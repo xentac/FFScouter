@@ -3,7 +3,7 @@
 // @namespace    Violentmonkey Scripts
 // @match        https://www.torn.com/*
 // @version      2.41
-// @author       rDacted, Weav3r
+// @author       rDacted, Weav3r, xentac
 // @description  Shows the expected Fair Fight score against targets and faction war status
 // @grant        GM_xmlhttpRequest
 // @grant        GM_setValue
@@ -14,14 +14,14 @@
 // @connect      ffscouter.com
 // ==/UserScript==
 
-const FF_VERSION = 2.4;
+const FF_VERSION = "2.41";
 const API_INTERVAL = 30000;
 const memberCountdowns = {};
 let apiCallInProgressCount = 0;
 
 let singleton = document.getElementById('ff-scouter-run-once');
 if (!singleton) {
-    console.log(`FF Scouter version ${FF_VERSION} starting`);
+    console.log(`[FF Scouter V2] FF Scouter version ${FF_VERSION} starting`);
     GM_addStyle(`
         .ff-scouter-indicator {
         position: relative;
@@ -135,25 +135,25 @@ if (!singleton) {
     // DO NOT CHANGE THIS
     // DO NOT CHANGE THIS
     if (apikey[0] != '#') {
-        console.log("Adding modifications to support TornPDA");
+        console.log("[FF Scouter V2] Adding modifications to support TornPDA");
         rD_xmlhttpRequest = function (details) {
-            console.log("Attempt to make http request");
+            console.log("[FF Scouter V2] Attempt to make http request");
             if (details.method.toLowerCase() == "get") {
                 return PDA_httpGet(details.url)
                     .then(details.onload)
-                    .catch(details.onerror ?? ((e) => console.error(e)));
+                    .catch(details.onerror ?? ((e) => console.error("[FF Scouter V2] ", e)));
             }
             else if (details.method.toLowerCase() == "post") {
                 return PDA_httpPost(details.url, details.headers ?? {}, details.body ?? details.data ?? "")
                     .then(details.onload)
-                    .catch(details.onerror ?? ((e) => console.error(e)));
+                    .catch(details.onerror ?? ((e) => console.error("[FF Scouter V2] ", e)));
             }
             else {
-                console.log("What is this? " + details.method);
+                console.log("[FF Scouter V2] What is this? " + details.method);
             }
         }
         rD_setValue = function (name, value) {
-            console.log("Attempted to set " + name);
+            console.log("[FF Scouter V2] Attempted to set " + name);
             return localStorage.setItem(name, value);
         }
         rD_getValue = function (name, defaultValue) {
@@ -161,11 +161,11 @@ if (!singleton) {
             return value;
         }
         rD_deleteValue = function (name) {
-            console.log("Attempted to delete " + name);
+            console.log("[FF Scouter V2] Attempted to delete " + name);
             return localStorage.removeItem(name);
         }
         rD_registerMenuCommand = function () {
-            console.log("Disabling GM_registerMenuCommand");
+            console.log("[FF Scouter V2] Disabling GM_registerMenuCommand");
         }
         rD_setValue('limited_key', apikey);
     }
@@ -246,7 +246,7 @@ if (!singleton) {
         var unknown_player_ids = get_cache_misses(player_ids)
 
         if (unknown_player_ids.length > 0) {
-            console.log(`Refreshing cache for ${unknown_player_ids.length} ids`);
+            console.log(`[FF Scouter V2] Refreshing cache for ${unknown_player_ids.length} ids`);
 
             var player_id_list = unknown_player_ids.join(",")
             const url = `${BASE_URL}/api/v1/get-stats?key=${key}&targets=${player_id_list}`;
@@ -261,8 +261,8 @@ if (!singleton) {
                             showToast(ff_response.error);
                             return;
                         }
-                            var one_hour = 60 * 60 * 1000;
-                            var expiry = Date.now() + one_hour;
+                        var one_hour = 60 * 60 * 1000;
+                        var expiry = Date.now() + one_hour;
                         ff_response.forEach(result => {
                             if (result && result.player_id) {
                                 if (result.fair_fight === null) {
@@ -298,37 +298,17 @@ if (!singleton) {
                         }
                     }
                 },
-                onerror: function (e) { console.error('**** error ', e); },
-                onabort: function (e) { console.error('**** abort ', e); },
-                ontimeout: function (e) { console.error('**** timeout ', e); }
+                onerror: function (e) { console.error('[FF Scouter V2] **** error ', e); },
+                onabort: function (e) { console.error('[FF Scouter V2] **** abort ', e); },
+                ontimeout: function (e) { console.error('[FF Scouter V2] **** timeout ', e); }
             });
         } else {
             callback(player_ids);
         }
     }
 
-    function get_fair_fight_response(target_id) {
-        var cached_ff_response = rD_getValue("" + target_id, null);
-        try {
-            cached_ff_response = JSON.parse(cached_ff_response);
-        }
-        catch {
-            cached_ff_response = null;
-        }
-
-        if (cached_ff_response) {
-            if (
-                cached_ff_response.expiry > Date.now() &&
-                !cached_ff_response.no_data &&
-                cached_ff_response.value
-            ) {
-                return cached_ff_response;
-            }
-        }
-    }
-
     function display_fair_fight(target_id, player_id) {
-        const response = get_fair_fight_response(target_id);
+        const response = get_cached_value(target_id);
         if (response) {
             set_fair_fight(response, player_id);
         }
@@ -511,25 +491,22 @@ if (!singleton) {
         return (brightness > 126) ? 'black' : 'white'; // Return black or white based on brightness
     }
 
-    function apply_fair_fight_info(player_ids) {
-        const fair_fights = new Object();
+    function get_cached_value(player_id) {
+      var cached_ff_response = rD_getValue("" + player_id, null);
+      try {
+          cached_ff_response = JSON.parse(cached_ff_response);
+      }
+      catch {
+          cached_ff_response = null;
+      }
 
-        for (const player_id of player_ids) {
-            var cached_ff_response = rD_getValue("" + player_id, null);
-            try {
-                cached_ff_response = JSON.parse(cached_ff_response);
-            }
-            catch {
-                cached_ff_response = null;
-            }
+      if (cached_ff_response && cached_ff_response.value && !cached_ff_response.no_data && cached_ff_response.expiry > Date.now()) {
+        return cached_ff_response;
+      }
+      return null;
+    }
 
-            if (cached_ff_response) {
-                if (cached_ff_response.expiry > Date.now()) {
-                    fair_fights[player_id] = cached_ff_response;
-                }
-            }
-        }
-
+    function apply_fair_fight_info(_) {
         var header_li = document.createElement("li");
         header_li.tabIndex = "0";
         header_li.classList.add("table-cell");
@@ -541,7 +518,7 @@ if (!singleton) {
 
         $(".table-header > .lvl")[0].after(header_li);
 
-        $(".table-body > .table-row > .member").each(function (index, value) {
+        $(".table-body > .table-row > .member").each(function (_, value) {
             var url = value.querySelectorAll('a[href^="/profiles"]')[0].href;
             var player_id = url.match(/.*XID=(?<player_id>\d+)/).groups.player_id;
 
@@ -549,9 +526,10 @@ if (!singleton) {
             fair_fight_div.classList.add("table-cell");
             fair_fight_div.classList.add("lvl");
 
-            if (fair_fights[player_id]) {
-                const ff = fair_fights[player_id].value;
-                const ff_string = get_ff_string_short(fair_fights[player_id], player_id)
+            const cached = get_cached_value(player_id)
+            if (cached) {
+                const ff = cached.value;
+                const ff_string = get_ff_string_short(cached, player_id)
 
                 const background_colour = get_ff_colour(ff);
                 const text_colour = get_contrast_color(background_colour);
@@ -568,22 +546,9 @@ if (!singleton) {
     function get_cache_misses(player_ids) {
         var unknown_player_ids = []
         for (const player_id of player_ids) {
-            var cached_ff_response = rD_getValue("" + player_id, null);
-            try {
-                cached_ff_response = JSON.parse(cached_ff_response);
-            }
-            catch {
-                cached_ff_response = null;
-            }
-
-            if (
-                !cached_ff_response ||
-                cached_ff_response.expiry < Date.now() ||
-                cached_ff_response.age > (7 * 24 * 60 * 60) ||
-                (!cached_ff_response.value && !cached_ff_response.no_data)
-            ) {
-                unknown_player_ids.push(player_id);
-            }
+          if (!get_cached_value(player_id)) {
+            unknown_player_ids.push(player_id);
+          }
         }
 
         return unknown_player_ids;
@@ -650,15 +615,6 @@ if (!singleton) {
         return null;
     }
 
-    function get_ff(target_id) {
-        const response = get_fair_fight_response(target_id);
-        if (response) {
-            return response.value;
-        }
-
-        return null;
-    }
-
     function ff_to_percent(ff) {
         // There are 3 key areas, low, medium, high
         // Low is 1-2
@@ -700,9 +656,9 @@ if (!singleton) {
                 //$(element).append($("<div>", { class: "ff-scouter-vertical-line-high-lower" }));
             }
 
-            const ff = get_ff(player_id);
-            if (ff) {
-                const percent = ff_to_percent(ff);
+            const cached = get_cached_value(player_id);
+            if (cached) {
+                const percent = ff_to_percent(cached.value);
                 element.style.setProperty("--band-percent", percent);
 
                 $(element).find('.ff-scouter-arrow').remove();
@@ -751,7 +707,7 @@ if (!singleton) {
         // Then in profile-container.description append a new span with the text. Win
         const player_id = get_player_id_in_element(mini);
         if (player_id) {
-            const response = get_fair_fight_response(player_id);
+            const response = get_cached_value(player_id);
             if (response) {
                 // Remove any existing elements
                 $(mini).find('.ff-scouter-mini-ff').remove();
@@ -934,7 +890,7 @@ if (!singleton) {
         fetchFactionData(factionID)
             .then(data => {
                 if (!Array.isArray(data.members)) {
-                    console.warn(`No members array for faction ${factionID}`);
+                    console.warn(`[FF Scouter V2] No members array for faction ${factionID}`);
                     return;
                 }
 
@@ -953,7 +909,7 @@ if (!singleton) {
                 });
             })
             .catch(err => {
-                console.error("Error fetching faction data for faction", factionID, err);
+                console.error("[FF Scouter V2] Error fetching faction data for faction", factionID, err);
             })
             .finally(() => {
                 apiCallInProgressCount--;
@@ -1006,7 +962,7 @@ if (!singleton) {
 
         updateAPICalls();
         setInterval(updateAPICalls, API_INTERVAL);
-        console.log("Torn Faction Status Countdown (Real-Time & API Status - Relative Last): Initialized");
+        console.log("[FF Scouter V2] Torn Faction Status Countdown (Real-Time & API Status - Relative Last): Initialized");
         return true;
     }
 
