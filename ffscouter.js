@@ -261,8 +261,8 @@ if (!singleton) {
                             showToast(ff_response.error);
                             return;
                         }
-                            var one_hour = 60 * 60 * 1000;
-                            var expiry = Date.now() + one_hour;
+                        var one_hour = 60 * 60 * 1000;
+                        var expiry = Date.now() + one_hour;
                         ff_response.forEach(result => {
                             if (result && result.player_id) {
                                 if (result.fair_fight === null) {
@@ -307,28 +307,8 @@ if (!singleton) {
         }
     }
 
-    function get_fair_fight_response(target_id) {
-        var cached_ff_response = rD_getValue("" + target_id, null);
-        try {
-            cached_ff_response = JSON.parse(cached_ff_response);
-        }
-        catch {
-            cached_ff_response = null;
-        }
-
-        if (cached_ff_response) {
-            if (
-                cached_ff_response.expiry > Date.now() &&
-                !cached_ff_response.no_data &&
-                cached_ff_response.value
-            ) {
-                return cached_ff_response;
-            }
-        }
-    }
-
     function display_fair_fight(target_id, player_id) {
-        const response = get_fair_fight_response(target_id);
+        const response = get_cached_value(target_id);
         if (response) {
             set_fair_fight(response, player_id);
         }
@@ -511,25 +491,22 @@ if (!singleton) {
         return (brightness > 126) ? 'black' : 'white'; // Return black or white based on brightness
     }
 
-    function apply_fair_fight_info(player_ids) {
-        const fair_fights = new Object();
+    function get_cached_value(player_id) {
+      var cached_ff_response = rD_getValue("" + player_id, null);
+      try {
+          cached_ff_response = JSON.parse(cached_ff_response);
+      }
+      catch {
+          cached_ff_response = null;
+      }
 
-        for (const player_id of player_ids) {
-            var cached_ff_response = rD_getValue("" + player_id, null);
-            try {
-                cached_ff_response = JSON.parse(cached_ff_response);
-            }
-            catch {
-                cached_ff_response = null;
-            }
+      if (cached_ff_response && cached_ff_response.value && !cached_ff_response.no_data && cached_ff_response.expiry > Date.now()) {
+        return cached_ff_response;
+      }
+      return null;
+    }
 
-            if (cached_ff_response) {
-                if (cached_ff_response.expiry > Date.now()) {
-                    fair_fights[player_id] = cached_ff_response;
-                }
-            }
-        }
-
+    function apply_fair_fight_info(_) {
         var header_li = document.createElement("li");
         header_li.tabIndex = "0";
         header_li.classList.add("table-cell");
@@ -541,7 +518,7 @@ if (!singleton) {
 
         $(".table-header > .lvl")[0].after(header_li);
 
-        $(".table-body > .table-row > .member").each(function (index, value) {
+        $(".table-body > .table-row > .member").each(function (_, value) {
             var url = value.querySelectorAll('a[href^="/profiles"]')[0].href;
             var player_id = url.match(/.*XID=(?<player_id>\d+)/).groups.player_id;
 
@@ -549,9 +526,10 @@ if (!singleton) {
             fair_fight_div.classList.add("table-cell");
             fair_fight_div.classList.add("lvl");
 
-            if (fair_fights[player_id]) {
-                const ff = fair_fights[player_id].value;
-                const ff_string = get_ff_string_short(fair_fights[player_id], player_id)
+            const cached = get_cached_value(player_id)
+            if (cached) {
+                const ff = cached.value;
+                const ff_string = get_ff_string_short(cached, player_id)
 
                 const background_colour = get_ff_colour(ff);
                 const text_colour = get_contrast_color(background_colour);
@@ -568,22 +546,9 @@ if (!singleton) {
     function get_cache_misses(player_ids) {
         var unknown_player_ids = []
         for (const player_id of player_ids) {
-            var cached_ff_response = rD_getValue("" + player_id, null);
-            try {
-                cached_ff_response = JSON.parse(cached_ff_response);
-            }
-            catch {
-                cached_ff_response = null;
-            }
-
-            if (
-                !cached_ff_response ||
-                cached_ff_response.expiry < Date.now() ||
-                cached_ff_response.age > (7 * 24 * 60 * 60) ||
-                (!cached_ff_response.value && !cached_ff_response.no_data)
-            ) {
-                unknown_player_ids.push(player_id);
-            }
+          if (!get_cached_value(player_id)) {
+            unknown_player_ids.push(player_id);
+          }
         }
 
         return unknown_player_ids;
@@ -650,15 +615,6 @@ if (!singleton) {
         return null;
     }
 
-    function get_ff(target_id) {
-        const response = get_fair_fight_response(target_id);
-        if (response) {
-            return response.value;
-        }
-
-        return null;
-    }
-
     function ff_to_percent(ff) {
         // There are 3 key areas, low, medium, high
         // Low is 1-2
@@ -700,9 +656,9 @@ if (!singleton) {
                 //$(element).append($("<div>", { class: "ff-scouter-vertical-line-high-lower" }));
             }
 
-            const ff = get_ff(player_id);
-            if (ff) {
-                const percent = ff_to_percent(ff);
+            const cached = get_cached_value(player_id);
+            if (cached) {
+                const percent = ff_to_percent(cached.value);
                 element.style.setProperty("--band-percent", percent);
 
                 $(element).find('.ff-scouter-arrow').remove();
@@ -751,7 +707,7 @@ if (!singleton) {
         // Then in profile-container.description append a new span with the text. Win
         const player_id = get_player_id_in_element(mini);
         if (player_id) {
-            const response = get_fair_fight_response(player_id);
+            const response = get_cached_value(player_id);
             if (response) {
                 // Remove any existing elements
                 $(mini).find('.ff-scouter-mini-ff').remove();
