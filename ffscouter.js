@@ -21,7 +21,7 @@ let apiCallInProgressCount = 0;
 
 let singleton = document.getElementById('ff-scouter-run-once');
 if (!singleton) {
-    console.log(`FF Scouter version ${FF_VERSION} starting`);
+    console.log(`[FF Scouter V2] FF Scouter version ${FF_VERSION} starting`);
     GM_addStyle(`
         .ff-scouter-indicator {
         position: relative;
@@ -135,25 +135,25 @@ if (!singleton) {
     // DO NOT CHANGE THIS
     // DO NOT CHANGE THIS
     if (apikey[0] != '#') {
-        console.log("Adding modifications to support TornPDA");
+        console.log("[FF Scouter V2] Adding modifications to support TornPDA");
         rD_xmlhttpRequest = function (details) {
-            console.log("Attempt to make http request");
+            console.log("[FF Scouter V2] Attempt to make http request");
             if (details.method.toLowerCase() == "get") {
                 return PDA_httpGet(details.url)
                     .then(details.onload)
-                    .catch(details.onerror ?? ((e) => console.error(e)));
+                    .catch(details.onerror ?? ((e) => console.error("[FF Scouter V2] ", e)));
             }
             else if (details.method.toLowerCase() == "post") {
                 return PDA_httpPost(details.url, details.headers ?? {}, details.body ?? details.data ?? "")
                     .then(details.onload)
-                    .catch(details.onerror ?? ((e) => console.error(e)));
+                    .catch(details.onerror ?? ((e) => console.error("[FF Scouter V2] ", e)));
             }
             else {
-                console.log("What is this? " + details.method);
+                console.log("[FF Scouter V2] What is this? " + details.method);
             }
         }
         rD_setValue = function (name, value) {
-            console.log("Attempted to set " + name);
+            console.log("[FF Scouter V2] Attempted to set " + name);
             return localStorage.setItem(name, value);
         }
         rD_getValue = function (name, defaultValue) {
@@ -161,11 +161,11 @@ if (!singleton) {
             return value;
         }
         rD_deleteValue = function (name) {
-            console.log("Attempted to delete " + name);
+            console.log("[FF Scouter V2] Attempted to delete " + name);
             return localStorage.removeItem(name);
         }
         rD_registerMenuCommand = function () {
-            console.log("Disabling GM_registerMenuCommand");
+            console.log("[FF Scouter V2] Disabling GM_registerMenuCommand");
         }
         rD_setValue('limited_key', apikey);
     }
@@ -246,7 +246,7 @@ if (!singleton) {
         var unknown_player_ids = get_cache_misses(player_ids)
 
         if (unknown_player_ids.length > 0) {
-            console.log(`Refreshing cache for ${unknown_player_ids.length} ids`);
+            console.log(`[FF Scouter V2] Refreshing cache for ${unknown_player_ids.length} ids`);
 
             var player_id_list = unknown_player_ids.join(",")
             const url = `${BASE_URL}/api/v1/get-stats?key=${key}&targets=${player_id_list}`;
@@ -298,9 +298,9 @@ if (!singleton) {
                         }
                     }
                 },
-                onerror: function (e) { console.error('**** error ', e); },
-                onabort: function (e) { console.error('**** abort ', e); },
-                ontimeout: function (e) { console.error('**** timeout ', e); }
+                onerror: function (e) { console.error('[FF Scouter V2] **** error ', e); },
+                onabort: function (e) { console.error('[FF Scouter V2] **** abort ', e); },
+                ontimeout: function (e) { console.error('[FF Scouter V2] **** timeout ', e); }
             });
         } else {
             callback(player_ids);
@@ -890,7 +890,7 @@ if (!singleton) {
         fetchFactionData(factionID)
             .then(data => {
                 if (!Array.isArray(data.members)) {
-                    console.warn(`No members array for faction ${factionID}`);
+                    console.warn(`[FF Scouter V2] No members array for faction ${factionID}`);
                     return;
                 }
 
@@ -909,7 +909,7 @@ if (!singleton) {
                 });
             })
             .catch(err => {
-                console.error("Error fetching faction data for faction", factionID, err);
+                console.error("[FF Scouter V2] Error fetching faction data for faction", factionID, err);
             })
             .finally(() => {
                 apiCallInProgressCount--;
@@ -962,7 +962,7 @@ if (!singleton) {
 
         updateAPICalls();
         setInterval(updateAPICalls, API_INTERVAL);
-        console.log("Torn Faction Status Countdown (Real-Time & API Status - Relative Last): Initialized");
+        console.log("[FF Scouter V2] Torn Faction Status Countdown (Real-Time & API Status - Relative Last): Initialized");
         return true;
     }
 
