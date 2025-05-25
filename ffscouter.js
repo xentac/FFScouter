@@ -1062,9 +1062,20 @@ if (!singleton) {
       obs.disconnect();
     }
   });
-  warObserver.observe(document.body, { childList: true, subtree: true });
+  if (!document.getElementById("FFScouterV2DisableWarMonitor")) {
+    warObserver.observe(document.body, { childList: true, subtree: true });
 
-  setInterval(updateAllMemberTimers, 1000);
+    const memberTimersInterval = setInterval(updateAllMemberTimers, 1000);
+
+    window.addEventListener("FFScouterV2DisableWarMonitor", () => {
+      console.log(
+        "[FF Scouter V2] Caught disable event, removing monitoring observer and interval",
+      );
+      warObserver.disconnect();
+
+      clearInterval(memberTimersInterval);
+    });
+  }
 
   function showToast(message) {
     const existing = document.getElementById("ffscouter-toast");
