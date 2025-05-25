@@ -14,7 +14,7 @@
 // @connect      ffscouter.com
 // ==/UserScript==
 
-const FF_VERSION = 2.4;
+const FF_VERSION = "2.41";
 const API_INTERVAL = 30000;
 const memberCountdowns = {};
 let apiCallInProgressCount = 0;
