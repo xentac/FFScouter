@@ -1076,6 +1076,23 @@ if (!singleton) {
       clearInterval(memberTimersInterval);
     });
   }
+  // Try to be friendly and detect other war monitoring scripts
+  const catchOtherScripts = () => {
+    if (
+      Array.from(document.querySelectorAll("style")).some(
+        (style) =>
+          style.textContent.includes(
+            '.members-list li:has(div.status[data-twse-highlight="true"])', // Torn War Stuff Enhanced
+          ) ||
+          style.textContent.includes(".warstuff_highlight") || // Torn War Stuff
+          style.textContent.includes(".finally-bs-stat"), // wall-battlestats
+      )
+    ) {
+      window.dispatchEvent(new Event("FFScouterV2DisableWarMonitor"));
+    }
+  };
+  catchOtherScripts();
+  setTimeout(catchOtherScripts, 500);
 
   function showToast(message) {
     const existing = document.getElementById("ffscouter-toast");
