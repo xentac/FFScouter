@@ -1062,9 +1062,37 @@ if (!singleton) {
       obs.disconnect();
     }
   });
-  warObserver.observe(document.body, { childList: true, subtree: true });
+  if (!document.getElementById("FFScouterV2DisableWarMonitor")) {
+    warObserver.observe(document.body, { childList: true, subtree: true });
 
-  setInterval(updateAllMemberTimers, 1000);
+    const memberTimersInterval = setInterval(updateAllMemberTimers, 1000);
+
+    window.addEventListener("FFScouterV2DisableWarMonitor", () => {
+      console.log(
+        "[FF Scouter V2] Caught disable event, removing monitoring observer and interval",
+      );
+      warObserver.disconnect();
+
+      clearInterval(memberTimersInterval);
+    });
+  }
+  // Try to be friendly and detect other war monitoring scripts
+  const catchOtherScripts = () => {
+    if (
+      Array.from(document.querySelectorAll("style")).some(
+        (style) =>
+          style.textContent.includes(
+            '.members-list li:has(div.status[data-twse-highlight="true"])', // Torn War Stuff Enhanced
+          ) ||
+          style.textContent.includes(".warstuff_highlight") || // Torn War Stuff
+          style.textContent.includes(".finally-bs-stat"), // wall-battlestats
+      )
+    ) {
+      window.dispatchEvent(new Event("FFScouterV2DisableWarMonitor"));
+    }
+  };
+  catchOtherScripts();
+  setTimeout(catchOtherScripts, 500);
 
   function showToast(message) {
     const existing = document.getElementById("ffscouter-toast");
