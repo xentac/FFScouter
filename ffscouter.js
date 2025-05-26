@@ -125,6 +125,7 @@ if (!singleton) {
     "https://raw.githubusercontent.com/rDacted2/fair_fight_scouter/main/images/green-arrow.svg";
   var RED_ARROW =
     "https://raw.githubusercontent.com/rDacted2/fair_fight_scouter/main/images/red-arrow.svg";
+  const darkMode = body.classList.contains('dark-mode')
 
   var rD_xmlhttpRequest;
   var rD_setValue;
@@ -415,17 +416,22 @@ if (!singleton) {
 
     let statDetails = "";
     if (ff_response.bs_estimate_human) {
-      statDetails = `<span style=\"font-size: 11px; font-weight: normal; margin-left: 8px; vertical-align: middle; color: #cccccc; font-style: italic;\">Est. Stats: <span>${ff_response.bs_estimate_human}</span></span>`;
+      if (darkMode) {
+          statDetails = `<span style=\"font-size: 11px; font-weight: normal; margin-left: 8px; vertical-align: middle; color: #cccccc; font-style: italic;\">Est. Stats: <span>${ff_response.bs_estimate_human}</span></span>`;
+      } else {
+          statDetails = `<span style=\"font-size: 11px; font-weight: normal; margin-left: 8px; vertical-align: middle; color: #555555; font-style: italic;\">Est. Stats: <span>${ff_response.bs_estimate_human}</span></span>`;
+      }
     }
 
     return `<span style=\"font-weight: bold; margin-right: 6px;\">FairFight:</span><span style=\"background: ${background_colour}; color: ${text_colour}; font-weight: bold; padding: 2px 6px; border-radius: 4px; display: inline-block;\">${ff_string} (${difficulty}) ${fresh}</span>${statDetails}`;
   }
 
-  function get_ff_string_short(ff_response, player_id) {
-
-    //after the no data check
-    if (showStats) {
-      return ff_response.bs_estimate_human
+function get_ff_string_short(ff_response, player_id) {
+    if (ff_response?.no_data) {
+        return "?";
+    }
+    if (showStats && ff_response.bs_estimate_human) {
+        return ff_response.bs_estimate_human;
     }
     const ff = ff_response.value.toFixed(2);
 
@@ -433,16 +439,16 @@ if (!singleton) {
     const age = now - ff_response.last_updated;
 
     if (ff > 9) {
-      return `high`;
+        return `high`;
     }
 
     var suffix = "";
     if (age > 14 * 24 * 60 * 60) {
-      suffix = "?";
+        suffix = "?";
     }
 
     return `${ff}${suffix}`;
-  }
+}
 
   function set_fair_fight(ff_response, player_id) {
     const detailed_message = get_detailed_message(ff_response, player_id);
