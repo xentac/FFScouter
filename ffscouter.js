@@ -414,6 +414,9 @@ if (!singleton) {
   }
 
   function get_ff_string_short(ff_response, player_id) {
+    if (ff_response?.no_data) {
+      return "?";
+    }
     const ff = ff_response.value.toFixed(2);
 
     const now = Date.now() / 1000;
