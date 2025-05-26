@@ -200,6 +200,14 @@ if (!singleton) {
       window.location.reload();
     }
   });
+  
+  var showStats = rD_getValue("show_stats", false);
+
+  rD_registerMenuCommand(showStats ? "Show FF Score" : "Show Stats", () => {
+    rD_setValue('show_stats', !showStats);
+    // Reload page
+    window.location.reload();
+  });
 
   function create_text_location() {
     info_line = document.createElement("div");
@@ -418,9 +426,12 @@ if (!singleton) {
     return `<span style=\"font-weight: bold; margin-right: 6px;\">FairFight:</span><span style=\"background: ${background_colour}; color: ${text_colour}; font-weight: bold; padding: 2px 6px; border-radius: 4px; display: inline-block;\">${ff_string} (${difficulty}) ${fresh}</span>${statDetails}`;
   }
 
-  function get_ff_string_short(ff_response, player_id) {
+function get_ff_string_short(ff_response, player_id) {
     if (ff_response?.no_data) {
-      return "?";
+        return "?";
+    }
+    if (showStats && ff_response.bs_estimate_human) {
+        return ff_response.bs_estimate_human;
     }
     const ff = ff_response.value.toFixed(2);
 
@@ -428,16 +439,16 @@ if (!singleton) {
     const age = now - ff_response.last_updated;
 
     if (ff > 9) {
-      return `high`;
+        return `high`;
     }
 
     var suffix = "";
     if (age > 14 * 24 * 60 * 60) {
-      suffix = "?";
+        suffix = "?";
     }
 
     return `${ff}${suffix}`;
-  }
+}
 
   function set_fair_fight(ff_response, player_id) {
     const detailed_message = get_detailed_message(ff_response, player_id);
@@ -764,7 +775,7 @@ if (!singleton) {
         $(mini).find(".ff-scouter-mini-ff").remove();
 
         // Minimal, text-only Fair Fight string for mini-profiles
-        const ff_string = get_ff_string(response);
+        const ff_string = showStats ? response.bs_estimate_human : `FF ${get_ff_string(response)}`;
         const difficulty = get_difficulty_text(response.value);
         const now = Date.now() / 1000;
         const age = now - response.last_updated;
