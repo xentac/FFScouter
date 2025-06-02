@@ -2,7 +2,7 @@
 // @name         FF Scouter V2
 // @namespace    Violentmonkey Scripts
 // @match        https://www.torn.com/*
-// @version      2.41
+// @version      2.46
 // @author       rDacted, Weav3r, xentac
 // @description  Shows the expected Fair Fight score against targets and faction war status
 // @grant        GM_xmlhttpRequest
@@ -14,7 +14,7 @@
 // @connect      ffscouter.com
 // ==/UserScript==
 
-const FF_VERSION = "2.41";
+const FF_VERSION = "2.46";
 const API_INTERVAL = 30000;
 const memberCountdowns = {};
 let apiCallInProgressCount = 0;
@@ -23,100 +23,100 @@ let singleton = document.getElementById("ff-scouter-run-once");
 if (!singleton) {
   console.log(`[FF Scouter V2] FF Scouter version ${FF_VERSION} starting`);
   GM_addStyle(`
-        .ff-scouter-indicator {
-        position: relative;
-        display: block;
-        padding: 0;
-        }
-
-        .ff-scouter-vertical-line-low-upper,
-        .ff-scouter-vertical-line-low-lower,
-        .ff-scouter-vertical-line-high-upper,
-        .ff-scouter-vertical-line-high-lower {
-        content: '';
-        position: absolute;
-        width: 2px;
-        height: 30%;
-        background-color: black;
-        margin-left: -1px;
-        }
-
-        .ff-scouter-vertical-line-low-upper {
-        top: 0;
-        left: calc(var(--arrow-width) / 2 + 33 * (100% - var(--arrow-width)) / 100);
-        }
-
-        .ff-scouter-vertical-line-low-lower {
-        bottom: 0;
-        left: calc(var(--arrow-width) / 2 + 33 * (100% - var(--arrow-width)) / 100);
-        }
-
-        .ff-scouter-vertical-line-high-upper {
-        top: 0;
-        left: calc(var(--arrow-width) / 2 + 66 * (100% - var(--arrow-width)) / 100);
-    }
-
-        .ff-scouter-vertical-line-high-lower {
-        bottom: 0;
-        left: calc(var(--arrow-width) / 2 + 66 * (100% - var(--arrow-width)) / 100);
-        }
-
-        .ff-scouter-arrow {
-        position: absolute;
-        transform: translate(-50%, -50%);
-        padding: 0;
-        top: 0;
-        left: calc(var(--arrow-width) / 2 + var(--band-percent) * (100% - var(--arrow-width)) / 100);
-        width: var(--arrow-width);
-        object-fit: cover;
-        pointer-events: none;
-        }
-
-        .last-action-row {
-            font-size: 11px;
-            color: inherit;
-            font-style: normal;
-            font-weight: normal;
-            text-align: center;
-            margin-left: 8px;
-            margin-bottom: 2px;
-            margin-top: -2px;
+            .ff-scouter-indicator {
+            position: relative;
             display: block;
+            padding: 0;
+            }
+     
+            .ff-scouter-vertical-line-low-upper,
+            .ff-scouter-vertical-line-low-lower,
+            .ff-scouter-vertical-line-high-upper,
+            .ff-scouter-vertical-line-high-lower {
+            content: '';
+            position: absolute;
+            width: 2px;
+            height: 30%;
+            background-color: black;
+            margin-left: -1px;
+            }
+     
+            .ff-scouter-vertical-line-low-upper {
+            top: 0;
+            left: calc(var(--arrow-width) / 2 + 33 * (100% - var(--arrow-width)) / 100);
+            }
+     
+            .ff-scouter-vertical-line-low-lower {
+            bottom: 0;
+            left: calc(var(--arrow-width) / 2 + 33 * (100% - var(--arrow-width)) / 100);
+            }
+     
+            .ff-scouter-vertical-line-high-upper {
+            top: 0;
+            left: calc(var(--arrow-width) / 2 + 66 * (100% - var(--arrow-width)) / 100);
         }
-        .travel-status {
-            display: flex;
-            align-items: center;
-            justify-content: flex-end;
-            gap: 2px;
-            min-width: 0;
-            overflow: hidden;
-        }
-        .torn-symbol {
-            width: 16px;
-            height: 16px;
-            fill: currentColor;
-            vertical-align: middle;
-            flex-shrink: 0;
-        }
-        .plane-svg {
-            width: 14px;
-            height: 14px;
-            fill: currentColor;
-            vertical-align: middle;
-            flex-shrink: 0;
-        }
-        .plane-svg.returning {
-            transform: scaleX(-1);
-        }
-        .country-abbr {
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            min-width: 0;
-            flex: 0 1 auto;
-            vertical-align: bottom;
-        }
-    `);
+     
+            .ff-scouter-vertical-line-high-lower {
+            bottom: 0;
+            left: calc(var(--arrow-width) / 2 + 66 * (100% - var(--arrow-width)) / 100);
+            }
+     
+            .ff-scouter-arrow {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            padding: 0;
+            top: 0;
+            left: calc(var(--arrow-width) / 2 + var(--band-percent) * (100% - var(--arrow-width)) / 100);
+            width: var(--arrow-width);
+            object-fit: cover;
+            pointer-events: none;
+            }
+     
+            .last-action-row {
+                font-size: 11px;
+                color: inherit;
+                font-style: normal;
+                font-weight: normal;
+                text-align: center;
+                margin-left: 8px;
+                margin-bottom: 2px;
+                margin-top: -2px;
+                display: block;
+            }
+            .travel-status {
+                display: flex;
+                align-items: center;
+                justify-content: flex-end;
+                gap: 2px;
+                min-width: 0;
+                overflow: hidden;
+            }
+            .torn-symbol {
+                width: 16px;
+                height: 16px;
+                fill: currentColor;
+                vertical-align: middle;
+                flex-shrink: 0;
+            }
+            .plane-svg {
+                width: 14px;
+                height: 14px;
+                fill: currentColor;
+                vertical-align: middle;
+                flex-shrink: 0;
+            }
+            .plane-svg.returning {
+                transform: scaleX(-1);
+            }
+            .country-abbr {
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                min-width: 0;
+                flex: 0 1 auto;
+                vertical-align: bottom;
+            }
+        `);
 
   var BASE_URL = "https://ffscouter.com";
   var BLUE_ARROW =
@@ -125,7 +125,6 @@ if (!singleton) {
     "https://raw.githubusercontent.com/rDacted2/fair_fight_scouter/main/images/green-arrow.svg";
   var RED_ARROW =
     "https://raw.githubusercontent.com/rDacted2/fair_fight_scouter/main/images/red-arrow.svg";
-  const darkMode = body.classList.contains('dark-mode')
 
   var rD_xmlhttpRequest;
   var rD_setValue;
@@ -199,14 +198,6 @@ if (!singleton) {
       // Reload page
       window.location.reload();
     }
-  });
-  
-  var showStats = rD_getValue("show_stats", false);
-
-  rD_registerMenuCommand(showStats ? "Show FF Score" : "Show Stats", () => {
-    rD_setValue('show_stats', !showStats);
-    // Reload page
-    window.location.reload();
   });
 
   function create_text_location() {
@@ -416,39 +407,29 @@ if (!singleton) {
 
     let statDetails = "";
     if (ff_response.bs_estimate_human) {
-      if (darkMode) {
-          statDetails = `<span style=\"font-size: 11px; font-weight: normal; margin-left: 8px; vertical-align: middle; color: #cccccc; font-style: italic;\">Est. Stats: <span>${ff_response.bs_estimate_human}</span></span>`;
-      } else {
-          statDetails = `<span style=\"font-size: 11px; font-weight: normal; margin-left: 8px; vertical-align: middle; color: #555555; font-style: italic;\">Est. Stats: <span>${ff_response.bs_estimate_human}</span></span>`;
-      }
+      statDetails = `<span style=\"font-size: 11px; font-weight: normal; margin-left: 8px; vertical-align: middle; color: #cccccc; font-style: italic;\">Est. Stats: <span>${ff_response.bs_estimate_human}</span></span>`;
     }
 
     return `<span style=\"font-weight: bold; margin-right: 6px;\">FairFight:</span><span style=\"background: ${background_colour}; color: ${text_colour}; font-weight: bold; padding: 2px 6px; border-radius: 4px; display: inline-block;\">${ff_string} (${difficulty}) ${fresh}</span>${statDetails}`;
   }
 
-function get_ff_string_short(ff_response, player_id) {
-    if (ff_response?.no_data) {
-        return "?";
-    }
-    if (showStats && ff_response.bs_estimate_human) {
-        return ff_response.bs_estimate_human;
-    }
+  function get_ff_string_short(ff_response, player_id) {
     const ff = ff_response.value.toFixed(2);
 
     const now = Date.now() / 1000;
     const age = now - ff_response.last_updated;
 
     if (ff > 9) {
-        return `high`;
+      return `high`;
     }
 
     var suffix = "";
     if (age > 14 * 24 * 60 * 60) {
-        suffix = "?";
+      suffix = "?";
     }
 
     return `${ff}${suffix}`;
-}
+  }
 
   function set_fair_fight(ff_response, player_id) {
     const detailed_message = get_detailed_message(ff_response, player_id);
@@ -775,7 +756,7 @@ function get_ff_string_short(ff_response, player_id) {
         $(mini).find(".ff-scouter-mini-ff").remove();
 
         // Minimal, text-only Fair Fight string for mini-profiles
-        const ff_string = showStats ? response.bs_estimate_human : `FF ${get_ff_string(response)}`;
+        const ff_string = get_ff_string(response);
         const difficulty = get_difficulty_text(response.value);
         const now = Date.now() / 1000;
         const age = now - response.last_updated;
@@ -954,12 +935,12 @@ function get_ff_string_short(ff_response, player_id) {
 
       let abbr = abbreviateCountry(location);
       const planeSvg = `<svg class="plane-svg ${isReturning ? "returning" : ""}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512">
-                <path d="M482.3 192c34.2 0 93.7 29 93.7 64c0 36-59.5 64-93.7 64l-116.6 0L265.2 495.9c-5.7 10-16.3 16.1-27.8 16.1l-56.2 0c-10.6 0-18.3-10.2-15.4-20.4l49-171.6L112 320 68.8 377.6c-3 4-7.8 6.4-12.8 6.4l-42 0c-7.8 0-14-6.3-14-14c0-1.3 .2-2.6 .5-3.9L32 256 .5 145.9c-.4-1.3-.5-2.6-.5-3.9c0-7.8 6.3-14 14-14l42 0c5 0 9.8 2.4 12.8 6.4L112 192l102.9 0-49-171.6C162.9 10.2 170.6 0 181.2 0l56.2 0c11.5 0 22.1 6.2 27.8 16.1L365.7 192l116.6 0z"/>
-            </svg>`;
+                    <path d="M482.3 192c34.2 0 93.7 29 93.7 64c0 36-59.5 64-93.7 64l-116.6 0L265.2 495.9c-5.7 10-16.3 16.1-27.8 16.1l-56.2 0c-10.6 0-18.3-10.2-15.4-20.4l49-171.6L112 320 68.8 377.6c-3 4-7.8 6.4-12.8 6.4l-42 0c-7.8 0-14-6.3-14-14c0-1.3 .2-2.6 .5-3.9L32 256 .5 145.9c-.4-1.3-.5-2.6-.5-3.9c0-7.8 6.3-14 14-14l42 0c5 0 9.8 2.4 12.8 6.4L112 192l102.9 0-49-171.6C162.9 10.2 170.6 0 181.2 0l56.2 0c11.5 0 22.1 6.2 27.8 16.1L365.7 192l116.6 0z"/>
+                </svg>`;
       const tornSymbol = `<svg class="torn-symbol" viewBox="0 0 24 24">
-                <circle cx="12" cy="12" r="11" fill="none" stroke="currentColor" stroke-width="1.5"/>
-                <text x="12" y="16" text-anchor="middle" font-family="Arial" font-weight="bold" font-size="14" fill="currentColor">T</text>
-            </svg>`;
+                    <circle cx="12" cy="12" r="11" fill="none" stroke="currentColor" stroke-width="1.5"/>
+                    <text x="12" y="16" text-anchor="middle" font-family="Arial" font-weight="bold" font-size="14" fill="currentColor">T</text>
+                </svg>`;
       statusEl.innerHTML = `<span class="travel-status">${tornSymbol}${planeSvg}<span class="country-abbr">${abbr}</span></span>`;
     } else if (member.status.state === "Abroad") {
       if (!statusEl.dataset.originalHtml) {
