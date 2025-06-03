@@ -141,11 +141,22 @@ if (!singleton) {
     console.log("[FF Scouter V2] Adding modifications to support TornPDA");
     rD_xmlhttpRequest = function (details) {
       console.log("[FF Scouter V2] Attempt to make http request");
+      console.log(
+        "[FF Scouter V2] Making " +
+          details.method +
+          " request to url: " +
+          details.url,
+      );
       if (details.method.toLowerCase() == "get") {
         return PDA_httpGet(details.url)
           .then(details.onload)
           .catch(
-            details.onerror ?? ((e) => console.error("[FF Scouter V2] ", e)),
+            details.onerror ??
+              ((e) =>
+                console.error(
+                  "[FF Scouter V2] Generic error handler: ",
+                  JSON.stringify(e),
+                )),
           );
       } else if (details.method.toLowerCase() == "post") {
         return PDA_httpPost(
@@ -155,7 +166,12 @@ if (!singleton) {
         )
           .then(details.onload)
           .catch(
-            details.onerror ?? ((e) => console.error("[FF Scouter V2] ", e)),
+            details.onerror ??
+              ((e) =>
+                console.error(
+                  "[FF Scouter V2] Generic error handler: ",
+                  JSON.stringify(e),
+                )),
           );
       } else {
         console.log("[FF Scouter V2] What is this? " + details.method);
@@ -273,6 +289,10 @@ if (!singleton) {
         method: "GET",
         url: url,
         onload: function (response) {
+          if (!response) {
+            // If the same request happens in under a second, Torn PDA will return nothing
+            return;
+          }
           if (response.status == 200) {
             var ff_response = JSON.parse(response.responseText);
             if (ff_response && ff_response.error) {
@@ -306,23 +326,44 @@ if (!singleton) {
             try {
               var err = JSON.parse(response.responseText);
               if (err && err.error) {
-                showToast(err.error);
+                showToast(
+                  "API request failed. Error: " +
+                    err.error +
+                    "; Code: " +
+                    err.code,
+                );
               } else {
-                showToast("API request failed.");
+                showToast(
+                  "API request failed. HTTP status code: " + response.status,
+                );
               }
             } catch {
-              showToast("API request failed.");
+              showToast(
+                "API request failed. HTTP status code: " + response.status,
+              );
             }
           }
         },
         onerror: function (e) {
-          console.error("[FF Scouter V2] **** error ", e);
+          let message = e;
+          if (Object.prototype.toString.call(e) !== "[object String]") {
+            message = JSON.stringify(e);
+          }
+          console.error("[FF Scouter V2] **** error ", message);
         },
         onabort: function (e) {
-          console.error("[FF Scouter V2] **** abort ", e);
+          let message = e;
+          if (Object.prototype.toString.call(e) !== "[object String]") {
+            message = JSON.stringify(e);
+          }
+          console.error("[FF Scouter V2] **** abort ", message);
         },
         ontimeout: function (e) {
-          console.error("[FF Scouter V2] **** timeout ", e);
+          let message = e;
+          if (Object.prototype.toString.call(e) !== "[object String]") {
+            message = JSON.stringify(e);
+          }
+          console.error("[FF Scouter V2] **** timeout ", message);
         },
       });
     } else {
@@ -1137,6 +1178,8 @@ if (!singleton) {
     } else {
       msg.textContent = `FairFight Scouter: ${message}`;
     }
+
+    console.log("[FF Scouter V2] Toast: ", message);
 
     toast.appendChild(msg);
     toast.appendChild(closeBtn);
