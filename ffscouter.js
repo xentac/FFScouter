@@ -8,6 +8,7 @@
 // @grant        GM_xmlhttpRequest
 // @grant        GM_setValue
 // @grant        GM_getValue
+// @grant        GM_listValues
 // @grant        GM_deleteValue
 // @grant        GM_registerMenuCommand
 // @grant        GM_addStyle
@@ -130,6 +131,7 @@ if (!singleton) {
   var rD_xmlhttpRequest;
   var rD_setValue;
   var rD_getValue;
+  var rD_listValues;
   var rD_deleteValue;
   var rD_registerMenuCommand;
 
@@ -170,6 +172,15 @@ if (!singleton) {
       var value = localStorage.getItem(name) ?? defaultValue;
       return value;
     };
+    rD_listValues = function () {
+      const keys = [];
+      for (const key in localStorage) {
+        if (localStorage.hasOwnProperty(key)) {
+          keys.push(key);
+        }
+      }
+      return keys;
+    };
     rD_deleteValue = function (name) {
       console.log("[FF Scouter V2] Attempted to delete " + name);
       return localStorage.removeItem(name);
@@ -182,6 +193,7 @@ if (!singleton) {
     rD_xmlhttpRequest = GM_xmlhttpRequest;
     rD_setValue = GM_setValue;
     rD_getValue = GM_getValue;
+    rD_listValues = GM_listValues;
     rD_deleteValue = GM_deleteValue;
     rD_registerMenuCommand = GM_registerMenuCommand;
   }
@@ -342,6 +354,39 @@ if (!singleton) {
       });
     } else {
       callback(player_ids);
+    }
+
+    clean_expired_data();
+  }
+
+  function clean_expired_data() {
+    for (const key of rD_listValues()) {
+      if (key.startsWith("ffscouterv2-")) {
+        clear_if_expired(key);
+      }
+      // This is the old cached key format, these keys might be ours
+      // Hopefully one day we can remove this...
+      if (key.match(/\d+/)) {
+        clear_if_expired(key);
+      }
+    }
+  }
+
+  function clear_if_expired(key) {
+    const value = rD_getValue(key, null);
+    var parsed = null;
+    try {
+      parsed = JSON.parse(value);
+    } catch {
+      return;
+    }
+    if (
+      parsed &&
+      (parsed.value || parsed.no_data) &&
+      parsed.expiry &&
+      parsed.expiry < Date.now()
+    ) {
+      rD_deleteValue(key);
     }
   }
 
@@ -548,6 +593,11 @@ function get_ff_string_short(ff_response, player_id) {
         // Rename exsiting cached values to new keys
         rD_deleteValue("" + player_id);
         rD_setValue("ffscouterv2-" + player_id, cached_ff_response);
+        try {
+          cached_ff_response = JSON.parse(cached_ff_response);
+        } catch {
+          cached_ff_response = null;
+        }
       }
     }
 
