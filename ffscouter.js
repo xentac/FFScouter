@@ -297,7 +297,10 @@ if (!singleton) {
                     no_data: true,
                     expiry: expiry,
                   };
-                  rD_setValue("" + result.player_id, JSON.stringify(cacheObj));
+                  rD_setValue(
+                    "ffscouterv2-" + result.player_id,
+                    JSON.stringify(cacheObj),
+                  );
                 } else {
                   let cacheObj = {
                     value: result.fair_fight,
@@ -306,7 +309,10 @@ if (!singleton) {
                     bs_estimate: result.bs_estimate,
                     bs_estimate_human: result.bs_estimate_human,
                   };
-                  rD_setValue("" + result.player_id, JSON.stringify(cacheObj));
+                  rD_setValue(
+                    "ffscouterv2-" + result.player_id,
+                    JSON.stringify(cacheObj),
+                  );
                 }
               }
             });
@@ -530,11 +536,19 @@ function get_ff_string_short(ff_response, player_id) {
   }
 
   function get_cached_value(player_id) {
-    var cached_ff_response = rD_getValue("" + player_id, null);
+    var cached_ff_response = rD_getValue("ffscouterv2-" + player_id, null);
     try {
       cached_ff_response = JSON.parse(cached_ff_response);
     } catch {
       cached_ff_response = null;
+    }
+    if (cached_ff_response == null) {
+      cached_ff_response = rD_getValue("" + player_id, null);
+      if (cached_ff_response) {
+        // Rename exsiting cached values to new keys
+        rD_deleteValue("" + player_id);
+        rD_setValue("ffscouterv2-" + player_id, cached_ff_response);
+      }
     }
 
     if (
