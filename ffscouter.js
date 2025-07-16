@@ -280,6 +280,8 @@ if (!singleton) {
 
     player_ids = [...new Set(player_ids)];
 
+    clean_expired_data();
+
     var unknown_player_ids = get_cache_misses(player_ids);
 
     if (unknown_player_ids.length > 0) {
@@ -355,21 +357,43 @@ if (!singleton) {
     } else {
       callback(player_ids);
     }
-
-    clean_expired_data();
   }
 
   function clean_expired_data() {
     for (const key of rD_listValues()) {
+      // Try renaming the key to the new name format
+      if (key.match(/^\d+$/)) {
+        if (rename_if_ffscouter(key)) {
+          clear_if_expired("ffscouterv2-" + key);
+        }
+      }
       if (key.startsWith("ffscouterv2-")) {
         clear_if_expired(key);
       }
-      // This is the old cached key format, these keys might be ours
-      // Hopefully one day we can remove this...
-      if (key.match(/\d+/)) {
-        clear_if_expired(key);
-      }
     }
+  }
+
+  function rename_if_ffscouter(key) {
+    const value = rD_getValue(key, null);
+    if (value == null) {
+      return false;
+    }
+    var parsed = null;
+    try {
+      parsed = JSON.parse(value);
+    } catch {
+      return false;
+    }
+    if (parsed == null) {
+      return false;
+    }
+    if ((!parsed.value && !parsed.no_data) || !parsed.expiry) {
+      return false;
+    }
+
+    rD_setValue("ffscouterv2-" + key, value);
+    rD_deleteValue(key);
+    return true;
   }
 
   function clear_if_expired(key) {
@@ -586,19 +610,6 @@ function get_ff_string_short(ff_response, player_id) {
       cached_ff_response = JSON.parse(cached_ff_response);
     } catch {
       cached_ff_response = null;
-    }
-    if (cached_ff_response == null) {
-      cached_ff_response = rD_getValue("" + player_id, null);
-      if (cached_ff_response) {
-        // Rename exsiting cached values to new keys
-        rD_deleteValue("" + player_id);
-        rD_setValue("ffscouterv2-" + player_id, cached_ff_response);
-        try {
-          cached_ff_response = JSON.parse(cached_ff_response);
-        } catch {
-          cached_ff_response = null;
-        }
-      }
     }
 
     if (
