@@ -539,6 +539,10 @@ if (!singleton) {
     header_li.classList.add("c-pointer");
     header_li.appendChild(document.createTextNode("FF"));
 
+    if ($(".table-header > .lvl").length == 0) {
+      // The .member-list doesn't have a .lvl, give up
+      return;
+    }
     $(".table-header > .lvl")[0].after(header_li);
 
     $(".table-body > .table-row > .member").each(function (_, value) {
