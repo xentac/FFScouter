@@ -373,17 +373,23 @@ if (!singleton) {
   }
 
   function clean_expired_data() {
+    let count = 0;
     for (const key of rD_listValues()) {
       // Try renaming the key to the new name format
       if (key.match(/^\d+$/)) {
         if (rename_if_ffscouter(key)) {
-          clear_if_expired("ffscouterv2-" + key);
+          if (clear_if_expired("ffscouterv2-" + key)) {
+            count++;
+          }
         }
       }
       if (key.startsWith("ffscouterv2-")) {
-        clear_if_expired(key);
+        if (clear_if_expired(key)) {
+          count++;
+        }
       }
     }
+    console.log("[FF Scouter V2] Cleaned " + count + " expired values");
   }
 
   function rename_if_ffscouter(key) {
@@ -415,7 +421,7 @@ if (!singleton) {
     try {
       parsed = JSON.parse(value);
     } catch {
-      return;
+      return false;
     }
     if (
       parsed &&
@@ -424,7 +430,9 @@ if (!singleton) {
       parsed.expiry < Date.now()
     ) {
       rD_deleteValue(key);
+      return true;
     }
+    return false;
   }
 
   function display_fair_fight(target_id, player_id) {
