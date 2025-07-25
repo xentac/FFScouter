@@ -353,13 +353,18 @@ if (!singleton) {
           }
         },
         onerror: function (e) {
-          console.error("[FF Scouter V2] **** error ", e);
+          console.error("[FF Scouter V2] **** error ", e, "; Stack:", e.stack);
         },
         onabort: function (e) {
-          console.error("[FF Scouter V2] **** abort ", e);
+          console.error("[FF Scouter V2] **** abort ", e, "; Stack:", e.stack);
         },
         ontimeout: function (e) {
-          console.error("[FF Scouter V2] **** timeout ", e);
+          console.error(
+            "[FF Scouter V2] **** timeout ",
+            e,
+            "; Stack:",
+            e.stack,
+          );
         },
       });
     } else {
