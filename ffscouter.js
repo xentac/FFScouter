@@ -8,6 +8,7 @@
 // @grant        GM_xmlhttpRequest
 // @grant        GM_setValue
 // @grant        GM_getValue
+// @grant        GM_listValues
 // @grant        GM_deleteValue
 // @grant        GM_registerMenuCommand
 // @grant        GM_addStyle
@@ -129,6 +130,7 @@ if (!singleton) {
   var rD_xmlhttpRequest;
   var rD_setValue;
   var rD_getValue;
+  var rD_listValues;
   var rD_deleteValue;
   var rD_registerMenuCommand;
 
@@ -169,6 +171,15 @@ if (!singleton) {
       var value = localStorage.getItem(name) ?? defaultValue;
       return value;
     };
+    rD_listValues = function () {
+      const keys = [];
+      for (const key in localStorage) {
+        if (localStorage.hasOwnProperty(key)) {
+          keys.push(key);
+        }
+      }
+      return keys;
+    };
     rD_deleteValue = function (name) {
       console.log("[FF Scouter V2] Attempted to delete " + name);
       return localStorage.removeItem(name);
@@ -181,6 +192,7 @@ if (!singleton) {
     rD_xmlhttpRequest = GM_xmlhttpRequest;
     rD_setValue = GM_setValue;
     rD_getValue = GM_getValue;
+    rD_listValues = GM_listValues;
     rD_deleteValue = GM_deleteValue;
     rD_registerMenuCommand = GM_registerMenuCommand;
   }
@@ -259,6 +271,8 @@ if (!singleton) {
 
     player_ids = [...new Set(player_ids)];
 
+    clean_expired_data();
+
     var unknown_player_ids = get_cache_misses(player_ids);
 
     if (unknown_player_ids.length > 0) {
@@ -288,7 +302,10 @@ if (!singleton) {
                     no_data: true,
                     expiry: expiry,
                   };
-                  rD_setValue("" + result.player_id, JSON.stringify(cacheObj));
+                  rD_setValue(
+                    "ffscouterv2-" + result.player_id,
+                    JSON.stringify(cacheObj),
+                  );
                 } else {
                   let cacheObj = {
                     value: result.fair_fight,
@@ -297,7 +314,10 @@ if (!singleton) {
                     bs_estimate: result.bs_estimate,
                     bs_estimate_human: result.bs_estimate_human,
                   };
-                  rD_setValue("" + result.player_id, JSON.stringify(cacheObj));
+                  rD_setValue(
+                    "ffscouterv2-" + result.player_id,
+                    JSON.stringify(cacheObj),
+                  );
                 }
               }
             });
@@ -327,6 +347,61 @@ if (!singleton) {
       });
     } else {
       callback(player_ids);
+    }
+  }
+
+  function clean_expired_data() {
+    for (const key of rD_listValues()) {
+      // Try renaming the key to the new name format
+      if (key.match(/^\d+$/)) {
+        if (rename_if_ffscouter(key)) {
+          clear_if_expired("ffscouterv2-" + key);
+        }
+      }
+      if (key.startsWith("ffscouterv2-")) {
+        clear_if_expired(key);
+      }
+    }
+  }
+
+  function rename_if_ffscouter(key) {
+    const value = rD_getValue(key, null);
+    if (value == null) {
+      return false;
+    }
+    var parsed = null;
+    try {
+      parsed = JSON.parse(value);
+    } catch {
+      return false;
+    }
+    if (parsed == null) {
+      return false;
+    }
+    if ((!parsed.value && !parsed.no_data) || !parsed.expiry) {
+      return false;
+    }
+
+    rD_setValue("ffscouterv2-" + key, value);
+    rD_deleteValue(key);
+    return true;
+  }
+
+  function clear_if_expired(key) {
+    const value = rD_getValue(key, null);
+    var parsed = null;
+    try {
+      parsed = JSON.parse(value);
+    } catch {
+      return;
+    }
+    if (
+      parsed &&
+      (parsed.value || parsed.no_data) &&
+      parsed.expiry &&
+      parsed.expiry < Date.now()
+    ) {
+      rD_deleteValue(key);
     }
   }
 
@@ -511,7 +586,7 @@ if (!singleton) {
   }
 
   function get_cached_value(player_id) {
-    var cached_ff_response = rD_getValue("" + player_id, null);
+    var cached_ff_response = rD_getValue("ffscouterv2-" + player_id, null);
     try {
       cached_ff_response = JSON.parse(cached_ff_response);
     } catch {
