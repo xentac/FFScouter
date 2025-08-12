@@ -927,6 +927,16 @@ if (!singleton) {
         await apply_ff_gauge($(".target").toArray());
         await apply_ff_gauge($(".listed").toArray());
       } else if (
+        window.location.href.startsWith(
+          "https://www.torn.com/loader.php?sid=attackLog",
+        )
+      ) {
+        const participants = $("ul.participants-list span.name a").toArray();
+        if (participants > 100) {
+          return;
+        }
+        await apply_ff_gauge(participants);
+      } else if (
         window.location.href.startsWith("https://www.torn.com/forums.php")
       ) {
         await apply_ff_gauge($(".last-poster").toArray());
