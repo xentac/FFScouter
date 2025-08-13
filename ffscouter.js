@@ -29,7 +29,7 @@ if (!singleton) {
             display: block;
             padding: 0;
             }
-     
+
             .ff-scouter-vertical-line-low-upper,
             .ff-scouter-vertical-line-low-lower,
             .ff-scouter-vertical-line-high-upper,
@@ -41,27 +41,27 @@ if (!singleton) {
             background-color: black;
             margin-left: -1px;
             }
-     
+
             .ff-scouter-vertical-line-low-upper {
             top: 0;
             left: calc(var(--arrow-width) / 2 + 33 * (100% - var(--arrow-width)) / 100);
             }
-     
+
             .ff-scouter-vertical-line-low-lower {
             bottom: 0;
             left: calc(var(--arrow-width) / 2 + 33 * (100% - var(--arrow-width)) / 100);
             }
-     
+
             .ff-scouter-vertical-line-high-upper {
             top: 0;
             left: calc(var(--arrow-width) / 2 + 66 * (100% - var(--arrow-width)) / 100);
         }
-     
+
             .ff-scouter-vertical-line-high-lower {
             bottom: 0;
             left: calc(var(--arrow-width) / 2 + 66 * (100% - var(--arrow-width)) / 100);
             }
-     
+
             .ff-scouter-arrow {
             position: absolute;
             transform: translate(-50%, -50%);
@@ -72,7 +72,7 @@ if (!singleton) {
             object-fit: cover;
             pointer-events: none;
             }
-     
+
             .last-action-row {
                 font-size: 11px;
                 color: inherit;
@@ -512,7 +512,7 @@ if (!singleton) {
 
     let statDetails = "";
     if (ff_response.bs_estimate_human) {
-      statDetails = `<span style=\"font-size: 11px; font-weight: normal; margin-left: 8px; vertical-align: middle; color: #cccccc; font-style: italic;\">Est. Stats: <span>${ff_response.bs_estimate_human}</span></span>`;
+      statDetails = `<span style=\"font-size: 11px; font-weight: normal; margin-left: 8px; vertical-align: middle; font-style: italic;\">Est. Stats: <span>${ff_response.bs_estimate_human}</span></span>`;
     }
 
     return `<span style=\"font-weight: bold; margin-right: 6px;\">FairFight:</span><span style=\"background: ${background_colour}; color: ${text_colour}; font-weight: bold; padding: 2px 6px; border-radius: 4px; display: inline-block;\">${ff_string} (${difficulty}) ${fresh}</span>${statDetails}`;
@@ -623,12 +623,7 @@ if (!singleton) {
       cached_ff_response = null;
     }
 
-    if (
-      cached_ff_response &&
-      cached_ff_response.value &&
-      !cached_ff_response.no_data &&
-      cached_ff_response.expiry > Date.now()
-    ) {
+    if (cached_ff_response && cached_ff_response.expiry > Date.now()) {
       return cached_ff_response;
     }
     return null;
@@ -659,7 +654,7 @@ if (!singleton) {
       fair_fight_div.classList.add("lvl");
 
       const cached = get_cached_value(player_id);
-      if (cached) {
+      if (cached && cached.value) {
         const ff = cached.value;
         const ff_string = get_ff_string_short(cached, player_id);
 
@@ -678,7 +673,8 @@ if (!singleton) {
   function get_cache_misses(player_ids) {
     var unknown_player_ids = [];
     for (const player_id of player_ids) {
-      if (!get_cached_value(player_id)) {
+      const cached = get_cached_value(player_id);
+      if (!cached || !cached.value) {
         unknown_player_ids.push(player_id);
       }
     }
@@ -805,7 +801,7 @@ if (!singleton) {
       }
 
       const cached = get_cached_value(player_id);
-      if (cached) {
+      if (cached && cached.value) {
         const percent = ff_to_percent(cached.value);
         element.style.setProperty("--band-percent", percent);
 
@@ -860,7 +856,7 @@ if (!singleton) {
     const player_id = get_player_id_in_element(mini);
     if (player_id) {
       const response = get_cached_value(player_id);
-      if (response) {
+      if (response && response.value) {
         // Remove any existing elements
         $(mini).find(".ff-scouter-mini-ff").remove();
 
