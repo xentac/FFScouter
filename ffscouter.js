@@ -206,7 +206,7 @@ if (!singleton) {
 
   rD_registerMenuCommand("Enter Limited API Key", () => {
     let userInput = prompt(
-      "Enter Limited API Key",
+      "[FF Scouter V2]: Enter Limited API Key",
       rD_getValue("limited_key", ""),
     );
     if (userInput !== null) {
@@ -223,9 +223,9 @@ if (!singleton) {
     info_line.style.clear = "both";
     info_line.style.margin = "5px 0";
     info_line.addEventListener("click", () => {
-      if (key === null) {
+      if (!key) {
         const limited_key = prompt(
-          "Enter Limited API Key",
+          "[FF Scouter V2]: Enter Limited API Key",
           rD_getValue("limited_key", ""),
         );
         if (limited_key) {
@@ -703,7 +703,7 @@ if (!singleton) {
     });
 
     if (!key) {
-      set_message("Limited API key needed - click to add");
+      set_message("[FF Scouter V2]: Limited API key needed - click to add");
     }
   } else if (
     window.location.href.startsWith("https://www.torn.com/factions.php")
@@ -727,7 +727,7 @@ if (!singleton) {
     });
 
     if (!key) {
-      set_message("Limited API key needed - click to add");
+      set_message("[FF Scouter V2]: Limited API key needed - click to add");
     }
   } else {
     // console.log("Did not match against " + window.location.href);
