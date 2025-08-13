@@ -29,7 +29,7 @@ if (!singleton) {
             display: block;
             padding: 0;
             }
-     
+
             .ff-scouter-vertical-line-low-upper,
             .ff-scouter-vertical-line-low-lower,
             .ff-scouter-vertical-line-high-upper,
@@ -41,27 +41,27 @@ if (!singleton) {
             background-color: black;
             margin-left: -1px;
             }
-     
+
             .ff-scouter-vertical-line-low-upper {
             top: 0;
             left: calc(var(--arrow-width) / 2 + 33 * (100% - var(--arrow-width)) / 100);
             }
-     
+
             .ff-scouter-vertical-line-low-lower {
             bottom: 0;
             left: calc(var(--arrow-width) / 2 + 33 * (100% - var(--arrow-width)) / 100);
             }
-     
+
             .ff-scouter-vertical-line-high-upper {
             top: 0;
             left: calc(var(--arrow-width) / 2 + 66 * (100% - var(--arrow-width)) / 100);
         }
-     
+
             .ff-scouter-vertical-line-high-lower {
             bottom: 0;
             left: calc(var(--arrow-width) / 2 + 66 * (100% - var(--arrow-width)) / 100);
             }
-     
+
             .ff-scouter-arrow {
             position: absolute;
             transform: translate(-50%, -50%);
@@ -72,7 +72,7 @@ if (!singleton) {
             object-fit: cover;
             pointer-events: none;
             }
-     
+
             .last-action-row {
                 font-size: 11px;
                 color: inherit;
