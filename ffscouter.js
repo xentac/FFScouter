@@ -62,20 +62,22 @@ if (!singleton) {
             left: calc(var(--arrow-width) / 2 + 66 * (100% - var(--arrow-width)) / 100);
             }
      
-            .ff-scouter-ff-visible {
-              display: flex !important;
-            }
+            @media screen and (max-width: 784px) {
+              .ff-scouter-ff-visible {
+                display: flex !important;
+              }
 
-            .ff-scouter-ff-hidden {
-              display: none !important;
-            }
+              .ff-scouter-ff-hidden {
+                display: none !important;
+              }
 
-            .ff-scouter-est-visible {
-              display: flex !important;
-            }
+              .ff-scouter-est-visible {
+                display: flex !important;
+              }
 
-            .ff-scouter-est-hidden {
-              display: none !important;
+              .ff-scouter-est-hidden {
+                display: none !important;
+              }
             }
 
             .ff-scouter-arrow {
