@@ -939,7 +939,7 @@ if (!singleton) {
           "https://www.torn.com/loader.php?sid=attackLog",
         )
       ) {
-        const participants = $("ul.participants-list span.name a").toArray();
+        const participants = $("ul.participants-list li").toArray();
         if (participants > 100) {
           return;
         }
