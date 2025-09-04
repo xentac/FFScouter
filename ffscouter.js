@@ -61,6 +61,24 @@ if (!singleton) {
             bottom: 0;
             left: calc(var(--arrow-width) / 2 + 66 * (100% - var(--arrow-width)) / 100);
             }
+     
+            @media screen and (max-width: 784px) {
+              .ff-scouter-ff-visible {
+                display: flex !important;
+              }
+
+              .ff-scouter-ff-hidden {
+                display: none !important;
+              }
+
+              .ff-scouter-est-visible {
+                display: flex !important;
+              }
+
+              .ff-scouter-est-hidden {
+                display: none !important;
+              }
+            }
 
             .ff-scouter-arrow {
             position: absolute;
@@ -630,20 +648,50 @@ if (!singleton) {
   }
 
   function apply_fair_fight_info(_) {
-    var header_li = document.createElement("li");
-    header_li.tabIndex = "0";
-    header_li.classList.add("table-cell");
-    header_li.classList.add("lvl");
-    header_li.classList.add("torn-divider");
-    header_li.classList.add("divider-vertical");
-    header_li.classList.add("c-pointer");
-    header_li.appendChild(document.createTextNode("FF"));
+    var ff_li = document.createElement("li");
+    ff_li.tabIndex = "0";
+    ff_li.classList.add("table-cell");
+    ff_li.classList.add("lvl");
+    ff_li.classList.add("torn-divider");
+    ff_li.classList.add("divider-vertical");
+    ff_li.classList.add("c-pointer");
+    ff_li.classList.add("ff-scouter-ff-visible");
+    ff_li.onclick = () => {
+      $(".ff-scouter-ff-visible").each(function (_, value) {
+        value.classList.remove("ff-scouter-ff-visible");
+        value.classList.add("ff-scouter-ff-hidden");
+      });
+      $(".ff-scouter-est-hidden").each(function (_, value) {
+        value.classList.remove("ff-scouter-est-hidden");
+        value.classList.add("ff-scouter-est-visible");
+      });
+    };
+    ff_li.appendChild(document.createTextNode("FF"));
+    var est_li = document.createElement("li");
+    est_li.tabIndex = "0";
+    est_li.classList.add("table-cell");
+    est_li.classList.add("lvl");
+    est_li.classList.add("torn-divider");
+    est_li.classList.add("divider-vertical");
+    est_li.classList.add("c-pointer");
+    est_li.classList.add("ff-scouter-est-hidden");
+    est_li.onclick = () => {
+      $(".ff-scouter-ff-hidden").each(function (_, value) {
+        value.classList.remove("ff-scouter-ff-hidden");
+        value.classList.add("ff-scouter-ff-visible");
+      });
+      $(".ff-scouter-est-visible").each(function (_, value) {
+        value.classList.remove("ff-scouter-est-visible");
+        value.classList.add("ff-scouter-est-hidden");
+      });
+    };
+    est_li.appendChild(document.createTextNode("Est"));
 
     if ($(".table-header > .lvl").length == 0) {
       // The .member-list doesn't have a .lvl, give up
       return;
     }
-    $(".table-header > .lvl")[0].after(header_li);
+    $(".table-header > .lvl")[0].after(ff_li, est_li);
 
     $(".table-body > .table-row > .member").each(function (_, value) {
       var url = value.querySelectorAll('a[href^="/profiles"]')[0].href;
@@ -652,6 +700,12 @@ if (!singleton) {
       var fair_fight_div = document.createElement("div");
       fair_fight_div.classList.add("table-cell");
       fair_fight_div.classList.add("lvl");
+      fair_fight_div.classList.add("ff-scouter-ff-visible");
+
+      var estimate_div = document.createElement("div");
+      estimate_div.classList.add("table-cell");
+      estimate_div.classList.add("lvl");
+      estimate_div.classList.add("ff-scouter-est-hidden");
 
       const cached = get_cached_value(player_id);
       if (cached && cached.value) {
@@ -664,9 +718,13 @@ if (!singleton) {
         fair_fight_div.style.color = text_colour;
         fair_fight_div.style.fontWeight = "bold";
         fair_fight_div.innerHTML = ff_string;
+
+        if (cached.bs_estimate_human) {
+          estimate_div.innerHTML = cached.bs_estimate_human;
+        }
       }
 
-      value.nextSibling.after(fair_fight_div);
+      value.nextSibling.after(fair_fight_div, estimate_div);
     });
   }
 
