@@ -240,6 +240,7 @@ if (!singleton) {
     info_line.style.display = "block";
     info_line.style.clear = "both";
     info_line.style.margin = "5px 0";
+    info_line.style.cursor = "pointer";
     info_line.addEventListener("click", () => {
       if (!key) {
         const limited_key = prompt(
@@ -251,6 +252,8 @@ if (!singleton) {
           key = limited_key;
           window.location.reload();
         }
+      } else {
+        configure_ranges();
       }
     });
 
@@ -270,6 +273,92 @@ if (!singleton) {
     }
 
     return info_line;
+  }
+
+  function configure_ranges() {
+    const values = get_ff_ranges(true);
+    let curSetting = "";
+    if (values) {
+      curSetting = `${values.low},${values.high},${values.max}`;
+    }
+    const response = prompt(
+      "Enter the low, high, and max FF you want to use, separated by commas. Empty resets to default (Default '2,4,8').",
+      curSetting,
+    );
+    // They hit cancel
+    if (response == null) {
+      return;
+    }
+    if (response == "") {
+      reset_ff_ranges();
+      return;
+    }
+    const split = response.split(",");
+    if (split.length != 3) {
+      showToast(
+        "Incorrect format: FF scouter ranges should be 3 numbers separated by commas [<low>,<high>,<max>]",
+      );
+      return;
+    }
+    let low = null;
+    try {
+      low = parseFloat(split[0]);
+    } catch (e) {
+      showToast("Incorrect format: FF scouter low value must be a float.");
+      return;
+    }
+    let high = null;
+    try {
+      high = parseFloat(split[1]);
+    } catch (e) {
+      showToast("Incorrect format: FF scouter high value must be a float.");
+      return;
+    }
+    let max = null;
+    try {
+      max = parseFloat(split[2]);
+    } catch (e) {
+      showToast("Incorrect format: FF scouter max value must be a float.");
+      return;
+    }
+
+    set_ff_ranges(low, high, max);
+  }
+
+  function reset_ff_ranges() {
+    rD_deleteValue("ffscouterv2-ranges");
+  }
+
+  function set_ff_ranges(low, high, max) {
+    rD_setValue(
+      "ffscouterv2-ranges",
+      JSON.stringify({ low: low, high: high, max: max }),
+    );
+  }
+
+  function get_ff_ranges(noDefault) {
+    const defaultRange = { low: 2, high: 4, max: 8 };
+    const rangeUnparsed = rD_getValue("ffscouterv2-ranges");
+    if (!rangeUnparsed) {
+      if (noDefault) {
+        return null;
+      }
+      return defaultRange;
+    }
+
+    try {
+      const parsed = JSON.parse(rangeUnparsed);
+      return parsed;
+    } catch (error) {
+      console.log(
+        "[FF Scouter V2] Problem parsing configured range, reseting values.",
+      );
+      reset_ff_ranges();
+      if (noDefault) {
+        return null;
+      }
+      return defaultRange;
+    }
   }
 
   function set_message(message, error = false) {
@@ -813,17 +902,14 @@ if (!singleton) {
   }
 
   function ff_to_percent(ff) {
-    // There are 3 key areas, low, medium, high
-    // Low is 1-2
-    // Medium is 2-4
-    // High is 4+
-    // If we clip high at 8 then the math becomes easy
     // The percent is 0-33% 33-66% 66%-100%
-    const low_ff = 2;
-    const high_ff = 4;
+    // With configurable ranges there are no guarantees that the sections are linear
+    const stored_values = get_ff_ranges();
+    const low_ff = stored_values.low;
+    const high_ff = stored_values.high;
     const low_mid_percent = 33;
     const mid_high_percent = 66;
-    ff = Math.min(ff, 8);
+    ff = Math.min(ff, stored_values.max);
     var percent;
     if (ff < low_ff) {
       percent = ((ff - 1) / (low_ff - 1)) * low_mid_percent;
@@ -834,7 +920,8 @@ if (!singleton) {
         low_mid_percent;
     } else {
       percent =
-        ((ff - high_ff) / (8 - high_ff)) * (100 - mid_high_percent) +
+        ((ff - high_ff) / (stored_values.max - high_ff)) *
+          (100 - mid_high_percent) +
         mid_high_percent;
     }
 
