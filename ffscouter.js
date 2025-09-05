@@ -631,7 +631,7 @@ if (!singleton) {
     const now = Date.now() / 1000;
     const age = now - ff_response.last_updated;
 
-    if (ff > 9) {
+    if (ff > 99) {
       return `high`;
     }
 
