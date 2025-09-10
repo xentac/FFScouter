@@ -800,12 +800,20 @@ if (!singleton) {
       if (match) {
         return match.groups.target_id;
       }
+      const matchUserId = anchor.href.match(/.*userId=(?<target_id>\d+)/);
+      if (matchUserId) {
+        return matchUserId.groups.target_id;
+      }
     }
 
     if (element.nodeName.toLowerCase() === "a") {
       const match = element.href.match(/.*XID=(?<target_id>\d+)/);
       if (match) {
         return match.groups.target_id;
+      }
+      const matchUserId = element.href.match(/.*userId=(?<target_id>\d+)/);
+      if (matchUserId) {
+        return matchUserId.groups.target_id;
       }
     }
 
@@ -1008,6 +1016,17 @@ if (!singleton) {
       } else if (window.location.href.includes("page.php?sid=hof")) {
         await apply_ff_gauge($('[class^="userInfoBox__"]').toArray());
       }
+    }
+    if (
+      window.location.href.startsWith(
+        "https://www.torn.com/page.php?sid=ItemMarket",
+      )
+    ) {
+      await apply_ff_gauge(
+        $(
+          "div.bazaar-listing-card div:first-child div:first-child > a",
+        ).toArray(),
+      );
     }
 
     var mini_profiles = $(
