@@ -17,6 +17,8 @@
 
 const FF_VERSION = "2.49";
 const API_INTERVAL = 30000;
+const FF_TARGET_STALENESS = 24 * 60 * 60 * 1000; // Refresh the target list every day
+const TARGET_KEY = "ffscouterv2-targets";
 const memberCountdowns = {};
 let apiCallInProgressCount = 0;
 
@@ -1035,6 +1037,151 @@ if (!singleton) {
     subtree: true,
   });
 
+  function get_cached_targets(staleok) {
+    const value = rD_getValue(TARGET_KEY);
+    if (!value) {
+      return null;
+    }
+
+    let parsed = null;
+    try {
+      parsed = JSON.parse(value);
+    } catch {
+      return null;
+    }
+
+    if (parsed == null) {
+      return null;
+    }
+
+    if (staleok) {
+      return parsed.targets;
+    }
+
+    if (parsed.last_updated + FF_TARGET_STALENESS > new Date()) {
+      // Old cache, return nothing
+      return null;
+    }
+
+    return parsed.targets;
+  }
+
+  function update_ff_targets() {
+    if (!key) {
+      return;
+    }
+
+    const cached = get_cached_targets(false);
+    if (cached) {
+      return;
+    }
+
+    const url = `${BASE_URL}/api/v1/get-targets?key=${key}&inactiveonly=1&maxff=2.5`;
+
+    console.log("[FF Scouter V2] Refreshing chain list");
+    rD_xmlhttpRequest({
+      method: "GET",
+      url: url,
+      onload: function (response) {
+        if (!response) {
+          return;
+        }
+        if (response.status == 200) {
+          var ff_response = JSON.parse(response.responseText);
+          if (ff_response && ff_response.error) {
+            showToast(ff_response.error);
+            return;
+          }
+          if (ff_response.targets) {
+            const result = {
+              targets: ff_response.targets,
+              last_updated: new Date(),
+            };
+            rD_setValue(TARGET_KEY, JSON.stringify(result));
+            console.log("[FF Scouter V2] Chain list updated successfully");
+          }
+        } else {
+          try {
+            var err = JSON.parse(response.responseText);
+            if (err && err.error) {
+              showToast(
+                "API request failed. Error: " +
+                  err.error +
+                  "; Code: " +
+                  err.code,
+              );
+            } else {
+              showToast(
+                "API request failed. HTTP status code: " + response.status,
+              );
+            }
+          } catch {
+            showToast(
+              "API request failed. HTTP status code: " + response.status,
+            );
+          }
+        }
+      },
+      onerror: function (e) {
+        console.error("[FF Scouter V2] **** error ", e, "; Stack:", e.stack);
+      },
+      onabort: function (e) {
+        console.error("[FF Scouter V2] **** abort ", e, "; Stack:", e.stack);
+      },
+      ontimeout: function (e) {
+        console.error("[FF Scouter V2] **** timeout ", e, "; Stack:", e.stack);
+      },
+    });
+  }
+
+  function get_random_chain_target() {
+    const targets = get_cached_targets(true);
+    if (!targets) {
+      return null;
+    }
+
+    const r = Math.floor(Math.random() * targets.length);
+    return targets[r];
+  }
+
+  // Chain button stolen from https://greasyfork.org/en/scripts/511916-random-target-finder
+  function create_chain_button() {
+    const button = document.createElement("button");
+    button.innerHTML = "FF";
+    button.style.position = "fixed";
+    //button.style.top = '10px';
+    //button.style.right = '10px';
+    button.style.top = "32%"; // Adjusted to center vertically
+    button.style.right = "0%"; // Center horizontally
+    //button.style.transform = 'translate(-50%, -50%)'; // Center the button properly
+    button.style.zIndex = "9999";
+
+    // Add CSS styles for a green background
+    button.style.backgroundColor = "green";
+    button.style.color = "white";
+    button.style.border = "none";
+    button.style.padding = "6px";
+    button.style.borderRadius = "6px";
+    button.style.cursor = "pointer";
+
+    // Add a click event listener to open Google in a new tab
+    button.addEventListener("click", function () {
+      let rando = get_random_chain_target();
+      if (!rando) {
+        return;
+      }
+      // Uncomment one of the lines below, depending on what you prefer
+      //let profileLink = `https://www.torn.com/profiles.php?XID=${randID}`; // Profile link
+      let profileLink = `https://www.torn.com/loader.php?sid=attack&user2ID=${rando.player_id}`; // Attack link
+
+      // Comment this line and uncomment the one below it if you want the profile to open in a new tab
+      //window.location.href = profileLink;
+      window.open(profileLink, "_blank");
+    });
+    // Add the button to the page
+    document.body.appendChild(button);
+  }
+
   function abbreviateCountry(name) {
     if (!name) return "";
     if (name.trim().toLowerCase() === "switzerland") return "Switz";
@@ -1323,4 +1470,7 @@ if (!singleton) {
       }
     }, 4000);
   }
+
+  create_chain_button();
+  update_ff_targets();
 }
