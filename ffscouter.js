@@ -1076,7 +1076,7 @@ if (!singleton) {
       return;
     }
 
-    const url = `${BASE_URL}/api/v1/get-targets?key=${key}&inactiveonly=1&maxff=2.5`;
+    const url = `${BASE_URL}/api/v1/get-targets?key=${key}&inactiveonly=1&maxff=2.5&limit=50`;
 
     console.log("[FF Scouter V2] Refreshing chain list");
     rD_xmlhttpRequest({
