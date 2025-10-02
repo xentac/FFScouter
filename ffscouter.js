@@ -17,6 +17,8 @@
 
 const FF_VERSION = "2.49";
 const API_INTERVAL = 30000;
+const FF_TARGET_STALENESS = 24 * 60 * 60 * 1000; // Refresh the target list every day
+const TARGET_KEY = "ffscouterv2-targets";
 const memberCountdowns = {};
 let apiCallInProgressCount = 0;
 
@@ -238,6 +240,7 @@ if (!singleton) {
     info_line.style.display = "block";
     info_line.style.clear = "both";
     info_line.style.margin = "5px 0";
+    info_line.style.cursor = "pointer";
     info_line.addEventListener("click", () => {
       if (!key) {
         const limited_key = prompt(
@@ -249,6 +252,8 @@ if (!singleton) {
           key = limited_key;
           window.location.reload();
         }
+      } else {
+        configure_ranges();
       }
     });
 
@@ -268,6 +273,92 @@ if (!singleton) {
     }
 
     return info_line;
+  }
+
+  function configure_ranges() {
+    const values = get_ff_ranges(true);
+    let curSetting = "";
+    if (values) {
+      curSetting = `${values.low},${values.high},${values.max}`;
+    }
+    const response = prompt(
+      "Enter the low, high, and max FF you want to use, separated by commas. Empty resets to default (Default '2,4,8').",
+      curSetting,
+    );
+    // They hit cancel
+    if (response == null) {
+      return;
+    }
+    if (response == "") {
+      reset_ff_ranges();
+      return;
+    }
+    const split = response.split(",");
+    if (split.length != 3) {
+      showToast(
+        "Incorrect format: FF scouter ranges should be 3 numbers separated by commas [<low>,<high>,<max>]",
+      );
+      return;
+    }
+    let low = null;
+    try {
+      low = parseFloat(split[0]);
+    } catch (e) {
+      showToast("Incorrect format: FF scouter low value must be a float.");
+      return;
+    }
+    let high = null;
+    try {
+      high = parseFloat(split[1]);
+    } catch (e) {
+      showToast("Incorrect format: FF scouter high value must be a float.");
+      return;
+    }
+    let max = null;
+    try {
+      max = parseFloat(split[2]);
+    } catch (e) {
+      showToast("Incorrect format: FF scouter max value must be a float.");
+      return;
+    }
+
+    set_ff_ranges(low, high, max);
+  }
+
+  function reset_ff_ranges() {
+    rD_deleteValue("ffscouterv2-ranges");
+  }
+
+  function set_ff_ranges(low, high, max) {
+    rD_setValue(
+      "ffscouterv2-ranges",
+      JSON.stringify({ low: low, high: high, max: max }),
+    );
+  }
+
+  function get_ff_ranges(noDefault) {
+    const defaultRange = { low: 2, high: 4, max: 8 };
+    const rangeUnparsed = rD_getValue("ffscouterv2-ranges");
+    if (!rangeUnparsed) {
+      if (noDefault) {
+        return null;
+      }
+      return defaultRange;
+    }
+
+    try {
+      const parsed = JSON.parse(rangeUnparsed);
+      return parsed;
+    } catch (error) {
+      console.log(
+        "[FF Scouter V2] Problem parsing configured range, reseting values.",
+      );
+      reset_ff_ranges();
+      if (noDefault) {
+        return null;
+      }
+      return defaultRange;
+    }
   }
 
   function set_message(message, error = false) {
@@ -540,7 +631,7 @@ if (!singleton) {
     const now = Date.now() / 1000;
     const age = now - ff_response.last_updated;
 
-    if (ff > 9) {
+    if (ff > 99) {
       return `high`;
     }
 
@@ -798,6 +889,10 @@ if (!singleton) {
       if (match) {
         return match.groups.target_id;
       }
+      const matchUserId = anchor.href.match(/.*userId=(?<target_id>\d+)/);
+      if (matchUserId) {
+        return matchUserId.groups.target_id;
+      }
     }
 
     if (element.nodeName.toLowerCase() === "a") {
@@ -805,23 +900,24 @@ if (!singleton) {
       if (match) {
         return match.groups.target_id;
       }
+      const matchUserId = element.href.match(/.*userId=(?<target_id>\d+)/);
+      if (matchUserId) {
+        return matchUserId.groups.target_id;
+      }
     }
 
     return null;
   }
 
   function ff_to_percent(ff) {
-    // There are 3 key areas, low, medium, high
-    // Low is 1-2
-    // Medium is 2-4
-    // High is 4+
-    // If we clip high at 8 then the math becomes easy
     // The percent is 0-33% 33-66% 66%-100%
-    const low_ff = 2;
-    const high_ff = 4;
+    // With configurable ranges there are no guarantees that the sections are linear
+    const stored_values = get_ff_ranges();
+    const low_ff = stored_values.low;
+    const high_ff = stored_values.high;
     const low_mid_percent = 33;
     const mid_high_percent = 66;
-    ff = Math.min(ff, 8);
+    ff = Math.min(ff, stored_values.max);
     var percent;
     if (ff < low_ff) {
       percent = ((ff - 1) / (low_ff - 1)) * low_mid_percent;
@@ -832,7 +928,8 @@ if (!singleton) {
         low_mid_percent;
     } else {
       percent =
-        ((ff - high_ff) / (8 - high_ff)) * (100 - mid_high_percent) +
+        ((ff - high_ff) / (stored_values.max - high_ff)) *
+          (100 - mid_high_percent) +
         mid_high_percent;
     }
 
@@ -1007,6 +1104,17 @@ if (!singleton) {
         await apply_ff_gauge($('[class^="userInfoBox__"]').toArray());
       }
     }
+    if (
+      window.location.href.startsWith(
+        "https://www.torn.com/page.php?sid=ItemMarket",
+      )
+    ) {
+      await apply_ff_gauge(
+        $(
+          "div.bazaar-listing-card div:first-child div:first-child > a",
+        ).toArray(),
+      );
+    }
 
     var mini_profiles = $(
       '[class^="profile-mini-_userProfileWrapper_"]',
@@ -1032,6 +1140,151 @@ if (!singleton) {
     characterData: false,
     subtree: true,
   });
+
+  function get_cached_targets(staleok) {
+    const value = rD_getValue(TARGET_KEY);
+    if (!value) {
+      return null;
+    }
+
+    let parsed = null;
+    try {
+      parsed = JSON.parse(value);
+    } catch {
+      return null;
+    }
+
+    if (parsed == null) {
+      return null;
+    }
+
+    if (staleok) {
+      return parsed.targets;
+    }
+
+    if (parsed.last_updated + FF_TARGET_STALENESS > new Date()) {
+      // Old cache, return nothing
+      return null;
+    }
+
+    return parsed.targets;
+  }
+
+  function update_ff_targets() {
+    if (!key) {
+      return;
+    }
+
+    const cached = get_cached_targets(false);
+    if (cached) {
+      return;
+    }
+
+    const url = `${BASE_URL}/api/v1/get-targets?key=${key}&inactiveonly=1&maxff=2.5&limit=50`;
+
+    console.log("[FF Scouter V2] Refreshing chain list");
+    rD_xmlhttpRequest({
+      method: "GET",
+      url: url,
+      onload: function (response) {
+        if (!response) {
+          return;
+        }
+        if (response.status == 200) {
+          var ff_response = JSON.parse(response.responseText);
+          if (ff_response && ff_response.error) {
+            showToast(ff_response.error);
+            return;
+          }
+          if (ff_response.targets) {
+            const result = {
+              targets: ff_response.targets,
+              last_updated: new Date(),
+            };
+            rD_setValue(TARGET_KEY, JSON.stringify(result));
+            console.log("[FF Scouter V2] Chain list updated successfully");
+          }
+        } else {
+          try {
+            var err = JSON.parse(response.responseText);
+            if (err && err.error) {
+              showToast(
+                "API request failed. Error: " +
+                  err.error +
+                  "; Code: " +
+                  err.code,
+              );
+            } else {
+              showToast(
+                "API request failed. HTTP status code: " + response.status,
+              );
+            }
+          } catch {
+            showToast(
+              "API request failed. HTTP status code: " + response.status,
+            );
+          }
+        }
+      },
+      onerror: function (e) {
+        console.error("[FF Scouter V2] **** error ", e, "; Stack:", e.stack);
+      },
+      onabort: function (e) {
+        console.error("[FF Scouter V2] **** abort ", e, "; Stack:", e.stack);
+      },
+      ontimeout: function (e) {
+        console.error("[FF Scouter V2] **** timeout ", e, "; Stack:", e.stack);
+      },
+    });
+  }
+
+  function get_random_chain_target() {
+    const targets = get_cached_targets(true);
+    if (!targets) {
+      return null;
+    }
+
+    const r = Math.floor(Math.random() * targets.length);
+    return targets[r];
+  }
+
+  // Chain button stolen from https://greasyfork.org/en/scripts/511916-random-target-finder
+  function create_chain_button() {
+    const button = document.createElement("button");
+    button.innerHTML = "FF";
+    button.style.position = "fixed";
+    //button.style.top = '10px';
+    //button.style.right = '10px';
+    button.style.top = "32%"; // Adjusted to center vertically
+    button.style.right = "0%"; // Center horizontally
+    //button.style.transform = 'translate(-50%, -50%)'; // Center the button properly
+    button.style.zIndex = "9999";
+
+    // Add CSS styles for a green background
+    button.style.backgroundColor = "green";
+    button.style.color = "white";
+    button.style.border = "none";
+    button.style.padding = "6px";
+    button.style.borderRadius = "6px";
+    button.style.cursor = "pointer";
+
+    // Add a click event listener to open Google in a new tab
+    button.addEventListener("click", function () {
+      let rando = get_random_chain_target();
+      if (!rando) {
+        return;
+      }
+      // Uncomment one of the lines below, depending on what you prefer
+      //let profileLink = `https://www.torn.com/profiles.php?XID=${randID}`; // Profile link
+      let profileLink = `https://www.torn.com/loader.php?sid=attack&user2ID=${rando.player_id}`; // Attack link
+
+      // Comment this line and uncomment the one below it if you want the profile to open in a new tab
+      //window.location.href = profileLink;
+      window.open(profileLink, "_blank");
+    });
+    // Add the button to the page
+    document.body.appendChild(button);
+  }
 
   function abbreviateCountry(name) {
     if (!name) return "";
@@ -1321,4 +1574,7 @@ if (!singleton) {
       }
     }, 4000);
   }
+
+  create_chain_button();
+  update_ff_targets();
 }
