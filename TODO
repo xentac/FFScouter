@@ -1,0 +1,5 @@
+# Things to add
+
+- Configure positioning of FF chain button (fixed floating, relative to other elements, etc)
+- Define range of FF button targets (max FF number or "Easy"/"Medium")
+- Add better error messages for when you have a bad key (specifically that the key provided to ff scouter script isn't valid or is not registered)
