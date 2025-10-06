@@ -13,6 +13,7 @@
 // @grant        GM_registerMenuCommand
 // @grant        GM_addStyle
 // @connect      ffscouter.com
+// @license      GPL-3.0
 // ==/UserScript==
 
 const FF_VERSION = "2.60";
