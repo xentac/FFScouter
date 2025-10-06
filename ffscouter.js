@@ -2,7 +2,7 @@
 // @name         FF Scouter V2
 // @namespace    Violentmonkey Scripts
 // @match        https://www.torn.com/*
-// @version      2.50
+// @version      2.60
 // @author       rDacted, Weav3r, xentac
 // @description  Shows the expected Fair Fight score against targets and faction war status
 // @grant        GM_xmlhttpRequest
@@ -21,6 +21,7 @@ const FF_TARGET_STALENESS = 24 * 60 * 60 * 1000; // Refresh the target list ever
 const TARGET_KEY = "ffscouterv2-targets";
 const memberCountdowns = {};
 let apiCallInProgressCount = 0;
+let currentUserId = null;
 
 let singleton = document.getElementById("ff-scouter-run-once");
 if (!singleton) {
@@ -134,6 +135,190 @@ if (!singleton) {
                 min-width: 0;
                 flex: 0 1 auto;
                 vertical-align: bottom;
+            }
+
+            /* FF Scouter CSS Variables */
+            body {
+                --ff-bg-color: #f0f0f0;
+                --ff-alt-bg-color: #fff;
+                --ff-border-color: #ccc;
+                --ff-input-color: #ccc;
+                --ff-text-color: #000;
+                --ff-hover-color: #ddd;
+                --ff-glow-color: #4CAF50;
+                --ff-success-color: #4CAF50;
+            }
+
+            body.dark-mode {
+                --ff-bg-color: #333;
+                --ff-alt-bg-color: #383838;
+                --ff-border-color: #444;
+                --ff-input-color: #504f4f;
+                --ff-text-color: #ccc;
+                --ff-hover-color: #555;
+                --ff-glow-color: #4CAF50;
+                --ff-success-color: #4CAF50;
+            }
+
+            .ff-settings-accordion {
+                margin: 10px 0;
+                padding: 10px;
+                background-color: var(--ff-bg-color);
+                border: 1px solid var(--ff-border-color);
+                border-radius: 5px;
+            }
+
+            .ff-settings-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-top: 10px;
+                margin-bottom: 10px;
+                font-size: 1.2em;
+                font-weight: bold;
+                color: var(--ff-text-color);
+            }
+
+            .ff-settings-header-username {
+                display: inline;
+                font-style: italic;
+                color: var(--ff-success-color);
+            }
+
+            .ff-settings-entry {
+                display: flex;
+                align-items: center;
+                gap: 5px;
+                margin-top: 10px;
+                margin-bottom: 5px;
+            }
+
+            .ff-settings-entry p {
+                margin: 0;
+                color: var(--ff-text-color);
+            }
+
+            .ff-settings-input {
+                width: 120px;
+                padding: 5px;
+                background-color: var(--ff-input-color);
+                color: var(--ff-text-color);
+                border: 1px solid var(--ff-border-color);
+                border-radius: 3px;
+            }
+
+            .ff-settings-input.ff-blur {
+                filter: blur(3px);
+                transition: filter 0.5s;
+            }
+
+            .ff-settings-input.ff-blur:focus {
+                filter: blur(0);
+                transition: filter 0.5s;
+            }
+
+            .ff-settings-button {
+                padding: 5px 10px;
+                transition: background-color 0.5s;
+                background-color: var(--ff-bg-color);
+                cursor: pointer;
+                border: 1px solid var(--ff-border-color);
+                border-radius: 5px;
+                color: var(--ff-text-color);
+                margin-right: 10px;
+            }
+
+            .ff-settings-button:hover {
+                background-color: var(--ff-hover-color);
+            }
+
+            .ff-settings-button:last-child {
+                margin-right: 0;
+            }
+
+            .ff-settings-glow {
+                animation: ff-glow 1s infinite alternate;
+                border-width: 3px;
+            }
+
+            @keyframes ff-glow {
+                0% {
+                    border-color: var(--ff-border-color);
+                }
+                100% {
+                    border-color: var(--ff-glow-color);
+                }
+            }
+
+            .ff-api-explanation {
+                background-color: var(--ff-alt-bg-color);
+                border: 1px solid var(--ff-border-color);
+                border-radius: 8px;
+                color: var(--ff-text-color);
+                margin-bottom: 20px;
+            }
+
+            .ff-api-explanation a {
+                color: var(--ff-success-color) !important;
+                text-decoration: underline;
+            }
+
+            .ff-settings-label {
+                color: var(--ff-text-color);
+            }
+
+            .ff-settings-section-header {
+                color: var(--ff-text-color);
+                margin-top: 20px;
+                margin-bottom: 10px;
+                font-weight: bold;
+            }
+
+            .ff-settings-entry-large {
+                margin-bottom: 15px;
+            }
+
+            .ff-settings-entry-small {
+                margin-bottom: 10px;
+            }
+
+            .ff-settings-entry-section {
+                margin-bottom: 20px;
+            }
+
+            .ff-settings-label-inline {
+                margin-right: 10px;
+                min-width: 150px;
+                display: inline-block;
+            }
+
+            .ff-settings-input-wide {
+                width: 200px;
+            }
+
+            .ff-settings-input-narrow {
+                width: 120px;
+            }
+
+            .ff-settings-checkbox {
+                margin-right: 8px;
+            }
+
+            .ff-settings-button-large {
+                padding: 8px 16px;
+                font-size: 14px;
+                font-weight: bold;
+            }
+
+            .ff-settings-button-container {
+                margin-bottom: 20px;
+                text-align: center;
+            }
+
+            .ff-api-explanation-content {
+                padding: 12px 16px;
+                font-size: 13px;
+                line-height: 1.5;
             }
         `);
 
@@ -1250,6 +1435,12 @@ if (!singleton) {
 
   // Chain button stolen from https://greasyfork.org/en/scripts/511916-random-target-finder
   function create_chain_button() {
+    // Check if chain button is enabled in settings
+    if (!ffSettingsGetToggle("chain-button-enabled")) {
+      console.log("[FF Scouter V2] Chain button disabled in settings");
+      return;
+    }
+
     const button = document.createElement("button");
     button.innerHTML = "FF";
     button.style.position = "fixed";
@@ -1274,13 +1465,22 @@ if (!singleton) {
       if (!rando) {
         return;
       }
-      // Uncomment one of the lines below, depending on what you prefer
-      //let profileLink = `https://www.torn.com/profiles.php?XID=${randID}`; // Profile link
-      let profileLink = `https://www.torn.com/loader.php?sid=attack&user2ID=${rando.player_id}`; // Attack link
+      
+      const linkType = ffSettingsGet("chain-link-type") || "attack";
+      const tabType = ffSettingsGet("chain-tab-type") || "newtab";
+      
+      let profileLink;
+      if (linkType === "profile") {
+        profileLink = `https://www.torn.com/profiles.php?XID=${rando.player_id}`;
+      } else {
+        profileLink = `https://www.torn.com/loader.php?sid=attack&user2ID=${rando.player_id}`;
+      }
 
-      // Comment this line and uncomment the one below it if you want the profile to open in a new tab
-      //window.location.href = profileLink;
-      window.open(profileLink, "_blank");
+      if (tabType === "sametab") {
+        window.location.href = profileLink;
+      } else {
+        window.open(profileLink, "_blank");
+      }
     });
     // Add the button to the page
     document.body.appendChild(button);
@@ -1486,7 +1686,9 @@ if (!singleton) {
       obs.disconnect();
     }
   });
-  if (!document.getElementById("FFScouterV2DisableWarMonitor")) {
+  
+  // Only initialize war monitoring if enabled in settings
+  if (!document.getElementById("FFScouterV2DisableWarMonitor") && ffSettingsGetToggle("war-monitor-enabled")) {
     warObserver.observe(document.body, { childList: true, subtree: true });
 
     const memberTimersInterval = setInterval(updateAllMemberTimers, 1000);
@@ -1518,6 +1720,600 @@ if (!singleton) {
   catchOtherScripts();
   setTimeout(catchOtherScripts, 500);
 
+  function waitForElement(querySelector, timeout = 15000) {
+    return new Promise((resolve) => {
+      // Check if element already exists
+      const existingElement = document.querySelector(querySelector);
+      if (existingElement) {
+        return resolve(existingElement);
+      }
+
+      // Set up observer to watch for element
+      const observer = new MutationObserver(() => {
+        const element = document.querySelector(querySelector);
+        if (element) {
+          observer.disconnect();
+          if (timer) {
+            clearTimeout(timer);
+          }
+          resolve(element);
+        }
+      });
+
+      observer.observe(document.body, {
+        childList: true,
+        subtree: true,
+      });
+
+      // Set up timeout
+      const timer = setTimeout(() => {
+        observer.disconnect();
+        resolve(null);
+      }, timeout);
+    });
+  }
+
+  async function getLocalUserId() {
+    const profileLink = await waitForElement(".settings-menu > .link > a:first-child", 15000);
+    
+    if (!profileLink) {
+      console.log("[FF Scouter V2] Could not find profile link in settings menu");
+      return null;
+    }
+
+    const match = profileLink.href.match(/XID=(\d+)/);
+    if (match) {
+      const userId = match[1];
+      console.log(`[FF Scouter V2] Found local user ID: ${userId}`);
+      return userId;
+    }
+
+    console.log("[FF Scouter V2] Could not extract user ID from profile link");
+    return null;
+  }
+
+  function getCurrentUserId() {
+    return currentUserId;
+  }
+
+  // Settings management utilities
+  function ffSettingsGet(key) {
+    return rD_getValue(`ffscouterv2-${key}`, null);
+  }
+
+  function ffSettingsSet(key, value) {
+    rD_setValue(`ffscouterv2-${key}`, value);
+  }
+
+  function ffSettingsGetToggle(key) {
+    return ffSettingsGet(key) === "true";
+  }
+
+  function ffSettingsSetToggle(key, value) {
+    ffSettingsSet(key, value.toString());
+  }
+
+  async function createSettingsPanel() {
+    // Check if we're on the user's own profile page
+    const pageId = window.location.href.match(/XID=(\d+)/)?.[1];
+    if (!pageId || pageId !== currentUserId) {
+      return;
+    }
+
+    // Wait for profile wrapper to be available
+    const profileWrapper = await waitForElement(".profile-wrapper", 15000);
+    if (!profileWrapper) {
+      console.log("[FF Scouter V2] Could not find profile wrapper for settings panel");
+      return;
+    }
+
+    // Check if settings panel already exists
+    if (profileWrapper.nextElementSibling?.classList.contains("ff-settings-accordion")) {
+      console.log("[FF Scouter V2] Settings panel already exists");
+      return;
+    }
+
+    // Get current user data for display
+    const userName = profileWrapper.querySelector(".user-name")?.textContent || 
+                     profileWrapper.querySelector(".profile-name")?.textContent ||
+                     profileWrapper.querySelector("h1")?.textContent ||
+                     "User";
+
+    // Create the settings panel
+    const settingsPanel = document.createElement("details");
+    settingsPanel.className = "ff-settings-accordion";
+    
+    // Add glow effect if API key is not set
+    if (!key) {
+      settingsPanel.classList.add("ff-settings-glow");
+    }
+
+    // Create summary
+    const summary = document.createElement("summary");
+    summary.textContent = "FF Scouter Settings";
+    settingsPanel.appendChild(summary);
+
+    // Create main content div
+    const content = document.createElement("div");
+
+    // API Key Explanation
+    const apiExplanation = document.createElement("div");
+    apiExplanation.className = "ff-api-explanation ff-api-explanation-content";
+    
+    apiExplanation.innerHTML = `
+      <strong>Important:</strong> You must use the SAME exact API key that you use on 
+      <a href="https://ffscouter.com/" target="_blank">ffscouter.com</a>.
+      <br><br>
+      If you're not sure which API key you used, go to 
+      <a href="https://www.torn.com/preferences.php#tab=api" target="_blank">your API preferences</a> 
+      and look for "FFScouter3" in your API key history comments.
+    `;
+    content.appendChild(apiExplanation);
+
+    // API Key Input
+    const apiKeyDiv = document.createElement("div");
+    apiKeyDiv.className = "ff-settings-entry ff-settings-entry-large";
+    
+    const apiKeyLabel = document.createElement("label");
+    apiKeyLabel.setAttribute("for", "ff-api-key");
+    apiKeyLabel.textContent = "FF Scouter API Key:";
+    apiKeyLabel.className = "ff-settings-label ff-settings-label-inline";
+    apiKeyDiv.appendChild(apiKeyLabel);
+
+    const apiKeyInput = document.createElement("input");
+    apiKeyInput.type = "text";
+    apiKeyInput.id = "ff-api-key";
+    apiKeyInput.placeholder = "Paste your key here...";
+    apiKeyInput.className = "ff-settings-input ff-settings-input-wide";
+    apiKeyInput.value = key || "";
+    
+    // Add blur class if key exists
+    if (key) {
+      apiKeyInput.classList.add("ff-blur");
+    }
+    
+    apiKeyInput.addEventListener("focus", function() {
+      this.classList.remove("ff-blur");
+    });
+    
+    apiKeyInput.addEventListener("blur", function() {
+      if (this.value) {
+        this.classList.add("ff-blur");
+      }
+    });
+    
+    apiKeyInput.addEventListener("change", function() {
+      const newKey = this.value;
+      
+      if (typeof newKey !== "string") {
+        return;
+      }
+
+      if (newKey && newKey.length < 10) {
+        this.style.outline = "1px solid red";
+        return;
+      }
+
+      this.style.outline = "none";
+
+      if (newKey === key) return;
+
+      rD_setValue("limited_key", newKey);
+      key = newKey;
+      
+      if (newKey) {
+        this.classList.add("ff-blur");
+        settingsPanel.classList.remove("ff-settings-glow");
+      } else {
+        settingsPanel.classList.add("ff-settings-glow");
+      }
+    });
+    
+    apiKeyDiv.appendChild(apiKeyInput);
+    content.appendChild(apiKeyDiv);
+
+    const rangesDiv = document.createElement("div");
+    rangesDiv.className = "ff-settings-entry ff-settings-entry-large";
+    
+    const rangesLabel = document.createElement("label");
+    rangesLabel.setAttribute("for", "ff-ranges");
+    rangesLabel.textContent = "FF Ranges (Low, High, Max):";
+    rangesLabel.className = "ff-settings-label ff-settings-label-inline";
+    rangesDiv.appendChild(rangesLabel);
+
+    const rangesInput = document.createElement("input");
+    rangesInput.type = "text";
+    rangesInput.id = "ff-ranges";
+    rangesInput.placeholder = "2,4,8";
+    rangesInput.className = "ff-settings-input ff-settings-input-narrow";
+    
+    // Set current values
+    const currentRanges = get_ff_ranges(true);
+    if (currentRanges) {
+      rangesInput.value = `${currentRanges.low},${currentRanges.high},${currentRanges.max}`;
+    }
+    
+    rangesInput.addEventListener("change", function() {
+      const value = this.value;
+      
+      if (value === "") {
+        reset_ff_ranges();
+        this.style.outline = "none";
+        return;
+      }
+      
+      const parts = value.split(",").map(p => p.trim());
+      if (parts.length !== 3) {
+        this.style.outline = "1px solid red";
+        showToast("Incorrect format: FF ranges should be exactly 3 numbers separated by commas [low,high,max]");
+        return;
+      }
+      
+      try {
+        const low = parseFloat(parts[0]);
+        const high = parseFloat(parts[1]);
+        const max = parseFloat(parts[2]);
+        
+        if (isNaN(low) || isNaN(high) || isNaN(max)) {
+          throw new Error("Invalid numbers");
+        }
+        
+        if (low <= 0 || high <= 0 || max <= 0) {
+          this.style.outline = "1px solid red";
+          showToast("FF ranges must be positive numbers");
+          return;
+        }
+        
+        if (low >= high || high >= max) {
+          this.style.outline = "1px solid red";
+          showToast("FF ranges must be in ascending order: low < high < max");
+          return;
+        }
+        
+        set_ff_ranges(low, high, max);
+        this.style.outline = "none";
+        showToast("FF ranges updated successfully!");
+      } catch (e) {
+        this.style.outline = "1px solid red";
+        showToast("Invalid numbers in FF ranges");
+      }
+    });
+    
+    rangesDiv.appendChild(rangesInput);
+    content.appendChild(rangesDiv);
+
+    // Feature Toggles
+    const featuresLabel = document.createElement("p");
+    featuresLabel.textContent = "Feature toggles:";
+    featuresLabel.className = "ff-settings-section-header";
+    content.appendChild(featuresLabel);
+
+    // Chain Button Toggle
+    const chainToggleDiv = document.createElement("div");
+    chainToggleDiv.className = "ff-settings-entry ff-settings-entry-small";
+    
+    const chainToggle = document.createElement("input");
+    chainToggle.type = "checkbox";
+    chainToggle.id = "chain-button-toggle";
+    chainToggle.checked = ffSettingsGetToggle("chain-button-enabled");
+    chainToggle.className = "ff-settings-checkbox";
+    
+    const chainLabel = document.createElement("label");
+    chainLabel.setAttribute("for", "chain-button-toggle");
+    chainLabel.textContent = "Enable Chain Button (Green FF Button)";
+    chainLabel.className = "ff-settings-label";
+    chainLabel.style.cursor = "pointer";
+    
+    chainToggleDiv.appendChild(chainToggle);
+    chainToggleDiv.appendChild(chainLabel);
+    
+    content.appendChild(chainToggleDiv);
+
+    const chainLinkTypeDiv = document.createElement("div");
+    chainLinkTypeDiv.className = "ff-settings-entry ff-settings-entry-small";
+    chainLinkTypeDiv.style.marginLeft = "20px";
+    
+    const chainLinkTypeLabel = document.createElement("label");
+    chainLinkTypeLabel.textContent = "Chain button opens:";
+    chainLinkTypeLabel.className = "ff-settings-label ff-settings-label-inline";
+    chainLinkTypeDiv.appendChild(chainLinkTypeLabel);
+    
+    const chainLinkTypeSelect = document.createElement("select");
+    chainLinkTypeSelect.id = "chain-link-type";
+    chainLinkTypeSelect.className = "ff-settings-input";
+    
+    const attackOption = document.createElement("option");
+    attackOption.value = "attack";
+    attackOption.textContent = "Attack page";
+    chainLinkTypeSelect.appendChild(attackOption);
+    
+    const profileOption = document.createElement("option");
+    profileOption.value = "profile";
+    profileOption.textContent = "Profile page";
+    chainLinkTypeSelect.appendChild(profileOption);
+    
+    chainLinkTypeSelect.value = ffSettingsGet("chain-link-type") || "attack";
+    chainLinkTypeDiv.appendChild(chainLinkTypeSelect);
+    
+    content.appendChild(chainLinkTypeDiv);
+
+    const chainTabTypeDiv = document.createElement("div");
+    chainTabTypeDiv.className = "ff-settings-entry ff-settings-entry-small";
+    chainTabTypeDiv.style.marginLeft = "20px";
+    
+    const chainTabTypeLabel = document.createElement("label");
+    chainTabTypeLabel.textContent = "Open in:";
+    chainTabTypeLabel.className = "ff-settings-label ff-settings-label-inline";
+    chainTabTypeDiv.appendChild(chainTabTypeLabel);
+    
+    const chainTabTypeSelect = document.createElement("select");
+    chainTabTypeSelect.id = "chain-tab-type";
+    chainTabTypeSelect.className = "ff-settings-input";
+    
+    const newTabOption = document.createElement("option");
+    newTabOption.value = "newtab";
+    newTabOption.textContent = "New tab";
+    chainTabTypeSelect.appendChild(newTabOption);
+    
+    const sameTabOption = document.createElement("option");
+    sameTabOption.value = "sametab";
+    sameTabOption.textContent = "Same tab";
+    chainTabTypeSelect.appendChild(sameTabOption);
+    
+    chainTabTypeSelect.value = ffSettingsGet("chain-tab-type") || "newtab";
+    chainTabTypeDiv.appendChild(chainTabTypeSelect);
+    
+    content.appendChild(chainTabTypeDiv);
+
+    // War Monitor Toggle
+    const warToggleDiv = document.createElement("div");
+    warToggleDiv.className = "ff-settings-entry ff-settings-entry-section";
+    
+    const warToggle = document.createElement("input");
+    warToggle.type = "checkbox";
+    warToggle.id = "war-monitor-toggle";
+    warToggle.checked = ffSettingsGetToggle("war-monitor-enabled");
+    warToggle.className = "ff-settings-checkbox";
+    
+    const warLabel = document.createElement("label");
+    warLabel.setAttribute("for", "war-monitor-toggle");
+    warLabel.textContent = "Enable War Monitor (Faction Status)";
+    warLabel.className = "ff-settings-label";
+    warLabel.style.cursor = "pointer";
+    
+    warToggleDiv.appendChild(warToggle);
+    warToggleDiv.appendChild(warLabel);
+    
+    content.appendChild(warToggleDiv);
+
+    const saveButtonDiv = document.createElement("div");
+    saveButtonDiv.className = "ff-settings-button-container";
+    
+    const resetButton = document.createElement("button");
+    resetButton.textContent = "Reset to Defaults";
+    resetButton.className = "ff-settings-button ff-settings-button-large";
+    
+    resetButton.addEventListener("click", function() {
+      const confirmed = confirm("Are you sure you want to reset all settings to their default values?");
+      if (!confirmed) return;
+      
+      reset_ff_ranges();
+      ffSettingsSetToggle("chain-button-enabled", true);
+      ffSettingsSet("chain-link-type", "attack");
+      ffSettingsSet("chain-tab-type", "newtab");
+      ffSettingsSetToggle("war-monitor-enabled", true);
+      ffSettingsSetToggle("debug-logs", false);
+      
+      document.getElementById("ff-ranges").value = "";
+      document.getElementById("chain-button-toggle").checked = true;
+      document.getElementById("chain-link-type").value = "attack";
+      document.getElementById("chain-tab-type").value = "newtab";
+      document.getElementById("war-monitor-toggle").checked = true;
+      document.getElementById("debug-logs").checked = false;
+      
+      document.getElementById("ff-ranges").style.outline = "none";
+      
+      const existingButtons = Array.from(document.querySelectorAll('button')).filter(btn => 
+        btn.textContent === "FF" && 
+        btn.style.position === "fixed" && 
+        btn.style.backgroundColor === "green"
+      );
+      existingButtons.forEach(btn => btn.remove());
+      create_chain_button();
+      
+      showToast("Settings reset to defaults!");
+      
+      this.style.backgroundColor = "var(--ff-success-color)";
+      setTimeout(() => {
+        this.style.backgroundColor = "";
+      }, 1000);
+    });
+    
+    const saveButton = document.createElement("button");
+    saveButton.textContent = "Save Settings";
+    saveButton.className = "ff-settings-button ff-settings-button-large";
+    
+    saveButton.addEventListener("click", function() {
+      const apiKey = document.getElementById("ff-api-key").value;
+      const ranges = document.getElementById("ff-ranges").value;
+      const chainEnabled = document.getElementById("chain-button-toggle").checked;
+      const chainLinkType = document.getElementById("chain-link-type").value;
+      const chainTabType = document.getElementById("chain-tab-type").value;
+      const warEnabled = document.getElementById("war-monitor-toggle").checked;
+      const debugEnabled = document.getElementById("debug-logs").checked;
+      
+      let hasErrors = false;
+      
+      if (apiKey !== key) {
+        rD_setValue("limited_key", apiKey);
+        key = apiKey;
+        
+        if (apiKey) {
+          settingsPanel.classList.remove("ff-settings-glow");
+          document.getElementById("ff-api-key").classList.add("ff-blur");
+        } else {
+          settingsPanel.classList.add("ff-settings-glow");
+        }
+      }
+      
+      const rangesInput = document.getElementById("ff-ranges");
+      if (ranges === "") {
+        reset_ff_ranges();
+        rangesInput.style.outline = "none";
+      } else {
+        const parts = ranges.split(",").map(p => p.trim());
+        if (parts.length !== 3) {
+          rangesInput.style.outline = "1px solid red";
+          showToast("FF ranges must be exactly 3 numbers separated by commas [low,high,max]");
+          hasErrors = true;
+        } else {
+          try {
+            const low = parseFloat(parts[0]);
+            const high = parseFloat(parts[1]);
+            const max = parseFloat(parts[2]);
+            
+            if (isNaN(low) || isNaN(high) || isNaN(max)) {
+              rangesInput.style.outline = "1px solid red";
+              showToast("FF ranges must be valid numbers");
+              hasErrors = true;
+            } else if (low <= 0 || high <= 0 || max <= 0) {
+              rangesInput.style.outline = "1px solid red";
+              showToast("FF ranges must be positive numbers");
+              hasErrors = true;
+            } else if (low >= high || high >= max) {
+              rangesInput.style.outline = "1px solid red";
+              showToast("FF ranges must be in ascending order: low < high < max");
+              hasErrors = true;
+            } else {
+              set_ff_ranges(low, high, max);
+              rangesInput.style.outline = "none";
+            }
+          } catch (e) {
+            rangesInput.style.outline = "1px solid red";
+            showToast("Invalid FF ranges format");
+            hasErrors = true;
+          }
+        }
+      }
+      
+      if (hasErrors) {
+        return;
+      }
+      
+      const wasChainEnabled = ffSettingsGetToggle("chain-button-enabled");
+      const wasWarEnabled = ffSettingsGetToggle("war-monitor-enabled");
+      
+      ffSettingsSetToggle("chain-button-enabled", chainEnabled);
+      ffSettingsSet("chain-link-type", chainLinkType);
+      ffSettingsSet("chain-tab-type", chainTabType);
+      ffSettingsSetToggle("war-monitor-enabled", warEnabled);
+      ffSettingsSetToggle("debug-logs", debugEnabled);
+      
+      const existingButtons = Array.from(document.querySelectorAll('button')).filter(btn => 
+        btn.textContent === "FF" && 
+        btn.style.position === "fixed" && 
+        btn.style.backgroundColor === "green"
+      );
+      
+      if (!chainEnabled) {
+        existingButtons.forEach(btn => btn.remove());
+      } else if (chainEnabled !== wasChainEnabled) {
+        if (existingButtons.length === 0) {
+          create_chain_button();
+        }
+      } else {
+        existingButtons.forEach(btn => btn.remove());
+        create_chain_button();
+      }
+      
+      if (warEnabled !== wasWarEnabled) {
+        if (!warEnabled) {
+          window.dispatchEvent(new Event("FFScouterV2DisableWarMonitor"));
+        } else {
+          location.reload();
+        }
+      }
+      
+      showToast("Settings saved successfully!");
+      
+      this.style.backgroundColor = "var(--ff-success-color)";
+      setTimeout(() => {
+        this.style.backgroundColor = "";
+      }, 1000);
+    });
+    
+    saveButtonDiv.appendChild(resetButton);
+    saveButtonDiv.appendChild(saveButton);
+    content.appendChild(saveButtonDiv);
+
+    const cacheLabel = document.createElement("p");
+    cacheLabel.textContent = "Cache management:";
+    cacheLabel.className = "ff-settings-section-header";
+    content.appendChild(cacheLabel);
+
+    const cacheButtonDiv = document.createElement("div");
+    cacheButtonDiv.className = "ff-settings-button-container";
+    
+    const clearCacheBtn = document.createElement("button");
+    clearCacheBtn.textContent = "Clear FF Cache";
+    clearCacheBtn.className = "ff-settings-button";
+    
+    clearCacheBtn.addEventListener("click", function() {
+      const confirmed = confirm("Are you sure you want to clear all FF Scouter cache?");
+      if (!confirmed) return;
+      
+      let count = 0;
+      const keysToRemove = [];
+      
+      for (const key of rD_listValues()) {
+        if (key.startsWith("ffscouterv2-") && !key.includes("limited_key") && !key.includes("ranges")) {
+          keysToRemove.push(key);
+        }
+      }
+      
+      for (const key of keysToRemove) {
+        rD_deleteValue(key);
+        count++;
+      }
+      
+      showToast(`Cleared ${count} cached items`);  
+    });
+    
+    cacheButtonDiv.appendChild(clearCacheBtn); 
+    content.appendChild(cacheButtonDiv);
+
+    const debugLabel = document.createElement("p");
+    debugLabel.textContent = "Debug settings:";
+    debugLabel.className = "ff-settings-section-header";
+    content.appendChild(debugLabel);
+
+    const debugToggleDiv = document.createElement("div");
+    debugToggleDiv.className = "ff-settings-entry ff-settings-entry-small";
+    
+    const debugToggle = document.createElement("input");
+    debugToggle.type = "checkbox";
+    debugToggle.id = "debug-logs";
+    debugToggle.checked = ffSettingsGetToggle("debug-logs");
+    debugToggle.className = "ff-settings-checkbox";
+    
+    const debugToggleLabel = document.createElement("label");
+    debugToggleLabel.setAttribute("for", "debug-logs");
+    debugToggleLabel.textContent = "Enable debug logging";
+    debugToggleLabel.className = "ff-settings-label";
+    debugToggleLabel.style.cursor = "pointer";
+    
+    debugToggleDiv.appendChild(debugToggle);
+    debugToggleDiv.appendChild(debugToggleLabel);
+    
+    content.appendChild(debugToggleDiv);
+
+    settingsPanel.appendChild(content);
+    
+    profileWrapper.parentNode.insertBefore(settingsPanel, profileWrapper.nextSibling);
+    
+    console.log("[FF Scouter V2] Settings panel created successfully");
+  }
+
   function showToast(message) {
     const existing = document.getElementById("ffscouter-toast");
     if (existing) existing.remove();
@@ -1541,7 +2337,6 @@ if (!singleton) {
     toast.style.alignItems = "center";
     toast.style.gap = "10px";
 
-    // Close button
     const closeBtn = document.createElement("span");
     closeBtn.textContent = "×";
     closeBtn.style.cursor = "pointer";
@@ -1577,4 +2372,22 @@ if (!singleton) {
 
   create_chain_button();
   update_ff_targets();
+  
+  getLocalUserId().then(userId => {
+    if (userId) {
+      currentUserId = userId;
+      console.log(`[FF Scouter V2] Current user ID initialized: ${currentUserId}`);
+      
+      createSettingsPanel();
+      
+      const profileObserver = new MutationObserver(() => {
+        const pageId = window.location.href.match(/XID=(\d+)/)?.[1];
+        if (pageId === currentUserId && window.location.pathname === "/profiles.php") {
+          createSettingsPanel();
+        }
+      });
+      
+      profileObserver.observe(document.body, { childList: true, subtree: true });
+    }
+  });
 }
