@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name         FF Scouter V2
+// @name         FF Scouter V2 xentac edition
 // @namespace    Violentmonkey Scripts
 // @match        https://www.torn.com/*
 // @version      2.71
