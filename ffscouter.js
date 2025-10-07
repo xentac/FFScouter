@@ -1932,7 +1932,8 @@ if (!singleton) {
 
     const rangesLabel = document.createElement("label");
     rangesLabel.setAttribute("for", "ff-ranges");
-    rangesLabel.textContent = "FF Ranges (Low, High, Max):";
+    rangesLabel.textContent =
+      "FF Ranges (Low, High, Max) -- affects the color and positions of the arrows over player's honor bars:";
     rangesLabel.className = "ff-settings-label ff-settings-label-inline";
     rangesDiv.appendChild(rangesLabel);
 
@@ -2439,4 +2440,3 @@ if (!singleton) {
     }
   });
 }
-
