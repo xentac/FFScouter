@@ -23,6 +23,9 @@ const memberCountdowns = {};
 let apiCallInProgressCount = 0;
 let currentUserId = null;
 
+TOAST_ERROR = "error";
+TOAST_LOG = "log";
+
 let singleton = document.getElementById("ff-scouter-run-once");
 if (!singleton) {
   console.log(`[FF Scouter V2] FF Scouter version ${FF_VERSION} starting`);
@@ -2134,7 +2137,7 @@ if (!singleton) {
       existingButtons.forEach((btn) => btn.remove());
       create_chain_button();
 
-      showToast("Settings reset to defaults!");
+      showToast("Settings reset to defaults!", TOAST_LOG);
 
       this.style.backgroundColor = "var(--ff-success-color)";
       setTimeout(() => {
@@ -2257,7 +2260,7 @@ if (!singleton) {
         }
       }
 
-      showToast("Settings saved successfully!");
+      showToast("Settings saved successfully!", TOAST_LOG);
 
       this.style.backgroundColor = "var(--ff-success-color)";
       setTimeout(() => {
@@ -2346,7 +2349,7 @@ if (!singleton) {
     console.log("[FF Scouter V2] Settings panel created successfully");
   }
 
-  function showToast(message) {
+  function showToast(message, level) {
     const existing = document.getElementById("ffscouter-toast");
     if (existing) existing.remove();
 
@@ -2356,7 +2359,6 @@ if (!singleton) {
     toast.style.bottom = "30px";
     toast.style.left = "50%";
     toast.style.transform = "translateX(-50%)";
-    toast.style.background = "#c62828";
     toast.style.color = "#fff";
     toast.style.padding = "8px 16px";
     toast.style.borderRadius = "8px";
@@ -2377,6 +2379,17 @@ if (!singleton) {
     closeBtn.style.fontSize = "18px";
     closeBtn.setAttribute("aria-label", "Close");
     closeBtn.onclick = () => toast.remove();
+
+    switch (level) {
+      case TOAST_LOG:
+        toast.style.background = "green";
+        break;
+
+      case TOAST_ERROR:
+      default:
+        toast.style.background = "#c62828";
+        break;
+    }
 
     const msg = document.createElement("span");
     if (
