@@ -218,18 +218,7 @@ if (!singleton) {
             }
 
             .ff-settings-button {
-                padding: 5px 10px;
-                transition: background-color 0.5s;
-                background-color: var(--ff-bg-color);
-                cursor: pointer;
-                border: 1px solid var(--ff-border-color);
-                border-radius: 5px;
-                color: var(--ff-text-color);
                 margin-right: 10px;
-            }
-
-            .ff-settings-button:hover {
-                background-color: var(--ff-hover-color);
             }
 
             .ff-settings-button:last-child {
@@ -2109,7 +2098,8 @@ if (!singleton) {
 
     const resetButton = document.createElement("button");
     resetButton.textContent = "Reset to Defaults";
-    resetButton.className = "ff-settings-button ff-settings-button-large";
+    resetButton.className =
+      "ff-settings-button ff-settings-button-large torn-btn btn-big";
 
     resetButton.addEventListener("click", function () {
       const confirmed = confirm(
@@ -2154,7 +2144,8 @@ if (!singleton) {
 
     const saveButton = document.createElement("button");
     saveButton.textContent = "Save Settings";
-    saveButton.className = "ff-settings-button ff-settings-button-large";
+    saveButton.className =
+      "ff-settings-button ff-settings-button-large torn-btn btn-big";
 
     saveButton.addEventListener("click", function () {
       const apiKey = document.getElementById("ff-api-key").value;
@@ -2288,7 +2279,7 @@ if (!singleton) {
 
     const clearCacheBtn = document.createElement("button");
     clearCacheBtn.textContent = "Clear FF Cache";
-    clearCacheBtn.className = "ff-settings-button";
+    clearCacheBtn.className = "ff-settings-button torn-btn btn-big";
 
     clearCacheBtn.addEventListener("click", function () {
       const confirmed = confirm(
