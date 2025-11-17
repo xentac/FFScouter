@@ -1357,7 +1357,9 @@ if (!singleton) {
       return;
     }
 
-    const url = `${BASE_URL}/api/v1/get-targets?key=${key}&inactiveonly=1&maxff=2.5&limit=50`;
+    const chain_ff_target = ffSettingsGet("chain-ff-target") || "2.5";
+
+    const url = `${BASE_URL}/api/v1/get-targets?key=${key}&inactiveonly=1&maxff=${chain_ff_target}&limit=50`;
 
     console.log("[FF Scouter V2] Refreshing chain list");
     rD_xmlhttpRequest({
@@ -1423,6 +1425,10 @@ if (!singleton) {
 
     const r = Math.floor(Math.random() * targets.length);
     return targets[r];
+  }
+
+  function clear_cached_targets() {
+    rD_deleteValue(TARGET_KEY);
   }
 
   // Chain button stolen from https://greasyfork.org/en/scripts/511916-random-target-finder
@@ -2075,6 +2081,26 @@ if (!singleton) {
 
     content.appendChild(chainTabTypeDiv);
 
+    const chainFFTargetDiv = document.createElement("div");
+    chainFFTargetDiv.className = "ff-settings-entry ff-settings-entry-small";
+    chainFFTargetDiv.style.marginLeft = "20px";
+
+    const chainFFTargetLabel = document.createElement("label");
+    chainFFTargetLabel.setAttribute("for", "chain-ff-target");
+    chainFFTargetLabel.textContent =
+      "FF target (Maximum FF the chain button should open)";
+    chainFFTargetLabel.className = "ff-settings-label ff-settings-label-inline";
+    chainFFTargetDiv.appendChild(chainFFTargetLabel);
+
+    const chainFFTargetInput = document.createElement("input");
+    chainFFTargetInput.id = "chain-ff-target";
+    chainFFTargetInput.className = "ff-settings-input";
+
+    chainFFTargetInput.value = ffSettingsGet("chain-ff-target") || "2.5";
+    chainFFTargetDiv.appendChild(chainFFTargetInput);
+
+    content.appendChild(chainFFTargetDiv);
+
     // War Monitor Toggle
     const warToggleDiv = document.createElement("div");
     warToggleDiv.className = "ff-settings-entry ff-settings-entry-section";
@@ -2114,6 +2140,7 @@ if (!singleton) {
       ffSettingsSetToggle("chain-button-enabled", true);
       ffSettingsSet("chain-link-type", "attack");
       ffSettingsSet("chain-tab-type", "newtab");
+      ffSettingsSet("chain-ff-target", "2.5");
       ffSettingsSetToggle("war-monitor-enabled", true);
       ffSettingsSetToggle("debug-logs", false);
 
@@ -2121,6 +2148,7 @@ if (!singleton) {
       document.getElementById("chain-button-toggle").checked = true;
       document.getElementById("chain-link-type").value = "attack";
       document.getElementById("chain-tab-type").value = "newtab";
+      document.getElementById("chain-ff-target").value = "2.5";
       document.getElementById("war-monitor-toggle").checked = true;
       document.getElementById("debug-logs").checked = false;
 
@@ -2158,6 +2186,7 @@ if (!singleton) {
       ).checked;
       const chainLinkType = document.getElementById("chain-link-type").value;
       const chainTabType = document.getElementById("chain-tab-type").value;
+      const chainFFTarget = document.getElementById("chain-ff-target").value;
       const warEnabled = document.getElementById("war-monitor-toggle").checked;
       const debugEnabled = document.getElementById("debug-logs").checked;
 
@@ -2229,6 +2258,7 @@ if (!singleton) {
       ffSettingsSetToggle("chain-button-enabled", chainEnabled);
       ffSettingsSet("chain-link-type", chainLinkType);
       ffSettingsSet("chain-tab-type", chainTabType);
+      ffSettingsSet("chain-ff-target", chainFFTarget);
       ffSettingsSetToggle("war-monitor-enabled", warEnabled);
       ffSettingsSetToggle("debug-logs", debugEnabled);
 
@@ -2251,6 +2281,9 @@ if (!singleton) {
         existingButtons.forEach((btn) => btn.remove());
         create_chain_button();
       }
+
+      clear_cached_targets();
+      update_ff_targets();
 
       if (warEnabled !== wasWarEnabled) {
         if (!warEnabled) {
