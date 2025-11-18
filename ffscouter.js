@@ -19,6 +19,7 @@ const FF_VERSION = "2.60";
 const API_INTERVAL = 30000;
 const FF_TARGET_STALENESS = 24 * 60 * 60 * 1000; // Refresh the target list every day
 const TARGET_KEY = "ffscouterv2-targets";
+const CLEARED_TSC_KEY = "ffscouterv2-cleared-tsc-keys";
 const memberCountdowns = {};
 let apiCallInProgressCount = 0;
 let currentUserId = null;
@@ -402,6 +403,25 @@ if (!singleton) {
     rD_listValues = GM_listValues;
     rD_deleteValue = GM_deleteValue;
     rD_registerMenuCommand = GM_registerMenuCommand;
+  }
+
+  if (!rD_getValue(CLEARED_TSC_KEY)) {
+    console.log("Trying to delete any TSC keys found");
+    // Delete TSC data because they're not useful anymore
+    const badkeys = [];
+    for (var i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key.startsWith("kwack.mavri.tsc.rocks")) {
+        badkeys.push(key);
+      }
+    }
+    console.log(`Found ${badkeys.length} TSC keys`);
+    for (const key of badkeys) {
+      localStorage.removeItem(key);
+    }
+    console.log("Deleted keys");
+
+    rD_setValue(CLEARED_TSC_KEY, "true");
   }
 
   var key = rD_getValue("limited_key", null);
