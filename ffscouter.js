@@ -1816,11 +1816,7 @@ if (!singleton) {
     }
 
     // Check if settings panel already exists
-    if (
-      profileWrapper.nextElementSibling?.classList.contains(
-        "ff-settings-accordion",
-      )
-    ) {
+    if (document.querySelector(".ff-settings-accordion")) {
       console.log("[FF Scouter V2] Settings panel already exists");
       return;
     }
@@ -1835,6 +1831,11 @@ if (!singleton) {
     // Create the settings panel
     const settingsPanel = document.createElement("details");
     settingsPanel.className = "ff-settings-accordion";
+
+    profileWrapper.parentNode.insertBefore(
+      settingsPanel,
+      profileWrapper.nextSibling,
+    );
 
     // Add glow effect if API key is not set
     if (!key) {
@@ -2373,11 +2374,6 @@ if (!singleton) {
     content.appendChild(debugToggleDiv);
 
     settingsPanel.appendChild(content);
-
-    profileWrapper.parentNode.insertBefore(
-      settingsPanel,
-      profileWrapper.nextSibling,
-    );
 
     console.log("[FF Scouter V2] Settings panel created successfully");
   }
