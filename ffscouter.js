@@ -324,12 +324,9 @@ if (!singleton) {
         `);
 
   var BASE_URL = "https://ffscouter.com";
-  var BLUE_ARROW =
-    "https://raw.githubusercontent.com/rDacted2/fair_fight_scouter/main/images/blue-arrow.svg";
-  var GREEN_ARROW =
-    "https://raw.githubusercontent.com/rDacted2/fair_fight_scouter/main/images/green-arrow.svg";
-  var RED_ARROW =
-    "https://raw.githubusercontent.com/rDacted2/fair_fight_scouter/main/images/red-arrow.svg";
+  var BLUE_ARROW = "https://uploads.glasnost.dev/blue-arrow.svg";
+  var GREEN_ARROW = "https://uploads.glasnost.dev/green-arrow.svg";
+  var RED_ARROW = "https://uploads.glasnost.dev/red-arrow.svg";
 
   var rD_xmlhttpRequest;
   var rD_setValue;
@@ -2440,4 +2437,3 @@ if (!singleton) {
     }
   });
 }
-
