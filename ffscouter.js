@@ -1865,66 +1865,85 @@ if (!singleton) {
     content.appendChild(apiExplanation);
 
     // API Key Input
-    const apiKeyDiv = document.createElement("div");
-    apiKeyDiv.className = "ff-settings-entry ff-settings-entry-large";
 
-    const apiKeyLabel = document.createElement("label");
-    apiKeyLabel.setAttribute("for", "ff-api-key");
-    apiKeyLabel.textContent = "FF Scouter API Key:";
-    apiKeyLabel.className = "ff-settings-label ff-settings-label-inline";
-    apiKeyDiv.appendChild(apiKeyLabel);
+    if (apikey[0] == "#") {
+      const apiKeyDiv = document.createElement("div");
+      apiKeyDiv.className = "ff-settings-entry ff-settings-entry-large";
 
-    const apiKeyInput = document.createElement("input");
-    apiKeyInput.type = "text";
-    apiKeyInput.id = "ff-api-key";
-    apiKeyInput.placeholder = "Paste your key here...";
-    apiKeyInput.className = "ff-settings-input ff-settings-input-wide";
-    apiKeyInput.value = key || "";
+      const apiKeyLabel = document.createElement("label");
+      apiKeyLabel.setAttribute("for", "ff-api-key");
+      apiKeyLabel.textContent = "FF Scouter API Key:";
+      apiKeyLabel.className = "ff-settings-label ff-settings-label-inline";
+      apiKeyDiv.appendChild(apiKeyLabel);
 
-    // Add blur class if key exists
-    if (key) {
-      apiKeyInput.classList.add("ff-blur");
+      const apiKeyInput = document.createElement("input");
+      apiKeyInput.type = "text";
+      apiKeyInput.id = "ff-api-key";
+      apiKeyInput.placeholder = "Paste your key here...";
+      apiKeyInput.className = "ff-settings-input ff-settings-input-wide";
+      apiKeyInput.value = key || "";
+
+      // Add blur class if key exists
+      if (key) {
+        apiKeyInput.classList.add("ff-blur");
+      }
+
+      apiKeyInput.addEventListener("focus", function () {
+        this.classList.remove("ff-blur");
+      });
+
+      apiKeyInput.addEventListener("blur", function () {
+        if (this.value) {
+          this.classList.add("ff-blur");
+        }
+      });
+
+      apiKeyInput.addEventListener("change", function () {
+        const newKey = this.value;
+
+        if (typeof newKey !== "string") {
+          return;
+        }
+
+        if (newKey && newKey.length < 10) {
+          this.style.outline = "1px solid red";
+          return;
+        }
+
+        this.style.outline = "none";
+
+        if (newKey === key) return;
+
+        rD_setValue("limited_key", newKey);
+        key = newKey;
+
+        if (newKey) {
+          this.classList.add("ff-blur");
+          settingsPanel.classList.remove("ff-settings-glow");
+        } else {
+          settingsPanel.classList.add("ff-settings-glow");
+        }
+      });
+
+      apiKeyDiv.appendChild(apiKeyInput);
+      content.appendChild(apiKeyDiv);
+    } else {
+      const apiKeyDiv = document.createElement("div");
+      apiKeyDiv.className = "ff-settings-entry ff-settings-entry-large";
+
+      const apiKeyLabel = document.createElement("label");
+      apiKeyLabel.setAttribute("for", "ff-api-key");
+      apiKeyLabel.textContent = "FF Scouter API Key:";
+      apiKeyLabel.className = "ff-settings-label ff-settings-label-inline";
+      apiKeyDiv.appendChild(apiKeyLabel);
+
+      const apiKeyInput = document.createElement("label");
+      apiKeyInput.textContent = "Code entered in Torn PDA User Scripts";
+      apiKeyInput.className = "ff-settings-label ff-settings-label-inline";
+      apiKeyDiv.appendChild(apiKeyInput);
+
+      content.appendChild(apiKeyDiv);
     }
-
-    apiKeyInput.addEventListener("focus", function () {
-      this.classList.remove("ff-blur");
-    });
-
-    apiKeyInput.addEventListener("blur", function () {
-      if (this.value) {
-        this.classList.add("ff-blur");
-      }
-    });
-
-    apiKeyInput.addEventListener("change", function () {
-      const newKey = this.value;
-
-      if (typeof newKey !== "string") {
-        return;
-      }
-
-      if (newKey && newKey.length < 10) {
-        this.style.outline = "1px solid red";
-        return;
-      }
-
-      this.style.outline = "none";
-
-      if (newKey === key) return;
-
-      rD_setValue("limited_key", newKey);
-      key = newKey;
-
-      if (newKey) {
-        this.classList.add("ff-blur");
-        settingsPanel.classList.remove("ff-settings-glow");
-      } else {
-        settingsPanel.classList.add("ff-settings-glow");
-      }
-    });
-
-    apiKeyDiv.appendChild(apiKeyInput);
-    content.appendChild(apiKeyDiv);
 
     const rangesDiv = document.createElement("div");
     rangesDiv.className = "ff-settings-entry ff-settings-entry-large";
