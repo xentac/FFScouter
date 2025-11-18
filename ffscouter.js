@@ -19,6 +19,7 @@ const FF_VERSION = "2.60";
 const API_INTERVAL = 30000;
 const FF_TARGET_STALENESS = 24 * 60 * 60 * 1000; // Refresh the target list every day
 const TARGET_KEY = "ffscouterv2-targets";
+const TARGET_INDEX_KEY = "ffscouterv2-target-index";
 const memberCountdowns = {};
 let apiCallInProgressCount = 0;
 let currentUserId = null;
@@ -1347,6 +1348,18 @@ if (!singleton) {
     return parsed.targets;
   }
 
+  function get_next_target_index() {
+    const value = Number(rD_getValue(TARGET_INDEX_KEY, 0));
+
+    rD_setValue(TARGET_INDEX_KEY, value + 1);
+
+    return value;
+  }
+
+  function reset_next_target_index() {
+    rD_setValue(TARGET_INDEX_KEY, 0);
+  }
+
   function update_ff_targets() {
     if (!key) {
       return;
@@ -1423,8 +1436,14 @@ if (!singleton) {
       return null;
     }
 
-    const r = Math.floor(Math.random() * targets.length);
-    return targets[r];
+    let index = get_next_target_index();
+
+    if (index >= targets.length) {
+      index = 0;
+      reset_next_target_index();
+    }
+
+    return targets[index];
   }
 
   function clear_cached_targets() {
