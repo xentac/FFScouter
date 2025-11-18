@@ -2,7 +2,7 @@
 // @name         FF Scouter V2 xentac edition
 // @namespace    Violentmonkey Scripts
 // @match        https://www.torn.com/*
-// @version      2.60
+// @version      2.61
 // @author       rDacted, Weav3r, xentac
 // @description  Shows the expected Fair Fight score against targets and faction war status
 // @grant        GM_xmlhttpRequest
@@ -13,9 +13,10 @@
 // @grant        GM_registerMenuCommand
 // @grant        GM_addStyle
 // @connect      ffscouter.com
+// @license      GPL-3.0
 // ==/UserScript==
 
-const FF_VERSION = "2.60";
+const FF_VERSION = "2.61";
 const API_INTERVAL = 30000;
 const FF_TARGET_STALENESS = 24 * 60 * 60 * 1000; // Refresh the target list every day
 const TARGET_KEY = "ffscouterv2-targets";
@@ -317,12 +318,9 @@ if (!singleton) {
         `);
 
   var BASE_URL = "https://ffscouter.com";
-  var BLUE_ARROW =
-    "https://raw.githubusercontent.com/rDacted2/fair_fight_scouter/main/images/blue-arrow.svg";
-  var GREEN_ARROW =
-    "https://raw.githubusercontent.com/rDacted2/fair_fight_scouter/main/images/green-arrow.svg";
-  var RED_ARROW =
-    "https://raw.githubusercontent.com/rDacted2/fair_fight_scouter/main/images/red-arrow.svg";
+  var BLUE_ARROW = "https://uploads.glasnost.dev/blue-arrow.svg";
+  var GREEN_ARROW = "https://uploads.glasnost.dev/green-arrow.svg";
+  var RED_ARROW = "https://uploads.glasnost.dev/red-arrow.svg";
 
   var rD_xmlhttpRequest;
   var rD_setValue;
