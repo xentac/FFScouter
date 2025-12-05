@@ -2236,7 +2236,10 @@ if (!singleton) {
       "ff-settings-button ff-settings-button-large torn-btn btn-big";
 
     saveButton.addEventListener("click", function () {
-      const apiKey = document.getElementById("ff-api-key").value;
+      let apiKey = null;
+      if (document.getElementById("ff-api-key")) {
+        apiKey = document.getElementById("ff-api-key").value;
+      }
       const ranges = document.getElementById("ff-ranges").value;
       const chainEnabled = document.getElementById(
         "chain-button-toggle",
@@ -2249,7 +2252,8 @@ if (!singleton) {
 
       let hasErrors = false;
 
-      if (apiKey !== key) {
+      // In Torn PDA we hide the api key field because we read it from the script page
+      if (document.getElementById("ff-api-key") && apiKey !== key) {
         rD_setValue("limited_key", apiKey);
         key = apiKey;
 
