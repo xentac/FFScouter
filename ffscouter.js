@@ -20,9 +20,13 @@ const FF_VERSION = "2.61";
 const API_INTERVAL = 30000;
 const FF_TARGET_STALENESS = 24 * 60 * 60 * 1000; // Refresh the target list every day
 const TARGET_KEY = "ffscouterv2-targets";
+const TARGET_INDEX_KEY = "ffscouterv2-target-index";
 const memberCountdowns = {};
 let apiCallInProgressCount = 0;
 let currentUserId = null;
+
+TOAST_ERROR = "error";
+TOAST_LOG = "log";
 
 let singleton = document.getElementById("ff-scouter-run-once");
 if (!singleton) {
@@ -219,18 +223,7 @@ if (!singleton) {
             }
 
             .ff-settings-button {
-                padding: 5px 10px;
-                transition: background-color 0.5s;
-                background-color: var(--ff-bg-color);
-                cursor: pointer;
-                border: 1px solid var(--ff-border-color);
-                border-radius: 5px;
-                color: var(--ff-text-color);
                 margin-right: 10px;
-            }
-
-            .ff-settings-button:hover {
-                background-color: var(--ff-hover-color);
             }
 
             .ff-settings-button:last-child {
@@ -1353,6 +1346,18 @@ if (!singleton) {
     return parsed.targets;
   }
 
+  function get_next_target_index() {
+    const value = Number(rD_getValue(TARGET_INDEX_KEY, 0));
+
+    rD_setValue(TARGET_INDEX_KEY, value + 1);
+
+    return value;
+  }
+
+  function reset_next_target_index() {
+    rD_setValue(TARGET_INDEX_KEY, 0);
+  }
+
   function update_ff_targets() {
     if (!key) {
       return;
@@ -1363,7 +1368,9 @@ if (!singleton) {
       return;
     }
 
-    const url = `${BASE_URL}/api/v1/get-targets?key=${key}&inactiveonly=1&maxff=2.5&limit=50`;
+    const chain_ff_target = ffSettingsGet("chain-ff-target") || "2.5";
+
+    const url = `${BASE_URL}/api/v1/get-targets?key=${key}&inactiveonly=1&maxff=${chain_ff_target}&limit=50`;
 
     console.log("[FF Scouter V2] Refreshing chain list");
     rD_xmlhttpRequest({
@@ -1427,8 +1434,18 @@ if (!singleton) {
       return null;
     }
 
-    const r = Math.floor(Math.random() * targets.length);
-    return targets[r];
+    let index = get_next_target_index();
+
+    if (index >= targets.length) {
+      index = 0;
+      reset_next_target_index();
+    }
+
+    return targets[index];
+  }
+
+  function clear_cached_targets() {
+    rD_deleteValue(TARGET_KEY);
   }
 
   // Chain button stolen from https://greasyfork.org/en/scripts/511916-random-target-finder
@@ -1816,11 +1833,7 @@ if (!singleton) {
     }
 
     // Check if settings panel already exists
-    if (
-      profileWrapper.nextElementSibling?.classList.contains(
-        "ff-settings-accordion",
-      )
-    ) {
+    if (document.querySelector(".ff-settings-accordion")) {
       console.log("[FF Scouter V2] Settings panel already exists");
       return;
     }
@@ -1835,6 +1848,11 @@ if (!singleton) {
     // Create the settings panel
     const settingsPanel = document.createElement("details");
     settingsPanel.className = "ff-settings-accordion";
+
+    profileWrapper.parentNode.insertBefore(
+      settingsPanel,
+      profileWrapper.nextSibling,
+    );
 
     // Add glow effect if API key is not set
     if (!key) {
@@ -1864,73 +1882,93 @@ if (!singleton) {
     content.appendChild(apiExplanation);
 
     // API Key Input
-    const apiKeyDiv = document.createElement("div");
-    apiKeyDiv.className = "ff-settings-entry ff-settings-entry-large";
 
-    const apiKeyLabel = document.createElement("label");
-    apiKeyLabel.setAttribute("for", "ff-api-key");
-    apiKeyLabel.textContent = "FF Scouter API Key:";
-    apiKeyLabel.className = "ff-settings-label ff-settings-label-inline";
-    apiKeyDiv.appendChild(apiKeyLabel);
+    if (apikey[0] == "#") {
+      const apiKeyDiv = document.createElement("div");
+      apiKeyDiv.className = "ff-settings-entry ff-settings-entry-large";
 
-    const apiKeyInput = document.createElement("input");
-    apiKeyInput.type = "text";
-    apiKeyInput.id = "ff-api-key";
-    apiKeyInput.placeholder = "Paste your key here...";
-    apiKeyInput.className = "ff-settings-input ff-settings-input-wide";
-    apiKeyInput.value = key || "";
+      const apiKeyLabel = document.createElement("label");
+      apiKeyLabel.setAttribute("for", "ff-api-key");
+      apiKeyLabel.textContent = "FF Scouter API Key:";
+      apiKeyLabel.className = "ff-settings-label ff-settings-label-inline";
+      apiKeyDiv.appendChild(apiKeyLabel);
 
-    // Add blur class if key exists
-    if (key) {
-      apiKeyInput.classList.add("ff-blur");
+      const apiKeyInput = document.createElement("input");
+      apiKeyInput.type = "text";
+      apiKeyInput.id = "ff-api-key";
+      apiKeyInput.placeholder = "Paste your key here...";
+      apiKeyInput.className = "ff-settings-input ff-settings-input-wide";
+      apiKeyInput.value = key || "";
+
+      // Add blur class if key exists
+      if (key) {
+        apiKeyInput.classList.add("ff-blur");
+      }
+
+      apiKeyInput.addEventListener("focus", function () {
+        this.classList.remove("ff-blur");
+      });
+
+      apiKeyInput.addEventListener("blur", function () {
+        if (this.value) {
+          this.classList.add("ff-blur");
+        }
+      });
+
+      apiKeyInput.addEventListener("change", function () {
+        const newKey = this.value;
+
+        if (typeof newKey !== "string") {
+          return;
+        }
+
+        if (newKey && newKey.length < 10) {
+          this.style.outline = "1px solid red";
+          return;
+        }
+
+        this.style.outline = "none";
+
+        if (newKey === key) return;
+
+        rD_setValue("limited_key", newKey);
+        key = newKey;
+
+        if (newKey) {
+          this.classList.add("ff-blur");
+          settingsPanel.classList.remove("ff-settings-glow");
+        } else {
+          settingsPanel.classList.add("ff-settings-glow");
+        }
+      });
+
+      apiKeyDiv.appendChild(apiKeyInput);
+      content.appendChild(apiKeyDiv);
+    } else {
+      const apiKeyDiv = document.createElement("div");
+      apiKeyDiv.className = "ff-settings-entry ff-settings-entry-large";
+
+      const apiKeyLabel = document.createElement("label");
+      apiKeyLabel.setAttribute("for", "ff-api-key");
+      apiKeyLabel.textContent = "FF Scouter API Key:";
+      apiKeyLabel.className = "ff-settings-label ff-settings-label-inline";
+      apiKeyDiv.appendChild(apiKeyLabel);
+
+      const apiKeyInput = document.createElement("label");
+      apiKeyInput.textContent = "Code entered in Torn PDA User Scripts";
+      apiKeyInput.className = "ff-settings-label ff-settings-label-inline";
+      apiKeyDiv.appendChild(apiKeyInput);
+
+      content.appendChild(apiKeyDiv);
     }
-
-    apiKeyInput.addEventListener("focus", function () {
-      this.classList.remove("ff-blur");
-    });
-
-    apiKeyInput.addEventListener("blur", function () {
-      if (this.value) {
-        this.classList.add("ff-blur");
-      }
-    });
-
-    apiKeyInput.addEventListener("change", function () {
-      const newKey = this.value;
-
-      if (typeof newKey !== "string") {
-        return;
-      }
-
-      if (newKey && newKey.length < 10) {
-        this.style.outline = "1px solid red";
-        return;
-      }
-
-      this.style.outline = "none";
-
-      if (newKey === key) return;
-
-      rD_setValue("limited_key", newKey);
-      key = newKey;
-
-      if (newKey) {
-        this.classList.add("ff-blur");
-        settingsPanel.classList.remove("ff-settings-glow");
-      } else {
-        settingsPanel.classList.add("ff-settings-glow");
-      }
-    });
-
-    apiKeyDiv.appendChild(apiKeyInput);
-    content.appendChild(apiKeyDiv);
 
     const rangesDiv = document.createElement("div");
     rangesDiv.className = "ff-settings-entry ff-settings-entry-large";
 
     const rangesLabel = document.createElement("label");
     rangesLabel.setAttribute("for", "ff-ranges");
-    rangesLabel.textContent = "FF Ranges (Low, High, Max):";
+    rangesLabel.textContent =
+      "FF Ranges (Low, High, Max) -- affects the color and positions of the arrows over player's honor bars:";
     rangesLabel.className = "ff-settings-label ff-settings-label-inline";
     rangesDiv.appendChild(rangesLabel);
 
@@ -2080,6 +2118,26 @@ if (!singleton) {
 
     content.appendChild(chainTabTypeDiv);
 
+    const chainFFTargetDiv = document.createElement("div");
+    chainFFTargetDiv.className = "ff-settings-entry ff-settings-entry-small";
+    chainFFTargetDiv.style.marginLeft = "20px";
+
+    const chainFFTargetLabel = document.createElement("label");
+    chainFFTargetLabel.setAttribute("for", "chain-ff-target");
+    chainFFTargetLabel.textContent =
+      "FF target (Maximum FF the chain button should open)";
+    chainFFTargetLabel.className = "ff-settings-label ff-settings-label-inline";
+    chainFFTargetDiv.appendChild(chainFFTargetLabel);
+
+    const chainFFTargetInput = document.createElement("input");
+    chainFFTargetInput.id = "chain-ff-target";
+    chainFFTargetInput.className = "ff-settings-input";
+
+    chainFFTargetInput.value = ffSettingsGet("chain-ff-target") || "2.5";
+    chainFFTargetDiv.appendChild(chainFFTargetInput);
+
+    content.appendChild(chainFFTargetDiv);
+
     // War Monitor Toggle
     const warToggleDiv = document.createElement("div");
     warToggleDiv.className = "ff-settings-entry ff-settings-entry-section";
@@ -2106,7 +2164,8 @@ if (!singleton) {
 
     const resetButton = document.createElement("button");
     resetButton.textContent = "Reset to Defaults";
-    resetButton.className = "ff-settings-button ff-settings-button-large";
+    resetButton.className =
+      "ff-settings-button ff-settings-button-large torn-btn btn-big";
 
     resetButton.addEventListener("click", function () {
       const confirmed = confirm(
@@ -2118,6 +2177,7 @@ if (!singleton) {
       ffSettingsSetToggle("chain-button-enabled", true);
       ffSettingsSet("chain-link-type", "attack");
       ffSettingsSet("chain-tab-type", "newtab");
+      ffSettingsSet("chain-ff-target", "2.5");
       ffSettingsSetToggle("war-monitor-enabled", true);
       ffSettingsSetToggle("debug-logs", false);
 
@@ -2125,6 +2185,7 @@ if (!singleton) {
       document.getElementById("chain-button-toggle").checked = true;
       document.getElementById("chain-link-type").value = "attack";
       document.getElementById("chain-tab-type").value = "newtab";
+      document.getElementById("chain-ff-target").value = "2.5";
       document.getElementById("war-monitor-toggle").checked = true;
       document.getElementById("debug-logs").checked = false;
 
@@ -2141,7 +2202,7 @@ if (!singleton) {
       existingButtons.forEach((btn) => btn.remove());
       create_chain_button();
 
-      showToast("Settings reset to defaults!");
+      showToast("Settings reset to defaults!", TOAST_LOG);
 
       this.style.backgroundColor = "var(--ff-success-color)";
       setTimeout(() => {
@@ -2151,7 +2212,8 @@ if (!singleton) {
 
     const saveButton = document.createElement("button");
     saveButton.textContent = "Save Settings";
-    saveButton.className = "ff-settings-button ff-settings-button-large";
+    saveButton.className =
+      "ff-settings-button ff-settings-button-large torn-btn btn-big";
 
     saveButton.addEventListener("click", function () {
       const apiKey = document.getElementById("ff-api-key").value;
@@ -2161,6 +2223,7 @@ if (!singleton) {
       ).checked;
       const chainLinkType = document.getElementById("chain-link-type").value;
       const chainTabType = document.getElementById("chain-tab-type").value;
+      const chainFFTarget = document.getElementById("chain-ff-target").value;
       const warEnabled = document.getElementById("war-monitor-toggle").checked;
       const debugEnabled = document.getElementById("debug-logs").checked;
 
@@ -2232,6 +2295,7 @@ if (!singleton) {
       ffSettingsSetToggle("chain-button-enabled", chainEnabled);
       ffSettingsSet("chain-link-type", chainLinkType);
       ffSettingsSet("chain-tab-type", chainTabType);
+      ffSettingsSet("chain-ff-target", chainFFTarget);
       ffSettingsSetToggle("war-monitor-enabled", warEnabled);
       ffSettingsSetToggle("debug-logs", debugEnabled);
 
@@ -2255,6 +2319,9 @@ if (!singleton) {
         create_chain_button();
       }
 
+      clear_cached_targets();
+      update_ff_targets();
+
       if (warEnabled !== wasWarEnabled) {
         if (!warEnabled) {
           window.dispatchEvent(new Event("FFScouterV2DisableWarMonitor"));
@@ -2263,7 +2330,7 @@ if (!singleton) {
         }
       }
 
-      showToast("Settings saved successfully!");
+      showToast("Settings saved successfully!", TOAST_LOG);
 
       this.style.backgroundColor = "var(--ff-success-color)";
       setTimeout(() => {
@@ -2285,7 +2352,7 @@ if (!singleton) {
 
     const clearCacheBtn = document.createElement("button");
     clearCacheBtn.textContent = "Clear FF Cache";
-    clearCacheBtn.className = "ff-settings-button";
+    clearCacheBtn.className = "ff-settings-button torn-btn btn-big";
 
     clearCacheBtn.addEventListener("click", function () {
       const confirmed = confirm(
@@ -2344,15 +2411,10 @@ if (!singleton) {
 
     settingsPanel.appendChild(content);
 
-    profileWrapper.parentNode.insertBefore(
-      settingsPanel,
-      profileWrapper.nextSibling,
-    );
-
     console.log("[FF Scouter V2] Settings panel created successfully");
   }
 
-  function showToast(message) {
+  function showToast(message, level) {
     const existing = document.getElementById("ffscouter-toast");
     if (existing) existing.remove();
 
@@ -2362,7 +2424,6 @@ if (!singleton) {
     toast.style.bottom = "30px";
     toast.style.left = "50%";
     toast.style.transform = "translateX(-50%)";
-    toast.style.background = "#c62828";
     toast.style.color = "#fff";
     toast.style.padding = "8px 16px";
     toast.style.borderRadius = "8px";
@@ -2383,6 +2444,17 @@ if (!singleton) {
     closeBtn.style.fontSize = "18px";
     closeBtn.setAttribute("aria-label", "Close");
     closeBtn.onclick = () => toast.remove();
+
+    switch (level) {
+      case TOAST_LOG:
+        toast.style.background = "green";
+        break;
+
+      case TOAST_ERROR:
+      default:
+        toast.style.background = "#c62828";
+        break;
+    }
 
     const msg = document.createElement("span");
     if (
