@@ -430,6 +430,22 @@ if (!singleton) {
     }
   });
 
+  function inject_info_line(h4, info_line) {
+    if (h4.textContent === "Attacking") {
+      h4.parentNode.parentNode.after(info_line);
+    } else {
+      const linksTopWrap = h4.parentNode.querySelector(".links-top-wrap");
+      if (linksTopWrap) {
+        linksTopWrap.parentNode.insertBefore(
+          info_line,
+          linksTopWrap.nextSibling,
+        );
+      } else {
+        h4.after(info_line);
+      }
+    }
+  }
+
   function create_text_location() {
     info_line = document.createElement("div");
     info_line.id = "ff-scouter-run-once";
@@ -454,18 +470,23 @@ if (!singleton) {
     });
 
     var h4 = $("h4")[0];
-    if (h4.textContent === "Attacking") {
-      h4.parentNode.parentNode.after(info_line);
+    if (!h4) {
+      const obs = new MutationObserver(function () {
+        var h4 = $("h4")[0];
+        if (!h4) {
+          return;
+        }
+
+        inject_info_line(h4, info_line);
+        obs.disconnect();
+      });
+
+      obs.observe(document, {
+        childList: true,
+        subtree: true,
+      });
     } else {
-      const linksTopWrap = h4.parentNode.querySelector(".links-top-wrap");
-      if (linksTopWrap) {
-        linksTopWrap.parentNode.insertBefore(
-          info_line,
-          linksTopWrap.nextSibling,
-        );
-      } else {
-        h4.after(info_line);
-      }
+      inject_info_line(h4, info_line);
     }
 
     return info_line;
