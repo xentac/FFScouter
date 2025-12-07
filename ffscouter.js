@@ -596,7 +596,9 @@ if (!singleton) {
   let queued_player_ids = [];
   let queued_callbacks = [];
   let requests_this_minute = 0;
-  let requests_this_minute_start = Date.now();
+  let requests_rate_limit = 100;
+  let requests_remaining = requests_rate_limit;
+  let requests_reset_time = new Date(Date.now() + 60000);
 
   function update_ff_cache(player_ids, callback) {
     if (!key) {
@@ -626,11 +628,13 @@ if (!singleton) {
       queued_player_ids = [];
       const callbacks = queued_callbacks;
       queued_callbacks = [];
-      if (Date.now() - requests_this_minute_start > 60 * 1000) {
+      if (requests_reset_time - Date.now() <= 0) {
         requests_this_minute = 0;
-        requests_this_minute_start = Date.now();
+        requests_remaining = requests_rate_limit;
+        requests_reset_time = new Date(Date.now() + 60000);
       } else {
         requests_this_minute++;
+        requests_remaining--;
       }
       process_queued_player_ids(processing_player_ids, function () {
         for (const callback of callbacks) {
@@ -639,25 +643,24 @@ if (!singleton) {
       });
     }
 
-    let seconds_left =
-      60 - Math.floor((Date.now() - requests_this_minute_start) / 1000);
-    if (seconds_left < 0) {
+    let seconds_left = Math.floor((requests_reset_time - Date.now()) / 1000);
+    if (seconds_left <= 0) {
       seconds_left = 60;
       requests_this_minute = 0;
-      requests_this_minute_start = Date.now();
+      requests_remaining = requests_rate_limit;
+      requests_reset_time = new Date(Date.now() + 60000);
     }
     debug("[FF Scouter V2] Seconds left:", seconds_left);
 
-    let requests_left = MAX_REQUESTS_PER_MINUTE - requests_this_minute;
-    if (requests_left <= 0) {
-      requests_left = 1;
+    if (requests_remaining <= 0) {
+      requests_remaining = 1;
     }
-    debug("[FF Scouter V2] Requests left:", requests_left);
+    debug("[FF Scouter V2] Requests left:", requests_remaining);
 
     // Evenly space the requests left this minute across the entire minute
-    let next_check = (seconds_left / requests_left) * 1000;
+    let next_check = (seconds_left / requests_remaining) * 1000;
     // But allow the first 5 to burst in the first second
-    if (requests_this_minute < 5) {
+    if (requests_this_minute < requests_rate_limit * 0.25) {
       next_check = 1000;
     }
     debug("[FF Scouter V2] Next check:", next_check);
@@ -726,6 +729,9 @@ if (!singleton) {
                 }
               }
             });
+
+            update_limits(response.responseHeaders);
+
             callback(player_ids);
           } else {
             try {
@@ -766,6 +772,28 @@ if (!singleton) {
       });
     } else {
       callback(player_ids);
+    }
+  }
+
+  function update_limits(responseHeaders) {
+    debug("responseHeaders:", responseHeaders);
+    const headerLines = responseHeaders.split("\n");
+    const headers = {};
+    for (const line of headerLines) {
+      const [key, value] = line.split(":", 2);
+      headers[key] = value.trim();
+    }
+    debug("headers:", headers);
+    if (
+      "x-ratelimit-reset-timestamp" in headers &&
+      "x-ratelimit-remaining" in headers
+    ) {
+      requests_reset_time = new Date(
+        parseInt(headers["x-ratelimit-reset-timestamp"]) * 1000,
+      );
+      requests_remaining = parseInt(headers["x-ratelimit-remaining"]);
+      requests_rate_limit = parseInt(headers["x-ratelimit-limit"]);
+      requests_this_minute = requests_rate_limit - requests_remaining;
     }
   }
 
