@@ -23,6 +23,7 @@ const TARGET_KEY = "ffscouterv2-targets";
 const TARGET_INDEX_KEY = "ffscouterv2-target-index";
 const CLEARED_TSC_KEY = "ffscouterv2-cleared-tsc-keys";
 const memberCountdowns = {};
+const MAX_REQUESTS_PER_MINUTE = 20;
 let apiCallInProgressCount = 0;
 let currentUserId = null;
 
@@ -592,7 +593,79 @@ if (!singleton) {
     info_line.appendChild(textNode);
   }
 
+  let queued_player_ids = [];
+  let queued_callbacks = [];
+  let requests_this_minute = 0;
+  let requests_this_minute_start = Date.now();
+
   function update_ff_cache(player_ids, callback) {
+    if (!key) {
+      return;
+    }
+
+    player_ids = [...new Set(player_ids)];
+
+    clean_expired_data();
+
+    var unknown_player_ids = get_cache_misses(player_ids);
+
+    if (unknown_player_ids.length > 0) {
+      console.log(
+        `[FF Scouter V2] Queuing ${unknown_player_ids.length} ids to update`,
+      );
+
+      queued_player_ids.push(...unknown_player_ids);
+      queued_callbacks.push(callback);
+    }
+  }
+
+  // Process queued player ids
+  function process_queue() {
+    if (queued_player_ids.length > 0) {
+      const processing_player_ids = queued_player_ids;
+      queued_player_ids = [];
+      const callbacks = queued_callbacks;
+      queued_callbacks = [];
+      if (Date.now() - requests_this_minute_start > 60 * 1000) {
+        requests_this_minute = 0;
+        requests_this_minute_start = Date.now();
+      } else {
+        requests_this_minute++;
+      }
+      process_queued_player_ids(processing_player_ids, function () {
+        for (const callback of callbacks) {
+          callback(processing_player_ids);
+        }
+      });
+    }
+
+    let seconds_left =
+      60 - Math.floor((Date.now() - requests_this_minute_start) / 1000);
+    if (seconds_left < 0) {
+      seconds_left = 60;
+      requests_this_minute = 0;
+      requests_this_minute_start = Date.now();
+    }
+    debug("[FF Scouter V2] Seconds left:", seconds_left);
+
+    let requests_left = MAX_REQUESTS_PER_MINUTE - requests_this_minute;
+    if (requests_left <= 0) {
+      requests_left = 1;
+    }
+    debug("[FF Scouter V2] Requests left:", requests_left);
+
+    // Evenly space the requests left this minute across the entire minute
+    let next_check = (seconds_left / requests_left) * 1000;
+    // But allow the first 5 to burst in the first second
+    if (requests_this_minute < 5) {
+      next_check = 1000;
+    }
+    debug("[FF Scouter V2] Next check:", next_check);
+    setTimeout(process_queue, next_check);
+  }
+  setTimeout(process_queue, 10);
+
+  function process_queued_player_ids(player_ids, callback) {
     if (!key) {
       return;
     }
@@ -1487,6 +1560,12 @@ if (!singleton) {
 
   function clear_cached_targets() {
     rD_deleteValue(TARGET_KEY);
+  }
+
+  function debug(...args) {
+    if (ffSettingsGet("debug-logs") == "true") {
+      console.log(...args);
+    }
   }
 
   // Chain button stolen from https://greasyfork.org/en/scripts/511916-random-target-finder
