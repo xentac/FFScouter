@@ -453,7 +453,9 @@ if (!singleton) {
     info_line.style.display = "block";
     info_line.style.clear = "both";
     info_line.style.margin = "5px 0";
-    info_line.style.cursor = "pointer";
+    if (!key) {
+      info_line.style.cursor = "pointer";
+    }
     info_line.addEventListener("click", () => {
       if (!key) {
         const limited_key = prompt(
@@ -465,8 +467,6 @@ if (!singleton) {
           key = limited_key;
           window.location.reload();
         }
-      } else {
-        configure_ranges();
       }
     });
 
@@ -491,56 +491,6 @@ if (!singleton) {
     }
 
     return info_line;
-  }
-
-  function configure_ranges() {
-    const values = get_ff_ranges(true);
-    let curSetting = "";
-    if (values) {
-      curSetting = `${values.low},${values.high},${values.max}`;
-    }
-    const response = prompt(
-      "Enter the low, high, and max FF you want to use, separated by commas. Empty resets to default (Default '2,4,8').",
-      curSetting,
-    );
-    // They hit cancel
-    if (response == null) {
-      return;
-    }
-    if (response == "") {
-      reset_ff_ranges();
-      return;
-    }
-    const split = response.split(",");
-    if (split.length != 3) {
-      showToast(
-        "Incorrect format: FF scouter ranges should be 3 numbers separated by commas [<low>,<high>,<max>]",
-      );
-      return;
-    }
-    let low = null;
-    try {
-      low = parseFloat(split[0]);
-    } catch (e) {
-      showToast("Incorrect format: FF scouter low value must be a float.");
-      return;
-    }
-    let high = null;
-    try {
-      high = parseFloat(split[1]);
-    } catch (e) {
-      showToast("Incorrect format: FF scouter high value must be a float.");
-      return;
-    }
-    let max = null;
-    try {
-      max = parseFloat(split[2]);
-    } catch (e) {
-      showToast("Incorrect format: FF scouter max value must be a float.");
-      return;
-    }
-
-    set_ff_ranges(low, high, max);
   }
 
   function reset_ff_ranges() {
