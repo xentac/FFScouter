@@ -568,6 +568,8 @@ if (!singleton) {
 
       queued_player_ids.push(...unknown_player_ids);
       queued_callbacks.push(callback);
+    } else {
+      callback(player_ids);
     }
   }
 
