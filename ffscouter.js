@@ -1318,8 +1318,6 @@ if (!singleton) {
     var name_elems = $(".user.name");
     if (honor_bars.length > 0) {
       await apply_ff_gauge($(".honor-text-wrap").toArray());
-    } else if (name_elems.length > 0) {
-      await apply_ff_gauge($(".user.name").toArray());
     } else {
       if (
         window.location.href.startsWith("https://www.torn.com/factions.php")
@@ -1381,6 +1379,9 @@ if (!singleton) {
         await apply_ff_gauge($(".poster").toArray());
       } else if (window.location.href.includes("page.php?sid=hof")) {
         await apply_ff_gauge($('[class^="userInfoBox__"]').toArray());
+      } else if (name_elems.length > 0) {
+        // Fallback for anyone without honor bars enabled
+        await apply_ff_gauge($(".user.name").toArray());
       }
     }
     if (
