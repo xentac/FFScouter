@@ -1330,6 +1330,12 @@ if (!singleton) {
       ) {
         await apply_ff_gauge($(".employee").toArray());
       } else if (
+        window.location.href.startsWith(
+          "https://www.torn.com/page.php?sid=competition#/team",
+        )
+      ) {
+        await apply_ff_gauge($(".name___H_bss").toArray());
+      } else if (
         window.location.href.startsWith("https://www.torn.com/joblist.php")
       ) {
         await apply_ff_gauge($(".employee").toArray());
