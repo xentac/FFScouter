@@ -336,9 +336,9 @@ if (!singleton) {
   // DO NOT CHANGE THIS
   // DO NOT CHANGE THIS
   if (apikey[0] != "#") {
-    console.log("[FF Scouter V2] Adding modifications to support TornPDA");
+    debug("[FF Scouter V2] Adding modifications to support TornPDA");
     rD_xmlhttpRequest = function (details) {
-      console.log("[FF Scouter V2] Attempt to make http request");
+      debug("[FF Scouter V2] Attempt to make http request");
       if (details.method.toLowerCase() == "get") {
         return PDA_httpGet(details.url)
           .then(details.onload)
@@ -360,11 +360,11 @@ if (!singleton) {
                 console.error("[FF Scouter V2] Generic error handler: ", e)),
           );
       } else {
-        console.log("[FF Scouter V2] What is this? " + details.method);
+        console.error("[FF Scouter V2] What is this? " + details.method);
       }
     };
     rD_setValue = function (name, value) {
-      console.log("[FF Scouter V2] Attempted to set " + name);
+      debug("[FF Scouter V2] Attempted to set " + name);
       return localStorage.setItem(name, value);
     };
     rD_getValue = function (name, defaultValue) {
@@ -381,7 +381,7 @@ if (!singleton) {
       return keys;
     };
     rD_deleteValue = function (name) {
-      console.log("[FF Scouter V2] Attempted to delete " + name);
+      debug("[FF Scouter V2] Attempted to delete " + name);
       return localStorage.removeItem(name);
     };
     rD_registerMenuCommand = function () {
@@ -518,7 +518,7 @@ if (!singleton) {
       const parsed = JSON.parse(rangeUnparsed);
       return parsed;
     } catch (error) {
-      console.log(
+      console.error(
         "[FF Scouter V2] Problem parsing configured range, reseting values.",
       );
       reset_ff_ranges();
@@ -766,7 +766,7 @@ if (!singleton) {
         }
       }
     }
-    console.log("[FF Scouter V2] Cleaned " + count + " expired values");
+    debug("[FF Scouter V2] Cleaned " + count + " expired values");
   }
 
   function rename_if_ffscouter(key) {
@@ -1579,7 +1579,7 @@ if (!singleton) {
   function create_chain_button() {
     // Check if chain button is enabled in settings
     if (!ffSettingsGetToggle("chain-button-enabled")) {
-      console.log("[FF Scouter V2] Chain button disabled in settings");
+      debug("[FF Scouter V2] Chain button disabled in settings");
       return;
     }
 
@@ -1905,7 +1905,7 @@ if (!singleton) {
     );
 
     if (!profileLink) {
-      console.log(
+      console.error(
         "[FF Scouter V2] Could not find profile link in settings menu",
       );
       return null;
@@ -1914,11 +1914,13 @@ if (!singleton) {
     const match = profileLink.href.match(/XID=(\d+)/);
     if (match) {
       const userId = match[1];
-      console.log(`[FF Scouter V2] Found local user ID: ${userId}`);
+      debug(`[FF Scouter V2] Found local user ID: ${userId}`);
       return userId;
     }
 
-    console.log("[FF Scouter V2] Could not extract user ID from profile link");
+    console.error(
+      "[FF Scouter V2] Could not extract user ID from profile link",
+    );
     return null;
   }
 
@@ -1953,7 +1955,7 @@ if (!singleton) {
     // Wait for profile wrapper to be available
     const profileWrapper = await waitForElement(".profile-wrapper", 15000);
     if (!profileWrapper) {
-      console.log(
+      console.error(
         "[FF Scouter V2] Could not find profile wrapper for settings panel",
       );
       return;
@@ -1961,7 +1963,7 @@ if (!singleton) {
 
     // Check if settings panel already exists
     if (document.querySelector(".ff-settings-accordion")) {
-      console.log("[FF Scouter V2] Settings panel already exists");
+      debug("[FF Scouter V2] Settings panel already exists");
       return;
     }
 
@@ -2542,7 +2544,7 @@ if (!singleton) {
 
     settingsPanel.appendChild(content);
 
-    console.log("[FF Scouter V2] Settings panel created successfully");
+    debug("[FF Scouter V2] Settings panel created successfully");
   }
 
   function showToast(message, level) {
@@ -2617,9 +2619,7 @@ if (!singleton) {
   getLocalUserId().then((userId) => {
     if (userId) {
       currentUserId = userId;
-      console.log(
-        `[FF Scouter V2] Current user ID initialized: ${currentUserId}`,
-      );
+      debug(`[FF Scouter V2] Current user ID initialized: ${currentUserId}`);
 
       createSettingsPanel();
 
