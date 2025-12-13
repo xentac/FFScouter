@@ -1207,6 +1207,23 @@ if (!singleton) {
   }
 
   function show_cached_values(elements) {
+    // Rescan player ids because the competition page can rewrite them
+    elements = elements.map((e) => {
+      const player_id = get_player_id_in_element(e[1]);
+      if (e[0] != player_id) {
+        debug(
+          "[FF Scouter V2] Torn rewrote player element between request and response! Previous player_id:",
+          e[0],
+          "; New player_id:",
+          player_id,
+          "; Element:",
+          e[1],
+        );
+      }
+      return [player_id, e[1]];
+    });
+    // Remove any elements that don't have an id
+    elements = elements.filter((e) => e[0]);
     for (const [player_id, element] of elements) {
       element.classList.add("ff-scouter-indicator");
       if (!element.classList.contains("indicator-lines")) {
