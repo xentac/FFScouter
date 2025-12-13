@@ -32,6 +32,12 @@ TOAST_LOG = "log";
 
 let singleton = document.getElementById("ff-scouter-run-once");
 if (!singleton) {
+  function ffdebug(...args) {
+    if (ffSettingsGet("debug-logs") == "true") {
+      console.log(...args);
+    }
+  }
+
   console.log(`[FF Scouter V2] FF Scouter version ${FF_VERSION} starting`);
   GM_addStyle(`
             .ff-scouter-indicator {
@@ -338,7 +344,7 @@ if (!singleton) {
   if (apikey[0] != "#") {
     console.log("[FF Scouter V2] Adding modifications to support TornPDA");
     rD_xmlhttpRequest = function (details) {
-      console.log("[FF Scouter V2] Attempt to make http request");
+      ffdebug("[FF Scouter V2] Attempt to make http request");
       if (details.method.toLowerCase() == "get") {
         return PDA_httpGet(details.url)
           .then(details.onload)
@@ -364,7 +370,7 @@ if (!singleton) {
       }
     };
     rD_setValue = function (name, value) {
-      console.log("[FF Scouter V2] Attempted to set " + name);
+      ffdebug("[FF Scouter V2] Attempted to set " + name);
       return localStorage.setItem(name, value);
     };
     rD_getValue = function (name, defaultValue) {
@@ -381,11 +387,11 @@ if (!singleton) {
       return keys;
     };
     rD_deleteValue = function (name) {
-      console.log("[FF Scouter V2] Attempted to delete " + name);
+      ffdebug("[FF Scouter V2] Attempted to delete " + name);
       return localStorage.removeItem(name);
     };
     rD_registerMenuCommand = function () {
-      console.log("[FF Scouter V2] Disabling GM_registerMenuCommand");
+      ffdebug("[FF Scouter V2] Disabling GM_registerMenuCommand");
     };
     rD_setValue("limited_key", apikey);
   } else {
@@ -518,7 +524,7 @@ if (!singleton) {
       const parsed = JSON.parse(rangeUnparsed);
       return parsed;
     } catch (error) {
-      console.log(
+      console.error(
         "[FF Scouter V2] Problem parsing configured range, reseting values.",
       );
       reset_ff_ranges();
@@ -602,12 +608,12 @@ if (!singleton) {
       requests_remaining = requests_rate_limit;
       requests_reset_time = new Date(Date.now() + 60000);
     }
-    debug("[FF Scouter V2] Seconds left:", seconds_left);
+    ffdebug("[FF Scouter V2] Seconds left:", seconds_left);
 
     if (requests_remaining <= 0) {
       requests_remaining = 1;
     }
-    debug("[FF Scouter V2] Requests left:", requests_remaining);
+    ffdebug("[FF Scouter V2] Requests left:", requests_remaining);
 
     // Evenly space the requests left this minute across the entire minute
     let next_check = (seconds_left / requests_remaining) * 1000;
@@ -615,7 +621,7 @@ if (!singleton) {
     if (requests_this_minute < requests_rate_limit * 0.25) {
       next_check = 1000;
     }
-    debug("[FF Scouter V2] Next check:", next_check);
+    ffdebug("[FF Scouter V2] Next check:", next_check);
     setTimeout(process_queue, next_check);
   }
   setTimeout(process_queue, 10);
@@ -728,14 +734,14 @@ if (!singleton) {
   }
 
   function update_limits(responseHeaders) {
-    debug("responseHeaders:", responseHeaders);
+    ffdebug("responseHeaders:", responseHeaders);
     const headerLines = responseHeaders.split("\n");
     const headers = {};
     for (const line of headerLines) {
       const [key, value] = line.split(":", 2);
       headers[key] = value.trim();
     }
-    debug("headers:", headers);
+    ffdebug("headers:", headers);
     if (
       "x-ratelimit-reset-timestamp" in headers &&
       "x-ratelimit-remaining" in headers
@@ -766,7 +772,7 @@ if (!singleton) {
         }
       }
     }
-    console.log("[FF Scouter V2] Cleaned " + count + " expired values");
+    ffdebug("[FF Scouter V2] Cleaned " + count + " expired values");
   }
 
   function rename_if_ffscouter(key) {
@@ -1211,7 +1217,7 @@ if (!singleton) {
     elements = elements.map((e) => {
       const player_id = get_player_id_in_element(e[1]);
       if (e[0] != player_id) {
-        debug(
+        ffdebug(
           "[FF Scouter V2] Torn rewrote player element between request and response! Previous player_id:",
           e[0],
           "; New player_id:",
@@ -1569,17 +1575,11 @@ if (!singleton) {
     rD_deleteValue(TARGET_KEY);
   }
 
-  function debug(...args) {
-    if (ffSettingsGet("debug-logs") == "true") {
-      console.log(...args);
-    }
-  }
-
   // Chain button stolen from https://greasyfork.org/en/scripts/511916-random-target-finder
   function create_chain_button() {
     // Check if chain button is enabled in settings
     if (!ffSettingsGetToggle("chain-button-enabled")) {
-      console.log("[FF Scouter V2] Chain button disabled in settings");
+      ffdebug("[FF Scouter V2] Chain button disabled in settings");
       return;
     }
 
@@ -1905,7 +1905,7 @@ if (!singleton) {
     );
 
     if (!profileLink) {
-      console.log(
+      console.error(
         "[FF Scouter V2] Could not find profile link in settings menu",
       );
       return null;
@@ -1914,11 +1914,13 @@ if (!singleton) {
     const match = profileLink.href.match(/XID=(\d+)/);
     if (match) {
       const userId = match[1];
-      console.log(`[FF Scouter V2] Found local user ID: ${userId}`);
+      ffdebug(`[FF Scouter V2] Found local user ID: ${userId}`);
       return userId;
     }
 
-    console.log("[FF Scouter V2] Could not extract user ID from profile link");
+    console.error(
+      "[FF Scouter V2] Could not extract user ID from profile link",
+    );
     return null;
   }
 
@@ -1953,7 +1955,7 @@ if (!singleton) {
     // Wait for profile wrapper to be available
     const profileWrapper = await waitForElement(".profile-wrapper", 15000);
     if (!profileWrapper) {
-      console.log(
+      console.error(
         "[FF Scouter V2] Could not find profile wrapper for settings panel",
       );
       return;
@@ -1961,7 +1963,7 @@ if (!singleton) {
 
     // Check if settings panel already exists
     if (document.querySelector(".ff-settings-accordion")) {
-      console.log("[FF Scouter V2] Settings panel already exists");
+      ffdebug("[FF Scouter V2] Settings panel already exists");
       return;
     }
 
@@ -2542,7 +2544,7 @@ if (!singleton) {
 
     settingsPanel.appendChild(content);
 
-    console.log("[FF Scouter V2] Settings panel created successfully");
+    ffdebug("[FF Scouter V2] Settings panel created successfully");
   }
 
   function showToast(message, level) {
@@ -2617,9 +2619,7 @@ if (!singleton) {
   getLocalUserId().then((userId) => {
     if (userId) {
       currentUserId = userId;
-      console.log(
-        `[FF Scouter V2] Current user ID initialized: ${currentUserId}`,
-      );
+      ffdebug(`[FF Scouter V2] Current user ID initialized: ${currentUserId}`);
 
       createSettingsPanel();
 
