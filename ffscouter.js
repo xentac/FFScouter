@@ -27,8 +27,8 @@ const MAX_REQUESTS_PER_MINUTE = 20;
 let apiCallInProgressCount = 0;
 let currentUserId = null;
 
-TOAST_ERROR = "error";
-TOAST_LOG = "log";
+const TOAST_ERROR = "error";
+const TOAST_LOG = "log";
 
 let singleton = document.getElementById("ff-scouter-run-once");
 if (!singleton) {
