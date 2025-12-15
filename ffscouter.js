@@ -588,12 +588,12 @@ if (!singleton) {
       return new Promise((resolve, reject) => {
         const r = window.indexedDB.deleteDatabase(this.db_name);
 
-        r.onerror = (event) => {
+        r.onerror = () => {
           ffdebug(`Error deleting indexedDB (${this.db_name}): ${r.error}`);
           reject(r.error);
         };
 
-        r.onsuccess = (event) => {
+        r.onsuccess = () => {
           ffdebug(`Successfully deleted indexedDB (${this.db_name})`);
           resolve(r.result);
         };
@@ -601,7 +601,7 @@ if (!singleton) {
     };
   }
 
-  ffcache = new FFScouterCache("ffscouter-cache");
+  const ffcache = new FFScouterCache("ffscouter-cache");
 
   if (!rD_getValue(CLEARED_TSC_KEY)) {
     console.log("Trying to delete any TSC keys found");
@@ -1334,7 +1334,7 @@ if (!singleton) {
   if (match) {
     // We're on a profile page or an attack page - get the fair fight score
     var target_id = parseInt(match.groups.target_id);
-    await update_ff_cache([target_id], function (target_ids) {
+    update_ff_cache([target_id], function (target_ids) {
       display_fair_fight(target_ids[0], target_id);
     });
 
