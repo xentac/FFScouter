@@ -32,12 +32,6 @@ const TOAST_LOG = "log";
 
 let singleton = document.getElementById("ff-scouter-run-once");
 if (!singleton) {
-  function ffdebug(...args) {
-    if (ffSettingsGet("debug-logs") == "true") {
-      console.log(...args);
-    }
-  }
-
   console.log(`[FF Scouter V2] FF Scouter version ${FF_VERSION} starting`);
   GM_addStyle(`
             .ff-scouter-indicator {
@@ -403,6 +397,212 @@ if (!singleton) {
     rD_registerMenuCommand = GM_registerMenuCommand;
   }
 
+  class FFScouterCache {
+    constructor(db_name) {
+      this.db_name = db_name;
+      this.db = null;
+      this.db_version = 1;
+
+      this.store_name = "cache";
+
+      this.migrations = {
+        1: (db, _) => {
+          ffdebug("Starting 1");
+          const store = db.createObjectStore(this.store_name, {
+            keyPath: "player_id",
+          });
+          store.createIndex("expiry", ["expiry"], {
+            unique: false,
+          });
+          ffdebug("Ending 1");
+        },
+      };
+    }
+
+    open = async () => {
+      return new Promise((resolve, reject) => {
+        const dbopen = window.indexedDB.open(this.db_name, this.db_version);
+        dbopen.onerror = (event) => {
+          showToast(`Error loading database: ${this.db_name}`);
+          ffdebug(event);
+          this.db = null;
+          reject(dbopen.error);
+        };
+
+        dbopen.onsuccess = () => {
+          this.db = dbopen.result;
+          this.db.onversionchange = (event) => {
+            const db = this.db;
+            this.db = null;
+            db.close();
+          };
+          resolve(dbopen.result);
+        };
+
+        dbopen.onupgradeneeded = (event) => {
+          const db = event.target.result;
+          const tx = event.target.transaction;
+          const old_version = event.target.oldVersion;
+          ffdebug(`Old version: ${old_version}`);
+
+          db.onerror = (event) => {
+            showToast(`Error loading database for upgrade: ${this.db_name}`);
+            ffdebug(event);
+            reject(db.error);
+          };
+
+          for (let i = (old_version ?? 0) + 1; i <= this.db_version; i++) {
+            ffdebug(`migration: ${i}`);
+            if (this.migrations[i]) {
+              ffdebug("exists");
+              this.migrations[i](db, tx);
+            }
+          }
+        };
+      });
+    };
+
+    update_cache = async (values) => {
+      return new Promise(async (resolve, reject) => {
+        if (!this.db) {
+          await this.open();
+        }
+        const tx = this.db.transaction(this.store_name, "readwrite");
+
+        tx.onerror = (event) => {
+          showToast(`Error opening transaction for update_cache`);
+          ffdebug(event);
+          reject(tx.error);
+        };
+
+        tx.oncomplete = (event) => {
+          resolve(event);
+        };
+
+        const store = tx.objectStore(this.store_name);
+
+        const adds = [];
+        for (const i of values) {
+          const r = store.put(i);
+          adds.push(r);
+        }
+
+        Promise.all(adds)
+          .then(() => {
+            tx.commit();
+          })
+          .catch((error) => {
+            ffdebug("Error adding document to object store.");
+            reject(error);
+          });
+      });
+    };
+
+    get = async (player_ids) => {
+      return new Promise(async (resolve, reject) => {
+        if (!this.db) {
+          await this.open();
+        }
+        const tx = this.db.transaction(this.store_name, "readonly");
+
+        tx.onerror = (event) => {
+          showToast(`Error opening transaction for get: ${tx.error}`);
+          ffdebug(event);
+          ffdebug(tx.error);
+          reject(tx.error);
+        };
+
+        const store = tx.objectStore(this.store_name);
+
+        const promises = [];
+        const results = {};
+        for (const player_id of player_ids) {
+          const res = store.get(player_id);
+          promises.push(
+            new Promise((resolve, reject) => {
+              res.onerror = () => {
+                reject(res.error);
+              };
+
+              res.onsuccess = () => {
+                if (res.result && res.result.expiry > Date.now()) {
+                  results[res.result.player_id] = res.result;
+                }
+                resolve();
+              };
+            }),
+          );
+        }
+
+        Promise.all(promises)
+          .then(() => {
+            tx.commit();
+            resolve(results);
+          })
+          .catch((error) => {
+            showToast(`Error getting a player_id: ${error}`);
+            ffdebug(error);
+            reject(error);
+          });
+      });
+    };
+
+    clean_expired = () => {
+      return new Promise(async (resolve, reject) => {
+        if (!this.db) {
+          await this.open();
+        }
+        const tx = this.db.transaction(this.store_name, "readwrite");
+
+        tx.onerror = (event) => {
+          showToast(`Error opening transaction for clean_expired: ${tx.error}`);
+          ffdebug(event);
+          ffdebug(tx.error);
+          reject(tx.error);
+        };
+
+        const store = tx.objectStore(this.store_name);
+        const index = store.index("expiry");
+
+        const range = IDBKeyRange.upperBound(Date.now(), true);
+
+        const r = index.getAllKeys(range);
+        r.onerror = () => {
+          reject(r.error);
+        };
+        r.onsuccess = () => {
+          r.result.forEach((elem) => {
+            store.delete(elem);
+          });
+
+          tx.commit();
+          ffdebug(
+            `[FF Scouter V2] Cleaned ${r.result.length} expired values from IndexedDB`,
+          );
+          resolve(r.result);
+        };
+      });
+    };
+
+    delete_db = async () => {
+      return new Promise((resolve, reject) => {
+        const r = window.indexedDB.deleteDatabase(this.db_name);
+
+        r.onerror = (event) => {
+          ffdebug(`Error deleting indexedDB (${this.db_name}): ${r.error}`);
+          reject(r.error);
+        };
+
+        r.onsuccess = (event) => {
+          ffdebug(`Successfully deleted indexedDB (${this.db_name})`);
+          resolve(r.result);
+        };
+      });
+    };
+  }
+
+  ffcache = new FFScouterCache("ffscouter-cache");
+
   if (!rD_getValue(CLEARED_TSC_KEY)) {
     console.log("Trying to delete any TSC keys found");
     // Delete TSC data because they're not useful anymore
@@ -450,6 +650,12 @@ if (!singleton) {
       } else {
         h4.after(info_line);
       }
+    }
+  }
+
+  function ffdebug(...args) {
+    if (ffSettingsGet("debug-logs") == "true") {
+      console.log(...args);
     }
   }
 
@@ -556,7 +762,7 @@ if (!singleton) {
   let requests_remaining = requests_rate_limit;
   let requests_reset_time = new Date(Date.now() + 60000);
 
-  function update_ff_cache(player_ids, callback) {
+  async function update_ff_cache(player_ids, callback) {
     if (!key) {
       return;
     }
@@ -565,7 +771,7 @@ if (!singleton) {
 
     clean_expired_data();
 
-    var unknown_player_ids = get_cache_misses(player_ids);
+    var unknown_player_ids = await get_cache_misses(player_ids);
 
     if (unknown_player_ids.length > 0) {
       console.log(
@@ -580,7 +786,7 @@ if (!singleton) {
   }
 
   // Process queued player ids
-  function process_queue() {
+  async function process_queue() {
     if (queued_player_ids.length > 0) {
       const processing_player_ids = queued_player_ids;
       queued_player_ids = [];
@@ -594,7 +800,7 @@ if (!singleton) {
         requests_this_minute++;
         requests_remaining--;
       }
-      process_queued_player_ids(processing_player_ids, function () {
+      await process_queued_player_ids(processing_player_ids, function () {
         for (const callback of callbacks) {
           callback(processing_player_ids);
         }
@@ -626,7 +832,7 @@ if (!singleton) {
   }
   setTimeout(process_queue, 10);
 
-  function process_queued_player_ids(player_ids, callback) {
+  async function process_queued_player_ids(player_ids, callback) {
     if (!key) {
       return;
     }
@@ -635,7 +841,7 @@ if (!singleton) {
 
     clean_expired_data();
 
-    var unknown_player_ids = get_cache_misses(player_ids);
+    var unknown_player_ids = await get_cache_misses(player_ids);
 
     if (unknown_player_ids.length > 0) {
       console.log(
@@ -661,17 +867,20 @@ if (!singleton) {
             }
             var one_hour = 60 * 60 * 1000;
             var expiry = Date.now() + one_hour;
+            const cachedObjs = [];
             ff_response.forEach((result) => {
               if (result && result.player_id) {
                 if (result.fair_fight === null) {
                   let cacheObj = {
                     no_data: true,
                     expiry: expiry,
+                    player_id: result.player_id,
                   };
                   rD_setValue(
                     "ffscouterv2-" + result.player_id,
                     JSON.stringify(cacheObj),
                   );
+                  cachedObjs.push(cacheObj);
                 } else {
                   let cacheObj = {
                     value: result.fair_fight,
@@ -679,18 +888,21 @@ if (!singleton) {
                     expiry: expiry,
                     bs_estimate: result.bs_estimate,
                     bs_estimate_human: result.bs_estimate_human,
+                    player_id: result.player_id,
                   };
                   rD_setValue(
                     "ffscouterv2-" + result.player_id,
                     JSON.stringify(cacheObj),
                   );
+                  cachedObjs.push(cacheObj);
                 }
               }
             });
+            ffcache.update_cache(cachedObjs).then(() => {
+              callback(player_ids);
+            });
 
             update_limits(response.responseHeaders);
-
-            callback(player_ids);
           } else {
             try {
               var err = JSON.parse(response.responseText);
@@ -756,6 +968,7 @@ if (!singleton) {
   }
 
   function clean_expired_data() {
+    ffcache.clean_expired();
     let count = 0;
     for (const key of rD_listValues()) {
       // Try renaming the key to the new name format
@@ -818,8 +1031,8 @@ if (!singleton) {
     return false;
   }
 
-  function display_fair_fight(target_id, player_id) {
-    const response = get_cached_value(target_id);
+  async function display_fair_fight(target_id, player_id) {
+    const response = await get_cached_value(target_id);
     if (response) {
       set_fair_fight(response, player_id);
     }
@@ -998,21 +1211,15 @@ if (!singleton) {
     return brightness > 126 ? "black" : "white"; // Return black or white based on brightness
   }
 
-  function get_cached_value(player_id) {
-    var cached_ff_response = rD_getValue("ffscouterv2-" + player_id, null);
-    try {
-      cached_ff_response = JSON.parse(cached_ff_response);
-    } catch {
-      cached_ff_response = null;
-    }
-
-    if (cached_ff_response && cached_ff_response.expiry > Date.now()) {
-      return cached_ff_response;
+  async function get_cached_value(player_id) {
+    const r = await ffcache.get([parseInt(player_id)]);
+    if (r[player_id]) {
+      return r[player_id];
     }
     return null;
   }
 
-  function apply_fair_fight_info(_) {
+  async function apply_fair_fight_info(_) {
     var ff_li = document.createElement("li");
     ff_li.tabIndex = "0";
     ff_li.classList.add("table-cell");
@@ -1058,9 +1265,20 @@ if (!singleton) {
     }
     $(".table-header > .lvl")[0].after(ff_li, est_li);
 
-    $(".table-body > .table-row > .member").each(function (_, value) {
+    const player_ids = [];
+    $(".table-body > .table-row > .member").each(async function (_, value) {
       var url = value.querySelectorAll('a[href^="/profiles"]')[0].href;
       var player_id = url.match(/.*XID=(?<player_id>\d+)/).groups.player_id;
+      player_ids.push(parseInt(player_id));
+    });
+
+    const cached_values = await ffcache.get(player_ids);
+
+    $(".table-body > .table-row > .member").each(async function (_, value) {
+      var url = value.querySelectorAll('a[href^="/profiles"]')[0].href;
+      var player_id = parseInt(
+        url.match(/.*XID=(?<player_id>\d+)/).groups.player_id,
+      );
 
       var fair_fight_div = document.createElement("div");
       fair_fight_div.classList.add("table-cell");
@@ -1072,7 +1290,7 @@ if (!singleton) {
       estimate_div.classList.add("lvl");
       estimate_div.classList.add("ff-scouter-est-hidden");
 
-      const cached = get_cached_value(player_id);
+      const cached = cached_values[player_id];
       if (cached && cached.value) {
         const ff = cached.value;
         const ff_string = get_ff_string_short(cached, player_id);
@@ -1093,15 +1311,14 @@ if (!singleton) {
     });
   }
 
-  function get_cache_misses(player_ids) {
+  async function get_cache_misses(player_ids) {
     var unknown_player_ids = [];
+    const cached_players = await ffcache.get(player_ids);
     for (const player_id of player_ids) {
-      const cached = get_cached_value(player_id);
-      if (!cached || !cached.value) {
+      if (player_id in cached_players === false) {
         unknown_player_ids.push(player_id);
       }
     }
-
     return unknown_player_ids;
   }
 
@@ -1116,8 +1333,8 @@ if (!singleton) {
   const match = match1 ?? match2;
   if (match) {
     // We're on a profile page or an attack page - get the fair fight score
-    var target_id = match.groups.target_id;
-    update_ff_cache([target_id], function (target_ids) {
+    var target_id = parseInt(match.groups.target_id);
+    await update_ff_cache([target_id], function (target_ids) {
       display_fair_fight(target_ids[0], target_id);
     });
 
@@ -1127,14 +1344,14 @@ if (!singleton) {
   } else if (
     window.location.href.startsWith("https://www.torn.com/factions.php")
   ) {
-    const torn_observer = new MutationObserver(function () {
+    const torn_observer = new MutationObserver(async function () {
       // Find the member table - add a column if it doesn't already have one, for FF scores
       var members_list = $(".members-list")[0];
       if (members_list) {
         torn_observer.disconnect();
 
         var player_ids = get_members();
-        update_ff_cache(player_ids, apply_fair_fight_info);
+        await update_ff_cache(player_ids, apply_fair_fight_info);
       }
     });
 
@@ -1155,7 +1372,7 @@ if (!singleton) {
   function get_player_id_in_element(element) {
     const match = element.parentElement?.href?.match(/.*XID=(?<target_id>\d+)/);
     if (match) {
-      return match.groups.target_id;
+      return parseInt(match.groups.target_id);
     }
 
     const anchors = element.getElementsByTagName("a");
@@ -1163,22 +1380,22 @@ if (!singleton) {
     for (const anchor of anchors) {
       const match = anchor.href.match(/.*XID=(?<target_id>\d+)/);
       if (match) {
-        return match.groups.target_id;
+        return parseInt(match.groups.target_id);
       }
       const matchUserId = anchor.href.match(/.*userId=(?<target_id>\d+)/);
       if (matchUserId) {
-        return matchUserId.groups.target_id;
+        return parseInt(matchUserId.groups.target_id);
       }
     }
 
     if (element.nodeName.toLowerCase() === "a") {
       const match = element.href.match(/.*XID=(?<target_id>\d+)/);
       if (match) {
-        return match.groups.target_id;
+        return parseInt(match.groups.target_id);
       }
       const matchUserId = element.href.match(/.*userId=(?<target_id>\d+)/);
       if (matchUserId) {
-        return matchUserId.groups.target_id;
+        return parseInt(matchUserId.groups.target_id);
       }
     }
 
@@ -1212,7 +1429,7 @@ if (!singleton) {
     return percent;
   }
 
-  function show_cached_values(elements) {
+  async function show_cached_values(elements) {
     // Rescan player ids because the competition page can rewrite them
     elements = elements.map((e) => {
       const player_id = get_player_id_in_element(e[1]);
@@ -1230,6 +1447,9 @@ if (!singleton) {
     });
     // Remove any elements that don't have an id
     elements = elements.filter((e) => e[0]);
+    const cached_values = await ffcache.get(
+      elements.map((e) => parseInt(e[0])),
+    );
     for (const [player_id, element] of elements) {
       element.classList.add("ff-scouter-indicator");
       if (!element.classList.contains("indicator-lines")) {
@@ -1246,7 +1466,7 @@ if (!singleton) {
         //$(element).append($("<div>", { class: "ff-scouter-vertical-line-high-lower" }));
       }
 
-      const cached = get_cached_value(player_id);
+      const cached = cached_values[parseInt(player_id)];
       if (cached && cached.value) {
         const percent = ff_to_percent(cached.value);
         element.style.setProperty("--band-percent", percent);
@@ -1290,7 +1510,7 @@ if (!singleton) {
       // Then re-display after the update
       show_cached_values(elements);
       const player_ids = elements.map((e) => e[0]);
-      update_ff_cache(player_ids, () => {
+      await update_ff_cache(player_ids, () => {
         show_cached_values(elements);
       });
     }
@@ -1301,7 +1521,7 @@ if (!singleton) {
     // Then in profile-container.description append a new span with the text. Win
     const player_id = get_player_id_in_element(mini);
     if (player_id) {
-      const response = get_cached_value(player_id);
+      const response = await get_cached_value(player_id);
       if (response && response.value) {
         // Remove any existing elements
         $(mini).find(".ff-scouter-mini-ff").remove();
@@ -1429,7 +1649,7 @@ if (!singleton) {
 
           const player_id = get_player_id_in_element(mini);
           apply_to_mini_profile(mini);
-          update_ff_cache([player_id], () => {
+          await update_ff_cache([player_id], () => {
             apply_to_mini_profile(mini);
           });
         }
@@ -2487,7 +2707,7 @@ if (!singleton) {
     clearCacheBtn.textContent = "Clear FF Cache";
     clearCacheBtn.className = "ff-settings-button torn-btn btn-big";
 
-    clearCacheBtn.addEventListener("click", function () {
+    clearCacheBtn.addEventListener("click", async function () {
       const confirmed = confirm(
         "Are you sure you want to clear all FF Scouter cache?",
       );
@@ -2510,6 +2730,8 @@ if (!singleton) {
         rD_deleteValue(key);
         count++;
       }
+
+      await ffcache.delete_db();
 
       showToast(`Cleared ${count} cached items`);
     });
