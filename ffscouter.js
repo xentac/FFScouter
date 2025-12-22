@@ -431,6 +431,11 @@ if (!singleton) {
     }
   });
 
+  function format_timestamp(ts) {
+    const d = new Date(ts * 1000);
+    return `${d.getHours() < 10 ? "0" : ""}${d.getHours()}:${d.getMinutes() < 10 ? "0" : ""}${d.getMinutes()}:${d.getSeconds() < 10 ? "0" : ""}${d.getSeconds()} - ${d.getDate() < 10 ? "0" : ""}${d.getDate()}/${d.getMonth() + 1 < 10 ? "0" : ""}${d.getMonth() + 1}/${d.getFullYear() - 2000}`;
+  }
+
   function inject_info_line(h4, info_line) {
     if (h4.textContent === "Attacking") {
       h4.parentNode.parentNode.after(info_line);
@@ -2010,16 +2015,16 @@ if (!singleton) {
 
     // API Key Input
 
+    const apiKeyDiv = document.createElement("div");
+    apiKeyDiv.className = "ff-settings-entry ff-settings-entry-large";
+
+    const apiKeyLabel = document.createElement("label");
+    apiKeyLabel.setAttribute("for", "ff-api-key");
+    apiKeyLabel.textContent = "FF Scouter API Key:";
+    apiKeyLabel.className = "ff-settings-label ff-settings-label-inline";
+    apiKeyDiv.appendChild(apiKeyLabel);
+
     if (apikey[0] == "#") {
-      const apiKeyDiv = document.createElement("div");
-      apiKeyDiv.className = "ff-settings-entry ff-settings-entry-large";
-
-      const apiKeyLabel = document.createElement("label");
-      apiKeyLabel.setAttribute("for", "ff-api-key");
-      apiKeyLabel.textContent = "FF Scouter API Key:";
-      apiKeyLabel.className = "ff-settings-label ff-settings-label-inline";
-      apiKeyDiv.appendChild(apiKeyLabel);
-
       const apiKeyInput = document.createElement("input");
       apiKeyInput.type = "text";
       apiKeyInput.id = "ff-api-key";
@@ -2070,24 +2075,83 @@ if (!singleton) {
       });
 
       apiKeyDiv.appendChild(apiKeyInput);
-      content.appendChild(apiKeyDiv);
     } else {
-      const apiKeyDiv = document.createElement("div");
-      apiKeyDiv.className = "ff-settings-entry ff-settings-entry-large";
-
-      const apiKeyLabel = document.createElement("label");
-      apiKeyLabel.setAttribute("for", "ff-api-key");
-      apiKeyLabel.textContent = "FF Scouter API Key:";
-      apiKeyLabel.className = "ff-settings-label ff-settings-label-inline";
-      apiKeyDiv.appendChild(apiKeyLabel);
-
       const apiKeyInput = document.createElement("label");
       apiKeyInput.textContent = "Code entered in Torn PDA User Scripts";
       apiKeyInput.className = "ff-settings-label ff-settings-label-inline";
       apiKeyDiv.appendChild(apiKeyInput);
-
-      content.appendChild(apiKeyDiv);
     }
+
+    checkKeyButton = document.createElement("button");
+    checkKeyButton.textContent = "Verify API Key";
+    checkKeyButton.className =
+      "ff-settings-button ff-settings-button-large torn-btn btn-big";
+
+    checkKeyButton.addEventListener("click", () => {
+      rD_xmlhttpRequest({
+        method: "GET",
+        url: `${BASE_URL}/api/v1/check-key?key=${key}`,
+        onload: (response) => {
+          if (!response) {
+            return;
+          }
+
+          if (response.status == 200) {
+            var ff_response = JSON.parse(response.responseText);
+            if (ff_response && ff_response.error) {
+              showToast(ff_response.error);
+              return;
+            }
+
+            let message = `FF Scouter not configured. API key (${ff_response.key}) not registered.`;
+            let level = TOAST_ERROR;
+            if (ff_response.is_registered) {
+              message = `FF Scouter successfully configured. API key (${ff_response.key}) was registered on ${format_timestamp(ff_response.registered_at)} and last used ${format_timestamp(ff_response.last_used)}.`;
+              level = TOAST_LOG;
+            }
+            showToast(message, level);
+          } else {
+            try {
+              var err = JSON.parse(response.responseText);
+              if (err && err.error) {
+                showToast(
+                  "API request failed. Error: " +
+                    err.error +
+                    "; Code: " +
+                    err.code,
+                );
+              } else {
+                showToast(
+                  "API request failed. HTTP status code: " + response.status,
+                );
+              }
+            } catch {
+              showToast(
+                "API request failed. HTTP status code: " + response.status,
+              );
+            }
+          }
+        },
+        onerror: function (e) {
+          console.error("[FF Scouter V2] **** error ", e, "; Stack:", e.stack);
+        },
+        onabort: function (e) {
+          console.error("[FF Scouter V2] **** abort ", e, "; Stack:", e.stack);
+        },
+        ontimeout: function (e) {
+          console.error(
+            "[FF Scouter V2] **** timeout ",
+            e,
+            "; Stack:",
+            e.stack,
+          );
+        },
+      });
+    });
+
+    apiKeyDiv.appendChild(checkKeyButton);
+
+    content.appendChild(apiKeyDiv);
 
     const rangesDiv = document.createElement("div");
     rangesDiv.className = "ff-settings-entry ff-settings-entry-large";
