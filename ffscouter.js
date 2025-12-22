@@ -175,6 +175,10 @@ if (!singleton) {
                 border-radius: 5px;
             }
 
+            .ff-settings-accordion summary {
+                cursor: pointer;
+            }
+
             .ff-settings-accordion div.ff-settings-body {
               margin-top: 10px;
             }
