@@ -876,10 +876,6 @@ if (!singleton) {
                     expiry: expiry,
                     player_id: result.player_id,
                   };
-                  rD_setValue(
-                    "ffscouterv2-" + result.player_id,
-                    JSON.stringify(cacheObj),
-                  );
                   cachedObjs.push(cacheObj);
                 } else {
                   let cacheObj = {
@@ -890,10 +886,6 @@ if (!singleton) {
                     bs_estimate_human: result.bs_estimate_human,
                     player_id: result.player_id,
                   };
-                  rD_setValue(
-                    "ffscouterv2-" + result.player_id,
-                    JSON.stringify(cacheObj),
-                  );
                   cachedObjs.push(cacheObj);
                 }
               }
