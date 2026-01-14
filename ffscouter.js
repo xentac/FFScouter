@@ -2,7 +2,7 @@
 // @name         FF Scouter V2
 // @namespace    Violentmonkey Scripts
 // @match        https://www.torn.com/*
-// @version      2.70
+// @version      2.71
 // @author       rDacted, Weav3r, xentac
 // @description  Shows the expected Fair Fight score against targets and faction war status
 // @grant        GM_xmlhttpRequest
