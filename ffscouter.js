@@ -175,6 +175,14 @@ if (!singleton) {
                 border-radius: 5px;
             }
 
+            .ff-settings-accordion summary {
+                cursor: pointer;
+            }
+
+            .ff-settings-accordion div.ff-settings-body {
+              margin-top: 10px;
+            }
+
             .ff-settings-header {
                 display: flex;
                 justify-content: space-between;
@@ -2207,6 +2215,7 @@ if (!singleton) {
 
     // Create main content div
     const content = document.createElement("div");
+    content.className = "ff-settings-body";
 
     // API Key Explanation
     const apiExplanation = document.createElement("div");
