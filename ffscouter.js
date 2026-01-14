@@ -2083,7 +2083,7 @@ if (!singleton) {
     }
 
     checkKeyButton = document.createElement("button");
-    checkKeyButton.textContent = "Verify API Key";
+    checkKeyButton.textContent = "Verify";
     checkKeyButton.className =
       "ff-settings-button ff-settings-button-large torn-btn btn-big";
 
