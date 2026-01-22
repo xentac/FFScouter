@@ -1652,8 +1652,13 @@ if (!singleton) {
       );
     }
 
+    if (!node?.parentNode?.querySelectorAll) {
+      return;
+    }
     var mini_profiles = Array.from(
-      node.querySelectorAll('[class^="profile-mini-_userProfileWrapper_"]'),
+      node.parentNode.querySelectorAll(
+        '[class^="profile-mini-_userProfileWrapper_"]',
+      ),
     );
     if (mini_profiles.length > 0) {
       for (const mini of mini_profiles) {
