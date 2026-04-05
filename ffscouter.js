@@ -1729,59 +1729,68 @@ if (!singleton) {
     }
   }
 
-  const ff_gauge_observer = new MutationObserver(async function () {
-    var honor_bars = $(".honor-text-wrap").toArray();
-    var name_elems = $(".user.name");
+  const check_mutation = async function (node) {
+    if (!node.querySelectorAll) {
+      return;
+    }
+    var honor_bars = Array.from(node.querySelectorAll(".honor-text-wrap"));
+    var name_elems = Array.from(node.querySelectorAll(".user.name"));
     if (honor_bars.length > 0) {
-      await apply_ff_gauge($(".honor-text-wrap").toArray());
+      await apply_ff_gauge(
+        Array.from(node.querySelectorAll(".honor-text-wrap")),
+      );
     } else {
       if (
         window.location.href.startsWith("https://www.torn.com/factions.php")
       ) {
-        await apply_ff_gauge($(".member").toArray());
+        await apply_ff_gauge(Array.from(node.querySelectorAll(".member")));
       } else if (
         window.location.href.startsWith("https://www.torn.com/companies.php")
       ) {
-        await apply_ff_gauge($(".employee").toArray());
+        await apply_ff_gauge(Array.from(node.querySelectorAll(".employee")));
       } else if (
         window.location.href.startsWith(
           "https://www.torn.com/page.php?sid=competition#/team",
         )
       ) {
-        await apply_ff_gauge($(".name___H_bss").toArray());
+        await apply_ff_gauge(
+          Array.from(node.querySelectorAll(".name___H_bss")),
+        );
       } else if (
         window.location.href.startsWith("https://www.torn.com/joblist.php")
       ) {
-        await apply_ff_gauge($(".employee").toArray());
+        await apply_ff_gauge(Array.from(node.querySelectorAll(".employee")));
       } else if (
         window.location.href.startsWith("https://www.torn.com/messages.php")
       ) {
-        await apply_ff_gauge($(".name").toArray());
+        await apply_ff_gauge(Array.from(node.querySelectorAll(".name")));
       } else if (
         window.location.href.startsWith("https://www.torn.com/index.php")
       ) {
-        await apply_ff_gauge($(".name").toArray());
+        await apply_ff_gauge(Array.from(node.querySelectorAll(".name")));
       } else if (
         window.location.href.startsWith("https://www.torn.com/hospitalview.php")
       ) {
-        await apply_ff_gauge($(".name").toArray());
+        await apply_ff_gauge(Array.from(node.querySelectorAll(".name")));
       } else if (
         window.location.href.startsWith(
           "https://www.torn.com/page.php?sid=UserList",
         )
       ) {
-        await apply_ff_gauge($(".name").toArray());
+        await apply_ff_gauge(Array.from(node.querySelectorAll(".name")));
       } else if (
         window.location.href.startsWith("https://www.torn.com/bounties.php")
       ) {
-        await apply_ff_gauge($(".target").toArray());
-        await apply_ff_gauge($(".listed").toArray());
+        await apply_ff_gauge(Array.from(node.querySelectorAll(".target")));
+        await apply_ff_gauge(Array.from(node.querySelectorAll(".listed")));
       } else if (
         window.location.href.startsWith(
           "https://www.torn.com/loader.php?sid=attackLog",
         )
       ) {
-        const participants = $("ul.participants-list li").toArray();
+        const participants = Array.from(
+          node.querySelectorAll("ul.participants-list li"),
+        );
         if (participants > 100) {
           return;
         }
@@ -1789,15 +1798,17 @@ if (!singleton) {
       } else if (
         window.location.href.startsWith("https://www.torn.com/forums.php")
       ) {
-        await apply_ff_gauge($(".last-poster").toArray());
-        await apply_ff_gauge($(".starter").toArray());
-        await apply_ff_gauge($(".last-post").toArray());
-        await apply_ff_gauge($(".poster").toArray());
+        await apply_ff_gauge(Array.from(node.querySelectorAll(".last-poster")));
+        await apply_ff_gauge(Array.from(node.querySelectorAll(".starter")));
+        await apply_ff_gauge(Array.from(node.querySelectorAll(".last-post")));
+        await apply_ff_gauge(Array.from(node.querySelectorAll(".poster")));
       } else if (window.location.href.includes("page.php?sid=hof")) {
-        await apply_ff_gauge($('[class^="userInfoBox__"]').toArray());
+        await apply_ff_gauge(
+          Array.from(node.querySelectorAll('[class^="userInfoBox__"]')),
+        );
       } else if (name_elems.length > 0) {
         // Fallback for anyone without honor bars enabled
-        await apply_ff_gauge($(".user.name").toArray());
+        await apply_ff_gauge(Array.from(node.querySelectorAll(".user.name")));
       }
     }
     if (
@@ -1806,15 +1817,22 @@ if (!singleton) {
       )
     ) {
       await apply_ff_gauge(
-        $(
-          "div.bazaar-listing-card div:first-child div:first-child > a",
-        ).toArray(),
+        Array.from(
+          node.querySelectorAll(
+            "div.bazaar-listing-card div:first-child div:first-child > a",
+          ),
+        ),
       );
     }
 
-    var mini_profiles = $(
-      '[class^="profile-mini-_userProfileWrapper_"]',
-    ).toArray();
+    if (!node?.parentNode?.querySelectorAll) {
+      return;
+    }
+    var mini_profiles = Array.from(
+      node.parentNode.querySelectorAll(
+        '[class^="profile-mini-_userProfileWrapper_"]',
+      ),
+    );
     if (mini_profiles.length > 0) {
       for (const mini of mini_profiles) {
         if (!mini.classList.contains("ff-processed")) {
@@ -1828,6 +1846,14 @@ if (!singleton) {
         }
       }
     }
+  };
+
+  const ff_gauge_observer = new MutationObserver(async (mutations) => {
+    for (const mutation of mutations) {
+      for (const node of mutation.addedNodes) {
+        check_mutation(node);
+      }
+    }
   });
 
   ff_gauge_observer.observe(document, {
@@ -1836,6 +1862,8 @@ if (!singleton) {
     characterData: false,
     subtree: true,
   });
+
+  check_mutation(document.body);
 
   function get_cached_targets(staleok) {
     const value = rD_getValue(TARGET_KEY);
