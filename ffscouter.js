@@ -2501,6 +2501,22 @@ if (!singleton) {
       apiKeyDiv.appendChild(apiKeyInput);
     }
 
+    content.appendChild(apiKeyDiv);
+
+    const premiumDiv = document.createElement("div");
+    premiumDiv.className = "ff-settings-entry ff-settings-entry-large";
+
+    const premiumLabel = document.createElement("label");
+    premiumLabel.setAttribute("for", "ff-premium");
+    premiumLabel.textContent = "FF Scouter Premium:";
+    premiumLabel.className = "ff-settings-label ff-settings-label-inline";
+    premiumDiv.appendChild(premiumLabel);
+
+    content.appendChild(premiumDiv);
+
+    const verifyDiv = document.createElement("div");
+    verifyDiv.className = "ff-settings-entry ff-settings-entry-large";
+
     checkKeyButton = document.createElement("button");
     checkKeyButton.textContent = "Verify";
     checkKeyButton.className =
@@ -2568,9 +2584,9 @@ if (!singleton) {
       });
     });
 
-    apiKeyDiv.appendChild(checkKeyButton);
+    verifyDiv.appendChild(checkKeyButton);
 
-    content.appendChild(apiKeyDiv);
+    content.appendChild(verifyDiv);
 
     const rangesDiv = document.createElement("div");
     rangesDiv.className = "ff-settings-entry ff-settings-entry-large";
@@ -3138,15 +3154,20 @@ if (!singleton) {
   function applyPremiumBadge(is_premium) {
     const existing = document.getElementById("ff-premium-badge");
     if (existing) existing.remove();
-    if (!is_premium) return;
     const badge = document.createElement("span");
     badge.id = "ff-premium-badge";
-    badge.textContent = "Premium Enabled";
-    badge.style.cssText =
-      "display:inline-block;background:#4CAF50;color:#fff;font-size:11px;font-weight:bold;padding:2px 8px;border-radius:4px;margin-left:8px;vertical-align:middle;";
-    const apiKeyLabel = document.querySelector('label[for="ff-api-key"]');
-    if (apiKeyLabel) {
-      apiKeyLabel.parentNode.insertBefore(badge, apiKeyLabel.nextSibling);
+    if (is_premium) {
+      badge.textContent = "Enabled";
+      badge.style.cssText =
+        "display:inline-block;background:#4CAF50;color:#fff;font-size:11px;font-weight:bold;padding:2px 8px;border-radius:4px;vertical-align:middle;";
+    } else {
+      badge.textContent = "Disabled";
+      badge.style.cssText =
+        "display:inline-block;background:#C62828;color:#fff;font-size:11px;font-weight:bold;padding:2px 8px;border-radius:4px;vertical-align:middle;";
+    }
+    const premiumLabel = document.querySelector('label[for="ff-premium"]');
+    if (premiumLabel) {
+      premiumLabel.parentNode.insertBefore(badge, premiumLabel.nextSibling);
     }
   }
 
