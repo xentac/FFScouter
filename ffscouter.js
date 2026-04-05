@@ -3,7 +3,7 @@
 // @namespace    Violentmonkey Scripts
 // @match        https://www.torn.com/*
 // @version      2.71
-// @author       rDacted, Weav3r, xentac
+// @author       rDacted, Weav3r, xentac, Glasnost
 // @description  Shows the expected Fair Fight score against targets and faction war status
 // @grant        GM_xmlhttpRequest
 // @grant        GM_setValue
@@ -22,6 +22,8 @@ const FF_TARGET_STALENESS = 24 * 60 * 60 * 1000; // Refresh the target list ever
 const TARGET_KEY = "ffscouterv2-targets";
 const TARGET_INDEX_KEY = "ffscouterv2-target-index";
 const CLEARED_TSC_KEY = "ffscouterv2-cleared-tsc-keys";
+const CHECK_KEY_CACHE_KEY = "ffscouterv2-check-key-cache";
+const CHECK_KEY_INTERVAL = 15 * 60 * 1000;
 const memberCountdowns = {};
 const MAX_REQUESTS_PER_MINUTE = 20;
 let apiCallInProgressCount = 0;
@@ -71,7 +73,7 @@ if (!singleton) {
             bottom: 0;
             left: calc(var(--arrow-width) / 2 + 66 * (100% - var(--arrow-width)) / 100);
             }
-     
+
             .ff-scouter-ff-visible {
               display: flex !important;
             }
@@ -324,6 +326,60 @@ if (!singleton) {
                 font-size: 13px;
                 line-height: 1.5;
             }
+
+			.ff-scouter-history-btn {
+				position: relative;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				width: 42px;
+				height: 42px;
+				margin: 0 12px 12px 0;
+				border: 1px solid rgb(17, 17, 17);
+				border-radius: 5px;
+				background: #1a6fa8;
+				color: #fff !important;
+				text-decoration: none !important;
+				cursor: pointer;
+				box-sizing: border-box;
+				flex-shrink: 0;
+				overflow: hidden;
+			}
+			.ff-scouter-history-btn:hover {
+				background: #155d8e !important;
+				color: #fff !important;
+				text-decoration: none !important;
+			}
+			body:not(.dark-mode) .ff-scouter-history-btn {
+				border-color: #b0c4d8;
+				background: #2980b9;
+			}
+			body:not(.dark-mode) .ff-scouter-history-btn:hover {
+				background: #1f6fa0 !important;
+			}
+			.ff-scouter-history-btn .ff-history-icon {
+				position: absolute;
+				top: 50%;
+				left: 50%;
+				transform: translate(-50%, -50%);
+				opacity: 0.15;
+				width: 36px;
+				height: 36px;
+				fill: #fff;
+				pointer-events: none;
+			}
+			.ff-scouter-history-btn .ff-history-label {
+				position: relative;
+				z-index: 1;
+				font-size: 9.5px;
+				font-weight: bold;
+				color: #fff;
+				text-align: center;
+				line-height: 1.2;
+				white-space: pre-line;
+				letter-spacing: 0.3px;
+				pointer-events: none;
+			}
         `);
 
   var BASE_URL = "https://ffscouter.com";
@@ -892,6 +948,10 @@ if (!singleton) {
                     expiry: expiry,
                     bs_estimate: result.bs_estimate,
                     bs_estimate_human: result.bs_estimate_human,
+                    distribution_human:
+                      result.distribution?.distribution_human ?? null,
+                    distribution_last_updated:
+                      result.distribution?.last_updated ?? null,
                     player_id: result.player_id,
                   };
                   cachedObjs.push(cacheObj);
@@ -1052,6 +1112,28 @@ if (!singleton) {
     return `${ff}${suffix}`;
   }
 
+  function get_age_human(unix_timestamp) {
+    if (!unix_timestamp) return null;
+    const now = Date.now() / 1000;
+    const age = now - unix_timestamp;
+    if (age < 60 * 60) {
+      const mins = Math.round(age / 60);
+      return mins <= 1 ? "1 minute" : `${mins} minutes`;
+    } else if (age < 24 * 60 * 60) {
+      const hours = Math.round(age / (60 * 60));
+      return hours === 1 ? "1 hour" : `${hours} hours`;
+    } else if (age < 31 * 24 * 60 * 60) {
+      const days = Math.round(age / (24 * 60 * 60));
+      return days === 1 ? "1 day" : `${days} days`;
+    } else if (age < 365 * 24 * 60 * 60) {
+      const months = Math.round(age / (31 * 24 * 60 * 60));
+      return months === 1 ? "1 month" : `${months} months`;
+    } else {
+      const years = Math.round(age / (365 * 24 * 60 * 60));
+      return years === 1 ? "1 year" : `${years} years`;
+    }
+  }
+
   function get_difficulty_text(ff) {
     if (ff <= 1) {
       return "Extremely easy";
@@ -1108,7 +1190,13 @@ if (!singleton) {
 
     let statDetails = "";
     if (ff_response.bs_estimate_human) {
-      statDetails = `<span style=\"font-size: 11px; font-weight: normal; margin-left: 8px; vertical-align: middle; font-style: italic;\">Est. Stats: <span>${ff_response.bs_estimate_human}</span></span>`;
+      let distLine = "";
+      if (ff_response.distribution_human) {
+        const ageStr = get_age_human(ff_response.distribution_last_updated);
+        const agePart = ageStr ? ` (${ageStr} old)` : "";
+        distLine = `<span style="display:block; margin-top: 2px; font-size: 12px; font-style: normal;"><span style="font-weight: bold; margin-right: 6px;">Top Stats:</span><span style="font-weight: normal;">${ff_response.distribution_human}${agePart}</span></span>`;
+      }
+      statDetails = `<span style="font-size: 11px; font-weight: normal; margin-left: 8px; vertical-align: middle; font-style: italic;">Est. Stats: <span>${ff_response.bs_estimate_human}</span>${distLine}</span>`;
     }
 
     return `<span style=\"font-weight: bold; margin-right: 6px;\">FairFight:</span><span style=\"background: ${background_colour}; color: ${text_colour}; font-weight: bold; padding: 2px 6px; border-radius: 4px; display: inline-block;\">${ff_string} (${difficulty}) ${fresh}</span>${statDetails}`;
@@ -1135,6 +1223,42 @@ if (!singleton) {
   function set_fair_fight(ff_response, player_id) {
     const detailed_message = get_detailed_message(ff_response, player_id);
     info_line.innerHTML = detailed_message;
+  }
+
+  function inject_stats_history_button(player_id) {
+    if (!player_id) return;
+    if (ffSettingsGet("ff-history-enabled") === "false") return;
+    if (document.querySelector(".ff-scouter-history-btn")) return;
+
+    const buttonsList = document.querySelector(
+      ".profile-buttons.profile-action .buttons-list",
+    );
+    if (!buttonsList) return;
+
+    const btn = document.createElement("a");
+    btn.href = `https://ffscouter.com/player-view?player_id=${player_id}`;
+    btn.target = "_blank";
+    btn.rel = "noopener noreferrer";
+    btn.className = "ff-scouter-history-btn";
+    btn.title = "View Stats History on FFScouter";
+
+    // Semi-transparent background clock/history icon
+    const svgNS = "http://www.w3.org/2000/svg";
+    const svg = document.createElementNS(svgNS, "svg");
+    svg.setAttribute("viewBox", "0 0 24 24");
+    svg.className.baseVal = "ff-history-icon";
+    svg.setAttribute("class", "ff-history-icon");
+    svg.innerHTML =
+      '<path d="M13 3a9 9 0 1 0 9 9h-2a7 7 0 1 1-7-7V3zm-1 5v5.41l3.29 3.3 1.42-1.42L13 12.17V8h-1z"/>';
+    btn.appendChild(svg);
+
+    // "FF\nHistory" label on top
+    const label = document.createElement("span");
+    label.className = "ff-history-label";
+    label.textContent = "FF\nHistory";
+    btn.appendChild(label);
+
+    buttonsList.appendChild(btn);
   }
 
   function get_members() {
@@ -1220,6 +1344,9 @@ if (!singleton) {
   }
 
   async function apply_fair_fight_info(_) {
+    const showBSDefault =
+      (ffSettingsGet("factions-col-display") || "fair_fight") ===
+      "battle_stats";
     var ff_li = document.createElement("li");
     ff_li.tabIndex = "0";
     ff_li.classList.add("table-cell");
@@ -1227,7 +1354,9 @@ if (!singleton) {
     ff_li.classList.add("torn-divider");
     ff_li.classList.add("divider-vertical");
     ff_li.classList.add("c-pointer");
-    ff_li.classList.add("ff-scouter-ff-visible");
+    ff_li.classList.add(
+      showBSDefault ? "ff-scouter-ff-hidden" : "ff-scouter-ff-visible",
+    );
     ff_li.onclick = () => {
       $(".ff-scouter-ff-visible").each(function (_, value) {
         value.classList.remove("ff-scouter-ff-visible");
@@ -1238,6 +1367,7 @@ if (!singleton) {
         value.classList.add("ff-scouter-est-visible");
       });
     };
+
     ff_li.appendChild(document.createTextNode("FF"));
     var est_li = document.createElement("li");
     est_li.tabIndex = "0";
@@ -1246,7 +1376,9 @@ if (!singleton) {
     est_li.classList.add("torn-divider");
     est_li.classList.add("divider-vertical");
     est_li.classList.add("c-pointer");
-    est_li.classList.add("ff-scouter-est-hidden");
+    est_li.classList.add(
+      showBSDefault ? "ff-scouter-est-visible" : "ff-scouter-est-hidden",
+    );
     est_li.onclick = () => {
       $(".ff-scouter-ff-hidden").each(function (_, value) {
         value.classList.remove("ff-scouter-ff-hidden");
@@ -1257,6 +1389,7 @@ if (!singleton) {
         value.classList.add("ff-scouter-est-hidden");
       });
     };
+
     est_li.appendChild(document.createTextNode("Est"));
 
     if ($(".table-header > .lvl").length == 0) {
@@ -1281,20 +1414,25 @@ if (!singleton) {
       );
 
       var fair_fight_div = document.createElement("div");
+
       fair_fight_div.classList.add("table-cell");
+
       fair_fight_div.classList.add("lvl");
-      fair_fight_div.classList.add("ff-scouter-ff-visible");
+      fair_fight_div.classList.add(
+        showBSDefault ? "ff-scouter-ff-hidden" : "ff-scouter-ff-visible",
+      );
 
       var estimate_div = document.createElement("div");
       estimate_div.classList.add("table-cell");
       estimate_div.classList.add("lvl");
-      estimate_div.classList.add("ff-scouter-est-hidden");
-
+      estimate_div.classList.add(
+        showBSDefault ? "ff-scouter-est-visible" : "ff-scouter-est-hidden",
+      );
       const cached = cached_values[player_id];
+
       if (cached && cached.value) {
         const ff = cached.value;
         const ff_string = get_ff_string_short(cached, player_id);
-
         const background_colour = get_ff_colour(ff);
         const text_colour = get_contrast_color(background_colour);
         fair_fight_div.style.backgroundColor = background_colour;
@@ -1303,7 +1441,15 @@ if (!singleton) {
         fair_fight_div.innerHTML = ff_string;
 
         if (cached.bs_estimate_human) {
+          estimate_div.style.backgroundColor = background_colour;
+          estimate_div.style.color = text_colour;
+          estimate_div.style.fontWeight = "bold";
           estimate_div.innerHTML = cached.bs_estimate_human;
+          if (cached.distribution_human) {
+            const ageStr = get_age_human(cached.distribution_last_updated);
+            const agePart = ageStr ? ` (${ageStr} old)` : "";
+            estimate_div.title = `Top Stats: ${cached.distribution_human}${agePart}`;
+          }
         }
       }
 
@@ -1332,11 +1478,27 @@ if (!singleton) {
   );
   const match = match1 ?? match2;
   if (match) {
-    // We're on a profile page or an attack page - get the fair fight score
     var target_id = parseInt(match.groups.target_id);
     update_ff_cache([target_id], function (target_ids) {
       display_fair_fight(target_ids[0], target_id);
     });
+
+    // Inject Stats History button into Actions area
+    // Use a MutationObserver in case the Actions area loads after page JS runs
+    const statsHistoryObserver = new MutationObserver(function () {
+      if (
+        document.querySelector(".profile-buttons.profile-action .buttons-list")
+      ) {
+        inject_stats_history_button(target_id);
+        statsHistoryObserver.disconnect();
+      }
+    });
+    statsHistoryObserver.observe(document.body, {
+      childList: true,
+      subtree: true,
+    });
+    // Also try immediately in case it's already loaded
+    inject_stats_history_button(target_id);
 
     if (!key) {
       set_message("[FF Scouter V2]: Limited API key needed - click to add");
@@ -1544,7 +1706,13 @@ if (!singleton) {
           var years = Math.round(age / (365 * 24 * 60 * 60));
           fresh = years === 1 ? "(1 year old)" : `(${years} years old)`;
         }
-        const message = `FF ${ff_string} (${difficulty}) ${fresh}`;
+        let distLine = "";
+        if (response.distribution_human) {
+          const ageStr = get_age_human(response.distribution_last_updated);
+          const agePart = ageStr ? ` (${ageStr})` : "";
+          distLine = ` | Dist: ${response.distribution_human}${agePart}`;
+        }
+        const message = `FF ${ff_string} (${difficulty}) ${fresh}${distLine}`;
 
         const description = $(mini).find(".description");
         const desc = $("<span></span>", {
@@ -2222,11 +2390,11 @@ if (!singleton) {
     apiExplanation.className = "ff-api-explanation ff-api-explanation-content";
 
     apiExplanation.innerHTML = `
-      <strong>Important:</strong> You must use the SAME exact API key that you use on 
+      <strong>Important:</strong> You must use the SAME exact API key that you use on
       <a href="https://ffscouter.com/" target="_blank">ffscouter.com</a>.
       <br><br>
-      If you're not sure which API key you used, go to 
-      <a href="https://www.torn.com/preferences.php#tab=api" target="_blank">your API preferences</a> 
+      If you're not sure which API key you used, go to
+      <a href="https://www.torn.com/preferences.php#tab=api" target="_blank">your API preferences</a>
       and look for "FFScouter3" in your API key history comments.
     `;
     content.appendChild(apiExplanation);
@@ -2488,6 +2656,47 @@ if (!singleton) {
 
     content.appendChild(chainFFTargetDiv);
 
+    // FF History Button Toggle
+    const historyToggleDiv = document.createElement("div");
+    historyToggleDiv.className = "ff-settings-entry ff-settings-entry-small";
+    const historyToggle = document.createElement("input");
+    historyToggle.type = "checkbox";
+    historyToggle.id = "ff-history-toggle";
+    historyToggle.checked = ffSettingsGet("ff-history-enabled") !== "false";
+    historyToggle.className = "ff-settings-checkbox";
+    const historyLabel = document.createElement("label");
+    historyLabel.setAttribute("for", "ff-history-toggle");
+    historyLabel.textContent = "Enable FF History button on profile pages";
+    historyLabel.className = "ff-settings-label";
+    historyLabel.style.cursor = "pointer";
+    historyToggleDiv.appendChild(historyToggle);
+    historyToggleDiv.appendChild(historyLabel);
+    content.appendChild(historyToggleDiv);
+
+    // Factions Column Display
+    const factionsColDiv = document.createElement("div");
+    factionsColDiv.className = "ff-settings-entry ff-settings-entry-small";
+    const factionsColLabel = document.createElement("label");
+    factionsColLabel.setAttribute("for", "factions-col-display");
+    factionsColLabel.textContent = "Factions page FF column shows:";
+    factionsColLabel.className = "ff-settings-label ff-settings-label-inline";
+    factionsColDiv.appendChild(factionsColLabel);
+    const factionsColSelect = document.createElement("select");
+    factionsColSelect.id = "factions-col-display";
+    factionsColSelect.className = "ff-settings-input";
+    const ffOption = document.createElement("option");
+    ffOption.value = "fair_fight";
+    ffOption.textContent = "Fair Fight score";
+    factionsColSelect.appendChild(ffOption);
+    const bsOption = document.createElement("option");
+    bsOption.value = "battle_stats";
+    bsOption.textContent = "Battle Stats estimate";
+    factionsColSelect.appendChild(bsOption);
+    factionsColSelect.value =
+      ffSettingsGet("factions-col-display") || "fair_fight";
+    factionsColDiv.appendChild(factionsColSelect);
+    content.appendChild(factionsColDiv);
+
     // War Monitor Toggle
     const warToggleDiv = document.createElement("div");
     warToggleDiv.className = "ff-settings-entry ff-settings-entry-section";
@@ -2530,6 +2739,8 @@ if (!singleton) {
       ffSettingsSet("chain-ff-target", "2.5");
       ffSettingsSetToggle("war-monitor-enabled", true);
       ffSettingsSetToggle("debug-logs", false);
+      ffSettingsSet("ff-history-enabled", "true");
+      ffSettingsSet("factions-col-display", "fair_fight");
 
       document.getElementById("ff-ranges").value = "";
       document.getElementById("chain-button-toggle").checked = true;
@@ -2538,6 +2749,8 @@ if (!singleton) {
       document.getElementById("chain-ff-target").value = "2.5";
       document.getElementById("war-monitor-toggle").checked = true;
       document.getElementById("debug-logs").checked = false;
+      document.getElementById("ff-history-toggle").checked = true;
+      document.getElementById("factions-col-display").value = "fair_fight";
 
       document.getElementById("ff-ranges").style.outline = "none";
 
@@ -2579,6 +2792,11 @@ if (!singleton) {
       const chainFFTarget = document.getElementById("chain-ff-target").value;
       const warEnabled = document.getElementById("war-monitor-toggle").checked;
       const debugEnabled = document.getElementById("debug-logs").checked;
+      const historyEnabled =
+        document.getElementById("ff-history-toggle").checked;
+      const factionsColDisplay = document.getElementById(
+        "factions-col-display",
+      ).value;
 
       let hasErrors = false;
 
@@ -2652,6 +2870,8 @@ if (!singleton) {
       ffSettingsSet("chain-ff-target", chainFFTarget);
       ffSettingsSetToggle("war-monitor-enabled", warEnabled);
       ffSettingsSetToggle("debug-logs", debugEnabled);
+      ffSettingsSet("ff-history-enabled", historyEnabled.toString());
+      ffSettingsSet("factions-col-display", factionsColDisplay);
 
       const existingButtons = Array.from(
         document.querySelectorAll("button"),
@@ -2768,6 +2988,74 @@ if (!singleton) {
     settingsPanel.appendChild(content);
 
     ffdebug("[FF Scouter V2] Settings panel created successfully");
+
+    const _ckCached = (() => {
+      try {
+        return JSON.parse(rD_getValue(CHECK_KEY_CACHE_KEY, null));
+      } catch {
+        return null;
+      }
+    })();
+    if (_ckCached) applyPremiumBadge(_ckCached.is_premium);
+    checkKeyAndUpdatePremium();
+  }
+
+  function checkKeyAndUpdatePremium() {
+    if (!key) return;
+    const now = Date.now();
+    const cached = (() => {
+      try {
+        return JSON.parse(rD_getValue(CHECK_KEY_CACHE_KEY, null));
+      } catch {
+        return null;
+      }
+    })();
+    if (
+      cached &&
+      cached.last_checked &&
+      now - cached.last_checked < CHECK_KEY_INTERVAL
+    ) {
+      ffdebug("[FF Scouter V2] check-key: using cached result");
+      applyPremiumBadge(cached.is_premium);
+      return;
+    }
+    const url = `${BASE_URL}/api/v1/check-key?key=${key}`;
+    rD_xmlhttpRequest({
+      method: "GET",
+      url: url,
+      onload: function (response) {
+        if (!response || response.status !== 200) return;
+        try {
+          const data = JSON.parse(response.responseText);
+          const result = {
+            is_premium: !!data.is_premium,
+            last_checked: Date.now(),
+          };
+          rD_setValue(CHECK_KEY_CACHE_KEY, JSON.stringify(result));
+          applyPremiumBadge(result.is_premium);
+        } catch (e) {
+          ffdebug("[FF Scouter V2] check-key parse error", e);
+        }
+      },
+      onerror: function (e) {
+        ffdebug("[FF Scouter V2] check-key error", e);
+      },
+    });
+  }
+
+  function applyPremiumBadge(is_premium) {
+    const existing = document.getElementById("ff-premium-badge");
+    if (existing) existing.remove();
+    if (!is_premium) return;
+    const badge = document.createElement("span");
+    badge.id = "ff-premium-badge";
+    badge.textContent = "Premium Enabled";
+    badge.style.cssText =
+      "display:inline-block;background:#4CAF50;color:#fff;font-size:11px;font-weight:bold;padding:2px 8px;border-radius:4px;margin-left:8px;vertical-align:middle;";
+    const apiKeyLabel = document.querySelector('label[for="ff-api-key"]');
+    if (apiKeyLabel) {
+      apiKeyLabel.parentNode.insertBefore(badge, apiKeyLabel.nextSibling);
+    }
   }
 
   function showToast(message, level) {
@@ -2838,6 +3126,8 @@ if (!singleton) {
 
   create_chain_button();
   update_ff_targets();
+  checkKeyAndUpdatePremium();
+  setInterval(checkKeyAndUpdatePremium, CHECK_KEY_INTERVAL);
 
   getLocalUserId().then((userId) => {
     if (userId) {
