@@ -2029,7 +2029,7 @@ if (!singleton) {
       if (linkType === "profile") {
         profileLink = `https://www.torn.com/profiles.php?XID=${rando.player_id}`;
       } else {
-        profileLink = `https://www.torn.com/loader.php?sid=attack&user2ID=${rando.player_id}`;
+        profileLink = `https://www.torn.com/page.php?sid=attack&user2ID=${rando.player_id}`;
       }
 
       if (tabType === "sametab") {
