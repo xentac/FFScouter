@@ -1778,7 +1778,7 @@ if (!singleton) {
         await apply_ff_gauge(Array.from(node.querySelectorAll(".listed")));
       } else if (
         window.location.href.startsWith(
-          "https://www.torn.com/loader.php?sid=attackLog",
+          "https://www.torn.com/page.php?sid=attackLog",
         )
       ) {
         const participants = Array.from(
