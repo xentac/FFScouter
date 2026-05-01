@@ -711,7 +711,7 @@ if (!singleton) {
     if (linksTopWrap) {
       linksTopWrap.parentNode.insertBefore(info_line, linksTopWrap.nextSibling);
     } else {
-      h4.after(info_line);
+      h4.parentNode.parentNode.after(info_line);
     }
   }
 
