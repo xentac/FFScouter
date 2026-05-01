@@ -744,10 +744,10 @@ if (!singleton) {
       }
     });
 
-    var h4 = $("h4")[0];
+    var h4 = document.querySelector("h4");
     if (!h4) {
       const obs = new MutationObserver(function () {
-        var h4 = $("h4")[0];
+        var h4 = document.querySelector("h4");
         if (!h4) {
           return;
         }
@@ -1261,20 +1261,21 @@ if (!singleton) {
 
   function get_members() {
     var player_ids = [];
-    $(".table-body > .table-row").each(function () {
-      if (!$(this).find(".fallen").length) {
-        if (!$(this).find(".fedded").length) {
-          $(this)
-            .find(".member")
-            .each(function (index, value) {
-              var url = value.querySelectorAll('a[href^="/profiles"]')[0].href;
-              var player_id = url.match(/.*XID=(?<player_id>\d+)/).groups
-                .player_id;
-              player_ids.push(parseInt(player_id));
-            });
+    document
+      .querySelectorAll(".table-body > .table-row")
+      .forEach(function (elem) {
+        if (
+          !elem.querySelectorAll(".fallen").length &&
+          !elem.querySelectorAll(".fedded").length
+        ) {
+          elem.querySelectorAll(".member").forEach(function (value) {
+            var url = value.querySelectorAll('a[href^="/profiles"]')[0].href;
+            var player_id = url.match(/.*XID=(?<player_id>\d+)/).groups
+              .player_id;
+            player_ids.push(parseInt(player_id));
+          });
         }
-      }
-    });
+      });
 
     return player_ids;
   }
@@ -1356,14 +1357,18 @@ if (!singleton) {
       showBSDefault ? "ff-scouter-ff-hidden" : "ff-scouter-ff-visible",
     );
     ff_li.onclick = () => {
-      $(".ff-scouter-ff-visible").each(function (_, value) {
-        value.classList.remove("ff-scouter-ff-visible");
-        value.classList.add("ff-scouter-ff-hidden");
-      });
-      $(".ff-scouter-est-hidden").each(function (_, value) {
-        value.classList.remove("ff-scouter-est-hidden");
-        value.classList.add("ff-scouter-est-visible");
-      });
+      document
+        .querySelectorAll(".ff-scouter-ff-visible")
+        .forEach(function (value) {
+          value.classList.remove("ff-scouter-ff-visible");
+          value.classList.add("ff-scouter-ff-hidden");
+        });
+      document
+        .querySelectorAll(".ff-scouter-est-hidden")
+        .forEach(function (value) {
+          value.classList.remove("ff-scouter-est-hidden");
+          value.classList.add("ff-scouter-est-visible");
+        });
     };
 
     ff_li.appendChild(document.createTextNode("FF"));
@@ -1378,81 +1383,89 @@ if (!singleton) {
       showBSDefault ? "ff-scouter-est-visible" : "ff-scouter-est-hidden",
     );
     est_li.onclick = () => {
-      $(".ff-scouter-ff-hidden").each(function (_, value) {
-        value.classList.remove("ff-scouter-ff-hidden");
-        value.classList.add("ff-scouter-ff-visible");
-      });
-      $(".ff-scouter-est-visible").each(function (_, value) {
-        value.classList.remove("ff-scouter-est-visible");
-        value.classList.add("ff-scouter-est-hidden");
-      });
+      document
+        .querySelectorAll(".ff-scouter-ff-hidden")
+        .forEach(function (value) {
+          value.classList.remove("ff-scouter-ff-hidden");
+          value.classList.add("ff-scouter-ff-visible");
+        });
+      document
+        .querySelectorAll(".ff-scouter-est-visible")
+        .forEach(function (value) {
+          value.classList.remove("ff-scouter-est-visible");
+          value.classList.add("ff-scouter-est-hidden");
+        });
     };
 
     est_li.appendChild(document.createTextNode("Est"));
 
-    if ($(".table-header > .lvl").length == 0) {
+    if (document.querySelectorAll(".table-header > .lvl").length == 0) {
       // The .member-list doesn't have a .lvl, give up
       return;
     }
-    $(".table-header > .lvl")[0].after(ff_li, est_li);
+    document.querySelector(".table-header > .lvl")?.after(ff_li, est_li);
 
     const player_ids = [];
-    $(".table-body > .table-row > .member").each(async function (_, value) {
-      var url = value.querySelectorAll('a[href^="/profiles"]')[0].href;
-      var player_id = url.match(/.*XID=(?<player_id>\d+)/).groups.player_id;
-      player_ids.push(parseInt(player_id));
-    });
+    document
+      .querySelectorAll(".table-body > .table-row > .member")
+      .forEach(function (value) {
+        var url = value.querySelectorAll('a[href^="/profiles"]')[0].href;
+        var player_id = url.match(/.*XID=(?<player_id>\d+)/).groups.player_id;
+        player_ids.push(parseInt(player_id));
+      });
 
     const cached_values = await ffcache.get(player_ids);
 
-    $(".table-body > .table-row > .member").each(async function (_, value) {
-      var url = value.querySelectorAll('a[href^="/profiles"]')[0].href;
-      var player_id = parseInt(
-        url.match(/.*XID=(?<player_id>\d+)/).groups.player_id,
-      );
+    document
+      .querySelectorAll(".table-body > .table-row > .member")
+      .forEach(function (value) {
+        var url = value.querySelectorAll('a[href^="/profiles"]')[0].href;
+        var player_id = parseInt(
+          url.match(/.*XID=(?<player_id>\d+)/).groups.player_id,
+        );
 
-      var fair_fight_div = document.createElement("div");
+        var fair_fight_div = document.createElement("div");
 
-      fair_fight_div.classList.add("table-cell");
+        fair_fight_div.classList.add("table-cell");
 
-      fair_fight_div.classList.add("lvl");
-      fair_fight_div.classList.add(
-        showBSDefault ? "ff-scouter-ff-hidden" : "ff-scouter-ff-visible",
-      );
+        fair_fight_div.classList.add("lvl");
+        fair_fight_div.classList.add(
+          showBSDefault ? "ff-scouter-ff-hidden" : "ff-scouter-ff-visible",
+        );
 
-      var estimate_div = document.createElement("div");
-      estimate_div.classList.add("table-cell");
-      estimate_div.classList.add("lvl");
-      estimate_div.classList.add(
-        showBSDefault ? "ff-scouter-est-visible" : "ff-scouter-est-hidden",
-      );
-      const cached = cached_values[player_id];
+        var estimate_div = document.createElement("div");
+        estimate_div.classList.add("table-cell");
+        estimate_div.classList.add("lvl");
+        estimate_div.classList.add(
+          showBSDefault ? "ff-scouter-est-visible" : "ff-scouter-est-hidden",
+        );
+        const cached = cached_values[player_id];
 
-      if (cached && cached.value) {
-        const ff = cached.value;
-        const ff_string = get_ff_string_short(cached, player_id);
-        const background_colour = get_ff_colour(ff);
-        const text_colour = get_contrast_color(background_colour);
-        fair_fight_div.style.backgroundColor = background_colour;
-        fair_fight_div.style.color = text_colour;
-        fair_fight_div.style.fontWeight = "bold";
-        fair_fight_div.innerHTML = ff_string;
+        if (cached && cached.value) {
+          const ff = cached.value;
+          const ff_string = get_ff_string_short(cached, player_id);
+          const background_colour = get_ff_colour(ff);
+          const text_colour = get_contrast_color(background_colour);
+          fair_fight_div.style.backgroundColor = background_colour;
+          fair_fight_div.style.color = text_colour;
+          fair_fight_div.style.fontWeight = "bold";
+          fair_fight_div.innerHTML = ff_string;
 
-        if (cached.bs_estimate_human) {
-          estimate_div.style.backgroundColor = background_colour;
-          estimate_div.style.color = text_colour;
-          estimate_div.style.fontWeight = "bold";
-          estimate_div.innerHTML = cached.bs_estimate_human;
-          if (cached.distribution_human) {
-            const ageStr = get_age_human(cached.distribution_last_updated);
-            const agePart = ageStr ? ` (${ageStr} old)` : "";
-            estimate_div.title = `Top Stats: ${cached.distribution_human}${agePart}`;
+          if (cached.bs_estimate_human) {
+            estimate_div.style.backgroundColor = background_colour;
+            estimate_div.style.color = text_colour;
+            estimate_div.style.fontWeight = "bold";
+            estimate_div.innerHTML = cached.bs_estimate_human;
+            if (cached.distribution_human) {
+              const ageStr = get_age_human(cached.distribution_last_updated);
+              const agePart = ageStr ? ` (${ageStr} old)` : "";
+              estimate_div.title = `Top Stats: ${cached.distribution_human}${agePart}`;
+            }
           }
         }
-      }
 
-      value.nextSibling.after(fair_fight_div, estimate_div);
-    });
+        value.nextSibling.after(fair_fight_div, estimate_div);
+      });
   }
 
   async function get_cache_misses(player_ids) {
@@ -1506,7 +1519,7 @@ if (!singleton) {
   ) {
     const torn_observer = new MutationObserver(async function () {
       // Find the member table - add a column if it doesn't already have one, for FF scores
-      var members_list = $(".members-list")[0];
+      var members_list = document.querySelector(".members-list");
       if (members_list) {
         torn_observer.disconnect();
 
@@ -1631,7 +1644,7 @@ if (!singleton) {
         const percent = ff_to_percent(cached.value);
         element.style.setProperty("--band-percent", percent);
 
-        $(element).find(".ff-scouter-arrow").remove();
+        element.querySelector(".ff-scouter-arrow")?.remove();
 
         var arrow;
         if (percent < 33) {
@@ -1641,11 +1654,10 @@ if (!singleton) {
         } else {
           arrow = RED_ARROW;
         }
-        const img = $("<img>", {
-          src: arrow,
-          class: "ff-scouter-arrow",
-        });
-        $(element).append(img);
+        const img = document.createElement("img");
+        img.src = arrow;
+        img.className = "ff-scouter-arrow";
+        element.appendChild(img);
       }
     }
   }
@@ -1684,7 +1696,7 @@ if (!singleton) {
       const response = await get_cached_value(player_id);
       if (response && response.value) {
         // Remove any existing elements
-        $(mini).find(".ff-scouter-mini-ff").remove();
+        mini.querySelector(".ff-scouter-mini-ff")?.remove();
 
         // Minimal, text-only Fair Fight string for mini-profiles
         const ff_string = get_ff_string(response);
@@ -1712,12 +1724,11 @@ if (!singleton) {
         }
         const message = `FF ${ff_string} (${difficulty}) ${fresh}${distLine}`;
 
-        const description = $(mini).find(".description");
-        const desc = $("<span></span>", {
-          class: "ff-scouter-mini-ff",
-        });
+        const description = mini.querySelector(".description");
+        const desc = document.createElement("span");
+        desc.className = "ff-scouter-mini-ff";
         desc.text(message);
-        $(description).append(desc);
+        description.appendChild(desc);
       }
     }
   }
