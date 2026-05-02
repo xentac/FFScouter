@@ -1727,7 +1727,7 @@ if (!singleton) {
         const description = mini.querySelector(".description");
         const desc = document.createElement("span");
         desc.className = "ff-scouter-mini-ff";
-        desc.text(message);
+        desc.textContent = message;
         description.appendChild(desc);
       }
     }
