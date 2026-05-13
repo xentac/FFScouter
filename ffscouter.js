@@ -2001,7 +2001,7 @@ if (!singleton) {
         )
       ) {
         await apply_ff_gauge(
-          Array.from(node.querySelectorAll(".name___H_bss")),
+          Array.from(node.querySelectorAll('[class^="name__"]')),
         );
       } else if (
         window.location.href.startsWith("https://www.torn.com/joblist.php")
@@ -2455,9 +2455,11 @@ if (!singleton) {
 
   function updateAPICalls() {
     let enemyFactionLink = document.querySelector(
-      ".opponentFactionName___vhESM",
+      '[class^="opponentFactionName__"]',
     );
-    let yourFactionLink = document.querySelector(".currentFactionName___eq7n8");
+    let yourFactionLink = document.querySelector(
+      '[class^="currentFactionName__"]',
+    );
     if (!enemyFactionLink || !yourFactionLink) return;
 
     let enemyFactionIdMatch = enemyFactionLink.href.match(/ID=(\d+)/);
@@ -2474,9 +2476,11 @@ if (!singleton) {
 
   function initWarScript() {
     let enemyFactionLink = document.querySelector(
-      ".opponentFactionName___vhESM",
+      '[class^="opponentFactionName__"]',
     );
-    let yourFactionLink = document.querySelector(".currentFactionName___eq7n8");
+    let yourFactionLink = document.querySelector(
+      '[class^="currentFactionName__"]',
+    );
     if (!enemyFactionLink || !yourFactionLink) return false;
 
     let enemyList = document.querySelector(".enemy-faction .members-list");
