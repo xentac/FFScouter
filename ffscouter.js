@@ -2001,7 +2001,7 @@ if (!singleton) {
         )
       ) {
         await apply_ff_gauge(
-          Array.from(node.querySelectorAll('[class^="name__"]')),
+          Array.from(node.querySelectorAll('[class*="name__"]')),
         );
       } else if (
         window.location.href.startsWith("https://www.torn.com/joblist.php")
@@ -2051,7 +2051,7 @@ if (!singleton) {
         await apply_ff_gauge(Array.from(node.querySelectorAll(".poster")));
       } else if (window.location.href.includes("page.php?sid=hof")) {
         await apply_ff_gauge(
-          Array.from(node.querySelectorAll('[class^="userInfoBox__"]')),
+          Array.from(node.querySelectorAll('[class*="userInfoBox__"]')),
         );
       } else if (name_elems.length > 0) {
         // Fallback for anyone without honor bars enabled
@@ -2077,7 +2077,7 @@ if (!singleton) {
     }
     var mini_profiles = Array.from(
       node.parentNode.querySelectorAll(
-        '[class^="profile-mini-_userProfileWrapper_"]',
+        '[class*="profile-mini-_userProfileWrapper_"]',
       ),
     );
     if (mini_profiles.length > 0) {
@@ -2455,10 +2455,10 @@ if (!singleton) {
 
   function updateAPICalls() {
     let enemyFactionLink = document.querySelector(
-      '[class^="opponentFactionName__"]',
+      '[class*="opponentFactionName__"]',
     );
     let yourFactionLink = document.querySelector(
-      '[class^="currentFactionName__"]',
+      '[class*="currentFactionName__"]',
     );
     if (!enemyFactionLink || !yourFactionLink) return;
 
@@ -2476,10 +2476,10 @@ if (!singleton) {
 
   function initWarScript() {
     let enemyFactionLink = document.querySelector(
-      '[class^="opponentFactionName__"]',
+      '[class*="opponentFactionName__"]',
     );
     let yourFactionLink = document.querySelector(
-      '[class^="currentFactionName__"]',
+      '[class*="currentFactionName__"]',
     );
     if (!enemyFactionLink || !yourFactionLink) return false;
 
