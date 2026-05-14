@@ -1395,8 +1395,9 @@ if (!singleton) {
   }
 
   async function apply_fair_fight_info(_) {
+    // The factions column defaults to BS Estimate unless the user chooses FF Score.
     const showBSDefault =
-      (ffSettingsGet("factions-col-display") || "fair_fight") ===
+      (ffSettingsGet("factions-col-display") || "battle_stats") ===
       "battle_stats";
     var ff_li = document.createElement("li");
     ff_li.tabIndex = "0";
@@ -1408,21 +1409,6 @@ if (!singleton) {
     ff_li.classList.add(
       showBSDefault ? "ff-scouter-ff-hidden" : "ff-scouter-ff-visible",
     );
-    ff_li.onclick = () => {
-      document
-        .querySelectorAll(".ff-scouter-ff-visible")
-        .forEach(function (value) {
-          value.classList.remove("ff-scouter-ff-visible");
-          value.classList.add("ff-scouter-ff-hidden");
-        });
-      document
-        .querySelectorAll(".ff-scouter-est-hidden")
-        .forEach(function (value) {
-          value.classList.remove("ff-scouter-est-hidden");
-          value.classList.add("ff-scouter-est-visible");
-        });
-    };
-
     ff_li.appendChild(document.createTextNode("FF"));
     var est_li = document.createElement("li");
     est_li.tabIndex = "0";
@@ -1434,20 +1420,6 @@ if (!singleton) {
     est_li.classList.add(
       showBSDefault ? "ff-scouter-est-visible" : "ff-scouter-est-hidden",
     );
-    est_li.onclick = () => {
-      document
-        .querySelectorAll(".ff-scouter-ff-hidden")
-        .forEach(function (value) {
-          value.classList.remove("ff-scouter-ff-hidden");
-          value.classList.add("ff-scouter-ff-visible");
-        });
-      document
-        .querySelectorAll(".ff-scouter-est-visible")
-        .forEach(function (value) {
-          value.classList.remove("ff-scouter-est-visible");
-          value.classList.add("ff-scouter-est-hidden");
-        });
-    };
 
     est_li.appendChild(document.createTextNode("Est"));
 
@@ -1467,6 +1439,223 @@ if (!singleton) {
       });
 
     const cached_values = await ffcache.get(player_ids);
+    const ffSortOrderKey = "factions-ff-sort-order";
+    const validFFSortOrders = new Set(["desc", "asc"]);
+    const savedFFSortOrder = ffSettingsGet(ffSortOrderKey);
+    let currentFFSortOrder = validFFSortOrders.has(savedFFSortOrder)
+      ? savedFFSortOrder
+      : "desc";
+    const estSortOrderKey = "factions-est-sort-order";
+    const validEstSortOrders = new Set(["desc", "asc"]);
+    const savedEstSortOrder = ffSettingsGet(estSortOrderKey);
+    let currentEstSortOrder = validEstSortOrders.has(savedEstSortOrder)
+      ? savedEstSortOrder
+      : "desc";
+
+    const get_estimate_for_row = (row) => {
+      const profile_link = row.querySelector('.member a[href^="/profiles"]');
+      if (!profile_link) {
+        return Number.NEGATIVE_INFINITY;
+      }
+      const match = profile_link.href.match(/.*XID=(?<player_id>\d+)/);
+      if (!match?.groups?.player_id) {
+        return Number.NEGATIVE_INFINITY;
+      }
+
+      const player_id = parseInt(match.groups.player_id, 10);
+      const cached = cached_values[player_id];
+      const estimate = Number(cached?.bs_estimate);
+      return Number.isFinite(estimate) ? estimate : Number.NEGATIVE_INFINITY;
+    };
+
+    const get_ff_for_row = (row) => {
+      const profile_link = row.querySelector('.member a[href^="/profiles"]');
+      if (!profile_link) {
+        return Number.NEGATIVE_INFINITY;
+      }
+      const match = profile_link.href.match(/.*XID=(?<player_id>\d+)/);
+      if (!match?.groups?.player_id) {
+        return Number.NEGATIVE_INFINITY;
+      }
+
+      const player_id = parseInt(match.groups.player_id, 10);
+      const cached = cached_values[player_id];
+      const ff = Number(cached?.value);
+      return Number.isFinite(ff) ? ff : Number.NEGATIVE_INFINITY;
+    };
+
+    function clearCustomSortArrows() {
+      // Only clear arrows that FF Scouter controls.
+      [ff_li, est_li].forEach((columnLi) => {
+        const sortDiv = columnLi.querySelector('[class*="sortIcon___"]');
+        if (!sortDiv) {
+          return;
+        }
+        sortDiv.classList.remove(
+          ...Array.from(sortDiv.classList).filter((c) =>
+            c.startsWith("activeIcon___"),
+          ),
+        );
+      });
+    }
+
+    function setSortArrow(targetLi, direction) {
+      // direction: "asc", "desc", or null (to clear)
+
+      // Clear all active arrows first so only one black arrow is shown.
+      document
+        .querySelectorAll('.table-header [class*="activeIcon___"]')
+        .forEach((el) => {
+          el.classList.remove(
+            ...Array.from(el.classList).filter((c) =>
+              c.startsWith("activeIcon___"),
+            ),
+          );
+        });
+
+      if (!targetLi || !direction) return;
+
+      // Find or create the sort icon div in the target column
+      let sortDiv = targetLi.querySelector('[class*="sortIcon___"]');
+      if (!sortDiv) {
+        sortDiv = document.createElement("div");
+        sortDiv.className = "sortIcon___LNQ9D";
+        targetLi.appendChild(sortDiv);
+      }
+      // Always reapply positioning so Torn's direction-specific top values don't interfere.
+      sortDiv.style.position = "absolute";
+      sortDiv.style.left = "50%";
+      sortDiv.style.transform = "translateX(-50%)";
+      sortDiv.style.margin = "0";
+
+      // Remove old direction classes
+      sortDiv.classList.remove(
+        ...Array.from(sortDiv.classList).filter(
+          (c) => c.startsWith("asc___") || c.startsWith("desc___"),
+        ),
+      );
+
+      // Add the correct direction class (Torn's exact class names from the live page)
+      if (direction === "asc") {
+        // Keep ascending arrow inside the header.
+        sortDiv.style.top = "auto";
+        sortDiv.style.bottom = "0px";
+        sortDiv.classList.add("asc___YAXFZ");
+      } else {
+        // Place descending arrow so its top edge sits at the header bottom.
+        sortDiv.style.top = "100%";
+        sortDiv.style.bottom = "auto";
+        sortDiv.classList.add("desc___ZvHWf");
+      }
+
+      // Make it visible
+      sortDiv.classList.add("activeIcon___SwNJj");
+    }
+
+    const apply_ff_sort_order = (sortOrder) => {
+      const table_body = document.querySelector(".table-body");
+      if (!table_body) {
+        return;
+      }
+
+      const member_rows = Array.from(
+        table_body.querySelectorAll(":scope > .table-row"),
+      );
+
+      if (sortOrder === "desc") {
+        member_rows.sort((a, b) => get_ff_for_row(b) - get_ff_for_row(a));
+        setTimeout(function () {
+          setSortArrow(ff_li, "desc");
+        }, 0);
+        // Reset the other column's remembered order to a valid two-state value.
+        currentEstSortOrder = "desc";
+        ffSettingsSet(estSortOrderKey, "desc");
+      } else {
+        member_rows.sort((a, b) => get_ff_for_row(a) - get_ff_for_row(b));
+        setTimeout(function () {
+          setSortArrow(ff_li, "asc");
+        }, 0);
+        currentEstSortOrder = "desc";
+        ffSettingsSet(estSortOrderKey, "desc");
+      }
+
+      member_rows.forEach((row) => table_body.appendChild(row));
+      currentFFSortOrder = sortOrder;
+      ffSettingsSet(ffSortOrderKey, sortOrder);
+    };
+
+    const apply_est_sort_order = (sortOrder) => {
+      const table_body = document.querySelector(".table-body");
+      if (!table_body) {
+        return;
+      }
+
+      const member_rows = Array.from(
+        table_body.querySelectorAll(":scope > .table-row"),
+      );
+
+      if (sortOrder === "desc") {
+        member_rows.sort(
+          (a, b) => get_estimate_for_row(b) - get_estimate_for_row(a),
+        );
+        setTimeout(function () {
+          setSortArrow(est_li, "desc");
+        }, 0);
+        currentFFSortOrder = "desc";
+        ffSettingsSet(ffSortOrderKey, "desc");
+      } else {
+        member_rows.sort(
+          (a, b) => get_estimate_for_row(a) - get_estimate_for_row(b),
+        );
+        setTimeout(function () {
+          setSortArrow(est_li, "asc");
+        }, 0);
+        currentFFSortOrder = "desc";
+        ffSettingsSet(ffSortOrderKey, "desc");
+      }
+
+      member_rows.forEach((row) => table_body.appendChild(row));
+      currentEstSortOrder = sortOrder;
+      ffSettingsSet(estSortOrderKey, sortOrder);
+    };
+
+    ff_li.onclick = () => {
+      // Two-state toggle only, matching Torn's native column headers.
+      const nextSortOrder = currentFFSortOrder === "desc" ? "asc" : "desc";
+      apply_ff_sort_order(nextSortOrder);
+    };
+
+    est_li.onclick = () => {
+      // Two-state toggle only, matching Torn's native column headers.
+      const nextSortOrder = currentEstSortOrder === "desc" ? "asc" : "desc";
+      apply_est_sort_order(nextSortOrder);
+    };
+
+    const tableHeader = document.querySelector(".table-header");
+    if (tableHeader && !tableHeader.dataset.ffScouterSortSyncBound) {
+      tableHeader.dataset.ffScouterSortSyncBound = "true";
+      tableHeader.addEventListener("click", function (event) {
+        const clickedHeaderCell = event.target.closest(".table-header > .table-cell");
+        if (!clickedHeaderCell) {
+          return;
+        }
+        if (clickedHeaderCell === ff_li || clickedHeaderCell === est_li) {
+          return;
+        }
+
+        // Defer to allow Torn to render its own active arrow first.
+        setTimeout(function () {
+          clearCustomSortArrows();
+        }, 0);
+      });
+    }
+
+    // Reapply the user's previous sorting preference for the active column.
+    if (showBSDefault) {
+      apply_est_sort_order(currentEstSortOrder);
+    } else {
+      apply_ff_sort_order(currentFFSortOrder);
+    }
 
     document
       .querySelectorAll(".table-body > .table-row > .member")
@@ -2842,7 +3031,7 @@ if (!singleton) {
     factionsColDiv.className = "ff-settings-entry ff-settings-entry-small";
     const factionsColLabel = document.createElement("label");
     factionsColLabel.setAttribute("for", "factions-col-display");
-    factionsColLabel.textContent = "Factions page FF column shows:";
+    factionsColLabel.textContent = "Faction Page Shows:";
     factionsColLabel.className = "ff-settings-label ff-settings-label-inline";
     factionsColDiv.appendChild(factionsColLabel);
     const factionsColSelect = document.createElement("select");
@@ -2850,14 +3039,14 @@ if (!singleton) {
     factionsColSelect.className = "ff-settings-input";
     const ffOption = document.createElement("option");
     ffOption.value = "fair_fight";
-    ffOption.textContent = "Fair Fight score";
+    ffOption.textContent = "FF Score";
     factionsColSelect.appendChild(ffOption);
     const bsOption = document.createElement("option");
     bsOption.value = "battle_stats";
-    bsOption.textContent = "Battle Stats estimate";
+    bsOption.textContent = "BS Estimate";
     factionsColSelect.appendChild(bsOption);
     factionsColSelect.value =
-      ffSettingsGet("factions-col-display") || "fair_fight";
+      ffSettingsGet("factions-col-display") || "battle_stats";
     factionsColDiv.appendChild(factionsColSelect);
     content.appendChild(factionsColDiv);
 
@@ -2904,7 +3093,7 @@ if (!singleton) {
       ffSettingsSetToggle("war-monitor-enabled", true);
       ffSettingsSetToggle("debug-logs", false);
       ffSettingsSet("ff-history-enabled", "true");
-      ffSettingsSet("factions-col-display", "fair_fight");
+      ffSettingsSet("factions-col-display", "battle_stats");
 
       document.getElementById("ff-ranges").value = "";
       document.getElementById("chain-button-toggle").checked = true;
@@ -2914,7 +3103,7 @@ if (!singleton) {
       document.getElementById("war-monitor-toggle").checked = true;
       document.getElementById("debug-logs").checked = false;
       document.getElementById("ff-history-toggle").checked = true;
-      document.getElementById("factions-col-display").value = "fair_fight";
+      document.getElementById("factions-col-display").value = "battle_stats";
 
       document.getElementById("ff-ranges").style.outline = "none";
 
