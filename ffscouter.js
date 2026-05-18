@@ -156,6 +156,27 @@ if (!singleton) {
                 vertical-align: bottom;
             }
 
+            #ff-scouter-profile-flight-info {
+                position: absolute;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                z-index: 2;
+                margin: 0;
+                padding: 2px 4px 4px;
+                box-sizing: border-box;
+                text-align: center;
+                font-size: 11px;
+                line-height: 1.25;
+                color: #fff;
+                text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85);
+                pointer-events: none;
+            }
+
+            #ff-scouter-profile-flight-info a {
+                pointer-events: auto;
+            }
+
             /* FF Scouter CSS Variables */
             body {
                 --ff-bg-color: #f0f0f0;
@@ -1165,9 +1186,8 @@ if (!singleton) {
     return value.replace(/\s+/g, " ").trim();
   }
 
-  // Travel checks should only run when the profile is showing a real Torn
-  // travel route, not when unrelated UI text (e.g. action dialogs) contains
-  // the word "to". We gate by known origin/destination names.
+  // Secondary validation: route text from `.profile-status` must look like a real
+  // Torn travel leg (e.g. "Torn to Japan") with known origin/destination names.
   const KNOWN_TRAVEL_LOCATIONS = new Set([
     "torn",
     "argentina",
@@ -1221,27 +1241,46 @@ if (!singleton) {
     return { origin, destination };
   }
 
-  function get_element_own_text(element) {
-    if (!element) return "";
-    return normalize_travel_description(
-      Array.from(element.childNodes)
-        .filter((node) => node.nodeType === Node.TEXT_NODE)
-        .map((node) => node.textContent || "")
-        .join(" "),
-    );
+  // Read route text from `.profile-status` without our own landing line (which
+  // would break route parsing and cause the line to flicker every second).
+  function get_profile_status_travel_text(profileStatusEl) {
+    if (!profileStatusEl || !profileStatusEl.isConnected) {
+      return "";
+    }
+    const clone = profileStatusEl.cloneNode(true);
+    clone
+      .querySelectorAll("#ff-scouter-profile-flight-info")
+      .forEach((element) => element.remove());
+    return normalize_travel_description(clone.textContent || "");
   }
 
-  function get_profile_travel_status_element() {
+  function query_profile_status_element() {
     const profileWrapper = document.querySelector(".profile-wrapper");
     if (!profileWrapper) {
       return null;
     }
+    return (
+      profileWrapper.querySelector(".profile-status") ||
+      profileWrapper.querySelector('[class*="profile-status"]')
+    );
+  }
 
-    const candidates = Array.from(profileWrapper.querySelectorAll("span, div, p"))
+  function is_profile_status_container(element) {
+    if (!element?.classList) {
+      return false;
+    }
+    return Array.from(element.classList).some((className) =>
+      className.startsWith("profile-status"),
+    );
+  }
+
+  function find_profile_route_label_element(profileStatus) {
+    return Array.from(profileStatus.querySelectorAll("span, div, p, a"))
       .filter((element) => {
-        if (!element || !element.isConnected) return false;
+        if (!element?.isConnected) return false;
         if (element.id === "ff-scouter-profile-flight-info") return false;
-        const text = get_element_own_text(element);
+        if (is_profile_status_container(element)) return false;
+        const text = normalize_travel_description(element.textContent || "");
         return (
           text.length > 0 &&
           text.length < 64 &&
@@ -1250,46 +1289,94 @@ if (!singleton) {
       })
       .sort(
         (a, b) =>
-          get_element_own_text(a).length - get_element_own_text(b).length,
-      );
+          normalize_travel_description(a.textContent || "").length -
+          normalize_travel_description(b.textContent || "").length,
+      )[0];
+  }
 
-    if (candidates.length === 0) {
+  // Banner wrapper around the jet image + route label; landing overlays its bottom.
+  function find_profile_flight_info_host(profileStatus) {
+    const routeLabel = find_profile_route_label_element(profileStatus);
+    if (routeLabel?.parentElement && profileStatus.contains(routeLabel.parentElement)) {
+      let host = routeLabel.parentElement;
+      // Step up to the visual banner container (child of profile-status).
+      if (
+        host.parentElement &&
+        host.parentElement !== profileStatus &&
+        profileStatus.contains(host.parentElement)
+      ) {
+        host = host.parentElement;
+      }
+      return host;
+    }
+
+    const travelChip =
+      profileStatus.querySelector(".travel-status") ||
+      profileStatus.querySelector('[class*="travel-status"]');
+    if (
+      travelChip?.parentElement &&
+      profileStatus.contains(travelChip.parentElement)
+    ) {
+      return travelChip.parentElement;
+    }
+
+    return profileStatus;
+  }
+
+  function prepare_profile_flight_info_host(host) {
+    if (!host?.style) return;
+    if (window.getComputedStyle(host).position === "static") {
+      host.style.position = "relative";
+    }
+  }
+
+  function get_profile_travel_status_element() {
+    // Strict scope: only Torn's status box may trigger flight checks. If Torn
+    // renames this node, detection fails closed (no false positives elsewhere).
+    const profileStatus = query_profile_status_element();
+    if (!profileStatus || !profileStatus.isConnected) {
       return null;
     }
 
-    const element = candidates[0];
+    const statusDescription = get_profile_status_travel_text(profileStatus);
+    if (
+      !statusDescription ||
+      statusDescription.length >= 64 ||
+      parse_profile_travel_route(statusDescription) === null
+    ) {
+      return null;
+    }
+
     return {
-      element: element,
-      status_description: get_element_own_text(element),
+      host: find_profile_flight_info_host(profileStatus),
+      profileStatus,
+      status_description: statusDescription,
     };
   }
 
-  function ensure_profile_flight_info_line(travelStatusEl, statusDescription) {
-    if (!travelStatusEl || !travelStatusEl.parentNode) return null;
+  function ensure_profile_flight_info_line(flightHost, statusDescription) {
+    if (!flightHost || !flightHost.isConnected) return null;
     const hostKey = normalize_travel_description(statusDescription || "");
-    if (
-      profileFlightInfoLine &&
-      profileFlightInfoLine.isConnected &&
-      profileFlightInfoLine.dataset.hostKey === hostKey
-    ) {
-      return profileFlightInfoLine;
+
+    let line =
+      profileFlightInfoLine ||
+      document.getElementById("ff-scouter-profile-flight-info");
+    if (line && line.isConnected && flightHost.contains(line)) {
+      profileFlightInfoLine = line;
+      line.dataset.hostKey = hostKey;
+      return line;
     }
 
-    if (profileFlightInfoLine) {
-      profileFlightInfoLine.remove();
+    if (line) {
+      line.remove();
     }
 
+    prepare_profile_flight_info_host(flightHost);
     profileFlightInfoLine = document.createElement("div");
     profileFlightInfoLine.id = "ff-scouter-profile-flight-info";
-    profileFlightInfoLine.style.display = "block";
-    profileFlightInfoLine.style.marginTop = "4px";
-    profileFlightInfoLine.style.fontSize = "12px";
-    profileFlightInfoLine.style.lineHeight = "1.35";
-    profileFlightInfoLine.style.color = "inherit";
+    profileFlightInfoLine.className = "ff-scouter-profile-flight-info";
     profileFlightInfoLine.dataset.hostKey = hostKey;
-    // Render as a sibling line beneath the travel text so interactive elements
-    // (e.g. upgrade link) are not nested inside possible aria-hidden wrappers.
-    travelStatusEl.insertAdjacentElement("afterend", profileFlightInfoLine);
+    flightHost.insertAdjacentElement("beforeend", profileFlightInfoLine);
     return profileFlightInfoLine;
   }
 
@@ -1445,7 +1532,7 @@ if (!singleton) {
     }
 
     const line = ensure_profile_flight_info_line(
-      travelStatus.element,
+      travelStatus.host,
       travelStatus.status_description,
     );
     if (!line) return;
