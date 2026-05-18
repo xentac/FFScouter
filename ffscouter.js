@@ -1165,6 +1165,62 @@ if (!singleton) {
     return value.replace(/\s+/g, " ").trim();
   }
 
+  // Travel checks should only run when the profile is showing a real Torn
+  // travel route, not when unrelated UI text (e.g. action dialogs) contains
+  // the word "to". We gate by known origin/destination names.
+  const KNOWN_TRAVEL_LOCATIONS = new Set([
+    "torn",
+    "argentina",
+    "canada",
+    "cayman islands",
+    "china",
+    "hawaii",
+    "japan",
+    "mexico",
+    "south africa",
+    "switzerland",
+    "uae",
+    "united arab emirates",
+    "uk",
+    "united kingdom",
+  ]);
+
+  function normalize_travel_location(value) {
+    return normalize_travel_description(value)
+      .toLowerCase()
+      .replace(/[^\w\s]/g, "");
+  }
+
+  function is_known_travel_location(value) {
+    return KNOWN_TRAVEL_LOCATIONS.has(normalize_travel_location(value));
+  }
+
+  function parse_profile_travel_route(statusDescription) {
+    const normalized = normalize_travel_description(statusDescription);
+    const match = normalized.match(
+      /^(?<origin>[A-Za-z][A-Za-z '&-]*)\s+to\s+(?<destination>[A-Za-z][A-Za-z '&-]*)$/,
+    );
+    if (!match) {
+      return null;
+    }
+
+    const origin = normalize_travel_description(match.groups.origin || "");
+    const destination = normalize_travel_description(
+      match.groups.destination || "",
+    );
+    if (!origin || !destination) {
+      return null;
+    }
+    if (
+      !is_known_travel_location(origin) ||
+      !is_known_travel_location(destination)
+    ) {
+      return null;
+    }
+
+    return { origin, destination };
+  }
+
   function get_element_own_text(element) {
     if (!element) return "";
     return normalize_travel_description(
@@ -1181,13 +1237,16 @@ if (!singleton) {
       return null;
     }
 
-    const travelPattern = /^[A-Za-z][A-Za-z '&-]*\s+to\s+[A-Za-z][A-Za-z '&-]*$/;
     const candidates = Array.from(profileWrapper.querySelectorAll("span, div, p"))
       .filter((element) => {
         if (!element || !element.isConnected) return false;
         if (element.id === "ff-scouter-profile-flight-info") return false;
         const text = get_element_own_text(element);
-        return text.length > 0 && text.length < 64 && travelPattern.test(text);
+        return (
+          text.length > 0 &&
+          text.length < 64 &&
+          parse_profile_travel_route(text) !== null
+        );
       })
       .sort(
         (a, b) =>
