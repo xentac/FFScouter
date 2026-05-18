@@ -165,7 +165,7 @@ if (!singleton) {
                 margin: 0;
                 padding: 2px 4px 4px;
                 box-sizing: border-box;
-                text-align: center;
+                text-align: right;
                 font-size: 11px;
                 line-height: 1.25;
                 color: #fff;
@@ -1181,202 +1181,33 @@ if (!singleton) {
     return `${hours}:${minutes}`;
   }
 
-  function normalize_travel_description(value) {
-    if (typeof value !== "string") return "";
-    return value.replace(/\s+/g, " ").trim();
-  }
-
-  // Secondary validation: route text from `.profile-status` must look like a real
-  // Torn travel leg (e.g. "Torn to Japan") with known origin/destination names.
-  const KNOWN_TRAVEL_LOCATIONS = new Set([
-    "torn",
-    "argentina",
-    "canada",
-    "cayman islands",
-    "china",
-    "hawaii",
-    "japan",
-    "mexico",
-    "south africa",
-    "switzerland",
-    "uae",
-    "united arab emirates",
-    "uk",
-    "united kingdom",
-  ]);
-
-  function normalize_travel_location(value) {
-    return normalize_travel_description(value)
-      .toLowerCase()
-      .replace(/[^\w\s]/g, "");
-  }
-
-  function is_known_travel_location(value) {
-    return KNOWN_TRAVEL_LOCATIONS.has(normalize_travel_location(value));
-  }
-
-  function parse_profile_travel_route(statusDescription) {
-    const normalized = normalize_travel_description(statusDescription);
-    const match = normalized.match(
-      /^(?<origin>[A-Za-z][A-Za-z '&-]*)\s+to\s+(?<destination>[A-Za-z][A-Za-z '&-]*)$/,
-    );
-    if (!match) {
-      return null;
-    }
-
-    const origin = normalize_travel_description(match.groups.origin || "");
-    const destination = normalize_travel_description(
-      match.groups.destination || "",
-    );
-    if (!origin || !destination) {
-      return null;
-    }
-    if (
-      !is_known_travel_location(origin) ||
-      !is_known_travel_location(destination)
-    ) {
-      return null;
-    }
-
-    return { origin, destination };
-  }
-
-  // Read route text from `.profile-status` without our own landing line (which
-  // would break route parsing and cause the line to flicker every second).
-  function get_profile_status_travel_text(profileStatusEl) {
-    if (!profileStatusEl || !profileStatusEl.isConnected) {
-      return "";
-    }
-    const clone = profileStatusEl.cloneNode(true);
-    clone
-      .querySelectorAll("#ff-scouter-profile-flight-info")
-      .forEach((element) => element.remove());
-    return normalize_travel_description(clone.textContent || "");
-  }
-
   function query_profile_status_element() {
-    const profileWrapper = document.querySelector(".profile-wrapper");
-    if (!profileWrapper) {
-      return null;
-    }
-    return (
-      profileWrapper.querySelector(".profile-status") ||
-      profileWrapper.querySelector('[class*="profile-status"]')
-    );
+    return document.querySelector(".profile-status");
   }
 
-  function is_profile_status_container(element) {
-    if (!element?.classList) {
-      return false;
-    }
-    return Array.from(element.classList).some((className) =>
-      className.startsWith("profile-status"),
-    );
-  }
-
-  function find_profile_route_label_element(profileStatus) {
-    return Array.from(profileStatus.querySelectorAll("span, div, p, a"))
-      .filter((element) => {
-        if (!element?.isConnected) return false;
-        if (element.id === "ff-scouter-profile-flight-info") return false;
-        if (is_profile_status_container(element)) return false;
-        const text = normalize_travel_description(element.textContent || "");
-        return (
-          text.length > 0 &&
-          text.length < 64 &&
-          parse_profile_travel_route(text) !== null
-        );
-      })
-      .sort(
-        (a, b) =>
-          normalize_travel_description(a.textContent || "").length -
-          normalize_travel_description(b.textContent || "").length,
-      )[0];
-  }
-
-  // Banner wrapper around the jet image + route label; landing overlays its bottom.
-  function find_profile_flight_info_host(profileStatus) {
-    const routeLabel = find_profile_route_label_element(profileStatus);
-    if (routeLabel?.parentElement && profileStatus.contains(routeLabel.parentElement)) {
-      let host = routeLabel.parentElement;
-      // Step up to the visual banner container (child of profile-status).
-      if (
-        host.parentElement &&
-        host.parentElement !== profileStatus &&
-        profileStatus.contains(host.parentElement)
-      ) {
-        host = host.parentElement;
-      }
-      return host;
-    }
-
-    const travelChip =
-      profileStatus.querySelector(".travel-status") ||
-      profileStatus.querySelector('[class*="travel-status"]');
-    if (
-      travelChip?.parentElement &&
-      profileStatus.contains(travelChip.parentElement)
-    ) {
-      return travelChip.parentElement;
-    }
-
-    return profileStatus;
-  }
-
+  // TODO: I'm not sure how I feel about changing the profile-status to relative position. Re-evaluate this.
   function prepare_profile_flight_info_host(host) {
     if (!host?.style) return;
-    if (window.getComputedStyle(host).position === "static") {
-      host.style.position = "relative";
-    }
+    host.style.position = "relative";
   }
 
-  function get_profile_travel_status_element() {
-    // Strict scope: only Torn's status box may trigger flight checks. If Torn
-    // renames this node, detection fails closed (no false positives elsewhere).
-    const profileStatus = query_profile_status_element();
-    if (!profileStatus || !profileStatus.isConnected) {
-      return null;
-    }
+  function ensure_profile_flight_info_line(profileStatus) {
+    if (!profileStatus || !profileStatus.isConnected) return null;
 
-    const statusDescription = get_profile_status_travel_text(profileStatus);
-    if (
-      !statusDescription ||
-      statusDescription.length >= 64 ||
-      parse_profile_travel_route(statusDescription) === null
-    ) {
-      return null;
-    }
-
-    return {
-      host: find_profile_flight_info_host(profileStatus),
-      profileStatus,
-      status_description: statusDescription,
-    };
-  }
-
-  function ensure_profile_flight_info_line(flightHost, statusDescription) {
-    if (!flightHost || !flightHost.isConnected) return null;
-    const hostKey = normalize_travel_description(statusDescription || "");
-
+    // If a line already exists, use that
     let line =
       profileFlightInfoLine ||
-      document.getElementById("ff-scouter-profile-flight-info");
-    if (line && line.isConnected && flightHost.contains(line)) {
+      profileStatus.querySelector(".ff-scouter-profile-flight-info");
+    if (line && line.isConnected && profileStatus.contains(line)) {
       profileFlightInfoLine = line;
-      line.dataset.hostKey = hostKey;
       return line;
     }
 
-    if (line) {
-      line.remove();
-    }
-
-    prepare_profile_flight_info_host(flightHost);
+    prepare_profile_flight_info_host(profileStatus);
     profileFlightInfoLine = document.createElement("div");
     profileFlightInfoLine.id = "ff-scouter-profile-flight-info";
     profileFlightInfoLine.className = "ff-scouter-profile-flight-info";
-    profileFlightInfoLine.dataset.hostKey = hostKey;
-    flightHost.insertAdjacentElement("beforeend", profileFlightInfoLine);
+    profileStatus.insertAdjacentElement("beforeend", profileFlightInfoLine);
     return profileFlightInfoLine;
   }
 
@@ -1389,6 +1220,10 @@ if (!singleton) {
 
   function build_landing_window_html(earliest, latest) {
     const nowUnix = Date.now() / 1000;
+    // Use Torn's builtin synced clock if it exists
+    if (window.getCurrentTimestamp) {
+      now = window.getCurrentTimestamp() / 1000;
+    }
     const earliestRemaining = Math.max(0, earliest - nowUnix);
     const latestRemaining = Math.max(0, latest - nowUnix);
     const earliestTct = format_tct_time(earliest);
@@ -1520,21 +1355,23 @@ if (!singleton) {
   }
 
   function refresh_profile_flight_tracking(target_id) {
-    if (!target_id || !window.location.pathname.startsWith("/profiles.php")) {
+    if (!target_id) {
       clear_profile_flight_info_line();
       return;
     }
 
-    const travelStatus = get_profile_travel_status_element();
-    if (!travelStatus || !travelStatus.status_description.includes(" to ")) {
+    // Check the profile status to see if they're currently traveling, if not, give up
+    const profileStatus = query_profile_status_element();
+    if (
+      !profileStatus ||
+      !profileStatus.isConnected ||
+      !profileStatus.classList.contains("travelling")
+    ) {
       clear_profile_flight_info_line();
       return;
     }
 
-    const line = ensure_profile_flight_info_line(
-      travelStatus.host,
-      travelStatus.status_description,
-    );
+    const line = ensure_profile_flight_info_line(profileStatus);
     if (!line) return;
 
     const isPremium = getCachedPremiumStatus();
@@ -1549,7 +1386,7 @@ if (!singleton) {
       return;
     }
 
-    const cacheKey = `${travelStatus.status_description}|${target_id}`;
+    const cacheKey = `${profileStatus.className}|${target_id}`;
     const cached = profileFlightCache.get(cacheKey);
     const now = Date.now();
 
@@ -1576,10 +1413,7 @@ if (!singleton) {
       line.textContent = `No data. Rechecking in ${secondsToRetry} seconds.`;
 
       if (now >= cached.next_retry_at) {
-        fetch_profile_flight_window(
-          target_id,
-          cacheKey,
-        );
+        fetch_profile_flight_window(target_id, cacheKey);
       }
       return;
     }
@@ -1600,10 +1434,7 @@ if (!singleton) {
         : now - cached.fetched_at < PROFILE_FLIGHT_CACHE_TTL_MS);
 
     if (!isFresh) {
-      fetch_profile_flight_window(
-        target_id,
-        cacheKey,
-      );
+      fetch_profile_flight_window(target_id, cacheKey);
       if (!cached) {
         line.textContent = "Landing: estimating...";
       }
@@ -1611,7 +1442,10 @@ if (!singleton) {
     }
 
     if (cached.type === "window") {
-      line.innerHTML = build_landing_window_html(cached.earliest, cached.latest);
+      line.innerHTML = build_landing_window_html(
+        cached.earliest,
+        cached.latest,
+      );
       return;
     }
 
@@ -2239,7 +2073,10 @@ if (!singleton) {
     update_ff_cache([target_id], function (target_ids) {
       display_fair_fight(target_ids[0], target_id);
     });
-    init_profile_flight_tracking(target_id);
+    // Only apply the flight tracker to profile pages
+    if (match1) {
+      init_profile_flight_tracking(target_id);
+    }
 
     // Inject Stats History button into Actions area
     // Use a MutationObserver in case the Actions area loads after page JS runs
