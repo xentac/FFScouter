@@ -1,4 +1,5 @@
 import { Features } from "@features/index";
+import { toast } from "@ui/toast";
 import { query_stats } from "@utils/api";
 import { FFConfig } from "@utils/ffconfig";
 import { FFScouter } from "@utils/ffscouter";
@@ -17,16 +18,18 @@ async function main() {
   w[INJECTION_KEY] = true;
 
   // TODO: Add version code here
-  logger.info("Initializing", __FF_SCOUTER_V3_VERSION__);
+  logger.info("Initializing", __FF_SCOUTER_V2_VERSION__);
 
   init_ui();
 
   unsafeWindow["FFScouter"] = FFScouter;
   unsafeWindow["query_stats"] = query_stats;
+  unsafeWindow["toast"] = toast;
   unsafeWindow["FFConfig"] = FFConfig;
 
   window["FFScouter"] = FFScouter;
   window["query_stats"] = query_stats;
+  window["toast"] = toast;
   window["FFConfig"] = FFConfig;
 
   // todo: settings panel

@@ -20,8 +20,9 @@ export default defineConfig(({ mode }) => {
           fileName: isDev ? "base-dev.user.js" : "base.user.js",
         },
         userscript: {
-          name: "FF Scouter V3",
-          author: "xentac [3354782], MAVRI [2402357]",
+          name: "FF Scouter V2",
+          author:
+            "xentac [3354782], MAVRI [2402357], rDacted [2670953], Weav3r [1853324], Glasnost [1844049]",
           description:
             "Shows the expected Fair Fight score against targets and faction war status",
           copyright: "2026, xentac",

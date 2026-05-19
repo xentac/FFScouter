@@ -1,1 +1,1 @@
-declare const __FF_SCOUTER_V3_VERSION__: string;
+declare const __FF_SCOUTER_V2_VERSION__: string;
