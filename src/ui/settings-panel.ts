@@ -227,6 +227,19 @@ export class FFSettingsPanel extends LitElement {
         </summary>
 
         <div style="margin-top: 15px;">
+          <div class="ff-api-explanation">
+            <strong>Important:</strong> You must use the SAME exact API key that
+            you use on
+            <a href="https://ffscouter.com/" target="_blank">ffscouter.com</a>.
+            <br /><br />
+            If you're not sure which API key you used, go to
+            <a
+              href="https://www.torn.com/preferences.php#tab=api"
+              target="_blank"
+              >your API preferences</a
+            >
+            and look for "FFScouter3" in your API key history comments.
+          </div>
           <!-- API Key Input -->
           <div class="input-row">
             <label for="api-key">API Key:</label>
@@ -381,7 +394,7 @@ export class FFSettingsPanel extends LitElement {
 
           <!-- Action Buttons Area -->
           <div
-            style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 20px;"
+            style="display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px; margin-top: 20px;"
           >
             <button class="torn-btn btn-save" @click=${this.handleSave}>
               Save Settings
