@@ -47,3 +47,90 @@ body.dark-mode {
   --ffsv3-glow-color: #4caf50;
   --ffsv3-success-color: #4caf50;
 }
+
+ff-settings-panel {
+  display: block;
+}
+
+ff-settings-panel .accordion {
+  margin: 10px 0;
+  padding: 15px;
+  background-color: var(--ffsv3-bg-color);
+  border: 1px solid var(--ffsv3-border-color);
+  border-radius: 5px;
+  color: var(--ffsv3-text-color);
+}
+
+ff-settings-panel .accordion.glow {
+  border-color: var(--ffsv3-glow-color);
+  box-shadow: 0 0 8px rgba(76, 175, 80, 0.5);
+}
+
+ff-settings-panel .input-row {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-bottom: 15px;
+}
+
+ff-settings-panel .input-row-inline {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+ff-settings-panel .blur-mode {
+  filter: blur(4px);
+  transition: filter 0.2s ease;
+}
+
+ff-settings-panel .blur-mode:hover,
+ff-settings-panel .blur-mode:focus {
+  filter: blur(0);
+}
+
+ff-settings-panel .error-msg {
+  color: #ff3333;
+  font-size: 13px;
+  margin-top: 5px;
+}
+
+ff-settings-panel input[type="text"],
+ff-settings-panel input[type="number"] {
+  text-align: left;
+  vertical-align: top;
+  width: 178px;
+  height: 14px;
+  margin-right: 8px;
+  padding: 9px 10px;
+  line-height: 14px;
+  display: inline-block;
+}
+
+ff-settings-panel input[type="number"].ff-number {
+  width: 52px;
+}
+
+ff-settings-panel select {
+  box-sizing: border-box;
+  text-align: left;
+  vertical-align: top;
+  width: 178px;
+  height: 34px;
+  margin-right: 8px;
+  padding: 8px 10px;
+  line-height: 14px;
+  display: inline-block;
+
+  border: var(--input-border-color);
+  border-radius: 5px;
+  font-family: Arial, serif;
+  color: var(--input-color);
+  background: var(--input-background-color);
+}
+
+:root .dark-mode ff-settings-panel select option {
+  background-color: rgb(0, 0, 0);
+  color: var(--input-color);
+}

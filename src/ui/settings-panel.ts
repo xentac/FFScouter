@@ -4,83 +4,14 @@ import {
   CONFIG_DEFAULTS,
   type FactionsColDisplay,
 } from "@utils/ffconfig";
-import { css, html, LitElement } from "lit";
+import { html, LitElement } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 
 @customElement("ff-settings-panel")
 export class FFSettingsPanel extends LitElement {
-  static override styles = css`
-    .accordion {
-      margin: 10px 0;
-      padding: 15px;
-      background-color: #333;
-      border: 1px solid #444;
-      border-radius: 5px;
-      color: #ccc;
-    }
-    .input-row {
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-      margin-bottom: 15px;
-    }
-    .input-row-inline {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 15px;
-    }
-    input[type="text"],
-    input[type="number"],
-    select {
-      padding: 8px;
-      background-color: #504f4f;
-      color: white;
-      border: 1px solid #444;
-      border-radius: 3px;
-    }
-    .btn-save {
-      padding: 8px 16px;
-      background-color: #4caf50;
-      color: white;
-      border: none;
-      border-radius: 3px;
-      cursor: pointer;
-      font-weight: bold;
-    }
-    .btn-save:hover {
-      background-color: #45a049;
-    }
-    .btn-secondary {
-      padding: 8px 16px;
-      background-color: #555;
-      color: white;
-      border: none;
-      border-radius: 3px;
-      cursor: pointer;
-      font-weight: bold;
-    }
-    .btn-secondary:hover {
-      background-color: #666;
-    }
-    .glow {
-      border-color: #4caf50;
-      box-shadow: 0 0 8px rgba(76, 175, 80, 0.5);
-    }
-    .blur-mode {
-      filter: blur(4px);
-      transition: filter 0.2s ease;
-    }
-    .blur-mode:hover,
-    .blur-mode:focus {
-      filter: blur(0);
-    }
-    .error-msg {
-      color: #ff3333;
-      font-size: 13px;
-      margin-top: 5px;
-    }
-  `;
+  protected override createRenderRoot() {
+    return this;
+  }
 
   // Inputs
   @property({ type: String }) apiKey = "";
@@ -288,7 +219,9 @@ export class FFSettingsPanel extends LitElement {
 
   override render() {
     return html`
-      <details class="accordion ${!this.apiKey ? "glow" : ""}">
+      <details
+        class="accordion ${!this.apiKey ? "glow" : ""} cont-gray border-round"
+      >
         <summary style="cursor: pointer; font-weight: bold;">
           FF Scouter Settings
         </summary>
@@ -315,7 +248,7 @@ export class FFSettingsPanel extends LitElement {
                 id="ff-range-low"
                 type="number"
                 step="0.1"
-                style="width: 70px;"
+                class="ff-number"
                 .value=${this.draftLowRange.toString()}
                 @input=${this.onLowRangeInput}
               />
@@ -324,7 +257,7 @@ export class FFSettingsPanel extends LitElement {
                 id="ff-range-high"
                 type="number"
                 step="0.1"
-                style="width: 70px;"
+                class="ff-number"
                 .value=${this.draftHighRange.toString()}
                 @input=${this.onHighRangeInput}
               />
@@ -333,7 +266,7 @@ export class FFSettingsPanel extends LitElement {
                 id="ff-range-max"
                 type="number"
                 step="0.1"
-                style="width: 70px;"
+                class="ff-number"
                 .value=${this.draftMaxRange.toString()}
                 @input=${this.onMaxRangeInput}
               />
@@ -398,6 +331,7 @@ export class FFSettingsPanel extends LitElement {
                       id="chain-ff-target"
                       type="number"
                       step="0.1"
+                      class="ff-number"
                       .value=${this.draftChainFFTarget.toString()}
                       @input=${this.onChainFFTargetInput}
                     />
@@ -449,13 +383,16 @@ export class FFSettingsPanel extends LitElement {
           <div
             style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 20px;"
           >
-            <button class="btn-save" @click=${this.handleSave}>
+            <button class="torn-btn btn-save" @click=${this.handleSave}>
               Save Settings
             </button>
-            <button class="btn-secondary" @click=${this.handleReset}>
+            <button class="torn-btn btn-secondary" @click=${this.handleReset}>
               Reset to Defaults
             </button>
-            <button class="btn-secondary" @click=${this.handleClearCache}>
+            <button
+              class="torn-btn btn-secondary"
+              @click=${this.handleClearCache}
+            >
               Clear FF Cache
             </button>
             ${
