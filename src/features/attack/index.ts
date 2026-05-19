@@ -24,7 +24,7 @@ export default {
 
   async shouldRun() {
     // Run on the attack page
-    return torn_page("loader", { sid: "attack" });
+    return torn_page("page", { sid: "attack" });
   },
 
   async run() {
