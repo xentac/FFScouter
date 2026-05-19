@@ -2,6 +2,7 @@ import { ffconfig } from "@utils/ffconfig";
 import { type Feature, StartTime } from "../feature";
 import "@ui/settings-panel";
 import { TOAST_LEVEL, toast } from "@ui/toast";
+import { check_key_status } from "@utils/check_key";
 import { torn_page, wait_for_element } from "@utils/dom";
 import { ffscouter } from "@utils/ffscouter";
 
@@ -31,6 +32,7 @@ export default {
     panel.ffHistoryEnabled = ffconfig.ff_history_enabled;
     panel.factionsColDisplay = ffconfig.factions_col_display;
     panel.debugLogs = ffconfig.debug_logs;
+    panel.isPremium = await check_key_status.isPremium(true);
 
     // Listen for the custom save event
     panel.addEventListener("ff-save", async (e: Event) => {
@@ -46,6 +48,7 @@ export default {
       ffconfig.ff_history_enabled = detail.ffHistoryEnabled;
       ffconfig.factions_col_display = detail.factionsColDisplay;
       ffconfig.debug_logs = detail.debugLogs;
+      panel.isPremium = await check_key_status.isPremium(true);
 
       toast("Settings saved successfully!");
     });

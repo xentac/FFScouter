@@ -31,6 +31,7 @@ export class FFSettingsPanel extends LitElement {
   @property({ type: String }) factionsColDisplay: FactionsColDisplay =
     CONFIG_DEFAULTS.factions_col_display;
   @property({ type: Boolean }) debugLogs: boolean = CONFIG_DEFAULTS.debug_logs;
+  @property({ type: Boolean }) isPremium: boolean = false;
 
   // Draft States
   @state() private draftApiKey = "";
@@ -251,6 +252,14 @@ export class FFSettingsPanel extends LitElement {
               .value=${this.draftApiKey}
               @input=${this.onKeyInput}
             />
+          </div>
+          <div class="input-row-inline">
+            <label for="ff-premium-badge">FF Scouter Premium:</label>
+            <span
+              id="ff-premium-badge"
+              class="is_premium_${this.isPremium ? "enabled" : "disabled"}"
+              >${this.isPremium ? "Enabled" : "Disabled"}</span
+            >
           </div>
 
           <!-- Ranges Input -->

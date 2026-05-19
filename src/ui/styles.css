@@ -150,3 +150,25 @@ ff-settings-panel .ff-api-explanation a {
   color: var(--ffsv3-success-color) !important;
   text-decoration: underline;
 }
+
+ff-settings-panel .is_premium_enabled {
+  display: inline-block;
+  background: #4caf50;
+  color: #fff;
+  font-size: 11px;
+  font-weight: bold;
+  padding: 2px 8px;
+  border-radius: 4px;
+  vertical-align: middle;
+}
+
+ff-settings-panel .is_premium_disabled {
+  display: inline-block;
+  background: #c62828;
+  color: #fff;
+  font-size: 11px;
+  font-weight: bold;
+  padding: 2px 8px;
+  border-radius: 4px;
+  vertical-align: middle;
+}

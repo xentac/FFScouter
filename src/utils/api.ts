@@ -54,6 +54,12 @@ function is_ff_success(resp: FFSuccess[] | FFError): resp is FFSuccess[] {
   return (resp as FFError).code === undefined;
 }
 
+function is_ff_check_success(
+  resp: FFCheckSuccess | FFError,
+): resp is FFCheckSuccess {
+  return (resp as FFError).code === undefined;
+}
+
 export type FFApiRateLimits = {
   reset_time: Date;
   remaining: number;
@@ -84,6 +90,30 @@ export class FFApiError extends Error {
     this.ff_api_error = options?.ff_api_error;
   }
 }
+
+export type FFCheckSuccess = {
+  key: string;
+  is_registered: boolean;
+  registered_at: number;
+  last_used: number;
+  policy_version: number;
+  policy_update_required: boolean;
+  is_premium: boolean;
+  premium_expires_at: number;
+  faction_id: number;
+  faction_premium_expires_at: number;
+  premium_entitlement_source: string;
+};
+
+export type FFApiCheckResponse =
+  | {
+      result: FFCheckSuccess;
+      blank: false;
+      limits?: FFApiRateLimits;
+    }
+  | {
+      blank: true;
+    };
 
 export const query_stats = async (
   key: TornApiKey,
@@ -201,4 +231,55 @@ const parse_limit_headers = (
       this_minute,
     };
   }
+};
+
+export const check_key = async (
+  key: TornApiKey,
+  requester: typeof gmRequest = gmRequest,
+): Promise<FFApiCheckResponse> => {
+  const query = new URLSearchParams([["key", key]]);
+  const url = `${FF_SCOUTER_BASE_URL}/check-key?${query.toString()}`;
+
+  const resp = await requester({
+    method: "GET",
+    url: url,
+  });
+
+  if (!resp) {
+    return { blank: true };
+  }
+
+  const limits = parse_limit_headers(resp.responseHeaders);
+  let ff_response: FFCheckSuccess | FFError | null = null;
+  try {
+    ff_response = JSON.parse(resp.responseText);
+  } catch {
+    throw new FFApiError(
+      `API request failed. Couldn't parse response. HTTP status code: ${resp.status}`,
+      { ff_api_limits: limits },
+    );
+  }
+  if (ff_response == null) {
+    // Shouldn't happen
+    throw new FFApiError(
+      `API request failed. Response not set. HTTP status code: ${resp.status}`,
+      { ff_api_limits: limits },
+    );
+  }
+
+  if (!is_ff_check_success(ff_response)) {
+    throw new FFApiError(
+      `API request failed. Error: ${ff_response.error}; Code: ${ff_response.code}`,
+      { ff_api_error: ff_response, ff_api_limits: limits },
+    );
+  }
+
+  if (resp.status !== 200) {
+    throw new FFApiError(
+      `API request failed. HTTP status code: ${resp.status}`,
+      { ff_api_limits: limits },
+    );
+  }
+
+  return { result: ff_response, blank: false, limits: limits };
 };

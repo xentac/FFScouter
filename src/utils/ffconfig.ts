@@ -177,4 +177,4 @@ export class FFConfig {
   }
 }
 
-export const ffconfig = new FFConfig("ffsv3");
+export const ffconfig = new FFConfig("ffsv3-config");
