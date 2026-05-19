@@ -87,7 +87,7 @@ export function get_ff_colour(d: FFDataComplete) {
 // Source: https://mistic100.github.io/tinygradient/
 // Inputs: rgb(33, 102, 172), rgb(27, 120, 55), rgb(215, 48, 39)
 // Steps: 11
-const arrow_gradient = [
+const _arrow_gradient = [
   "#2166ac",
   "#2080a2",
   "#1f9497",
@@ -103,7 +103,7 @@ const arrow_gradient = [
 
 // Alternative variants, triplet generated using https://www.canva.com/colors/color-wheel/
 // Just enter any of the three extreme values
-const arrow_gradient2 = [
+const _arrow_gradient2 = [
   "#0c50ff",
   "#0cb1ff",
   "#0cffec",

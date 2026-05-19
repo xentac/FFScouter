@@ -4,6 +4,7 @@ import {
   wait_for_body,
 } from "@utils/dom";
 import { ffscouter } from "@utils/ffscouter";
+import logger from "@utils/logger";
 import {
   format_difficulty_text,
   format_ff_score,
@@ -11,7 +12,6 @@ import {
 } from "@utils/strings";
 import type { FFData } from "@utils/types";
 import { type Feature, StartTime } from "../feature";
-import logger from "@utils/logger";
 
 const monitor_mini_profile_root = () => {
   const miniprofile = document.querySelector("#profile-mini-root");

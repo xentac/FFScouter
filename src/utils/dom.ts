@@ -1,6 +1,6 @@
 import { ffscouter } from "./ffscouter";
 import logger from "./logger";
-import type { WebSocketInterceptor } from "./network";
+
 import { ff_to_percent, get_ff_arrow_colour } from "./strings";
 import type { FFDataComplete, PlayerId } from "./types";
 

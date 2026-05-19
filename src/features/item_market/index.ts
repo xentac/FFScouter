@@ -1,10 +1,4 @@
-import {
-  create_info_line,
-  extract_id_from_url,
-  torn_page,
-  wait_for_body,
-  wait_for_element,
-} from "@utils/dom";
+import { torn_page, wait_for_body, wait_for_element } from "@utils/dom";
 import { ffscouter } from "@utils/ffscouter";
 import logger from "@utils/logger";
 import { generate_info_line } from "@utils/strings";

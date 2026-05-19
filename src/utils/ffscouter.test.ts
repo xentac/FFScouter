@@ -3,7 +3,7 @@ import { query_stats } from "./api";
 import { FFCache } from "./ffcache";
 import { FFConfig } from "./ffconfig.js";
 import { FFScouter } from "./ffscouter";
-import logger from "./logger.js";
+
 import { generate_test_ff_data } from "./test.js";
 import type { FFData } from "./types.js";
 

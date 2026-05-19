@@ -1,6 +1,6 @@
 import { TornApiClient } from "tornapi-typescript";
-import type { FFData, PlayerId, TornApiKey } from "./types";
 import logger from "./logger";
+import type { FFData, PlayerId, TornApiKey } from "./types";
 
 /// <reference types="tampermonkey" />
 
