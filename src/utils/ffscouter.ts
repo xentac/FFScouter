@@ -137,6 +137,10 @@ export class FFScouter {
     }
   };
 
+  clear_cache = () => {
+    this.cache.delete_db();
+  };
+
   enqueue_api = (player_id: PlayerId) => {
     logger.debug(`Enqueuing api ${player_id}`);
     this.api_queue.add(player_id);
