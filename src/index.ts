@@ -1,6 +1,8 @@
+import { StartTime } from "@features/feature";
 import { Features } from "@features/index";
 import { toast } from "@ui/toast";
 import { query_stats } from "@utils/api";
+import { wait_for_body } from "@utils/dom";
 import { FFConfig } from "@utils/ffconfig";
 import { FFScouter } from "@utils/ffscouter";
 import logger from "@utils/logger";
@@ -57,10 +59,24 @@ async function main() {
     },
   });
 
-  // todo: filter into 2 categories, documentend and documentstart, blah blah
   for (const feat of Features) {
     // + check if feature is toggled
-    if (await feat.shouldRun()) feat.run();
+    if (
+      feat.executionTime === StartTime.DocumentStart &&
+      (await feat.shouldRun())
+    )
+      feat.run();
+  }
+
+  await wait_for_body(10_000);
+
+  for (const feat of Features) {
+    // + check if feature is toggled
+    if (
+      feat.executionTime === StartTime.DocumentBody &&
+      (await feat.shouldRun())
+    )
+      feat.run();
   }
 }
 

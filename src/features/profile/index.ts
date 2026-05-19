@@ -2,7 +2,6 @@ import {
   create_info_line,
   extract_id_from_url,
   torn_page,
-  wait_for_body,
   wait_for_element,
 } from "@utils/dom";
 import { ffscouter } from "@utils/ffscouter";
@@ -25,7 +24,7 @@ function inject_info_line(h4: Element, info_line: Element) {
 export default {
   name: "Profile FF display",
   description: "Shows FF on top left of any profile page",
-  executionTime: StartTime.DocumentStart,
+  executionTime: StartTime.DocumentBody,
 
   async shouldRun() {
     // Run on the profile page
@@ -51,9 +50,6 @@ export default {
 
       // The element already exists
       if (!h4) {
-        if (!(await wait_for_body(10_000))) {
-          return;
-        }
         const elem = await wait_for_element("h4", 10_000);
         if (!elem) {
           return;

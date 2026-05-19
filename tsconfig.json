@@ -20,6 +20,8 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedIndexedAccess": true,
     "noImplicitOverride": true,
+    "experimentalDecorators": true,
+    "useDefineForClassFields": false,
 
     // Some stricter flags (disabled by default)
     "noUnusedLocals": true,

@@ -1,8 +1,4 @@
-import {
-  apply_ff_gauge,
-  get_player_id_in_element,
-  wait_for_body,
-} from "@utils/dom";
+import { apply_ff_gauge, get_player_id_in_element } from "@utils/dom";
 import { ffscouter } from "@utils/ffscouter";
 import logger from "@utils/logger";
 import {
@@ -104,14 +100,13 @@ const setup_mini_observer = () => {
 export default {
   name: "Fill mini profile",
   description: "Add FF data to mini profile",
-  executionTime: StartTime.DocumentStart,
+  executionTime: StartTime.DocumentBody,
 
   async shouldRun() {
     return true;
   },
 
   async run() {
-    await wait_for_body(10_000);
     monitor_mini_profile_root();
     logger.debug("mini-profile installed");
   },

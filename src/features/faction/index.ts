@@ -1,9 +1,4 @@
-import {
-  apply_ff_gauge,
-  torn_page,
-  wait_for_body,
-  wait_for_element,
-} from "@utils/dom";
+import { apply_ff_gauge, torn_page, wait_for_element } from "@utils/dom";
 import logger from "@utils/logger";
 import { type Feature, StartTime } from "../feature";
 
@@ -61,7 +56,7 @@ const apply_ff_members_list = (root: HTMLElement = document.body) => {
 export default {
   name: "Faction page FF display",
   description: "Shows FF arrows on both your faction and other faction pages.",
-  executionTime: StartTime.DocumentStart,
+  executionTime: StartTime.DocumentBody,
 
   async shouldRun() {
     // Run on the attack page
@@ -72,7 +67,6 @@ export default {
   },
 
   async run() {
-    await wait_for_body(10_000);
     wait_for_element(".members-list", 10_000).then((node) => {
       if (node instanceof HTMLElement) {
         logger.debug("Found members-list!");

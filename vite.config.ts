@@ -44,6 +44,7 @@ export default defineConfig(({ mode }) => {
     },
     build: {
       minify: false,
+      sourcemap: isDev ? "inline" : false,
     },
     test: {
       environment: "node",

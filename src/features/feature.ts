@@ -5,6 +5,7 @@ import type { HttpInterceptor } from "@utils/network";
 
 export enum StartTime {
   DocumentStart,
+  DocumentBody,
   DocumentEnd,
 }
 
