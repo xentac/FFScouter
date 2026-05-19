@@ -1,0 +1,49 @@
+.ffsv3-gauge {
+  position: relative;
+  display: block;
+  padding: 0;
+}
+
+.ffsv3-arrow {
+  position: absolute;
+  transform: translate(-50%, -30%);
+  padding: 0;
+  top: 0;
+  left: calc(
+    var(--ffsv3-arrow-width) /
+    2 +
+    var(--band-percent) *
+    (100% - var(--ffsv3-arrow-width)) /
+    100
+  );
+  width: var(--ffsv3-arrow-width);
+  object-fit: cover;
+  pointer-events: none;
+}
+
+.ffsv3-mini-desc {
+  padding: 0 5px;
+}
+
+body {
+  --ffsv3-bg-color: #f0f0f0;
+  --ffsv3-alt-bg-color: #fff;
+  --ffsv3-border-color: #ccc;
+  --ffsv3-input-color: #ccc;
+  --ffsv3-text-color: #000;
+  --ffsv3-hover-color: #ddd;
+  --ffsv3-glow-color: #4caf50;
+  --ffsv3-success-color: #4caf50;
+  --ffsv3-arrow-width: 20px;
+}
+
+body.dark-mode {
+  --ffsv3-bg-color: #333;
+  --ffsv3-alt-bg-color: #383838;
+  --ffsv3-border-color: #444;
+  --ffsv3-input-color: #504f4f;
+  --ffsv3-text-color: #ccc;
+  --ffsv3-hover-color: #555;
+  --ffsv3-glow-color: #4caf50;
+  --ffsv3-success-color: #4caf50;
+}

@@ -3868,3 +3868,5 @@ if (!singleton) {
     }
   });
 }
+
+export default {};
