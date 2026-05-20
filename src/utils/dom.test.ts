@@ -94,6 +94,8 @@ test("add_ff_arrow fetches data and inserts gauge arrow SVG to elements", async 
     bs_estimate: 1000,
     bs_estimate_human: "1k",
     bss_public: 10,
+    source: "bss",
+    premium_insights_available: false,
   });
 
   const anchor = document.createElement("a");

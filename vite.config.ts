@@ -49,11 +49,6 @@ export default defineConfig(({ mode }) => {
     test: {
       environment: "node",
       setupFiles: ["./src/tests/idbsetup.ts"],
-      server: {
-        deps: {
-          inline: ["jsdom", "parse5"],
-        },
-      },
     },
   };
 });

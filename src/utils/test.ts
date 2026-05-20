@@ -13,6 +13,8 @@ export const generate_test_ff_data = (id: PlayerId): FFData => {
     bs_estimate: id * 1000,
     bs_estimate_human: `${id * 1000}`,
     bss_public: id * 10,
+    source: "bss",
+    premium_insights_available: false,
     no_data: false,
   };
 };

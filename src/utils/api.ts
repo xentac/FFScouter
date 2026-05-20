@@ -1,6 +1,6 @@
 import { TornApiClient } from "tornapi-typescript";
 import logger from "./logger";
-import type { FFData, PlayerId, TornApiKey } from "./types";
+import type { FFData, FFDataDistribution, PlayerId, TornApiKey } from "./types";
 
 /// <reference types="tampermonkey" />
 
@@ -43,6 +43,18 @@ export type FFSuccess = {
   bs_estimate_human: string | null;
   bss_public: number | null;
   last_updated: number | null;
+  source: string;
+  premium_insights_available: boolean;
+  distribution: {
+    last_updated: number;
+    distribution_human: string;
+    stats_percentage: {
+      strength?: number;
+      speed?: number;
+      defense?: number;
+      dexterity?: number;
+    } | null;
+  };
 };
 
 export type FFError = {
@@ -172,13 +184,27 @@ export const query_stats = async (
         !result.last_updated ||
         !result.bs_estimate ||
         !result.bs_estimate_human ||
-        !result.bss_public
+        !result.bss_public ||
+        !result.source
       ) {
         results.set(result.player_id, {
           no_data: true,
           player_id: result.player_id,
         });
       } else {
+        let distribution: FFDataDistribution | undefined;
+        if (result.distribution) {
+          distribution = {
+            last_updated: result.distribution.last_updated,
+            distribution_human: result.distribution.distribution_human,
+            stats_percentage: {
+              strength: result.distribution.stats_percentage?.strength,
+              speed: result.distribution.stats_percentage?.speed,
+              defense: result.distribution.stats_percentage?.defense,
+              dexterity: result.distribution.stats_percentage?.dexterity,
+            },
+          };
+        }
         results.set(result.player_id, {
           no_data: false,
           fair_fight: result.fair_fight,
@@ -186,6 +212,10 @@ export const query_stats = async (
           bs_estimate: result.bs_estimate,
           bs_estimate_human: result.bs_estimate_human,
           bss_public: result.bss_public,
+          source: result.source ?? "bss",
+          premium_insights_available:
+            result.premium_insights_available ?? false,
+          distribution: distribution,
           player_id: result.player_id,
         });
       }

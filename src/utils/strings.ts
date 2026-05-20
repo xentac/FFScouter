@@ -6,24 +6,6 @@ const DAY = HOUR * 24;
 
 const OLD_ESTIMATE_INTERVAL = 14 * DAY; // sec
 
-export function generate_info_line(data: FFData) {
-  if (data.no_data) {
-    return `<span style="font-weight: bold; margin-right: 6px;">FairFight:</span><span style="background: #444; color: #fff; font-weight: bold; padding: 2px 6px; border-radius: 4px; display: inline-block;">No data</span>`;
-  }
-  const ff_string = format_ff_score(data);
-  const difficulty = format_difficulty_text(data);
-
-  const fresh = format_relative_time(data);
-
-  const background_colour = get_ff_colour(data);
-  const text_colour = get_contrast_color(background_colour);
-
-  let statDetails = "";
-  statDetails = `<span style="font-size: 11px; font-weight: normal; margin-left: 8px; vertical-align: middle; font-style: italic;">Est. Stats: <span>${data.bs_estimate_human}</span></span>`;
-
-  return `<span style="font-weight: bold; margin-right: 6px;">FairFight:</span><span style="background: ${background_colour}; color: ${text_colour}; font-weight: bold; padding: 2px 6px; border-radius: 4px; display: inline-block;">${ff_string} (${difficulty}) ${fresh}</span>${statDetails}`;
-}
-
 export function format_ff_score(d: FFDataComplete) {
   const ff = d.fair_fight.toFixed(2);
 
@@ -52,8 +34,8 @@ export function format_difficulty_text(d: FFDataComplete) {
   }
 }
 
-export function format_relative_time(d: FFDataComplete) {
-  const age = Date.now() / 1000 - d.last_updated;
+export function format_relative_time(timestamp_sec: TimestampSec) {
+  const age = Date.now() / 1000 - timestamp_sec;
   if (age < DAY) {
     return "";
   } else if (age < 31 * DAY) {

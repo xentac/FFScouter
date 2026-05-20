@@ -6,7 +6,6 @@ import {
   format_ff_score,
   format_relative_time,
   format_timestamp,
-  generate_info_line,
   get_contrast_color,
   get_ff_arrow_colour,
   get_ff_colour,
@@ -77,38 +76,15 @@ test("format_difficulty_text returns correct strings based on fair_fight score",
 
 test("format_relative_time handles various time differences", () => {
   const nowSec = Date.now() / 1000;
-  const baseData = (updatedSec: number): FFDataComplete => ({
-    player_id: 1,
-    no_data: false,
-    fair_fight: 2.0,
-    last_updated: updatedSec,
-    bs_estimate: 100,
-    bs_estimate_human: "100",
-    bss_public: 10,
-  });
 
-  expect(format_relative_time(baseData(nowSec - 0.5 * DAY))).toEqual("");
-  expect(format_relative_time(baseData(nowSec - 1.2 * DAY))).toEqual(
-    "(1 day old)",
-  );
-  expect(format_relative_time(baseData(nowSec - 5 * DAY))).toEqual(
-    "(5 days old)",
-  );
-  expect(format_relative_time(baseData(nowSec - 30 * DAY))).toEqual(
-    "(30 days old)",
-  );
-  expect(format_relative_time(baseData(nowSec - 45 * DAY))).toEqual(
-    "(1 month old)",
-  );
-  expect(format_relative_time(baseData(nowSec - 90 * DAY))).toEqual(
-    "(3 months old)",
-  );
-  expect(format_relative_time(baseData(nowSec - 365 * DAY))).toEqual(
-    "(1 year old)",
-  );
-  expect(format_relative_time(baseData(nowSec - 800 * DAY))).toEqual(
-    "(2 years old)",
-  );
+  expect(format_relative_time(nowSec - 0.5 * DAY)).toEqual("");
+  expect(format_relative_time(nowSec - 1.2 * DAY)).toEqual("(1 day old)");
+  expect(format_relative_time(nowSec - 5 * DAY)).toEqual("(5 days old)");
+  expect(format_relative_time(nowSec - 30 * DAY)).toEqual("(30 days old)");
+  expect(format_relative_time(nowSec - 45 * DAY)).toEqual("(1 month old)");
+  expect(format_relative_time(nowSec - 90 * DAY)).toEqual("(3 months old)");
+  expect(format_relative_time(nowSec - 365 * DAY)).toEqual("(1 year old)");
+  expect(format_relative_time(nowSec - 800 * DAY)).toEqual("(2 years old)");
 });
 
 test("get_ff_arrow_colour returns correct hex colors with clamping", () => {
@@ -221,25 +197,4 @@ test("format_timestamp formats seconds timestamp correctly", () => {
   const expected = `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())} - ${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear() - 2000}`;
 
   expect(format_timestamp(nowSec)).toEqual(expected);
-});
-
-test("generate_info_line returns correct html layout for players", () => {
-  const noData = { player_id: 1, no_data: true } as const;
-  expect(generate_info_line(noData)).toContain("No data");
-
-  const completedData: FFDataComplete = {
-    player_id: 2,
-    no_data: false,
-    fair_fight: 2.5,
-    last_updated: Date.now() / 1000 - 5 * DAY,
-    bs_estimate: 50000,
-    bs_estimate_human: "50k",
-    bss_public: 50,
-  };
-
-  const html = generate_info_line(completedData);
-  expect(html).toContain("FairFight:");
-  expect(html).toContain("2.50");
-  expect(html).toContain("Moderately difficult");
-  expect(html).toContain("50k");
 });

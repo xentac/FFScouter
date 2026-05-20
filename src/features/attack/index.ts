@@ -6,11 +6,16 @@ import {
 } from "@utils/dom";
 import { ffscouter } from "@utils/ffscouter";
 import logger from "@utils/logger";
-import { generate_info_line } from "@utils/strings";
+import "@ui/info-line";
 import type { FFData } from "@utils/types";
 import { type Feature, StartTime } from "../feature";
 
-function inject_info_line(h4: Element, info_line: Element) {
+async function inject_info_line(info_line: Element) {
+  // Figure out where to inject the info line
+  const h4 = await wait_for_element("h4", 10_000);
+  if (!h4) {
+    return;
+  }
   h4.parentNode?.parentNode?.parentNode?.insertBefore(
     info_line,
     h4.parentNode?.parentNode?.nextSibling,
@@ -41,22 +46,10 @@ export default {
 
     // Query ff scouter for FFData
     ffscouter.get(player_id).then(async (data: FFData) => {
-      logger.debug("got ff scouter results");
-      info_line.innerHTML = generate_info_line(data);
-
-      // Figure out where to inject the info line
-      const h4 = document.querySelector("h4");
-
-      // The element already exists
-      if (!h4) {
-        const elem = await wait_for_element("h4", 10_000);
-        if (!elem) {
-          return;
-        }
-        inject_info_line(elem, info_line);
-      } else {
-        inject_info_line(h4, info_line);
-      }
+      const line = document.createElement("ff-info-line");
+      line.data = data;
+      info_line.appendChild(line);
+      inject_info_line(info_line);
     });
     ffscouter.complete();
   },

@@ -279,3 +279,77 @@ test("check_key error response", async () => {
     }),
   );
 });
+
+test("success with premium insights and distribution data", async () => {
+  const success: typeof gmRequest = vi.fn().mockResolvedValue({
+    responseHeaders:
+      "cache-control: no-cache, private\n\
+      x-ratelimit-reset-until: 55\n\
+x-ratelimit-reset-timestamp: 1768192440\n\
+x-ratelimit-limit: 120\n\
+x-ratelimit-remaining: 118\n",
+    readyState: 4,
+    response: "",
+    responseText: JSON.stringify([
+      {
+        player_id: 234,
+        fair_fight: 6.4,
+        last_updated: 1328080860,
+        bs_estimate: 234000,
+        bs_estimate_human: "234k",
+        bss_public: 2340,
+        source: "bss",
+        premium_insights_available: true,
+        distribution: {
+          last_updated: 1328080800,
+          distribution_human: "STR: 30%, DEF: 40%",
+          stats_percentage: {
+            strength: 30,
+            defense: 40,
+          },
+        },
+      },
+    ]),
+    responseXML: null,
+    status: 200,
+    statusText: "",
+    finalUrl: "",
+    context: {},
+  });
+
+  expect(await query_stats("a", [234], success)).toEqual({
+    result: new Map([
+      [
+        234,
+        {
+          no_data: false,
+          player_id: 234,
+          fair_fight: 6.4,
+          last_updated: 1328080860,
+          bs_estimate: 234000,
+          bs_estimate_human: "234k",
+          bss_public: 2340,
+          source: "bss",
+          premium_insights_available: true,
+          distribution: {
+            last_updated: 1328080800,
+            distribution_human: "STR: 30%, DEF: 40%",
+            stats_percentage: {
+              strength: 30,
+              speed: undefined,
+              defense: 40,
+              dexterity: undefined,
+            },
+          },
+        },
+      ],
+    ]),
+    blank: false,
+    limits: {
+      rate_limit: 120,
+      remaining: 118,
+      reset_time: new Date("2026-01-12T04:34:00.000Z"),
+      this_minute: 2,
+    },
+  });
+});

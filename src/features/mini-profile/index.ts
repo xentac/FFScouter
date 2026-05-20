@@ -82,7 +82,7 @@ const setup_mini_observer = () => {
       // Minimal, text-only Fair Fight string for mini-profiles
       const ff_string = format_ff_score(d);
       const difficulty = format_difficulty_text(d);
-      const fresh = format_relative_time(d);
+      const fresh = format_relative_time(d.last_updated);
       const message = `FF ${ff_string} (${difficulty}) ${fresh}`;
 
       const description = miniroot.querySelector(".description");

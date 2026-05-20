@@ -6,7 +6,7 @@ import {
 } from "@utils/dom";
 import { ffconfig } from "@utils/ffconfig";
 import { ffscouter } from "@utils/ffscouter";
-import { generate_info_line } from "@utils/strings";
+import "@ui/info-line";
 import type { FFData } from "@utils/types";
 import { type Feature, StartTime } from "../feature";
 
@@ -54,7 +54,9 @@ export default {
 
     // Query ff scouter for FFData
     ffscouter.get(player_id).then(async (data: FFData) => {
-      info_line.innerHTML = generate_info_line(data);
+      const line = document.createElement("ff-info-line");
+      line.data = data;
+      info_line.appendChild(line);
       inject_info_line(info_line);
     });
     ffscouter.complete();

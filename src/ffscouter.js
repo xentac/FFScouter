@@ -21,7 +21,6 @@ const API_INTERVAL = 30000;
 const FF_TARGET_STALENESS = 24 * 60 * 60 * 1000; // Refresh the target list every day
 const TARGET_KEY = "ffscouterv2-targets";
 const TARGET_INDEX_KEY = "ffscouterv2-target-index";
-const _CLEARED_TSC_KEY = "ffscouterv2-cleared-tsc-keys";
 const CHECK_KEY_CACHE_KEY = "ffscouterv2-check-key-cache";
 const CHECK_KEY_INTERVAL = 5 * 60 * 1000;
 const PREMIUM_UPGRADE_URL = "https://ffscouter.com/premium";
@@ -30,7 +29,6 @@ const PROFILE_FLIGHT_RECHECK_INTERVAL_MS = 15 * 1000;
 const PROFILE_FLIGHT_RECHECK_WINDOW_MS = 3 * 60 * 1000;
 const PROFILE_FLIGHT_NO_DATA_CACHE_MS = 10 * 60 * 1000;
 const memberCountdowns = {};
-const _MAX_REQUESTS_PER_MINUTE = 20;
 let _apiCallInProgressCount = 0;
 const currentUserId = null;
 let premiumStatusRefreshInFlight = false;
@@ -436,20 +434,6 @@ function ffdebug(...args) {
   if (ffSettingsGet("debug-logs") === "true") {
     console.log(...args);
   }
-}
-
-function set_message(message, error = false) {
-  while (info_line.firstChild) {
-    info_line.removeChild(info_line.firstChild);
-  }
-
-  const textNode = document.createTextNode(message);
-  if (error) {
-    info_line.style.color = "red";
-  } else {
-    info_line.style.color = "";
-  }
-  info_line.appendChild(textNode);
 }
 
 async function display_fair_fight(target_id, player_id) {
