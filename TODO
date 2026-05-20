@@ -2,3 +2,12 @@
 
 - Configure positioning of FF chain button (fixed floating, relative to other elements, etc)
 - Add better error messages for when you have a bad key (specifically that the key provided to ff scouter script isn't valid or is not registered)
+
+# Before releasing version 3.0
+
+- Migrate FF history link on profile
+- Migrate flight tracker on profile
+- Add URL tracker for pages we find arrows on
+  - Split by url and query string
+  - Include which feature detected it
+- Figure out how to have main and dev version tracked at the same time
