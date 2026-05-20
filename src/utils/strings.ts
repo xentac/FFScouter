@@ -187,3 +187,8 @@ export function ff_to_percent(d: FFDataComplete) {
 
   return percent;
 }
+
+export function format_timestamp(ts: TimestampSec) {
+  const d = new Date(ts * 1000);
+  return `${d.getHours() < 10 ? "0" : ""}${d.getHours()}:${d.getMinutes() < 10 ? "0" : ""}${d.getMinutes()}:${d.getSeconds() < 10 ? "0" : ""}${d.getSeconds()} - ${d.getDate() < 10 ? "0" : ""}${d.getDate()}/${d.getMonth() + 1 < 10 ? "0" : ""}${d.getMonth() + 1}/${d.getFullYear() - 2000}`;
+}

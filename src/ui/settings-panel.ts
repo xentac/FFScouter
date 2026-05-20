@@ -160,6 +160,18 @@ export class FFSettingsPanel extends LitElement {
     }
   }
 
+  private handleVerify() {
+    this.dispatchEvent(
+      new CustomEvent("ff-verify", {
+        detail: {
+          apiKey: this.draftApiKey,
+        },
+        bubbles: true,
+        composed: true,
+      }),
+    );
+  }
+
   private onKeyInput(e: Event) {
     this.draftApiKey = (e.target as HTMLInputElement).value;
     this.showSavedMessage = false;
@@ -260,6 +272,11 @@ export class FFSettingsPanel extends LitElement {
               class="is_premium_${this.isPremium ? "enabled" : "disabled"}"
               >${this.isPremium ? "Enabled" : "Disabled"}</span
             >
+          </div>
+          <div class="input-row-inline">
+            <button class="torn-btn btn-save" @click=${this.handleVerify}>
+              Verify
+            </button>
           </div>
 
           <!-- Ranges Input -->

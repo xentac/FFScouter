@@ -2,9 +2,11 @@ import { ffconfig } from "@utils/ffconfig";
 import { type Feature, StartTime } from "../feature";
 import "@ui/settings-panel";
 import { TOAST_LEVEL, toast } from "@ui/toast";
+import { check_key, type FFApiCheckResponse } from "@utils/api";
 import { check_key_status } from "@utils/check_key";
 import { torn_page, wait_for_element } from "@utils/dom";
 import { ffscouter } from "@utils/ffscouter";
+import { format_timestamp } from "@utils/strings";
 
 export default {
   name: "FF Scouter settings panel",
@@ -82,6 +84,32 @@ export default {
         console.error("Failed to delete IndexedDB cache", err);
         toast("Failed to clear cache database", TOAST_LEVEL.ERROR);
       }
+    });
+
+    panel.addEventListener("ff-verify", async (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      let result: FFApiCheckResponse | null = null;
+      try {
+        result = await check_key(detail.apiKey);
+      } catch (err) {
+        toast(`${err}`, TOAST_LEVEL.ERROR);
+        return;
+      }
+      if (result == null || result.blank) {
+        toast(
+          "Problem querying ffscouter.com API. Please wait a few seconds and try again.",
+          TOAST_LEVEL.WARNING,
+        );
+        return;
+      }
+
+      let message = `FF Scouter not configured. API key (${result.result.key}) not registered.`;
+      let level = TOAST_LEVEL.ERROR;
+      if (result.result.is_registered) {
+        message = `FF Scouter successfully configured. Don't forget to save! API key (${result.result.key}) was registered on ${format_timestamp(result.result.registered_at)} and last used ${format_timestamp(result.result.last_used)}.`;
+        level = TOAST_LEVEL.INFO;
+      }
+      toast(message, level);
     });
 
     // Wait for profile wrapper to be available
