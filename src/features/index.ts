@@ -1,5 +1,6 @@
 import Attack from "./attack";
 import Faction from "./faction";
+import Fallback from "./fallback";
 import type { Feature } from "./feature";
 import MiniProfile from "./mini-profile";
 import Profile from "./profile";
@@ -11,6 +12,7 @@ export const Features: Feature[] = [
   Attack,
   Faction,
   MiniProfile,
+  Fallback,
 ];
 
 // You'll need to add a new export here for each feature

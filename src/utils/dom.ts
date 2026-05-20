@@ -148,12 +148,16 @@ export function get_player_id_in_element(element: Element): PlayerId | null {
   return null;
 }
 
+export async function apply_ff_gauge_selector(
+  node_list: NodeListOf<HTMLElement>,
+) {
+  for (const node of node_list) {
+    add_ff_arrow(node);
+  }
+}
+
 export async function apply_ff_gauge(element: Element) {
   if (!(element instanceof HTMLElement)) {
-    return;
-  }
-  const player_id = get_player_id_in_element(element);
-  if (!player_id) {
     return;
   }
   add_ff_arrow(element);
