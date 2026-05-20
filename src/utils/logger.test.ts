@@ -69,14 +69,21 @@ test("Logger filters out low-severity messages based on active LogLevel", () => 
 
 test("Logger handles groups correctly and filters them at NONE level", () => {
   const groupSpy = vi.spyOn(console, "group").mockImplementation(() => {});
-  const groupCollapsedSpy = vi.spyOn(console, "groupCollapsed").mockImplementation(() => {});
-  const groupEndSpy = vi.spyOn(console, "groupEnd").mockImplementation(() => {});
+  const groupCollapsedSpy = vi
+    .spyOn(console, "groupCollapsed")
+    .mockImplementation(() => {});
+  const groupEndSpy = vi
+    .spyOn(console, "groupEnd")
+    .mockImplementation(() => {});
 
   logger.group("my group", false);
   expect(groupSpy).toHaveBeenCalledWith("[FFSV3]: ", "my group");
 
   logger.group("my collapsed group", true);
-  expect(groupCollapsedSpy).toHaveBeenCalledWith("[FFSV3]: ", "my collapsed group");
+  expect(groupCollapsedSpy).toHaveBeenCalledWith(
+    "[FFSV3]: ",
+    "my collapsed group",
+  );
 
   logger.groupEnd();
   expect(groupEndSpy).toHaveBeenCalled();
@@ -98,7 +105,7 @@ test("Logger handles groups correctly and filters them at NONE level", () => {
 
 test("Logger child creates a child logger with combined prefixes", () => {
   const childLogger = logger.child("sub");
-  
+
   const debugSpy = vi.spyOn(console, "debug").mockImplementation(() => {});
 
   childLogger.debug("child msg");

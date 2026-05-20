@@ -88,33 +88,79 @@ test("format_relative_time handles various time differences", () => {
   });
 
   expect(format_relative_time(baseData(nowSec - 0.5 * DAY))).toEqual("");
-  expect(format_relative_time(baseData(nowSec - 1.2 * DAY))).toEqual("(1 day old)");
-  expect(format_relative_time(baseData(nowSec - 5 * DAY))).toEqual("(5 days old)");
-  expect(format_relative_time(baseData(nowSec - 30 * DAY))).toEqual("(30 days old)");
-  expect(format_relative_time(baseData(nowSec - 45 * DAY))).toEqual("(1 month old)");
-  expect(format_relative_time(baseData(nowSec - 90 * DAY))).toEqual("(3 months old)");
-  expect(format_relative_time(baseData(nowSec - 365 * DAY))).toEqual("(1 year old)");
-  expect(format_relative_time(baseData(nowSec - 800 * DAY))).toEqual("(2 years old)");
+  expect(format_relative_time(baseData(nowSec - 1.2 * DAY))).toEqual(
+    "(1 day old)",
+  );
+  expect(format_relative_time(baseData(nowSec - 5 * DAY))).toEqual(
+    "(5 days old)",
+  );
+  expect(format_relative_time(baseData(nowSec - 30 * DAY))).toEqual(
+    "(30 days old)",
+  );
+  expect(format_relative_time(baseData(nowSec - 45 * DAY))).toEqual(
+    "(1 month old)",
+  );
+  expect(format_relative_time(baseData(nowSec - 90 * DAY))).toEqual(
+    "(3 months old)",
+  );
+  expect(format_relative_time(baseData(nowSec - 365 * DAY))).toEqual(
+    "(1 year old)",
+  );
+  expect(format_relative_time(baseData(nowSec - 800 * DAY))).toEqual(
+    "(2 years old)",
+  );
 });
 
 test("get_ff_arrow_colour returns correct hex colors with clamping", () => {
-  expect(get_ff_arrow_colour({ player_id: 1, no_data: true })).toEqual("#000000");
+  expect(get_ff_arrow_colour({ player_id: 1, no_data: true })).toEqual(
+    "#000000",
+  );
 
   // arrow_gradient3 is used:
   // Low score (1.0) maps to index 0: "#1734e8"
-  expect(get_ff_arrow_colour({ player_id: 2, no_data: false, fair_fight: 1.0 })).toEqual("#1734e8");
+  expect(
+    get_ff_arrow_colour({
+      player_id: 2,
+      no_data: false,
+      fair_fight: 1.0,
+    } as any),
+  ).toEqual("#1734e8");
 
   // Clamping below 1
-  expect(get_ff_arrow_colour({ player_id: 2, no_data: false, fair_fight: 0.5 })).toEqual("#1734e8");
+  expect(
+    get_ff_arrow_colour({
+      player_id: 2,
+      no_data: false,
+      fair_fight: 0.5,
+    } as any),
+  ).toEqual("#1734e8");
 
   // High score (5.0) maps to index 10: "#e81734"
-  expect(get_ff_arrow_colour({ player_id: 2, no_data: false, fair_fight: 5.0 })).toEqual("#e81734");
+  expect(
+    get_ff_arrow_colour({
+      player_id: 2,
+      no_data: false,
+      fair_fight: 5.0,
+    } as any),
+  ).toEqual("#e81734");
 
   // Clamping above 5
-  expect(get_ff_arrow_colour({ player_id: 2, no_data: false, fair_fight: 6.0 })).toEqual("#e81734");
+  expect(
+    get_ff_arrow_colour({
+      player_id: 2,
+      no_data: false,
+      fair_fight: 6.0,
+    } as any),
+  ).toEqual("#e81734");
 
   // Middle score (3.0) maps to index 5: "#34e817"
-  expect(get_ff_arrow_colour({ player_id: 2, no_data: false, fair_fight: 3.0 })).toEqual("#34e817");
+  expect(
+    get_ff_arrow_colour({
+      player_id: 2,
+      no_data: false,
+      fair_fight: 3.0,
+    } as any),
+  ).toEqual("#34e817");
 
   // get_ff_colour is an alias for get_ff_arrow_colour
   const comp: FFDataComplete = {

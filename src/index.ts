@@ -24,15 +24,15 @@ async function main() {
 
   init_ui();
 
-  unsafeWindow["FFScouter"] = FFScouter;
-  unsafeWindow["query_stats"] = query_stats;
-  unsafeWindow["toast"] = toast;
-  unsafeWindow["FFConfig"] = FFConfig;
+  (unsafeWindow as any).FFScouter = FFScouter;
+  (unsafeWindow as any).query_stats = query_stats;
+  (unsafeWindow as any).toast = toast;
+  (unsafeWindow as any).FFConfig = FFConfig;
 
-  window["FFScouter"] = FFScouter;
-  window["query_stats"] = query_stats;
-  window["toast"] = toast;
-  window["FFConfig"] = FFConfig;
+  (window as any).FFScouter = FFScouter;
+  (window as any).query_stats = query_stats;
+  (window as any).toast = toast;
+  (window as any).FFConfig = FFConfig;
 
   // todo: settings panel
 
@@ -44,7 +44,9 @@ async function main() {
     // (unsure why this doesn't throw an error btw)
     before(url, init) {
       for (const feat of Features) {
-        feat.httpIntercept.before(url, init);
+        if (feat.httpIntercept?.before) {
+          feat.httpIntercept.before(url, init);
+        }
       }
 
       return undefined;
@@ -52,7 +54,9 @@ async function main() {
 
     after(bodyText, response, ctx) {
       for (const feat of Features) {
-        feat.httpIntercept.after(bodyText, response, ctx);
+        if (feat.httpIntercept?.after) {
+          feat.httpIntercept.after(bodyText, response, ctx);
+        }
       }
 
       return undefined;

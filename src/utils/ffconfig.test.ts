@@ -20,12 +20,16 @@ test("FFConfig gets default values when storage is empty", () => {
   expect(config.low_ff_range).toEqual(CONFIG_DEFAULTS.low_ff_range);
   expect(config.high_ff_range).toEqual(CONFIG_DEFAULTS.high_ff_range);
   expect(config.max_ff_range).toEqual(CONFIG_DEFAULTS.max_ff_range);
-  expect(config.chain_button_enabled).toEqual(CONFIG_DEFAULTS.chain_button_enabled);
+  expect(config.chain_button_enabled).toEqual(
+    CONFIG_DEFAULTS.chain_button_enabled,
+  );
   expect(config.chain_link_type).toEqual(CONFIG_DEFAULTS.chain_link_type);
   expect(config.chain_tab_type).toEqual(CONFIG_DEFAULTS.chain_tab_type);
   expect(config.chain_ff_target).toEqual(CONFIG_DEFAULTS.chain_ff_target);
   expect(config.ff_history_enabled).toEqual(CONFIG_DEFAULTS.ff_history_enabled);
-  expect(config.factions_col_display).toEqual(CONFIG_DEFAULTS.factions_col_display);
+  expect(config.factions_col_display).toEqual(
+    CONFIG_DEFAULTS.factions_col_display,
+  );
   expect(config.debug_logs).toEqual(CONFIG_DEFAULTS.debug_logs);
 });
 
@@ -64,7 +68,7 @@ test("FFConfig.reset resets values to their default states except the api key", 
 
   // API Key should NOT be reset (as key is not part of reset list in ffconfig.ts)
   expect(config.key).toEqual("my-sticky-api-key");
-  
+
   // Other values should be reset to defaults
   expect(config.low_ff_range).toEqual(CONFIG_DEFAULTS.low_ff_range);
   expect(config.debug_logs).toEqual(CONFIG_DEFAULTS.debug_logs);

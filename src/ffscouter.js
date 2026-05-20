@@ -21,7 +21,7 @@ const API_INTERVAL = 30000;
 const FF_TARGET_STALENESS = 24 * 60 * 60 * 1000; // Refresh the target list every day
 const TARGET_KEY = "ffscouterv2-targets";
 const TARGET_INDEX_KEY = "ffscouterv2-target-index";
-const CLEARED_TSC_KEY = "ffscouterv2-cleared-tsc-keys";
+const _CLEARED_TSC_KEY = "ffscouterv2-cleared-tsc-keys";
 const CHECK_KEY_CACHE_KEY = "ffscouterv2-check-key-cache";
 const CHECK_KEY_INTERVAL = 5 * 60 * 1000;
 const PREMIUM_UPGRADE_URL = "https://ffscouter.com/premium";
@@ -30,8 +30,8 @@ const PROFILE_FLIGHT_RECHECK_INTERVAL_MS = 15 * 1000;
 const PROFILE_FLIGHT_RECHECK_WINDOW_MS = 3 * 60 * 1000;
 const PROFILE_FLIGHT_NO_DATA_CACHE_MS = 10 * 60 * 1000;
 const memberCountdowns = {};
-const MAX_REQUESTS_PER_MINUTE = 20;
-let apiCallInProgressCount = 0;
+const _MAX_REQUESTS_PER_MINUTE = 20;
+let _apiCallInProgressCount = 0;
 const currentUserId = null;
 let premiumStatusRefreshInFlight = false;
 let profileFlightInfoLine = null;
@@ -433,7 +433,7 @@ var key = rD_getValue("limited_key", null);
 var info_line = null;
 
 function ffdebug(...args) {
-  if (ffSettingsGet("debug-logs") == "true") {
+  if (ffSettingsGet("debug-logs") === "true") {
     console.log(...args);
   }
 }
@@ -500,7 +500,7 @@ function ensure_profile_flight_info_line(profileStatus) {
   const line =
     profileFlightInfoLine ||
     profileStatus.querySelector(".ff-scouter-profile-flight-info");
-  if (line && line.isConnected && profileStatus.contains(line)) {
+  if (line?.isConnected && profileStatus.contains(line)) {
     profileFlightInfoLine = line;
     return line;
   }
@@ -824,7 +824,7 @@ function get_difficulty_text(ff) {
   }
 }
 
-function get_detailed_message(ff_response, player_id) {
+function get_detailed_message(ff_response, _player_id) {
   if (ff_response.no_data || !ff_response.value) {
     return `<span style="font-weight: bold; margin-right: 6px;">FairFight:</span><span style="background: #444; color: #fff; font-weight: bold; padding: 2px 6px; border-radius: 4px; display: inline-block;">No data</span>`;
   }
@@ -840,21 +840,21 @@ function get_detailed_message(ff_response, player_id) {
     // Pass
   } else if (age < 31 * 24 * 60 * 60) {
     var days = Math.round(age / (24 * 60 * 60));
-    if (days == 1) {
+    if (days === 1) {
       fresh = "(1 day old)";
     } else {
       fresh = `(${days} days old)`;
     }
   } else if (age < 365 * 24 * 60 * 60) {
     var months = Math.round(age / (31 * 24 * 60 * 60));
-    if (months == 1) {
+    if (months === 1) {
       fresh = "(1 month old)";
     } else {
       fresh = `(${months} months old)`;
     }
   } else {
     var years = Math.round(age / (365 * 24 * 60 * 60));
-    if (years == 1) {
+    if (years === 1) {
       fresh = "(1 year old)";
     } else {
       fresh = `(${years} years old)`;
@@ -888,7 +888,7 @@ function get_detailed_message(ff_response, player_id) {
   return `<span style="font-weight: bold; margin-right: 6px;">FairFight:</span><span style="background: ${background_colour}; color: ${text_colour}; font-weight: bold; padding: 2px 6px; border-radius: 4px; display: inline-block;">${ff_string} (${difficulty}) ${fresh}</span>${statDetails}${extraDetailsLine}`;
 }
 
-function get_ff_string_short(ff_response, player_id) {
+function get_ff_string_short(ff_response, _player_id) {
   const ff = ff_response.value.toFixed(2);
 
   const now = Date.now() / 1000;
@@ -957,7 +957,7 @@ function get_members() {
       elem.querySelectorAll(".member").forEach((value) => {
         var url = value.querySelectorAll('a[href^="/profiles"]')[0].href;
         var player_id = url.match(/.*XID=(?<player_id>\d+)/).groups.player_id;
-        player_ids.push(parseInt(player_id));
+        player_ids.push(parseInt(player_id, 10));
       });
     }
   });
@@ -1020,7 +1020,7 @@ function get_contrast_color(hex) {
 }
 
 async function get_cached_value(player_id) {
-  const r = await ffcache.get([parseInt(player_id)]);
+  const r = await ffcache.get([parseInt(player_id, 10)]);
   if (r[player_id]) {
     return r[player_id];
   }
@@ -1056,7 +1056,7 @@ async function apply_fair_fight_info(_) {
 
   est_li.appendChild(document.createTextNode("Est"));
 
-  if (document.querySelectorAll(".table-header > .lvl").length == 0) {
+  if (document.querySelectorAll(".table-header > .lvl").length === 0) {
     // The .member-list doesn't have a .lvl, give up
     return;
   }
@@ -1068,7 +1068,7 @@ async function apply_fair_fight_info(_) {
     .forEach((value) => {
       var url = value.querySelectorAll('a[href^="/profiles"]')[0].href;
       var player_id = url.match(/.*XID=(?<player_id>\d+)/).groups.player_id;
-      player_ids.push(parseInt(player_id));
+      player_ids.push(parseInt(player_id, 10));
     });
 
   const cached_values = await ffcache.get(player_ids);
@@ -1298,6 +1298,7 @@ async function apply_fair_fight_info(_) {
       var url = value.querySelectorAll('a[href^="/profiles"]')[0].href;
       var player_id = parseInt(
         url.match(/.*XID=(?<player_id>\d+)/).groups.player_id,
+        10,
       );
 
       var fair_fight_div = document.createElement("div");
@@ -1317,7 +1318,7 @@ async function apply_fair_fight_info(_) {
       );
       const cached = cached_values[player_id];
 
-      if (cached && cached.value) {
+      if (cached?.value) {
         const ff = cached.value;
         const ff_string = get_ff_string_short(cached, player_id);
         const background_colour = get_ff_colour(ff);
@@ -1344,7 +1345,7 @@ async function apply_fair_fight_info(_) {
     });
 }
 
-async function get_cache_misses(player_ids) {
+async function _get_cache_misses(player_ids) {
   var unknown_player_ids = [];
   const cached_players = await ffcache.get(player_ids);
   for (const player_id of player_ids) {
@@ -1365,7 +1366,7 @@ const match2 = window.location.href.match(
 );
 const match = match1 ?? match2;
 if (match) {
-  var target_id = parseInt(match.groups.target_id);
+  var target_id = parseInt(match.groups.target_id, 10);
   update_ff_cache([target_id], (target_ids) => {
     display_fair_fight(target_ids[0], target_id);
   });
@@ -1430,7 +1431,7 @@ if (match) {
 function get_player_id_in_element(element) {
   const match = element.parentElement?.href?.match(/.*XID=(?<target_id>\d+)/);
   if (match) {
-    return parseInt(match.groups.target_id);
+    return parseInt(match.groups.target_id, 10);
   }
 
   const anchors = element.getElementsByTagName("a");
@@ -1438,22 +1439,22 @@ function get_player_id_in_element(element) {
   for (const anchor of anchors) {
     const match = anchor.href.match(/.*XID=(?<target_id>\d+)/);
     if (match) {
-      return parseInt(match.groups.target_id);
+      return parseInt(match.groups.target_id, 10);
     }
     const matchUserId = anchor.href.match(/.*userId=(?<target_id>\d+)/);
     if (matchUserId) {
-      return parseInt(matchUserId.groups.target_id);
+      return parseInt(matchUserId.groups.target_id, 10);
     }
   }
 
   if (element.nodeName.toLowerCase() === "a") {
     const match = element.href.match(/.*XID=(?<target_id>\d+)/);
     if (match) {
-      return parseInt(match.groups.target_id);
+      return parseInt(match.groups.target_id, 10);
     }
     const matchUserId = element.href.match(/.*userId=(?<target_id>\d+)/);
     if (matchUserId) {
-      return parseInt(matchUserId.groups.target_id);
+      return parseInt(matchUserId.groups.target_id, 10);
     }
   }
 
@@ -1491,7 +1492,7 @@ async function show_cached_values(elements) {
   // Rescan player ids because the competition page can rewrite them
   elements = elements.map((e) => {
     const player_id = get_player_id_in_element(e[1]);
-    if (e[0] != player_id) {
+    if (e[0] !== player_id) {
       ffdebug(
         "[FF Scouter V2] Torn rewrote player element between request and response! Previous player_id:",
         e[0],
@@ -1505,7 +1506,9 @@ async function show_cached_values(elements) {
   });
   // Remove any elements that don't have an id
   elements = elements.filter((e) => e[0]);
-  const cached_values = await ffcache.get(elements.map((e) => parseInt(e[0])));
+  const cached_values = await ffcache.get(
+    elements.map((e) => parseInt(e[0], 10)),
+  );
   for (const [player_id, element] of elements) {
     element.classList.add("ff-scouter-indicator");
     if (!element.classList.contains("indicator-lines")) {
@@ -1522,8 +1525,8 @@ async function show_cached_values(elements) {
       //$(element).append($("<div>", { class: "ff-scouter-vertical-line-high-lower" }));
     }
 
-    const cached = cached_values[parseInt(player_id)];
-    if (cached && cached.value) {
+    const cached = cached_values[parseInt(player_id, 10)];
+    if (cached?.value) {
       const percent = ff_to_percent(cached.value);
       element.style.setProperty("--band-percent", percent);
 
@@ -1577,7 +1580,7 @@ async function apply_to_mini_profile(mini) {
   const player_id = get_player_id_in_element(mini);
   if (player_id) {
     const response = await get_cached_value(player_id);
-    if (response && response.value) {
+    if (response?.value) {
       // Remove any existing elements
       mini.querySelector(".ff-scouter-mini-ff")?.remove();
 
@@ -1811,9 +1814,9 @@ function update_ff_targets() {
       if (!response) {
         return;
       }
-      if (response.status == 200) {
+      if (response.status === 200) {
         var ff_response = JSON.parse(response.responseText);
-        if (ff_response && ff_response.error) {
+        if (ff_response?.error) {
           showToast(ff_response.error);
           return;
         }
@@ -1828,17 +1831,17 @@ function update_ff_targets() {
       } else {
         try {
           var err = JSON.parse(response.responseText);
-          if (err && err.error) {
+          if (err?.error) {
             showToast(
-              "API request failed. Error: " + err.error + "; Code: " + err.code,
+              `API request failed. Error: ${err.error}; Code: ${err.code}`,
             );
           } else {
             showToast(
-              "API request failed. HTTP status code: " + response.status,
+              `API request failed. HTTP status code: ${response.status}`,
             );
           }
         } catch {
-          showToast("API request failed. HTTP status code: " + response.status);
+          showToast(`API request failed. HTTP status code: ${response.status}`);
         }
       }
     },
@@ -2028,7 +2031,7 @@ function updateMemberStatus(li, member) {
 }
 
 function updateFactionStatuses(factionID, container) {
-  apiCallInProgressCount++;
+  _apiCallInProgressCount++;
   fetchFactionData(factionID)
     .then((data) => {
       if (!Array.isArray(data.members)) {
@@ -2060,7 +2063,7 @@ function updateFactionStatuses(factionID, container) {
       );
     })
     .finally(() => {
-      apiCallInProgressCount--;
+      _apiCallInProgressCount--;
     });
 }
 
@@ -2126,7 +2129,7 @@ function initWarScript() {
   return true;
 }
 
-const warObserver = new MutationObserver((mutations, obs) => {
+const warObserver = new MutationObserver((_mutations, obs) => {
   if (initWarScript()) {
     obs.disconnect();
   }
@@ -2201,7 +2204,7 @@ function waitForElement(querySelector, timeout = 15000) {
   });
 }
 
-async function getLocalUserId() {
+async function _getLocalUserId() {
   const profileLink = await waitForElement(
     ".settings-menu > .link > a:first-child",
     15000,
@@ -2225,7 +2228,7 @@ async function getLocalUserId() {
   return null;
 }
 
-function getCurrentUserId() {
+function _getCurrentUserId() {
   return currentUserId;
 }
 
@@ -2246,7 +2249,7 @@ function ffSettingsSetToggle(key, value) {
   ffSettingsSet(key, value.toString());
 }
 
-async function createSettingsPanel() {
+async function _createSettingsPanel() {
   // Check if we're on the user's own profile page
   const pageId = window.location.href.match(/XID=(\d+)/)?.[1];
   if (!pageId || pageId !== currentUserId) {
@@ -2269,7 +2272,7 @@ async function createSettingsPanel() {
   }
 
   // Get current user data for display
-  const userName =
+  const _userName =
     profileWrapper.querySelector(".user-name")?.textContent ||
     profileWrapper.querySelector(".profile-name")?.textContent ||
     profileWrapper.querySelector("h1")?.textContent ||
@@ -2323,7 +2326,7 @@ async function createSettingsPanel() {
   apiKeyLabel.className = "ff-settings-label ff-settings-label-inline";
   apiKeyDiv.appendChild(apiKeyLabel);
 
-  if (apikey[0] == "#") {
+  if (apikey[0] === "#") {
     const apiKeyInput = document.createElement("input");
     apiKeyInput.type = "text";
     apiKeyInput.id = "ff-api-key";
@@ -2411,9 +2414,9 @@ async function createSettingsPanel() {
           return;
         }
 
-        if (response.status == 200) {
+        if (response.status === 200) {
           var ff_response = JSON.parse(response.responseText);
-          if (ff_response && ff_response.error) {
+          if (ff_response?.error) {
             showToast(ff_response.error);
             return;
           }
@@ -2428,7 +2431,7 @@ async function createSettingsPanel() {
         } else {
           try {
             var err = JSON.parse(response.responseText);
-            if (err && err.error) {
+            if (err?.error) {
               showToast(
                 "API request failed. Error: " +
                   err.error +
@@ -2437,12 +2440,12 @@ async function createSettingsPanel() {
               );
             } else {
               showToast(
-                "API request failed. HTTP status code: " + response.status,
+                `API request failed. HTTP status code: ${response.status}`,
               );
             }
           } catch {
             showToast(
-              "API request failed. HTTP status code: " + response.status,
+              `API request failed. HTTP status code: ${response.status}`,
             );
           }
         }
@@ -2508,7 +2511,7 @@ async function createSettingsPanel() {
       const high = parseFloat(parts[1]);
       const max = parseFloat(parts[2]);
 
-      if (isNaN(low) || isNaN(high) || isNaN(max)) {
+      if (Number.isNaN(low) || Number.isNaN(high) || Number.isNaN(max)) {
         throw new Error("Invalid numbers");
       }
 
@@ -2527,7 +2530,7 @@ async function createSettingsPanel() {
       set_ff_ranges(low, high, max);
       this.style.outline = "none";
       showToast("FF ranges updated successfully!");
-    } catch (e) {
+    } catch (_e) {
       this.style.outline = "1px solid red";
       showToast("Invalid numbers in FF ranges");
     }
@@ -2811,7 +2814,7 @@ async function createSettingsPanel() {
           const high = parseFloat(parts[1]);
           const max = parseFloat(parts[2]);
 
-          if (isNaN(low) || isNaN(high) || isNaN(max)) {
+          if (Number.isNaN(low) || Number.isNaN(high) || Number.isNaN(max)) {
             rangesInput.style.outline = "1px solid red";
             showToast("FF ranges must be valid numbers");
             hasErrors = true;
@@ -2827,7 +2830,7 @@ async function createSettingsPanel() {
             set_ff_ranges(low, high, max);
             rangesInput.style.outline = "none";
           }
-        } catch (e) {
+        } catch (_e) {
           rangesInput.style.outline = "1px solid red";
           showToast("Invalid FF ranges format");
           hasErrors = true;

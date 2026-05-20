@@ -1,5 +1,11 @@
 import { expect, test, vi } from "vitest";
-import { FFApiError, type gmRequest, make_stats_url, query_stats, check_key } from "./api";
+import {
+  check_key,
+  FFApiError,
+  type gmRequest,
+  make_stats_url,
+  query_stats,
+} from "./api";
 import { generate_test_ff_data } from "./test";
 
 test("make_stats_url generates proper url", () => {

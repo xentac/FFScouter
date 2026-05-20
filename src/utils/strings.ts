@@ -84,39 +84,39 @@ export function get_ff_colour(d: FFDataComplete) {
   return get_ff_arrow_colour(d);
 }
 
-// Source: https://mistic100.github.io/tinygradient/
-// Inputs: rgb(33, 102, 172), rgb(27, 120, 55), rgb(215, 48, 39)
-// Steps: 11
-const _arrow_gradient = [
-  "#2166ac",
-  "#2080a2",
-  "#1f9497",
-  "#1e8d75",
-  "#1c8254",
-  "#1b7837",
-  "#2e8b1e",
-  "#6c9e21",
-  "#b1aa23",
-  "#c47525",
-  "#d73027",
-];
-
-// Alternative variants, triplet generated using https://www.canva.com/colors/color-wheel/
-// Just enter any of the three extreme values
-const _arrow_gradient2 = [
-  "#0c50ff",
-  "#0cb1ff",
-  "#0cffec",
-  "#0cff8a",
-  "#0cff29",
-  "#50ff0c",
-  "#b1ff0c",
-  "#ffec0c",
-  "#ff8a0c",
-  "#ff290c",
-  "#ff0c50",
-];
-
+// // Source: https://mistic100.github.io/tinygradient/
+// // Inputs: rgb(33, 102, 172), rgb(27, 120, 55), rgb(215, 48, 39)
+// // Steps: 11
+// const _arrow_gradient = [
+//   "#2166ac",
+//   "#2080a2",
+//   "#1f9497",
+//   "#1e8d75",
+//   "#1c8254",
+//   "#1b7837",
+//   "#2e8b1e",
+//   "#6c9e21",
+//   "#b1aa23",
+//   "#c47525",
+//   "#d73027",
+// ];
+//
+// // Alternative variants, triplet generated using https://www.canva.com/colors/color-wheel/
+// // Just enter any of the three extreme values
+// const _arrow_gradient2 = [
+//   "#0c50ff",
+//   "#0cb1ff",
+//   "#0cffec",
+//   "#0cff8a",
+//   "#0cff29",
+//   "#50ff0c",
+//   "#b1ff0c",
+//   "#ffec0c",
+//   "#ff8a0c",
+//   "#ff290c",
+//   "#ff0c50",
+// ];
+//
 const arrow_gradient3 = [
   "#1734e8",
   "#1788e8",

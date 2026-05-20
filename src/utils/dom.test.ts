@@ -1,21 +1,21 @@
 // @vitest-environment jsdom
 import { beforeEach, expect, test, vi } from "vitest";
-import { ffscouter } from "./ffscouter";
 import {
-  extract_id_from_url,
-  torn_page,
-  get_player_id_in_element,
   add_ff_arrow,
   apply_ff_gauge,
-  wait_for_element,
-  wait_for_body,
-  MonitorElements,
-  getRFC,
-  getHashParameters,
-  waitForDocumentReady,
-  getLocalUserId,
   create_info_line,
+  extract_id_from_url,
+  get_player_id_in_element,
+  getHashParameters,
+  getLocalUserId,
+  getRFC,
+  MonitorElements,
+  torn_page,
+  wait_for_body,
+  wait_for_element,
+  waitForDocumentReady,
 } from "./dom";
+import { ffscouter } from "./ffscouter";
 
 vi.mock("./ffscouter", () => {
   return {
@@ -32,9 +32,15 @@ beforeEach(() => {
 });
 
 test("extract_id_from_url extracts user IDs from standard XID and user2ID parameters", () => {
-  expect(extract_id_from_url("https://www.torn.com/profiles.php?XID=12345")).toEqual(12345);
-  expect(extract_id_from_url("https://www.torn.com/profiles.php?user2ID=67890")).toEqual(67890);
-  expect(extract_id_from_url("https://www.torn.com/profiles.php?other=123")).toBeNull();
+  expect(
+    extract_id_from_url("https://www.torn.com/profiles.php?XID=12345"),
+  ).toEqual(12345);
+  expect(
+    extract_id_from_url("https://www.torn.com/profiles.php?user2ID=67890"),
+  ).toEqual(67890);
+  expect(
+    extract_id_from_url("https://www.torn.com/profiles.php?other=123"),
+  ).toBeNull();
 });
 
 test("torn_page matches the current URL, step, and sid parameters", () => {
@@ -102,7 +108,7 @@ test("add_ff_arrow fetches data and inserts gauge arrow SVG to elements", async 
   expect(mockGet).toHaveBeenCalledWith(123);
   expect(anchor.classList.contains("ffsv3-gauge")).toBe(true);
   expect(anchor.style.getPropertyValue("--band-percent")).toEqual("57.75");
-  
+
   const svg = anchor.querySelector(".ffsv3-arrow");
   expect(svg).not.toBeNull();
   expect(svg?.tagName.toLowerCase()).toEqual("svg");
@@ -120,7 +126,7 @@ test("apply_ff_gauge invokes add_ff_arrow if element is valid", async () => {
   div.appendChild(a);
 
   await apply_ff_gauge(div);
-  
+
   await new Promise((resolve) => setTimeout(resolve, 10));
   expect(mockGet).toHaveBeenCalledWith(456);
 });
@@ -136,10 +142,10 @@ test("wait_for_element resolves element when present or added", async () => {
 
   // If element is added after a delay
   const promise = wait_for_element("#delayed", 1000);
-  
+
   const delayed = document.createElement("div");
   delayed.id = "delayed";
-  
+
   setTimeout(() => {
     document.body.appendChild(delayed);
   }, 50);
@@ -179,16 +185,16 @@ test("MonitorElements observes DOM mutations and triggers handlers", () => {
   // Mutate: append element
   const newlyAdded = document.createElement("div");
   newlyAdded.className = "monitored";
-  
+
   // Use MutationObserver trigger
   root.appendChild(newlyAdded);
-  
+
   // In JSDOM/Vitest, we can wait for MutationObserver to cycle
   // or we can mock/stub. Let's wait a tiny bit for MutationObserver to flush
   return new Promise<void>((resolve) => {
     setTimeout(() => {
       expect(handler).toHaveBeenCalledWith({ added: newlyAdded });
-      
+
       monitor.cleanup();
       resolve();
     }, 10);
@@ -228,7 +234,7 @@ test("getLocalUserId extracts user ID from burger dropdown setting menu link", a
   linkWrapper.className = "link";
   const anchor = document.createElement("a");
   anchor.href = "https://www.torn.com/profiles.php?XID=777777";
-  
+
   linkWrapper.appendChild(anchor);
   menuContainer.appendChild(linkWrapper);
   document.body.appendChild(menuContainer);

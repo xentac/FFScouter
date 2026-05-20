@@ -40,7 +40,7 @@ test("Storage handles invalid JSON gracefully", () => {
   localStorage.setItem("test-prefix.badjson", "{invalid json");
 
   const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
-  
+
   expect(store.get("badjson")).toBeNull();
   expect(localStorage.getItem("test-prefix.badjson")).toBeNull(); // Should remove bad key
   expect(warnSpy).toHaveBeenCalledWith(
@@ -52,10 +52,10 @@ test("Storage handles invalid JSON gracefully", () => {
 
 test("Storage supports expiration", () => {
   const store = new Storage("test-prefix.");
-  
+
   // Set value to expire in 5 minutes
   store.set("expiring", "val", { amount: 5, unit: Time.Minutes });
-  
+
   // Expiration time should be Date.now() + 5 * 60 * 1000 = 1768224000000 + 300000 = 1768224300000
   expect(store.get("expiring")).toEqual("val");
 

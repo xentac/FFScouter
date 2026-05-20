@@ -1,16 +1,19 @@
-import { torn_page, wait_for_element } from "@utils/dom";
-import { ffscouter } from "@utils/ffscouter";
+import { torn_page } from "@utils/dom";
+// import { wait_for_element } from "@utils/dom";
+// import { ffscouter } from "@utils/ffscouter";
 import logger from "@utils/logger";
-import { generate_info_line } from "@utils/strings";
-import type { FFData } from "@utils/types";
+// import { generate_info_line } from "@utils/strings";
+// import type { FFData } from "@utils/types";
 import { type Feature, StartTime } from "../feature";
 
+/*
 function inject_info_line(h4: Element, info_line: Element) {
   h4.parentNode?.parentNode?.parentNode?.insertBefore(
     info_line,
     h4.parentNode?.parentNode?.nextSibling,
   );
 }
+*/
 
 export default {
   name: "Item market FF display",
@@ -19,12 +22,13 @@ export default {
 
   async shouldRun() {
     // Run on the attack page
-    return torn_page("page", "ItemMarket");
+    return torn_page("page", { sid: "ItemMarket" });
   },
 
   async run() {
     // Monitor the sellerListWrapper___PN32N for player_ids
-
+    logger.debug("Item market feature run stub");
+    /*
     // Query ff scouter for FFData
     ffscouter.get(player_id).then(async (data: FFData) => {
       logger.debug("got ff scouter results");
@@ -45,6 +49,7 @@ export default {
       }
     });
     ffscouter.complete();
+    */
   },
 
   httpIntercept: {

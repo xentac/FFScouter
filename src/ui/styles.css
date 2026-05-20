@@ -147,7 +147,7 @@ ff-settings-panel .ff-api-explanation {
 }
 
 ff-settings-panel .ff-api-explanation a {
-  color: var(--ffsv3-success-color) !important;
+  color: var(--ffsv3-success-color);
   text-decoration: underline;
 }
 

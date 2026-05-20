@@ -235,18 +235,16 @@ export class MonitorElements {
   private observer: MutationObserver;
 
   private timer: ReturnType<typeof setInterval> | null = null;
-  private timeout: number;
 
   constructor(
     node_matcher: NodeMatcherFn,
     handler: HandlerFn,
     root: HTMLElement,
     continuous: boolean,
-    timeout: number,
+    _timeout: number,
   ) {
     this.node_matcher = node_matcher;
     this.handler = handler;
-    this.timeout = timeout;
     this.root = root;
     this.continuous = continuous;
 
