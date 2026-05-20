@@ -11,6 +11,7 @@
     "dev:tm": "concurrently -k -r \"bun:build:dev:watch\" \"bun:serve:dist\"",
     "biome": "biome check --write",
     "biome:unsafe": "biome check --write --unsafe",
+    "lint": "biome check && tsc --noEmit",
     "test": "vitest",
     "coverage": "vitest run --coverage"
   },
