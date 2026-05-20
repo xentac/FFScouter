@@ -436,13 +436,6 @@ function ffdebug(...args) {
   }
 }
 
-async function display_fair_fight(target_id, player_id) {
-  const response = await get_cached_value(target_id);
-  if (response) {
-    set_fair_fight(response, player_id);
-  }
-}
-
 function format_duration_human(totalSeconds) {
   const clampedSeconds = Math.max(0, Math.floor(totalSeconds));
   const hours = Math.floor(clampedSeconds / 3600);
@@ -808,70 +801,6 @@ function get_difficulty_text(ff) {
   }
 }
 
-function get_detailed_message(ff_response, _player_id) {
-  if (ff_response.no_data || !ff_response.value) {
-    return `<span style="font-weight: bold; margin-right: 6px;">FairFight:</span><span style="background: #444; color: #fff; font-weight: bold; padding: 2px 6px; border-radius: 4px; display: inline-block;">No data</span>`;
-  }
-  const ff_string = get_ff_string(ff_response);
-  const difficulty = get_difficulty_text(ff_response.value);
-
-  const now = Date.now() / 1000;
-  const age = now - ff_response.last_updated;
-
-  var fresh = "";
-
-  if (age < 24 * 60 * 60) {
-    // Pass
-  } else if (age < 31 * 24 * 60 * 60) {
-    var days = Math.round(age / (24 * 60 * 60));
-    if (days === 1) {
-      fresh = "(1 day old)";
-    } else {
-      fresh = `(${days} days old)`;
-    }
-  } else if (age < 365 * 24 * 60 * 60) {
-    var months = Math.round(age / (31 * 24 * 60 * 60));
-    if (months === 1) {
-      fresh = "(1 month old)";
-    } else {
-      fresh = `(${months} months old)`;
-    }
-  } else {
-    var years = Math.round(age / (365 * 24 * 60 * 60));
-    if (years === 1) {
-      fresh = "(1 year old)";
-    } else {
-      fresh = `(${years} years old)`;
-    }
-  }
-
-  const background_colour = get_ff_colour(ff_response.value);
-  const text_colour = get_contrast_color(background_colour);
-
-  let statDetails = "";
-  let extraDetailsLine = "";
-  if (ff_response.bs_estimate_human) {
-    const isViewerPremium = getCachedPremiumStatus();
-    if (
-      isViewerPremium === false &&
-      ff_response.premium_insights_available === true &&
-      !ff_response.distribution_human
-    ) {
-      extraDetailsLine =
-        '<span class="ff-premium-upgrade-line"><a href="' +
-        PREMIUM_UPGRADE_URL +
-        '" target="_blank" rel="noopener noreferrer" style="font-weight: bold; text-decoration: underline;">Premium Data Available - Upgrade To View</a></span>';
-    } else if (ff_response.distribution_human) {
-      const ageStr = get_age_human(ff_response.distribution_last_updated);
-      const agePart = ageStr ? ` (${ageStr} old)` : "";
-      extraDetailsLine = `<span style="display:block; margin-top: 2px; font-size: 12px; font-style: normal;"><span style="font-weight: bold; margin-right: 6px;">Top Stats:</span><span style="font-weight: normal;">${ff_response.distribution_human}${agePart}</span></span>`;
-    }
-    statDetails = `<span style="font-size: 11px; font-weight: normal; margin-left: 8px; vertical-align: middle; font-style: italic;">Est. Stats: <span>${ff_response.bs_estimate_human}</span></span>`;
-  }
-
-  return `<span style="font-weight: bold; margin-right: 6px;">FairFight:</span><span style="background: ${background_colour}; color: ${text_colour}; font-weight: bold; padding: 2px 6px; border-radius: 4px; display: inline-block;">${ff_string} (${difficulty}) ${fresh}</span>${statDetails}${extraDetailsLine}`;
-}
-
 function get_ff_string_short(ff_response, _player_id) {
   const ff = ff_response.value.toFixed(2);
 
@@ -888,11 +817,6 @@ function get_ff_string_short(ff_response, _player_id) {
   }
 
   return `${ff}${suffix}`;
-}
-
-function set_fair_fight(ff_response, player_id) {
-  const detailed_message = get_detailed_message(ff_response, player_id);
-  info_line.innerHTML = detailed_message;
 }
 
 function inject_stats_history_button(player_id) {
@@ -1329,19 +1253,6 @@ async function apply_fair_fight_info(_) {
     });
 }
 
-async function _get_cache_misses(player_ids) {
-  var unknown_player_ids = [];
-  const cached_players = await ffcache.get(player_ids);
-  for (const player_id of player_ids) {
-    if (player_id in cached_players === false) {
-      unknown_player_ids.push(player_id);
-    }
-  }
-  return unknown_player_ids;
-}
-
-create_text_location();
-
 const match1 = window.location.href.match(
   /https:\/\/www.torn.com\/profiles.php\?XID=(?<target_id>\d+)/,
 );
@@ -1351,9 +1262,6 @@ const match2 = window.location.href.match(
 const match = match1 ?? match2;
 if (match) {
   var target_id = parseInt(match.groups.target_id, 10);
-  update_ff_cache([target_id], (target_ids) => {
-    display_fair_fight(target_ids[0], target_id);
-  });
   // Only apply the flight tracker to profile pages
   if (match1) {
     init_profile_flight_tracking(target_id);

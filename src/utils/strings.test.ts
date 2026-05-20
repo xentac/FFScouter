@@ -37,6 +37,8 @@ test("format_ff_score formats scores with age check", () => {
     bs_estimate: 1000,
     bs_estimate_human: "1k",
     bss_public: 10,
+    source: "bss",
+    premium_insights_available: false,
   };
   expect(format_ff_score(freshData)).toEqual("2.35");
 
@@ -48,6 +50,8 @@ test("format_ff_score formats scores with age check", () => {
     bs_estimate: 2000,
     bs_estimate_human: "2k",
     bss_public: 20,
+    source: "bss",
+    premium_insights_available: false,
   };
   expect(format_ff_score(oldData)).toEqual("4.12?");
 });
@@ -61,6 +65,8 @@ test("format_difficulty_text returns correct strings based on fair_fight score",
     bs_estimate: 100,
     bs_estimate_human: "100",
     bss_public: 10,
+    source: "bss",
+    premium_insights_available: false,
   });
 
   expect(format_difficulty_text(baseData(0.5))).toEqual("Extremely easy");
@@ -147,6 +153,8 @@ test("get_ff_arrow_colour returns correct hex colors with clamping", () => {
     bs_estimate: 100,
     bs_estimate_human: "100",
     bss_public: 10,
+    source: "bss",
+    premium_insights_available: false,
   };
   expect(get_ff_colour(comp)).toEqual("#34e817");
 });
@@ -169,6 +177,8 @@ test("ff_to_percent computes expected percentage relative to configured ranges",
     bs_estimate: 100,
     bs_estimate_human: "100",
     bss_public: 10,
+    source: "bss",
+    premium_insights_available: false,
   });
 
   // Since low_ff_range is 2:
