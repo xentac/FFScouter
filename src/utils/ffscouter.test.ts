@@ -97,7 +97,7 @@ test("promises returned after processing is done are different", async () => {
   vi.spyOn(c, "update").mockResolvedValue();
   vi.spyOn(c, "clean_expired").mockResolvedValue();
 
-  vi.fn(query_stats).mockResolvedValue({
+  vi.mocked(query_stats).mockResolvedValue({
     result: new Map([[1, generate_test_ff_data(1)]]),
     blank: false,
   });
@@ -124,7 +124,7 @@ test("enqueue less than one batch over less than initial interval", async () => 
   vi.spyOn(c, "get").mockResolvedValue(new Map());
   vi.spyOn(c, "update").mockResolvedValue();
   vi.spyOn(c, "clean_expired").mockResolvedValue();
-  vi.fn(query_stats).mockResolvedValue({
+  vi.mocked(query_stats).mockResolvedValue({
     result: new Map([
       [10, generate_test_ff_data(10)],
       [11, generate_test_ff_data(11)],
@@ -185,7 +185,7 @@ test("get across interval boundaries", async () => {
   const f = new FFScouter(config, c);
 
   for (const i of [101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111]) {
-    vi.fn(query_stats).mockResolvedValue({
+    vi.mocked(query_stats).mockResolvedValue({
       result: new Map([[i, generate_test_ff_data(i)]]),
       blank: false,
     });
@@ -195,7 +195,7 @@ test("get across interval boundaries", async () => {
     await Promise.resolve();
     expect(p.resolved).toBe(true);
     expect(p.value).toEqual(generate_test_ff_data(i));
-    expect(vi.fn(query_stats)).toHaveBeenCalledWith(config.key, [i]);
+    expect(query_stats).toHaveBeenCalledWith(config.key, [i]);
   }
 });
 
@@ -205,10 +205,9 @@ test("enqueue more than one batch in a single batch time", async () => {
   vi.spyOn(c, "get").mockResolvedValue(new Map());
   vi.spyOn(c, "update").mockResolvedValue();
   vi.spyOn(c, "clean_expired").mockResolvedValue();
-  const spy = vi.fn(query_stats);
-
+  vi.mocked(query_stats).mockReset();
   for (let i = 0; i < 5; i++) {
-    spy.mockResolvedValueOnce({
+    vi.mocked(query_stats).mockResolvedValueOnce({
       result: new Map(
         Array.from({ length: 200 }, (_, j) => {
           return [
@@ -232,7 +231,7 @@ test("enqueue more than one batch in a single batch time", async () => {
     await f.process_api();
     await Promise.resolve();
 
-    expect(spy).toHaveBeenCalledWith(
+    expect(query_stats).toHaveBeenCalledWith(
       config.key,
       Array.from({ length: 200 }, (_, j) => {
         return i * 200 + j + 1000;
@@ -305,7 +304,7 @@ test("next_run is calculated based on limits returned", async () => {
   vi.spyOn(c, "get").mockResolvedValue(new Map());
   vi.spyOn(c, "update").mockResolvedValue();
   vi.spyOn(c, "clean_expired").mockResolvedValue();
-  vi.fn(query_stats).mockResolvedValue({
+  vi.mocked(query_stats).mockResolvedValue({
     result: new Map([[10, generate_test_ff_data(10)]]),
     blank: false,
     limits: {
@@ -337,7 +336,7 @@ test("complete schedules execution now", async () => {
   vi.spyOn(c, "update").mockResolvedValue();
   vi.spyOn(c, "clean_expired").mockResolvedValue();
 
-  vi.fn(query_stats).mockResolvedValue({
+  vi.mocked(query_stats).mockResolvedValue({
     result: new Map([[1, generate_test_ff_data(1)]]),
     blank: false,
   });

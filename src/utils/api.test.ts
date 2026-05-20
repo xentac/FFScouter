@@ -1,5 +1,5 @@
 import { expect, test, vi } from "vitest";
-import { FFApiError, type gmRequest, make_stats_url, query_stats } from "./api";
+import { FFApiError, type gmRequest, make_stats_url, query_stats, check_key } from "./api";
 import { generate_test_ff_data } from "./test";
 
 test("make_stats_url generates proper url", () => {
@@ -195,4 +195,81 @@ test("empty response", async () => {
     result: new Map(),
     blank: true,
   });
+});
+
+test("check_key success", async () => {
+  const mockCheckSuccess = {
+    key: "valid-key",
+    is_registered: true,
+    registered_at: 1768192400,
+    last_used: 1768192410,
+    policy_version: 1,
+    policy_update_required: false,
+    is_premium: true,
+    premium_expires_at: 1768192500,
+    faction_id: 12345,
+    faction_premium_expires_at: 1768192500,
+    premium_entitlement_source: "patreon",
+  };
+
+  const success: typeof gmRequest = vi.fn().mockResolvedValue({
+    responseHeaders:
+      "cache-control: no-cache, private\n\
+x-ratelimit-reset-until: 55\n\
+x-ratelimit-reset-timestamp: 1768192440\n\
+x-ratelimit-limit: 120\n\
+x-ratelimit-remaining: 118\n",
+    readyState: 4,
+    response: "",
+    responseText: JSON.stringify(mockCheckSuccess),
+    responseXML: null,
+    status: 200,
+    statusText: "",
+    finalUrl: "",
+    context: {},
+  });
+
+  expect(await check_key("valid-key", success)).toEqual({
+    result: mockCheckSuccess,
+    blank: false,
+    limits: {
+      rate_limit: 120,
+      remaining: 118,
+      reset_time: new Date("2026-01-12T04:34:00.000Z"),
+      this_minute: 2,
+    },
+  });
+});
+
+test("check_key empty response", async () => {
+  const empty: typeof gmRequest = vi.fn().mockResolvedValue(null);
+  expect(await check_key("some-key", empty)).toEqual({
+    blank: true,
+  });
+});
+
+test("check_key error response", async () => {
+  const error_with_code_2: typeof gmRequest = vi.fn().mockResolvedValue({
+    responseHeaders: "",
+    readyState: 4,
+    response: "",
+    responseText: JSON.stringify({
+      code: 2,
+      error: "Incorrect key format",
+    }),
+    responseXML: null,
+    status: 400,
+    statusText: "status error",
+    finalUrl: "",
+    context: {},
+  });
+
+  await expect(check_key("bad-key", error_with_code_2)).rejects.toThrow(
+    new FFApiError("API request failed. Error: Incorrect key format; Code: 2", {
+      ff_api_error: {
+        code: 2,
+        error: "Incorrect key format",
+      },
+    }),
+  );
 });
