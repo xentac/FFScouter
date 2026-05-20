@@ -11,3 +11,5 @@
   - Split by url and query string
   - Include which feature detected it
 - Figure out how to have main and dev version tracked at the same time
+- Fix `TypeError: Failed to construct 'Request': The `duplex` member must be specified for a request with a streaming body
+` error on crimes page load sometimes
