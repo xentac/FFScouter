@@ -28,10 +28,6 @@ export default {
         await apply_ff_gauge_selector(honor_bars);
       } else {
         if (
-          window.location.href.startsWith("https://www.torn.com/factions.php")
-        ) {
-          await apply_ff_gauge_selector(node.querySelectorAll(".member"));
-        } else if (
           window.location.href.startsWith("https://www.torn.com/companies.php")
         ) {
           await apply_ff_gauge_selector(node.querySelectorAll(".employee"));
