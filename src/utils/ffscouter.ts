@@ -103,7 +103,6 @@ export class FFScouter {
   };
 
   process_cache = async () => {
-    logger.debug("process_cache called");
     if (this.cache_timer) {
       this.clear(this.cache_timer);
       this.cache_timer = null;
