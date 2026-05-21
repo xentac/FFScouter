@@ -5,11 +5,8 @@
 
 # Before releasing version 3.0
 
-- Migrate FF history link on profile
 - Migrate flight tracker on profile
 - Add URL tracker for pages we find arrows on
   - Split by url and query string
   - Include which feature detected it
 - Figure out how to have main and dev version tracked at the same time
-- Fix `TypeError: Failed to construct 'Request': The `duplex` member must be specified for a request with a streaming body
-` error on crimes page load sometimes
