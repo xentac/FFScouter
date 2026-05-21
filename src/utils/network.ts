@@ -41,7 +41,7 @@ function patchFetch(): void {
     const originalFetch: typeof fetch = pageWindow.fetch.bind(pageWindow);
     (pageWindow as Window & { fetch: typeof fetch }).fetch =
       async function patchedFetch(
-        input: RequestInfo | URL,
+        input: (RequestInfo & { duplex?: string }) | URL,
         init?: RequestInit,
       ): Promise<Response> {
         if (!httpInterceptor) return originalFetch(input, init);
@@ -52,14 +52,16 @@ function patchFetch(): void {
           : typeof input === "string"
             ? input
             : input.toString();
-        let currentInit = init as RequestInit | undefined;
+        let currentInit = init as
+          | (RequestInit & { duplex?: string })
+          | undefined;
 
         if (
           requestIsObj &&
           !currentInit &&
           (httpInterceptor.before || httpInterceptor.after)
         ) {
-          const r = input as Request;
+          const r = input as Request & { duplex?: string };
           currentInit = {
             method: r.method,
             headers: r.headers as unknown as HeadersInit,
@@ -74,6 +76,7 @@ function patchFetch(): void {
             referrer: r.referrer,
             referrerPolicy: r.referrerPolicy,
             integrity: (r as Request & { integrity?: string }).integrity,
+            duplex: r.duplex,
           };
         }
 
