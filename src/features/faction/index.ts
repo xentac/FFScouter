@@ -1,42 +1,186 @@
 import { apply_ff_gauge, torn_page, wait_for_element } from "@utils/dom";
+import { FactionsColDisplay, ffconfig } from "@utils/ffconfig";
+import { ffscouter } from "@utils/ffscouter";
 import logger from "@utils/logger";
+import {
+  format_ff_score,
+  format_relative_time,
+  get_contrast_color,
+  get_ff_colour,
+} from "@utils/strings";
+import type { PlayerId } from "@utils/types";
 import { type Feature, StartTime } from "../feature";
 
 const FEATURE_NAME = "faction";
 
+export async function apply_ff_columns(membersList: HTMLElement) {
+  const headerLvl = membersList.querySelector(".table-header > .lvl");
+  if (!headerLvl) return;
+
+  const colDisplay = ffconfig.factions_col_display;
+  const isEst = colDisplay === FactionsColDisplay.BATTLE_STATS;
+  const expectedText = isEst ? "Est" : "FF";
+
+  let headerLi = membersList.querySelector(
+    ".ffscouter-header",
+  ) as HTMLElement | null;
+  if (!headerLi) {
+    headerLi = document.createElement("li");
+    headerLi.tabIndex = 0;
+    headerLi.classList.add(
+      "table-cell",
+      "lvl",
+      "torn-divider",
+      "divider-vertical",
+      "ffscouter-header",
+    );
+    headerLvl.after(headerLi);
+  }
+
+  if (headerLi.textContent !== expectedText) {
+    headerLi.textContent = expectedText;
+  }
+
+  const rows = Array.from(
+    membersList.querySelectorAll(".table-body > .table-row"),
+  );
+  const rowPlayers = rows
+    .map((row) => {
+      const memberDiv = row.querySelector(".member");
+      if (!memberDiv) return null;
+      const profileLink = memberDiv.querySelector('a[href^="/profiles"]');
+      if (!profileLink || !(profileLink instanceof HTMLAnchorElement))
+        return null;
+      const url = profileLink.href;
+      const match = url.match(/.*XID=(?<player_id>\d+)/);
+      // biome-ignore lint/complexity/useLiteralKeys: tsc requires index signature lookup
+      if (!match?.groups?.["player_id"]) return null;
+      return {
+        row,
+        // biome-ignore lint/complexity/useLiteralKeys: tsc requires index signature lookup
+        player_id: Number.parseInt(match.groups["player_id"], 10) as PlayerId,
+        memberDiv,
+      };
+    })
+    .filter((item): item is NonNullable<typeof item> => item !== null);
+
+  if (rowPlayers.length === 0) return;
+
+  const playerIds = rowPlayers.map((p) => p.player_id);
+  const dataPromises = playerIds.map((id) => ffscouter.get(id));
+  ffscouter.complete();
+  const dataList = await Promise.all(dataPromises);
+  const dataMap = new Map(dataList.map((d) => [d.player_id, d]));
+
+  for (const rp of rowPlayers) {
+    let cell = rp.row.querySelector(".ffscouter-cell") as HTMLElement | null;
+    if (!cell) {
+      cell = document.createElement("div");
+      cell.classList.add("table-cell", "lvl", "ffscouter-cell");
+      const rowLvl = rp.row.querySelector(".lvl");
+      if (rowLvl) {
+        rowLvl.after(cell);
+      } else {
+        rp.memberDiv.after(cell);
+      }
+    }
+
+    const data = dataMap.get(rp.player_id);
+    if (data && !data.no_data) {
+      const text = isEst ? data.bs_estimate_human : format_ff_score(data);
+      const bg_color = get_ff_colour(data);
+      const text_color = get_contrast_color(bg_color);
+
+      cell.style.backgroundColor = bg_color;
+      cell.style.color = text_color;
+      cell.style.fontWeight = "bold";
+      cell.textContent = text;
+
+      if (isEst && data.distribution) {
+        const ageStr = format_relative_time(data.distribution.last_updated);
+        const agePart = ageStr ? ` ${ageStr}` : "";
+        cell.title = `Top Stats: ${data.distribution.distribution_human}${agePart}`;
+      } else {
+        cell.title = "";
+      }
+    } else {
+      cell.textContent = "-";
+      cell.style.backgroundColor = "";
+      cell.style.color = "";
+      cell.style.fontWeight = "";
+      cell.title = "";
+    }
+  }
+}
+
 const monitor_member_list = (
   root: HTMLElement = document.body,
-  dynamic = false,
+  _dynamic = false,
 ) => {
-  apply_ff_members_list(root);
+  if (
+    root.classList.contains("members-list") ||
+    root.querySelector(".members-list")
+  ) {
+    const membersList = root.classList.contains("members-list")
+      ? root
+      : (root.querySelector(".members-list") as HTMLElement);
+    apply_ff_columns(membersList);
+  } else {
+    apply_ff_members_list(root);
+  }
 
-  if (dynamic) {
-    const m = new MutationObserver((mutations) => {
-      for (const mutation of mutations) {
-        for (const node of mutation.addedNodes) {
-          if (
-            node instanceof HTMLElement &&
-            (node.querySelector(".honor-text-wrap") ||
-              node.querySelector(".member"))
-          ) {
-            apply_ff_members_list(root);
-            return;
-          }
+  const m = new MutationObserver((mutations) => {
+    let shouldUpdate = false;
+    for (const mutation of mutations) {
+      for (const node of mutation.addedNodes) {
+        if (
+          node instanceof HTMLElement &&
+          (node.querySelector(".honor-text-wrap") ||
+            node.querySelector(".member") ||
+            node.classList.contains("table-row"))
+        ) {
+          shouldUpdate = true;
+          break;
         }
       }
-    });
-    m.observe(root, { childList: true, subtree: true });
-
-    const cleanupInterval = setInterval(() => {
-      if (!root.isConnected) {
-        clearInterval(cleanupInterval);
-        m.disconnect();
+      if (shouldUpdate) break;
+    }
+    if (shouldUpdate) {
+      if (
+        root.classList.contains("members-list") ||
+        root.querySelector(".members-list")
+      ) {
+        const membersList = root.classList.contains("members-list")
+          ? root
+          : (root.querySelector(".members-list") as HTMLElement);
+        apply_ff_columns(membersList);
+      } else {
+        apply_ff_members_list(root);
       }
-    }, 10_000);
-  }
+    }
+  });
+
+  m.observe(root, { childList: true, subtree: true });
+
+  const cleanupInterval = setInterval(() => {
+    if (!root.isConnected) {
+      clearInterval(cleanupInterval);
+      m.disconnect();
+    }
+  }, 10_000);
 };
 
 const apply_ff_members_list = (root: HTMLElement = document.body) => {
+  if (
+    root.classList.contains("members-list") ||
+    root.querySelector(".members-list")
+  ) {
+    const membersList = root.classList.contains("members-list")
+      ? root
+      : (root.querySelector(".members-list") as HTMLElement);
+    apply_ff_columns(membersList);
+    return;
+  }
   let found_honor = false;
   for (const bar of root.querySelectorAll(".honor-text-wrap")) {
     apply_ff_gauge(bar, FEATURE_NAME);
