@@ -46,7 +46,7 @@ export default {
 
     // Query ff scouter for FFData
     ffscouter.get(player_id).then(async (data: FFData) => {
-      const line = document.createElement("ff-info-line");
+      const line = document.createElement("ff-header-line");
       line.data = data;
       info_line.appendChild(line);
       inject_info_line(info_line);

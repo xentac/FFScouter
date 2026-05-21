@@ -17,7 +17,7 @@ beforeEach(() => {
 });
 
 test("renders 'No data' when data is null", async () => {
-  const el = document.createElement("ff-info-line");
+  const el = document.createElement("ff-header-line");
   document.body.appendChild(el);
   await el.updateComplete;
 
@@ -25,7 +25,7 @@ test("renders 'No data' when data is null", async () => {
 });
 
 test("renders 'No data' when no_data is true", async () => {
-  const el = document.createElement("ff-info-line");
+  const el = document.createElement("ff-header-line");
   el.data = { player_id: 123, no_data: true };
   document.body.appendChild(el);
   await el.updateComplete;
@@ -36,7 +36,7 @@ test("renders 'No data' when no_data is true", async () => {
 test("renders basic stats for non-premium user when premium is not available", async () => {
   vi.mocked(check_key_status.isPremium).mockResolvedValue(false);
 
-  const el = document.createElement("ff-info-line");
+  const el = document.createElement("ff-header-line");
   const nowSec = Date.now() / 1000;
   el.data = {
     player_id: 123,
@@ -66,7 +66,7 @@ test("renders basic stats for non-premium user when premium is not available", a
 test("renders premium upgrade link for non-premium user when premium insights are available", async () => {
   vi.mocked(check_key_status.isPremium).mockResolvedValue(false);
 
-  const el = document.createElement("ff-info-line");
+  const el = document.createElement("ff-header-line");
   const nowSec = Date.now() / 1000;
   el.data = {
     player_id: 123,
@@ -92,7 +92,7 @@ test("renders premium upgrade link for non-premium user when premium insights ar
 test("renders top stats and distribution for premium user", async () => {
   vi.mocked(check_key_status.isPremium).mockResolvedValue(true);
 
-  const el = document.createElement("ff-info-line");
+  const el = document.createElement("ff-header-line");
   const nowSec = Date.now() / 1000;
   el.data = {
     player_id: 123,

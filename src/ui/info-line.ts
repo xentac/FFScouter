@@ -13,8 +13,8 @@ import { customElement, property, state } from "lit/decorators.js";
 
 const PREMIUM_UPGRADE_URL = "https://ffscouter.com/premium";
 
-@customElement("ff-info-line")
-export class FFInfoLine extends LitElement {
+@customElement("ff-header-line")
+export class FFHeaderLine extends LitElement {
   protected override createRenderRoot() {
     return this;
   }
@@ -96,6 +96,6 @@ export class FFInfoLine extends LitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    "ff-info-line": FFInfoLine;
+    "ff-header-line": FFHeaderLine;
   }
 }
