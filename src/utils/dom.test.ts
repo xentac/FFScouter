@@ -21,6 +21,7 @@ vi.mock("./ffscouter", () => {
   return {
     ffscouter: {
       get: vi.fn(),
+      add_analytics_entry: vi.fn(),
     },
   };
 });

@@ -56,3 +56,14 @@ export type PlayerFlightsResponse = {
 };
 
 export type CachedFlightData = PlayerFlightsResponse & { expiry: Timestamp };
+
+export interface AnalyticsEntry {
+  id?: number;
+  feature: string;
+  player_id: PlayerId;
+  status: "applied" | "ignored";
+  url: string;
+  params: string;
+  hash: string;
+  timestamp: Timestamp;
+}

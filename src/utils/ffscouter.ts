@@ -10,6 +10,7 @@ import { FFCache } from "./ffcache";
 import { type FFConfig, ffconfig } from "./ffconfig";
 import logger from "./logger";
 import type {
+  AnalyticsEntry,
   CachedFlightData,
   FFData,
   PlayerFlightsResponse,
@@ -454,6 +455,40 @@ export class FFScouter {
 
     this.enqueue_api(id);
     return true;
+  };
+
+  add_analytics_entry = async (
+    feature: string,
+    player_id: PlayerId,
+    status: "applied" | "ignored",
+  ): Promise<void> => {
+    if (!this.config.analytics_enabled) {
+      return;
+    }
+    try {
+      const url = window.location.origin + window.location.pathname;
+      const params = window.location.search;
+      const hash = window.location.hash;
+      await this.cache.add_analytics({
+        feature,
+        player_id,
+        status,
+        url,
+        params,
+        hash,
+      });
+    } catch (err) {
+      logger.error("Failed to add analytics entry", err);
+    }
+  };
+
+  get_analytics_entries = async (): Promise<AnalyticsEntry[]> => {
+    try {
+      return await this.cache.get_analytics();
+    } catch (err) {
+      logger.error("Failed to get analytics entries", err);
+      return [];
+    }
   };
 }
 

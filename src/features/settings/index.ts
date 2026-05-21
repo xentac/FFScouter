@@ -34,6 +34,7 @@ export default {
     panel.ffHistoryEnabled = ffconfig.ff_history_enabled;
     panel.factionsColDisplay = ffconfig.factions_col_display;
     panel.debugLogs = ffconfig.debug_logs;
+    panel.analyticsEnabled = ffconfig.analytics_enabled;
     panel.isPremium = await check_key_status.is_premium(true);
 
     // Listen for the custom save event
@@ -50,6 +51,7 @@ export default {
       ffconfig.ff_history_enabled = detail.ffHistoryEnabled;
       ffconfig.factions_col_display = detail.factionsColDisplay;
       ffconfig.debug_logs = detail.debugLogs;
+      ffconfig.analytics_enabled = detail.analyticsEnabled;
       panel.isPremium = await check_key_status.is_premium(true);
 
       toast("Settings saved successfully!");
@@ -71,6 +73,7 @@ export default {
       panel.ffHistoryEnabled = ffconfig.ff_history_enabled;
       panel.factionsColDisplay = ffconfig.factions_col_display;
       panel.debugLogs = ffconfig.debug_logs;
+      panel.analyticsEnabled = ffconfig.analytics_enabled;
 
       toast("Settings reset to defaults!");
     });

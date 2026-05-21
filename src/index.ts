@@ -4,7 +4,7 @@ import { toast } from "@ui/toast";
 import { query_stats } from "@utils/api";
 import { wait_for_body } from "@utils/dom";
 import { FFConfig } from "@utils/ffconfig";
-import { FFScouter } from "@utils/ffscouter";
+import { FFScouter, ffscouter } from "@utils/ffscouter";
 import logger from "@utils/logger";
 import { setHttpInterceptor } from "@utils/network";
 import { init_ui } from "./ui";
@@ -25,11 +25,13 @@ async function main() {
   init_ui();
 
   (unsafeWindow as any).FFScouter = FFScouter;
+  (unsafeWindow as any).ffscouter = ffscouter;
   (unsafeWindow as any).query_stats = query_stats;
   (unsafeWindow as any).toast = toast;
   (unsafeWindow as any).FFConfig = FFConfig;
 
   (window as any).FFScouter = FFScouter;
+  (window as any).ffscouter = ffscouter;
   (window as any).query_stats = query_stats;
   (window as any).toast = toast;
   (window as any).FFConfig = FFConfig;

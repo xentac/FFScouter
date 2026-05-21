@@ -27,6 +27,7 @@ export const CONFIG_DEFAULTS = {
   ff_history_enabled: true,
   factions_col_display: FactionsColDisplay.BATTLE_STATS,
   debug_logs: false,
+  analytics_enabled: false,
 } as const;
 
 enum CONFIG {
@@ -41,6 +42,7 @@ enum CONFIG {
   FF_HISTORY_ENABLED = "ff_history_enabled",
   FACTIONS_COL_DISPLAY = "factions_col_display",
   DEBUG_LOGS = "debug_logs",
+  ANALYTICS_ENABLED = "analytics_enabled",
 }
 
 export class FFConfig {
@@ -163,6 +165,17 @@ export class FFConfig {
     this.storage.set(CONFIG.DEBUG_LOGS, val);
   }
 
+  get analytics_enabled(): boolean {
+    return (
+      this.storage.get(CONFIG.ANALYTICS_ENABLED) ??
+      CONFIG_DEFAULTS.analytics_enabled
+    );
+  }
+
+  set analytics_enabled(val: boolean) {
+    this.storage.set(CONFIG.ANALYTICS_ENABLED, val);
+  }
+
   public reset(): void {
     this.storage.remove(CONFIG.LOW_FF_RANGE);
     this.storage.remove(CONFIG.HIGH_FF_RANGE);
@@ -174,6 +187,7 @@ export class FFConfig {
     this.storage.remove(CONFIG.FF_HISTORY_ENABLED);
     this.storage.remove(CONFIG.FACTIONS_COL_DISPLAY);
     this.storage.remove(CONFIG.DEBUG_LOGS);
+    this.storage.remove(CONFIG.ANALYTICS_ENABLED);
   }
 }
 

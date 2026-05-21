@@ -9,6 +9,8 @@ import {
 import type { FFData } from "@utils/types";
 import { type Feature, StartTime } from "../feature";
 
+const FEATURE_NAME = "mini-profile";
+
 const monitor_mini_profile_root = () => {
   const miniprofile = document.querySelector("#profile-mini-root");
   if (miniprofile) {
@@ -75,7 +77,7 @@ const setup_mini_observer = () => {
 
       // Render arrow
       for (const bar of miniroot.querySelectorAll(".honor-text-wrap")) {
-        apply_ff_gauge(bar);
+        apply_ff_gauge(bar, FEATURE_NAME);
       }
       miniroot.querySelector(".ffsv3-mini-desc")?.remove();
 

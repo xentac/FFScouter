@@ -2,6 +2,8 @@ import { apply_ff_gauge, torn_page, wait_for_element } from "@utils/dom";
 import logger from "@utils/logger";
 import { type Feature, StartTime } from "../feature";
 
+const FEATURE_NAME = "faction";
+
 const monitor_member_list = (
   root: HTMLElement = document.body,
   dynamic = false,
@@ -37,14 +39,14 @@ const monitor_member_list = (
 const apply_ff_members_list = (root: HTMLElement = document.body) => {
   let found_honor = false;
   for (const bar of root.querySelectorAll(".honor-text-wrap")) {
-    apply_ff_gauge(bar);
+    apply_ff_gauge(bar, FEATURE_NAME);
     found_honor = true;
   }
   if (found_honor) {
     return;
   }
   for (const bar of root.querySelectorAll(".member")) {
-    apply_ff_gauge(bar);
+    apply_ff_gauge(bar, FEATURE_NAME);
   }
   for (const l of root.querySelectorAll(".members-list, .chain-attacks-list")) {
     if (l instanceof HTMLElement) {

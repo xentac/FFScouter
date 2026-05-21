@@ -2,6 +2,8 @@ import { apply_ff_gauge_selector } from "@utils/dom";
 import { ffscouter } from "@utils/ffscouter";
 import { type Feature, StartTime } from "../feature";
 
+const FEATURE_NAME = "fallback";
+
 export default {
   name: "Fallback mutation observer",
   description: "Catch all mutations and see if we can apply FF data",
@@ -24,12 +26,15 @@ export default {
         ".user.name",
       ) as NodeListOf<HTMLElement>;
       if (honor_bars.length > 0) {
-        await apply_ff_gauge_selector(honor_bars);
+        await apply_ff_gauge_selector(honor_bars, FEATURE_NAME);
       } else {
         if (
           window.location.href.startsWith("https://www.torn.com/companies.php")
         ) {
-          await apply_ff_gauge_selector(node.querySelectorAll(".employee"));
+          await apply_ff_gauge_selector(
+            node.querySelectorAll(".employee"),
+            FEATURE_NAME,
+          );
         } else if (
           window.location.href.startsWith(
             "https://www.torn.com/page.php?sid=competition#/team",
@@ -37,36 +42,58 @@ export default {
         ) {
           await apply_ff_gauge_selector(
             node.querySelectorAll('[class*="name__"]'),
+            FEATURE_NAME,
           );
         } else if (
           window.location.href.startsWith("https://www.torn.com/joblist.php")
         ) {
-          await apply_ff_gauge_selector(node.querySelectorAll(".employee"));
+          await apply_ff_gauge_selector(
+            node.querySelectorAll(".employee"),
+            FEATURE_NAME,
+          );
         } else if (
           window.location.href.startsWith("https://www.torn.com/messages.php")
         ) {
-          await apply_ff_gauge_selector(node.querySelectorAll(".name"));
+          await apply_ff_gauge_selector(
+            node.querySelectorAll(".name"),
+            FEATURE_NAME,
+          );
         } else if (
           window.location.href.startsWith("https://www.torn.com/index.php")
         ) {
-          await apply_ff_gauge_selector(node.querySelectorAll(".name"));
+          await apply_ff_gauge_selector(
+            node.querySelectorAll(".name"),
+            FEATURE_NAME,
+          );
         } else if (
           window.location.href.startsWith(
             "https://www.torn.com/hospitalview.php",
           )
         ) {
-          await apply_ff_gauge_selector(node.querySelectorAll(".name"));
+          await apply_ff_gauge_selector(
+            node.querySelectorAll(".name"),
+            FEATURE_NAME,
+          );
         } else if (
           window.location.href.startsWith(
             "https://www.torn.com/page.php?sid=UserList",
           )
         ) {
-          await apply_ff_gauge_selector(node.querySelectorAll(".name"));
+          await apply_ff_gauge_selector(
+            node.querySelectorAll(".name"),
+            FEATURE_NAME,
+          );
         } else if (
           window.location.href.startsWith("https://www.torn.com/bounties.php")
         ) {
-          await apply_ff_gauge_selector(node.querySelectorAll(".target"));
-          await apply_ff_gauge_selector(node.querySelectorAll(".listed"));
+          await apply_ff_gauge_selector(
+            node.querySelectorAll(".target"),
+            FEATURE_NAME,
+          );
+          await apply_ff_gauge_selector(
+            node.querySelectorAll(".listed"),
+            FEATURE_NAME,
+          );
         } else if (
           window.location.href.startsWith(
             "https://www.torn.com/page.php?sid=attackLog",
@@ -74,21 +101,35 @@ export default {
         ) {
           await apply_ff_gauge_selector(
             node.querySelectorAll("ul.participants-list li"),
+            FEATURE_NAME,
           );
         } else if (
           window.location.href.startsWith("https://www.torn.com/forums.php")
         ) {
-          await apply_ff_gauge_selector(node.querySelectorAll(".last-poster"));
-          await apply_ff_gauge_selector(node.querySelectorAll(".starter"));
-          await apply_ff_gauge_selector(node.querySelectorAll(".last-post"));
-          await apply_ff_gauge_selector(node.querySelectorAll(".poster"));
+          await apply_ff_gauge_selector(
+            node.querySelectorAll(".last-poster"),
+            FEATURE_NAME,
+          );
+          await apply_ff_gauge_selector(
+            node.querySelectorAll(".starter"),
+            FEATURE_NAME,
+          );
+          await apply_ff_gauge_selector(
+            node.querySelectorAll(".last-post"),
+            FEATURE_NAME,
+          );
+          await apply_ff_gauge_selector(
+            node.querySelectorAll(".poster"),
+            FEATURE_NAME,
+          );
         } else if (window.location.href.includes("page.php?sid=hof")) {
           await apply_ff_gauge_selector(
             node.querySelectorAll('[class*="userInfoBox__"]'),
+            FEATURE_NAME,
           );
         } else if (name_elems.length > 0) {
           // Fallback for anyone without honor bars enabled
-          await apply_ff_gauge_selector(name_elems);
+          await apply_ff_gauge_selector(name_elems, FEATURE_NAME);
         }
       }
       if (
@@ -100,6 +141,7 @@ export default {
           node.querySelectorAll(
             "div.bazaar-listing-card div:first-child div:first-child > a",
           ),
+          FEATURE_NAME,
         );
       }
       ffscouter.complete();

@@ -10,6 +10,7 @@ import {
 } from "idb";
 import logger from "./logger";
 import type {
+  AnalyticsEntry,
   CachedFFData,
   CachedFlightData,
   FFData,
@@ -20,6 +21,7 @@ import type {
 export const STORES = {
   CACHE: "cache",
   FLIGHTS: "flights",
+  ANALYTICS: "analytics",
 } as const;
 
 interface CacheDB extends DBSchema {
@@ -33,6 +35,11 @@ interface CacheDB extends DBSchema {
     value: CachedFlightData;
     indexes: { expiry: number };
   };
+  [STORES.ANALYTICS]: {
+    key: number;
+    value: AnalyticsEntry;
+    indexes: { timestamp: number };
+  };
 }
 
 type MigrationFn = (
@@ -43,7 +50,7 @@ type MigrationFn = (
 export class FFCache {
   private db_name: string;
   private db: IDBPDatabase<CacheDB> | null = null;
-  private db_version = 2;
+  private db_version = 3;
 
   private cache_interval: number = 60 * 60 * 1000; // one hour cache
 
@@ -66,6 +73,18 @@ export class FFCache {
           keyPath: "player_id",
         });
         store.createIndex("expiry", "expiry", {
+          unique: false,
+        });
+      },
+    ],
+    [
+      3,
+      (db, _) => {
+        const store = db.createObjectStore(STORES.ANALYTICS, {
+          keyPath: "id",
+          autoIncrement: true,
+        });
+        store.createIndex("timestamp", "timestamp", {
           unique: false,
         });
       },
@@ -204,6 +223,18 @@ export class FFCache {
       await tx.done;
     }
 
+    // Clean ANALYTICS
+    {
+      const tx = db.transaction(STORES.ANALYTICS, "readwrite");
+      const index = tx.store.index("timestamp");
+      const thirty_days_ago = Date.now() - 30 * 24 * 60 * 60 * 1000;
+      const range = IDBKeyRange.upperBound(thirty_days_ago);
+      const r = await index.getAllKeys(range);
+      logger.info(`Found ${r.length} expired values to delete from analytics.`);
+      await Promise.all(r.map((id) => tx.store.delete(id)));
+      await tx.done;
+    }
+
     this.close();
   };
 
@@ -237,6 +268,29 @@ export class FFCache {
     await tx.store.put(value_expiry);
     await tx.done;
     this.close();
+  };
+
+  add_analytics = async (
+    entry: Omit<AnalyticsEntry, "id" | "timestamp">,
+  ): Promise<void> => {
+    const db = await this.open();
+    const tx = db.transaction(STORES.ANALYTICS, "readwrite");
+    const value: AnalyticsEntry = {
+      ...entry,
+      timestamp: Date.now(),
+    };
+    await tx.store.add(value);
+    await tx.done;
+    this.close();
+  };
+
+  get_analytics = async (): Promise<AnalyticsEntry[]> => {
+    const db = await this.open();
+    const tx = db.transaction(STORES.ANALYTICS, "readonly");
+    const res = await tx.store.getAll();
+    await tx.done;
+    this.close();
+    return res;
   };
 
   dump = async () => {

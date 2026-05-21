@@ -61,13 +61,17 @@ function make_arrow(d: FFDataComplete): SVGElement {
   return svg;
 }
 
-export function add_ff_arrow(element: HTMLElement) {
-  if (element.querySelector(".ffsv3-gauge")) {
+export function add_ff_arrow(element: HTMLElement, featureName = "Unknown") {
+  const player_id = get_player_id_in_element(element);
+  if (!player_id) {
     return;
   }
 
-  const player_id = get_player_id_in_element(element);
-  if (!player_id) {
+  if (
+    element.querySelector(".ffsv3-gauge") ||
+    element.classList.contains("ffsv3-gauge")
+  ) {
+    ffscouter.add_analytics_entry(featureName, player_id, "ignored");
     return;
   }
 
@@ -75,6 +79,15 @@ export function add_ff_arrow(element: HTMLElement) {
     if (d.no_data) {
       return;
     }
+
+    if (
+      element.querySelector(".ffsv3-gauge") ||
+      element.classList.contains("ffsv3-gauge")
+    ) {
+      ffscouter.add_analytics_entry(featureName, player_id, "ignored");
+      return;
+    }
+
     const percent = ff_to_percent(d);
     element.classList.add("ffsv3-gauge");
     element.style.setProperty("--band-percent", `${percent}`);
@@ -85,6 +98,7 @@ export function add_ff_arrow(element: HTMLElement) {
     }
 
     element.appendChild(make_arrow(d));
+    ffscouter.add_analytics_entry(featureName, player_id, "applied");
   });
 }
 
@@ -150,17 +164,21 @@ export function get_player_id_in_element(element: Element): PlayerId | null {
 
 export async function apply_ff_gauge_selector(
   node_list: NodeListOf<HTMLElement>,
+  featureName = "Unknown",
 ) {
   for (const node of node_list) {
-    add_ff_arrow(node);
+    add_ff_arrow(node, featureName);
   }
 }
 
-export async function apply_ff_gauge(element: Element) {
+export async function apply_ff_gauge(
+  element: Element,
+  featureName = "Unknown",
+) {
   if (!(element instanceof HTMLElement)) {
     return;
   }
-  add_ff_arrow(element);
+  add_ff_arrow(element, featureName);
 }
 
 /**

@@ -31,6 +31,7 @@ test("FFConfig gets default values when storage is empty", () => {
     CONFIG_DEFAULTS.factions_col_display,
   );
   expect(config.debug_logs).toEqual(CONFIG_DEFAULTS.debug_logs);
+  expect(config.analytics_enabled).toEqual(CONFIG_DEFAULTS.analytics_enabled);
 });
 
 test("FFConfig sets and gets custom configuration values", () => {
@@ -45,6 +46,7 @@ test("FFConfig sets and gets custom configuration values", () => {
   config.ff_history_enabled = false;
   config.factions_col_display = FactionsColDisplay.FAIR_FIGHT;
   config.debug_logs = true;
+  config.analytics_enabled = true;
 
   expect(config.key).toEqual("myapi-key");
   expect(config.low_ff_range).toEqual(1.5);
@@ -57,12 +59,14 @@ test("FFConfig sets and gets custom configuration values", () => {
   expect(config.ff_history_enabled).toBe(false);
   expect(config.factions_col_display).toEqual(FactionsColDisplay.FAIR_FIGHT);
   expect(config.debug_logs).toBe(true);
+  expect(config.analytics_enabled).toBe(true);
 });
 
 test("FFConfig.reset resets values to their default states except the api key", () => {
   config.key = "my-sticky-api-key";
   config.low_ff_range = 5.0;
   config.debug_logs = true;
+  config.analytics_enabled = true;
 
   config.reset();
 
@@ -72,4 +76,5 @@ test("FFConfig.reset resets values to their default states except the api key", 
   // Other values should be reset to defaults
   expect(config.low_ff_range).toEqual(CONFIG_DEFAULTS.low_ff_range);
   expect(config.debug_logs).toEqual(CONFIG_DEFAULTS.debug_logs);
+  expect(config.analytics_enabled).toEqual(CONFIG_DEFAULTS.analytics_enabled);
 });

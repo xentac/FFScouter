@@ -31,6 +31,8 @@ export class FFSettingsPanel extends LitElement {
   @property({ type: String }) factionsColDisplay: FactionsColDisplay =
     CONFIG_DEFAULTS.factions_col_display;
   @property({ type: Boolean }) debugLogs: boolean = CONFIG_DEFAULTS.debug_logs;
+  @property({ type: Boolean }) analyticsEnabled: boolean =
+    CONFIG_DEFAULTS.analytics_enabled;
   @property({ type: Boolean }) isPremium: boolean = false;
 
   // Draft States
@@ -50,6 +52,8 @@ export class FFSettingsPanel extends LitElement {
   @state() private draftFactionsColDisplay: FactionsColDisplay =
     CONFIG_DEFAULTS.factions_col_display;
   @state() private draftDebugLogs: boolean = CONFIG_DEFAULTS.debug_logs;
+  @state() private draftAnalyticsEnabled: boolean =
+    CONFIG_DEFAULTS.analytics_enabled;
 
   @state() private rangeError = "";
   @state() private showSavedMessage = false;
@@ -71,7 +75,8 @@ export class FFSettingsPanel extends LitElement {
       changedProperties.has("chainFFTarget") ||
       changedProperties.has("ffHistoryEnabled") ||
       changedProperties.has("factionsColDisplay") ||
-      changedProperties.has("debugLogs")
+      changedProperties.has("debugLogs") ||
+      changedProperties.has("analyticsEnabled")
     ) {
       this.resetDrafts();
     }
@@ -89,6 +94,7 @@ export class FFSettingsPanel extends LitElement {
     this.draftFFHistoryEnabled = this.ffHistoryEnabled;
     this.draftFactionsColDisplay = this.factionsColDisplay;
     this.draftDebugLogs = this.debugLogs;
+    this.draftAnalyticsEnabled = this.analyticsEnabled;
   }
 
   private handleSave() {
@@ -131,6 +137,7 @@ export class FFSettingsPanel extends LitElement {
           ffHistoryEnabled: this.draftFFHistoryEnabled,
           factionsColDisplay: this.draftFactionsColDisplay,
           debugLogs: this.draftDebugLogs,
+          analyticsEnabled: this.draftAnalyticsEnabled,
         },
         bubbles: true,
         composed: true,
@@ -227,6 +234,11 @@ export class FFSettingsPanel extends LitElement {
 
   private onDebugLogsChange(e: Event) {
     this.draftDebugLogs = (e.target as HTMLInputElement).checked;
+    this.showSavedMessage = false;
+  }
+
+  private onAnalyticsEnabledChange(e: Event) {
+    this.draftAnalyticsEnabled = (e.target as HTMLInputElement).checked;
     this.showSavedMessage = false;
   }
 
@@ -416,6 +428,19 @@ export class FFSettingsPanel extends LitElement {
               @change=${this.onDebugLogsChange}
             />
             <label for="debug-logs">Enable debug logging</label>
+          </div>
+
+          <!-- Analytics Toggle -->
+          <div class="input-row-inline">
+            <input
+              id="analytics-toggle"
+              type="checkbox"
+              .checked=${this.draftAnalyticsEnabled}
+              @change=${this.onAnalyticsEnabledChange}
+            />
+            <label for="analytics-toggle"
+              >Enable local analytics logging (last 30 days)</label
+            >
           </div>
 
           <!-- Action Buttons Area -->

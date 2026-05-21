@@ -209,3 +209,68 @@ test("clean_expired cleans flight cache", async () => {
 
   await c.delete_db();
 });
+
+test("can save, recover, and purge analytics entries", async () => {
+  const c = new FFCache("test-analytics");
+
+  const entry1 = {
+    feature: "fallback",
+    player_id: 123,
+    status: "applied" as const,
+    url: "https://www.torn.com/profiles.php",
+    params: "?XID=123",
+    hash: "",
+  };
+
+  const entry2 = {
+    feature: "mini-profile",
+    player_id: 456,
+    status: "ignored" as const,
+    url: "https://www.torn.com/index.php",
+    params: "",
+    hash: "#/team",
+  };
+
+  await c.add_analytics(entry1);
+  vi.advanceTimersByTime(5 * SEC);
+  await c.add_analytics(entry2);
+
+  const logs = await c.get_analytics();
+  expect(logs.length).toEqual(2);
+  expect(logs[0]?.feature).toEqual("fallback");
+  expect(logs[0]?.player_id).toEqual(123);
+  expect(logs[0]?.status).toEqual("applied");
+  expect(logs[0]?.url).toEqual("https://www.torn.com/profiles.php");
+  expect(logs[0]?.timestamp).toEqual(Date.now() - 5 * SEC);
+
+  expect(logs[1]?.feature).toEqual("mini-profile");
+  expect(logs[1]?.player_id).toEqual(456);
+  expect(logs[1]?.status).toEqual("ignored");
+  expect(logs[1]?.hash).toEqual("#/team");
+  expect(logs[1]?.timestamp).toEqual(Date.now());
+
+  // Test rolling log deletion (older than 30 days)
+  vi.advanceTimersByTime(31 * 24 * 60 * 60 * SEC);
+
+  const entry3 = {
+    feature: "faction",
+    player_id: 789,
+    status: "applied" as const,
+    url: "https://www.torn.com/factions.php",
+    params: "?step=your",
+    hash: "",
+  };
+  await c.add_analytics(entry3);
+
+  const logsBeforeClean = await c.get_analytics();
+  expect(logsBeforeClean.length).toEqual(3);
+
+  await c.clean_expired();
+
+  const logsAfterClean = await c.get_analytics();
+  expect(logsAfterClean.length).toEqual(1);
+  expect(logsAfterClean[0]?.player_id).toEqual(789);
+  expect(logsAfterClean[0]?.feature).toEqual("faction");
+
+  await c.delete_db();
+});
