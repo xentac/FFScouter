@@ -50,6 +50,9 @@ export type PlayerFlightsResponse = {
   player_id: PlayerId;
   current: Flight | null;
   recent_flights: Flight[];
+  rechecking?: boolean;
+  next_retry_at?: number;
+  recheck_until?: number;
 };
 
 export type CachedFlightData = PlayerFlightsResponse & { expiry: Timestamp };

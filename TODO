@@ -5,9 +5,7 @@
 
 # Before releasing version 3.0
 
-- Migrate flight tracker on profile
 - Add URL tracker for pages we find arrows on
   - Split by url and query string
   - Include which feature detected it
 - Figure out how to have main and dev version tracked at the same time
-- Make flight status check retry a few times before giving up flight status (it can take a while to detect that they're flying)

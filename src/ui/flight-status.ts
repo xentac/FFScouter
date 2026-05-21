@@ -79,10 +79,18 @@ export class FFFlightProfileStatus extends LitElement {
 
     this.tick_interval = setInterval(() => {
       this.current_time_seconds = get_current_time_seconds();
+      if (this.data?.rechecking && this.data.next_retry_at) {
+        if (Date.now() >= this.data.next_retry_at) {
+          this.fetch_data();
+        }
+      }
     }, 1000);
 
     this.fetch_interval = setInterval(() => {
-      this.fetch_data();
+      // Only do normal 15s updates if not rechecking (since rechecking has its own custom retry ticker)
+      if (!this.data?.rechecking) {
+        this.fetch_data();
+      }
     }, 15000);
   }
 
@@ -165,7 +173,12 @@ export class FFFlightProfileStatus extends LitElement {
       content = html`Landing: estimating...`;
     } else {
       const current = this.data?.current;
-      if (!current) {
+      if (this.data?.rechecking) {
+        const next = this.data.next_retry_at ?? 0;
+        const now = Date.now();
+        const seconds = Math.max(0, Math.ceil((next - now) / 1000));
+        content = html`No data. Rechecking in ${seconds} seconds.`;
+      } else if (!current) {
         content = html`Landing: unavailable for current route`;
       } else {
         const earliest = Number(current.earliest_arrival_time);

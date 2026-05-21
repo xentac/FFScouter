@@ -406,7 +406,7 @@ test("get_flights cache miss success", async () => {
   expect(res).toEqual(mockFlight);
   expect(c.get_flight).toHaveBeenCalledWith(456);
   expect(query_flights).toHaveBeenCalledWith("a", 456);
-  expect(c.update_flight).toHaveBeenCalledWith(mockFlight);
+  expect(c.update_flight).toHaveBeenCalledWith(mockFlight, 60000);
   expect(c.clean_expired).toHaveBeenCalled();
 
   await c.delete_db();
@@ -420,6 +420,205 @@ test("get_flights API error throws", async () => {
   vi.mocked(query_flights).mockRejectedValue(new Error("API offline"));
 
   await expect(f.get_flights(789)).rejects.toThrow("API offline");
+
+  await c.delete_db();
+});
+
+test("get_flights cache miss with current === null starts rechecking", async () => {
+  const c = new FFCache("test-scouter-flights-recheck-start");
+  const f = new FFScouter(config, c);
+
+  const mockBlankFlight = {
+    player_id: 111,
+    current: null,
+    recent_flights: [],
+  };
+
+  vi.spyOn(c, "get_flight").mockResolvedValue(null);
+  const spyUpdate = vi.spyOn(c, "update_flight").mockResolvedValue();
+  vi.spyOn(c, "clean_expired").mockResolvedValue();
+
+  vi.mocked(query_flights).mockResolvedValue({
+    result: mockBlankFlight,
+    blank: false,
+  });
+
+  const now = 1000000000000;
+  vi.spyOn(Date, "now").mockReturnValue(now);
+
+  const res = await f.get_flights(111);
+
+  expect(res.rechecking).toBe(true);
+  expect(res.next_retry_at).toBe(now + 15 * 1000);
+  expect(res.recheck_until).toBe(now + 3 * 60 * 1000);
+  expect(spyUpdate).toHaveBeenCalledWith(
+    expect.objectContaining({
+      player_id: 111,
+      rechecking: true,
+      next_retry_at: now + 15 * 1000,
+      recheck_until: now + 3 * 60 * 1000,
+    }),
+    3 * 60 * 1000,
+  );
+
+  await c.delete_db();
+});
+
+test("get_flights cache hit rechecking before next_retry_at returns cached", async () => {
+  const c = new FFCache("test-scouter-flights-recheck-before");
+  const f = new FFScouter(config, c);
+
+  const now = 1000000000000;
+  const cachedData = {
+    player_id: 222,
+    current: null,
+    recent_flights: [],
+    rechecking: true,
+    next_retry_at: now + 15000,
+    recheck_until: now + 180000,
+    expiry: now + 180000,
+  };
+
+  vi.spyOn(c, "get_flight").mockResolvedValue(cachedData);
+  vi.spyOn(Date, "now").mockReturnValue(now + 5000); // 5 seconds later (before next_retry_at)
+
+  const res = await f.get_flights(222);
+
+  expect(res.rechecking).toBe(true);
+  expect(res.next_retry_at).toBe(now + 15000);
+  expect(query_flights).not.toHaveBeenCalled();
+
+  await c.delete_db();
+});
+
+test("get_flights cache hit rechecking after next_retry_at retries API (still null)", async () => {
+  const c = new FFCache("test-scouter-flights-recheck-after-null");
+  const f = new FFScouter(config, c);
+
+  const now = 1000000000000;
+  const cachedData = {
+    player_id: 333,
+    current: null,
+    recent_flights: [],
+    rechecking: true,
+    next_retry_at: now + 15000,
+    recheck_until: now + 180000,
+    expiry: now + 180000,
+  };
+
+  vi.spyOn(c, "get_flight").mockResolvedValue(cachedData);
+  const spyUpdate = vi.spyOn(c, "update_flight").mockResolvedValue();
+
+  const currentTime = now + 20000; // after next_retry_at
+  vi.spyOn(Date, "now").mockReturnValue(currentTime);
+
+  const mockBlankFlight = {
+    player_id: 333,
+    current: null,
+    recent_flights: [],
+  };
+  vi.mocked(query_flights).mockResolvedValue({
+    result: mockBlankFlight,
+    blank: false,
+  });
+
+  const res = await f.get_flights(333);
+
+  expect(res.rechecking).toBe(true);
+  expect(res.next_retry_at).toBe(currentTime + 15000);
+  expect(res.recheck_until).toBe(now + 180000);
+  expect(query_flights).toHaveBeenCalledWith("a", 333);
+  expect(spyUpdate).toHaveBeenCalledWith(
+    expect.objectContaining({
+      rechecking: true,
+      next_retry_at: currentTime + 15000,
+      recheck_until: now + 180000,
+    }),
+    now + 180000 - currentTime,
+  );
+
+  await c.delete_db();
+});
+
+test("get_flights cache hit rechecking after next_retry_at retries API (tracked)", async () => {
+  const c = new FFCache("test-scouter-flights-recheck-after-tracked");
+  const f = new FFScouter(config, c);
+
+  const now = 1000000000000;
+  const cachedData = {
+    player_id: 444,
+    current: null,
+    recent_flights: [],
+    rechecking: true,
+    next_retry_at: now + 15000,
+    recheck_until: now + 180000,
+    expiry: now + 180000,
+  };
+
+  vi.spyOn(c, "get_flight").mockResolvedValue(cachedData);
+  const spyUpdate = vi.spyOn(c, "update_flight").mockResolvedValue();
+
+  const currentTime = now + 20000; // after next_retry_at
+  vi.spyOn(Date, "now").mockReturnValue(currentTime);
+
+  const mockFlight = {
+    player_id: 444,
+    current: {
+      takeoff_time: 12345,
+      status_description: "Leaving",
+      earliest_arrival_time: 23456,
+      latest_arrival_time: 34567,
+      travel_method: "BCT" as TravelMethod,
+      book_likely_being_used: false,
+    },
+    recent_flights: [],
+  };
+  vi.mocked(query_flights).mockResolvedValue({
+    result: mockFlight,
+    blank: false,
+  });
+
+  const res = await f.get_flights(444);
+
+  expect(res.rechecking).toBeUndefined();
+  expect(res.current).not.toBeNull();
+  expect(spyUpdate).toHaveBeenCalledWith(mockFlight, 60 * 1000);
+
+  await c.delete_db();
+});
+
+test("get_flights cache hit rechecking after recheck_until finalizes", async () => {
+  const c = new FFCache("test-scouter-flights-recheck-final");
+  const f = new FFScouter(config, c);
+
+  const now = 1000000000000;
+  const cachedData = {
+    player_id: 555,
+    current: null,
+    recent_flights: [],
+    rechecking: true,
+    next_retry_at: now + 15000,
+    recheck_until: now + 180000,
+    expiry: now + 180000,
+  };
+
+  vi.spyOn(c, "get_flight").mockResolvedValue(cachedData);
+  const spyUpdate = vi.spyOn(c, "update_flight").mockResolvedValue();
+
+  const currentTime = now + 190000; // after recheck_until
+  vi.spyOn(Date, "now").mockReturnValue(currentTime);
+
+  const res = await f.get_flights(555);
+
+  expect(res.rechecking).toBe(false);
+  expect(res.current).toBeNull();
+  expect(query_flights).not.toHaveBeenCalled();
+  expect(spyUpdate).toHaveBeenCalledWith(
+    expect.objectContaining({
+      rechecking: false,
+    }),
+    10 * 60 * 1000,
+  );
 
   await c.delete_db();
 });
