@@ -57,7 +57,6 @@ export default {
   </g>
 </svg>`;
 
-    console.log(container);
     for (const node of container.children) {
       btn.appendChild(node);
     }
