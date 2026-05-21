@@ -428,7 +428,6 @@ GM_addStyle(`
         `);
 
 var key = rD_getValue("limited_key", null);
-var info_line = null;
 
 function ffdebug(...args) {
   if (ffSettingsGet("debug-logs") === "true") {
@@ -817,42 +816,6 @@ function get_ff_string_short(ff_response, _player_id) {
   }
 
   return `${ff}${suffix}`;
-}
-
-function inject_stats_history_button(player_id) {
-  if (!player_id) return;
-  if (ffSettingsGet("ff-history-enabled") === "false") return;
-  if (document.querySelector(".ff-scouter-history-btn")) return;
-
-  const buttonsList = document.querySelector(
-    ".profile-buttons.profile-action .buttons-list",
-  );
-  if (!buttonsList) return;
-
-  const btn = document.createElement("a");
-  btn.href = `https://ffscouter.com/player-view?player_id=${player_id}`;
-  btn.target = "_blank";
-  btn.rel = "noopener noreferrer";
-  btn.className = "ff-scouter-history-btn";
-  btn.title = "View Stats History on FFScouter";
-
-  // Semi-transparent background clock/history icon
-  const svgNS = "http://www.w3.org/2000/svg";
-  const svg = document.createElementNS(svgNS, "svg");
-  svg.setAttribute("viewBox", "0 0 24 24");
-  svg.className.baseVal = "ff-history-icon";
-  svg.setAttribute("class", "ff-history-icon");
-  svg.innerHTML =
-    '<path d="M13 3a9 9 0 1 0 9 9h-2a7 7 0 1 1-7-7V3zm-1 5v5.41l3.29 3.3 1.42-1.42L13 12.17V8h-1z"/>';
-  btn.appendChild(svg);
-
-  // "FF\nHistory" label on top
-  const label = document.createElement("span");
-  label.className = "ff-history-label";
-  label.textContent = "FF\nHistory";
-  btn.appendChild(label);
-
-  buttonsList.appendChild(btn);
 }
 
 function get_members() {
@@ -1258,23 +1221,6 @@ if (match) {
   if (match1) {
     init_profile_flight_tracking(target_id);
   }
-
-  // Inject Stats History button into Actions area
-  // Use a MutationObserver in case the Actions area loads after page JS runs
-  const statsHistoryObserver = new MutationObserver(() => {
-    if (
-      document.querySelector(".profile-buttons.profile-action .buttons-list")
-    ) {
-      inject_stats_history_button(target_id);
-      statsHistoryObserver.disconnect();
-    }
-  });
-  statsHistoryObserver.observe(document.body, {
-    childList: true,
-    subtree: true,
-  });
-  // Also try immediately in case it's already loaded
-  inject_stats_history_button(target_id);
 
   if (!key) {
     set_message("[FF Scouter V2]: Limited API key needed - click to add");
