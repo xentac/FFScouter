@@ -1,13 +1,5 @@
-import {
-  create_info_line,
-  extract_id_from_url,
-  torn_page,
-  wait_for_element,
-} from "@utils/dom";
-import { ffconfig } from "@utils/ffconfig";
-import { ffscouter } from "@utils/ffscouter";
+import { extract_id_from_url, torn_page, wait_for_element } from "@utils/dom";
 import "@ui/info-line";
-import type { FFData } from "@utils/types";
 import { type Feature, StartTime } from "../feature";
 
 export default {

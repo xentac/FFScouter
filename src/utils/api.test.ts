@@ -3,7 +3,9 @@ import {
   check_key,
   FFApiError,
   type gmRequest,
+  make_flights_url,
   make_stats_url,
+  query_flights,
   query_stats,
 } from "./api";
 import { generate_test_ff_data } from "./test";
@@ -352,4 +354,121 @@ x-ratelimit-remaining: 118\n",
       this_minute: 2,
     },
   });
+});
+
+test("make_flights_url generates proper url", () => {
+  expect(make_flights_url("test-key", 12345)).toEqual(
+    "https://ffscouter.com/api/v1/player-flights?key=test-key&target=12345",
+  );
+});
+
+test("query_flights success", async () => {
+  const mockResponse = {
+    player_id: 12345,
+    current: {
+      takeoff_time: 1710000000,
+      status_description: "Traveling to Japan",
+      earliest_arrival_time: 1710007200,
+      latest_arrival_time: 1710010800,
+      travel_method: "Airline",
+      book_likely_being_used: true,
+    },
+    recent_flights: [
+      {
+        takeoff_time: 1709900000,
+        status_description: "Traveling to China",
+        earliest_arrival_time: 1709905000,
+        latest_arrival_time: 1709909000,
+        travel_method: "PI",
+        book_likely_being_used: false,
+        approx_landing_time: 1709912000,
+      },
+    ],
+  };
+
+  const success: typeof gmRequest = vi.fn().mockResolvedValue({
+    responseHeaders:
+      "x-ratelimit-reset-timestamp: 1768192440\n\
+x-ratelimit-limit: 100\n\
+x-ratelimit-remaining: 99\n",
+    readyState: 4,
+    response: "",
+    responseText: JSON.stringify(mockResponse),
+    responseXML: null,
+    status: 200,
+    statusText: "",
+    finalUrl: "",
+    context: {},
+  });
+
+  expect(await query_flights("test-key", 12345, success)).toEqual({
+    result: mockResponse,
+    blank: false,
+    limits: {
+      rate_limit: 100,
+      remaining: 99,
+      reset_time: new Date("2026-01-12T04:34:00.000Z"),
+      this_minute: 1,
+    },
+  });
+});
+
+test("query_flights empty response", async () => {
+  const empty: typeof gmRequest = vi.fn().mockResolvedValue(null);
+  expect(await query_flights("test-key", 12345, empty)).toEqual({
+    blank: true,
+  });
+});
+
+test("query_flights handle errors", async () => {
+  const error400: typeof gmRequest = vi.fn().mockResolvedValue({
+    responseHeaders: "",
+    readyState: 4,
+    response: "",
+    responseText: "error",
+    responseXML: null,
+    status: 400,
+    statusText: "status error",
+    finalUrl: "",
+    context: {},
+  });
+
+  await expect(query_flights("test-key", 12345, error400)).rejects.toThrow(
+    new FFApiError(
+      "API request failed. Couldn't parse response. HTTP status code: 400",
+    ),
+  );
+
+  const error_rate_limit: typeof gmRequest = vi.fn().mockResolvedValue({
+    responseHeaders: "",
+    readyState: 4,
+    response: "",
+    responseText: JSON.stringify({
+      code: 20,
+      error:
+        "Rate limit exceeded. Maximum 100 requests per minute per account.",
+      retry_after_seconds: 45,
+    }),
+    responseXML: null,
+    status: 429,
+    statusText: "Too Many Requests",
+    finalUrl: "",
+    context: {},
+  });
+
+  await expect(
+    query_flights("test-key", 12345, error_rate_limit),
+  ).rejects.toThrow(
+    new FFApiError(
+      "API request failed. Error: Rate limit exceeded. Maximum 100 requests per minute per account.; Code: 20",
+      {
+        ff_api_error: {
+          code: 20,
+          error:
+            "Rate limit exceeded. Maximum 100 requests per minute per account.",
+          retry_after_seconds: 45,
+        } as any,
+      },
+    ),
+  );
 });

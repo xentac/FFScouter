@@ -1,6 +1,5 @@
 import { apply_ff_gauge_selector } from "@utils/dom";
 import { ffscouter } from "@utils/ffscouter";
-import logger from "@utils/logger";
 import { type Feature, StartTime } from "../feature";
 
 export default {

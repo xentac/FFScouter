@@ -12,7 +12,7 @@
     "biome": "biome check --write",
     "biome:unsafe": "biome check --write --unsafe",
     "lint": "biome check && tsc --noEmit",
-    "test": "vitest",
+    "test": "bun --bun vitest",
     "coverage": "vitest run --coverage"
   },
   "dependencies": {

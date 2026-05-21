@@ -9,16 +9,28 @@ import {
   type StoreNames,
 } from "idb";
 import logger from "./logger";
-import type { CachedFFData, FFData, PlayerId } from "./types";
+import type {
+  CachedFFData,
+  CachedFlightData,
+  FFData,
+  PlayerFlightsResponse,
+  PlayerId,
+} from "./types";
 
 export const STORES = {
   CACHE: "cache",
+  FLIGHTS: "flights",
 } as const;
 
 interface CacheDB extends DBSchema {
   [STORES.CACHE]: {
     key: PlayerId;
     value: CachedFFData;
+    indexes: { expiry: number };
+  };
+  [STORES.FLIGHTS]: {
+    key: PlayerId;
+    value: CachedFlightData;
     indexes: { expiry: number };
   };
 }
@@ -31,7 +43,7 @@ type MigrationFn = (
 export class FFCache {
   private db_name: string;
   private db: IDBPDatabase<CacheDB> | null = null;
-  private db_version = 1;
+  private db_version = 2;
 
   private cache_interval: number = 60 * 60 * 1000; // one hour cache
 
@@ -40,6 +52,17 @@ export class FFCache {
       1,
       (db, _) => {
         const store = db.createObjectStore(STORES.CACHE, {
+          keyPath: "player_id",
+        });
+        store.createIndex("expiry", "expiry", {
+          unique: false,
+        });
+      },
+    ],
+    [
+      2,
+      (db, _) => {
+        const store = db.createObjectStore(STORES.FLIGHTS, {
           keyPath: "player_id",
         });
         store.createIndex("expiry", "expiry", {
@@ -58,17 +81,18 @@ export class FFCache {
       return this.db;
     }
     const cache = this;
-    this.db = await openDB<CacheDB>(this.db_name, 1, {
+    this.db = await openDB<CacheDB>(this.db_name, this.db_version, {
       upgrade(db, oldVersion, newVersion, transaction, _event) {
         // …
         logger.info("Need to upgrade from", oldVersion, "to", newVersion);
 
         for (let i = (oldVersion ?? 0) + 1; i <= cache.db_version; i++) {
           logger.debug(`Migration: ${i}`);
-          const m = cache.migrations.get(1);
+          const m = cache.migrations.get(i);
           if (m) {
-            logger.debug(`Migration not found: ${i}`);
             m(db, transaction);
+          } else {
+            logger.debug(`Migration not found: ${i}`);
           }
           logger.debug(`Migration complete: ${i}`);
         }
@@ -157,21 +181,62 @@ export class FFCache {
 
   clean_expired = async () => {
     const db = await this.open();
-    const tx = db.transaction(STORES.CACHE, "readwrite");
 
-    const index = tx.store.index("expiry");
+    // Clean CACHE
+    {
+      const tx = db.transaction(STORES.CACHE, "readwrite");
+      const index = tx.store.index("expiry");
+      const range = IDBKeyRange.upperBound(Date.now());
+      const r = await index.getAllKeys(range);
+      logger.info(`Found ${r.length} expired values to delete from cache.`);
+      await Promise.all(r.map((id) => tx.store.delete(id)));
+      await tx.done;
+    }
 
-    const range = IDBKeyRange.upperBound(Date.now());
+    // Clean FLIGHTS
+    {
+      const tx = db.transaction(STORES.FLIGHTS, "readwrite");
+      const index = tx.store.index("expiry");
+      const range = IDBKeyRange.upperBound(Date.now());
+      const r = await index.getAllKeys(range);
+      logger.info(`Found ${r.length} expired values to delete from flights.`);
+      await Promise.all(r.map((id) => tx.store.delete(id)));
+      await tx.done;
+    }
 
-    const r = await index.getAllKeys(range);
-    logger.info(`Found ${r.length} expired values to delete.`);
+    this.close();
+  };
 
-    const res = await Promise.all(r.map((id) => tx.store.delete(id)));
-
+  get_flight = async (
+    player_id: PlayerId,
+  ): Promise<CachedFlightData | null> => {
+    const db = await this.open();
+    const tx = db.transaction(STORES.FLIGHTS, "readonly");
+    const entry = await tx.store.get(player_id);
     await tx.done;
     this.close();
 
-    logger.info(`Cleaned ${res.length} expired values from cache.`);
+    if (!entry || entry.expiry <= Date.now()) {
+      return null;
+    }
+    return entry;
+  };
+
+  update_flight = async (
+    value: PlayerFlightsResponse,
+    cache_interval = 10 * 1000,
+  ): Promise<void> => {
+    const db = await this.open();
+    const tx = db.transaction(STORES.FLIGHTS, "readwrite");
+
+    const value_expiry = {
+      ...value,
+      expiry: Date.now() + cache_interval,
+    };
+
+    await tx.store.put(value_expiry);
+    await tx.done;
+    this.close();
   };
 
   dump = async () => {
@@ -179,6 +244,15 @@ export class FFCache {
 
     const tx = db.transaction(STORES.CACHE, "readonly");
 
+    const res = await tx.store.getAll();
+    await tx.done;
+    this.close();
+    return res;
+  };
+
+  dump_flights = async () => {
+    const db = await this.open();
+    const tx = db.transaction(STORES.FLIGHTS, "readonly");
     const res = await tx.store.getAll();
     await tx.done;
     this.close();

@@ -1,15 +1,16 @@
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
-import { query_stats } from "./api";
+import { query_flights, query_stats } from "./api";
 import { FFCache } from "./ffcache";
 import { FFConfig } from "./ffconfig.js";
 import { FFScouter } from "./ffscouter";
 
 import { generate_test_ff_data } from "./test.js";
-import type { FFData } from "./types.js";
+import type { FFData, TravelMethod } from "./types.js";
 
 vi.mock(import("./api.js"), () => {
   return {
     query_stats: vi.fn(),
+    query_flights: vi.fn(),
   };
 });
 
@@ -346,6 +347,79 @@ test("complete schedules execution now", async () => {
   expect(f.process_cache).not.toHaveBeenCalled();
   f.complete();
   expect(f.process_cache).toHaveBeenCalled();
+
+  await c.delete_db();
+});
+
+test("get_flights cache hit", async () => {
+  const c = new FFCache("test-scouter-flights-hit");
+  const f = new FFScouter(config, c);
+
+  const mockFlight = {
+    player_id: 123,
+    current: null,
+    recent_flights: [],
+  };
+
+  vi.spyOn(c, "get_flight").mockResolvedValue({
+    ...mockFlight,
+    expiry: Date.now() + 5000,
+  });
+  vi.spyOn(c, "update_flight").mockResolvedValue();
+  vi.spyOn(c, "clean_expired").mockResolvedValue();
+
+  const res = await f.get_flights(123);
+  expect(res).toEqual(mockFlight);
+  expect(c.get_flight).toHaveBeenCalledWith(123);
+  expect(query_flights).not.toHaveBeenCalled();
+
+  await c.delete_db();
+});
+
+test("get_flights cache miss success", async () => {
+  const c = new FFCache("test-scouter-flights-miss");
+  const f = new FFScouter(config, c);
+
+  const mockFlight = {
+    player_id: 456,
+    current: {
+      takeoff_time: 12345,
+      status_description: "Leaving",
+      earliest_arrival_time: 23456,
+      latest_arrival_time: 34567,
+      travel_method: "BCT" as TravelMethod,
+      book_likely_being_used: false,
+    },
+    recent_flights: [],
+  };
+
+  vi.spyOn(c, "get_flight").mockResolvedValue(null);
+  vi.spyOn(c, "update_flight").mockResolvedValue();
+  vi.spyOn(c, "clean_expired").mockResolvedValue();
+
+  vi.mocked(query_flights).mockResolvedValue({
+    result: mockFlight,
+    blank: false,
+  });
+
+  const res = await f.get_flights(456);
+  expect(res).toEqual(mockFlight);
+  expect(c.get_flight).toHaveBeenCalledWith(456);
+  expect(query_flights).toHaveBeenCalledWith("a", 456);
+  expect(c.update_flight).toHaveBeenCalledWith(mockFlight);
+  expect(c.clean_expired).toHaveBeenCalled();
+
+  await c.delete_db();
+});
+
+test("get_flights API error throws", async () => {
+  const c = new FFCache("test-scouter-flights-err");
+  const f = new FFScouter(config, c);
+
+  vi.spyOn(c, "get_flight").mockResolvedValue(null);
+  vi.mocked(query_flights).mockRejectedValue(new Error("API offline"));
+
+  await expect(f.get_flights(789)).rejects.toThrow("API offline");
 
   await c.delete_db();
 });

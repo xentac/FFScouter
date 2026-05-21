@@ -1,13 +1,15 @@
 import {
   type FFApiError,
+  type FFApiFlightsResponse,
   type FFApiQueryResponse,
   type FFApiRateLimits,
+  query_flights,
   query_stats,
 } from "./api";
 import { FFCache } from "./ffcache";
 import { type FFConfig, ffconfig } from "./ffconfig";
 import logger from "./logger";
-import type { FFData, PlayerId } from "./types";
+import type { FFData, PlayerFlightsResponse, PlayerId } from "./types";
 
 const DB_NAME = "FFSV3-cache";
 
@@ -76,6 +78,62 @@ export class FFScouter {
     this.enqueue_cache(player_id);
 
     return promise;
+  };
+
+  // Get flights for a player, utilizing cache, bypassing batch queueing
+  get_flights = async (player_id: PlayerId): Promise<PlayerFlightsResponse> => {
+    logger.debug(`get_flights called for ${player_id}`);
+
+    // Check cache
+    let cached: PlayerFlightsResponse | null = null;
+    try {
+      cached = await this.cache.get_flight(player_id);
+    } catch (err) {
+      logger.error("Failed to query flight cache", err);
+    }
+
+    if (cached) {
+      logger.debug(`Flight cache hit for player ${player_id}`);
+      return {
+        player_id: cached.player_id,
+        current: cached.current,
+        recent_flights: cached.recent_flights,
+      };
+    }
+
+    logger.debug(`Flight cache miss for player ${player_id}. Querying API.`);
+
+    // Query API
+    let response: FFApiFlightsResponse;
+    try {
+      response = await query_flights(this.config.key, player_id);
+    } catch (err) {
+      logger.error(
+        `Received error response querying ffscouter player-flights API for ${player_id}:`,
+        err,
+      );
+      throw err;
+    }
+
+    if (response.blank) {
+      throw new Error(`Empty flight response returned for player ${player_id}`);
+    }
+
+    // Update cache
+    try {
+      await this.cache.update_flight(response.result);
+    } catch (err) {
+      logger.error("Failed to update flight cache", err);
+    }
+
+    // Clean expired cache entries
+    try {
+      await this.cache.clean_expired();
+    } catch (err) {
+      logger.error("Failed to clean expired cache entries", err);
+    }
+
+    return response.result;
   };
 
   // Tell the batch engine that the list of requests is complete for now so start processing

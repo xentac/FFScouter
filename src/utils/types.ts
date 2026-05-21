@@ -33,3 +33,23 @@ export type FFDataComplete = {
 export type FFData = FFDataComplete | { no_data: true; player_id: PlayerId };
 
 export type CachedFFData = FFData & { expiry: Timestamp };
+
+export type TravelMethod = "PI" | "Airline" | "WLT" | "BCT" | "Unknown" | null;
+
+export type Flight = {
+  takeoff_time: TimestampSec;
+  status_description: string;
+  earliest_arrival_time: TimestampSec;
+  latest_arrival_time: TimestampSec;
+  travel_method: TravelMethod;
+  book_likely_being_used: boolean;
+  approx_landing_time?: TimestampSec;
+};
+
+export type PlayerFlightsResponse = {
+  player_id: PlayerId;
+  current: Flight | null;
+  recent_flights: Flight[];
+};
+
+export type CachedFlightData = PlayerFlightsResponse & { expiry: Timestamp };

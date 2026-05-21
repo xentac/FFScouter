@@ -1,6 +1,12 @@
 import { TornApiClient } from "tornapi-typescript";
 import logger from "./logger";
-import type { FFData, FFDataDistribution, PlayerId, TornApiKey } from "./types";
+import type {
+  FFData,
+  FFDataDistribution,
+  PlayerFlightsResponse,
+  PlayerId,
+  TornApiKey,
+} from "./types";
 
 /// <reference types="tampermonkey" />
 
@@ -298,6 +304,81 @@ export const check_key = async (
   }
 
   if (!is_ff_check_success(ff_response)) {
+    throw new FFApiError(
+      `API request failed. Error: ${ff_response.error}; Code: ${ff_response.code}`,
+      { ff_api_error: ff_response, ff_api_limits: limits },
+    );
+  }
+
+  if (resp.status !== 200) {
+    throw new FFApiError(
+      `API request failed. HTTP status code: ${resp.status}`,
+      { ff_api_limits: limits },
+    );
+  }
+
+  return { result: ff_response, blank: false, limits: limits };
+};
+
+export type FFApiFlightsResponse =
+  | {
+      result: PlayerFlightsResponse;
+      blank: false;
+      limits?: FFApiRateLimits;
+    }
+  | {
+      blank: true;
+    };
+
+export const make_flights_url = (key: TornApiKey, target: PlayerId) => {
+  const query = new URLSearchParams([
+    ["key", key],
+    ["target", target.toString()],
+  ]);
+  return `${FF_SCOUTER_BASE_URL}/player-flights?${query.toString()}`;
+};
+
+function is_flight_success(
+  resp: PlayerFlightsResponse | FFError,
+): resp is PlayerFlightsResponse {
+  return (resp as FFError).code === undefined;
+}
+
+export const query_flights = async (
+  key: TornApiKey,
+  target: PlayerId,
+  requester: typeof gmRequest = gmRequest,
+): Promise<FFApiFlightsResponse> => {
+  logger.debug("Calling query_flights with arguments", { key, target });
+  const url = make_flights_url(key, target);
+
+  const resp = await requester({
+    method: "GET",
+    url: url,
+  });
+
+  if (!resp) {
+    return { blank: true };
+  }
+
+  const limits = parse_limit_headers(resp.responseHeaders);
+  let ff_response: PlayerFlightsResponse | FFError | null = null;
+  try {
+    ff_response = JSON.parse(resp.responseText);
+  } catch {
+    throw new FFApiError(
+      `API request failed. Couldn't parse response. HTTP status code: ${resp.status}`,
+      { ff_api_limits: limits },
+    );
+  }
+  if (ff_response == null) {
+    throw new FFApiError(
+      `API request failed. Response not set. HTTP status code: ${resp.status}`,
+      { ff_api_limits: limits },
+    );
+  }
+
+  if (!is_flight_success(ff_response)) {
     throw new FFApiError(
       `API request failed. Error: ${ff_response.error}; Code: ${ff_response.code}`,
       { ff_api_error: ff_response, ff_api_limits: limits },

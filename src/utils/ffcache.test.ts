@@ -1,6 +1,11 @@
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { FFCache } from "./ffcache";
-import type { CachedFFData, FFData, PlayerId } from "./types";
+import type {
+  CachedFFData,
+  FFData,
+  PlayerFlightsResponse,
+  PlayerId,
+} from "./types";
 
 const SEC = 1000;
 const MINUTE = 60 * SEC;
@@ -135,6 +140,72 @@ test("expired data is not returned but still saved and clean_expired works", asy
   await c.clean_expired();
 
   expect(await c.dump()).toEqual([cached_player2]);
+
+  await c.delete_db();
+});
+
+test("can save and recover flight data", async () => {
+  const c = new FFCache("test-flights");
+  const flightData: PlayerFlightsResponse = {
+    player_id: 42,
+    current: {
+      takeoff_time: 1710000000,
+      status_description: "Flying",
+      earliest_arrival_time: 1710005000,
+      latest_arrival_time: 1710006000,
+      travel_method: "Airline",
+      book_likely_being_used: false,
+    },
+    recent_flights: [],
+  };
+
+  expect(await c.get_flight(42)).toBeNull();
+
+  await c.update_flight(flightData, 5 * MINUTE);
+
+  const cached = await c.get_flight(42);
+  expect(cached).not.toBeNull();
+  expect(cached?.player_id).toEqual(42);
+  expect(cached?.current?.status_description).toEqual("Flying");
+  expect(cached?.expiry).toEqual(Date.now() + 5 * MINUTE);
+
+  // Expiration test
+  vi.advanceTimersByTime(6 * MINUTE);
+  expect(await c.get_flight(42)).toBeNull();
+
+  await c.delete_db();
+});
+
+test("clean_expired cleans flight cache", async () => {
+  const c = new FFCache("test-flights-expired");
+  const flightData1: PlayerFlightsResponse = {
+    player_id: 101,
+    current: null,
+    recent_flights: [],
+  };
+  const flightData2: PlayerFlightsResponse = {
+    player_id: 102,
+    current: null,
+    recent_flights: [],
+  };
+
+  await c.update_flight(flightData1, 5 * MINUTE);
+  await c.update_flight(flightData2, 15 * MINUTE);
+
+  vi.advanceTimersByTime(10 * MINUTE);
+
+  // flightData1 is expired, flightData2 is not
+  expect(await c.get_flight(101)).toBeNull();
+  expect(await c.get_flight(102)).not.toBeNull();
+
+  const dumped = await c.dump_flights();
+  expect(dumped.length).toEqual(2);
+
+  await c.clean_expired();
+
+  const dumpedAfter = await c.dump_flights();
+  expect(dumpedAfter.length).toEqual(1);
+  expect(dumpedAfter[0]?.player_id).toEqual(102);
 
   await c.delete_db();
 });
