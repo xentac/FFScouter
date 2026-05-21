@@ -224,7 +224,7 @@ export class FFCache {
 
   update_flight = async (
     value: PlayerFlightsResponse,
-    cache_interval = 10 * 1000,
+    cache_interval = 60 * 1000,
   ): Promise<void> => {
     const db = await this.open();
     const tx = db.transaction(STORES.FLIGHTS, "readwrite");

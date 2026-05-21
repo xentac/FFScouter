@@ -10,3 +10,4 @@
   - Split by url and query string
   - Include which feature detected it
 - Figure out how to have main and dev version tracked at the same time
+- Make flight status check retry a few times before giving up flight status (it can take a while to detect that they're flying)

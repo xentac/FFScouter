@@ -31,7 +31,7 @@ export class FFHeaderLine extends LitElement {
     if (changedProperties.has("data") && this.data) {
       this.loading = true;
       try {
-        this.is_premium = await check_key_status.isPremium();
+        this.is_premium = await check_key_status.is_premium();
       } catch (error) {
         logger.error(error);
       } finally {

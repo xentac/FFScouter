@@ -6,7 +6,7 @@ import { check_key_status } from "@utils/check_key";
 vi.mock("@utils/check_key", () => {
   return {
     check_key_status: {
-      isPremium: vi.fn().mockResolvedValue(false),
+      is_premium: vi.fn().mockResolvedValue(false),
     },
   };
 });
@@ -34,7 +34,7 @@ test("renders 'No data' when no_data is true", async () => {
 });
 
 test("renders basic stats for non-premium user when premium is not available", async () => {
-  vi.mocked(check_key_status.isPremium).mockResolvedValue(false);
+  vi.mocked(check_key_status.is_premium).mockResolvedValue(false);
 
   const el = document.createElement("ff-header-line");
   const nowSec = Date.now() / 1000;
@@ -64,7 +64,7 @@ test("renders basic stats for non-premium user when premium is not available", a
 });
 
 test("renders premium upgrade link for non-premium user when premium insights are available", async () => {
-  vi.mocked(check_key_status.isPremium).mockResolvedValue(false);
+  vi.mocked(check_key_status.is_premium).mockResolvedValue(false);
 
   const el = document.createElement("ff-header-line");
   const nowSec = Date.now() / 1000;
@@ -90,7 +90,7 @@ test("renders premium upgrade link for non-premium user when premium insights ar
 });
 
 test("renders top stats and distribution for premium user", async () => {
-  vi.mocked(check_key_status.isPremium).mockResolvedValue(true);
+  vi.mocked(check_key_status.is_premium).mockResolvedValue(true);
 
   const el = document.createElement("ff-header-line");
   const nowSec = Date.now() / 1000;

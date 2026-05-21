@@ -4,6 +4,7 @@ import Fallback from "./fallback";
 import type { Feature } from "./feature";
 import MiniProfile from "./mini-profile";
 import Profile from "./profile";
+import ProfileFlights from "./profile-flights";
 import ProfileHistory from "./profile-history";
 import Settings from "./settings";
 
@@ -11,6 +12,7 @@ export const Features: Feature[] = [
   Settings,
   Profile,
   ProfileHistory,
+  ProfileFlights,
   Attack,
   Faction,
   MiniProfile,

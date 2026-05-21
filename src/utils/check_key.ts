@@ -15,7 +15,7 @@ export class CheckKeyStatus {
     this.storage = storage;
   }
 
-  checkKeyStatus = async (
+  check_key_status = async (
     force: boolean = false,
   ): Promise<FFCheckSuccess | null> => {
     // See if we have a cached value, if so return it
@@ -49,8 +49,8 @@ export class CheckKeyStatus {
     return result.result;
   };
 
-  isPremium = async (force: boolean = false) => {
-    const status = await this.checkKeyStatus(force);
+  is_premium = async (force: boolean = false) => {
+    const status = await this.check_key_status(force);
     if (!status) {
       return false;
     }

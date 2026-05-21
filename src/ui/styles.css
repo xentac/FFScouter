@@ -190,3 +190,21 @@ ff-settings-panel .is_premium_disabled {
   border-radius: 4px;
   vertical-align: middle;
 }
+
+ff-flight-profile-status {
+  float: right;
+}
+
+.ff-scouter-profile-flight-info {
+  display: inline-block;
+  text-align: right;
+  font-size: 11px;
+  line-height: 1.25;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85);
+}
+
+.profile-status .ff-scouter-profile-flight-info a {
+  color: #fff;
+  text-decoration: underline;
+}
