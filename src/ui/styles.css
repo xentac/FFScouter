@@ -191,8 +191,15 @@ ff-settings-panel .is_premium_disabled {
   vertical-align: middle;
 }
 
+.profile-status {
+  position: relative;
+}
+
 ff-flight-profile-status {
-  float: right;
+  position: absolute;
+  right: 10px;
+  bottom: 2px;
+  z-index: 2;
 }
 
 .ff-scouter-profile-flight-info {
