@@ -5,6 +5,5 @@
 
 # Before releasing version 3.0
 
-- Figure out how to have main and dev version tracked at the same time
 - Add FF/Est column support to faction pages
 - Add improved sorting interface by adding an extra sorting line with options for Default or one of our Fair Fight parameters
