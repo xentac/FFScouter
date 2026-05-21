@@ -18,6 +18,11 @@ export default defineConfig(({ mode }) => {
         entry: "src/index.ts",
         build: {
           fileName: isDev ? "base-dev.user.js" : "base.user.js",
+          cssSideEffects: (css) => {
+            const style = document.createElement("style");
+            style.textContent = css;
+            (document.head || document.documentElement).appendChild(style);
+          },
         },
         userscript: {
           name: "FF Scouter V2",
