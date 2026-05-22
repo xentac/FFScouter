@@ -248,21 +248,12 @@ ff-faction-filter-box {
 .ff-filter-group {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-}
-
-.ff-filter-group h4 {
-  margin: 0 0 4px 0;
-  font-size: 12px;
-  font-weight: bold;
-  color: var(--ffsv3-text-color);
-  opacity: 0.8;
+  gap: 2px;
 }
 
 .ff-filter-options {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px 12px;
+  flex-direction: column;
 }
 
 .ff-filter-options label {

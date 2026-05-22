@@ -124,9 +124,9 @@ export class FFFactionFilterBox extends LitElement {
 
   private onSortToggle() {
     if (this.sortBy === "none") {
-      this.sortBy = "ff-asc";
-    } else if (this.sortBy === "ff-asc") {
       this.sortBy = "ff-desc";
+    } else if (this.sortBy === "ff-desc") {
+      this.sortBy = "ff-asc";
     } else {
       this.sortBy = "none";
     }
@@ -186,7 +186,7 @@ export class FFFactionFilterBox extends LitElement {
         <h3>FFScouter Filter & Sort Controls</h3>
         <div class="ff-filter-grid">
           <div class="ff-filter-group">
-            <h4>Sort Order</h4>
+            <strong>Sort Order</strong>
             <button @click="${this.onSortToggle}">
               ${
                 this.sortBy === "none"
@@ -199,7 +199,7 @@ export class FFFactionFilterBox extends LitElement {
           </div>
 
           <div class="ff-filter-group">
-            <h4>Activity</h4>
+            <strong>Activity</strong>
             <div class="ff-filter-options">
               <label>
                 <input
@@ -232,7 +232,7 @@ export class FFFactionFilterBox extends LitElement {
           </div>
 
           <div class="ff-filter-group">
-            <h4>Status</h4>
+            <strong>Status</strong>
             <div class="ff-filter-options">
               <label>
                 <input
@@ -283,7 +283,7 @@ export class FFFactionFilterBox extends LitElement {
           </div>
 
           <div class="ff-filter-group">
-            <h4>Level Range</h4>
+            <strong>Level Range</strong>
             <div class="ff-filter-range-inputs">
               <input
                 type="number"
@@ -304,7 +304,7 @@ export class FFFactionFilterBox extends LitElement {
           </div>
 
           <div class="ff-filter-group">
-            <h4>FF Range</h4>
+            <strong>FF Range</strong>
             <div class="ff-filter-range-inputs">
               <input
                 type="number"
