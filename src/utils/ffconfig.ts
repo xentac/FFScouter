@@ -43,6 +43,8 @@ enum CONFIG {
   FACTIONS_COL_DISPLAY = "factions_col_display",
   DEBUG_LOGS = "debug_logs",
   ANALYTICS_ENABLED = "analytics_enabled",
+  FACTION_FILTER_STATE = "faction_filter_state",
+  FACTION_FILTER_COLLAPSED = "faction_filter_collapsed",
 }
 
 export class FFConfig {
@@ -176,6 +178,22 @@ export class FFConfig {
     this.storage.set(CONFIG.ANALYTICS_ENABLED, val);
   }
 
+  get faction_filter_state(): any | null {
+    return this.storage.get(CONFIG.FACTION_FILTER_STATE) ?? null;
+  }
+
+  set faction_filter_state(val: any | null) {
+    this.storage.set(CONFIG.FACTION_FILTER_STATE, val);
+  }
+
+  get faction_filter_collapsed(): boolean {
+    return this.storage.get(CONFIG.FACTION_FILTER_COLLAPSED) ?? false;
+  }
+
+  set faction_filter_collapsed(val: boolean) {
+    this.storage.set(CONFIG.FACTION_FILTER_COLLAPSED, val);
+  }
+
   public reset(): void {
     this.storage.remove(CONFIG.LOW_FF_RANGE);
     this.storage.remove(CONFIG.HIGH_FF_RANGE);
@@ -188,6 +206,8 @@ export class FFConfig {
     this.storage.remove(CONFIG.FACTIONS_COL_DISPLAY);
     this.storage.remove(CONFIG.DEBUG_LOGS);
     this.storage.remove(CONFIG.ANALYTICS_ENABLED);
+    this.storage.remove(CONFIG.FACTION_FILTER_STATE);
+    this.storage.remove(CONFIG.FACTION_FILTER_COLLAPSED);
   }
 }
 

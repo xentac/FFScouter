@@ -1,4 +1,6 @@
 // @vitest-environment jsdom
+
+import { ffconfig } from "@utils/ffconfig";
 import { beforeEach, expect, test } from "vitest";
 import "./faction-filter-box";
 import type { FFFactionFilterBox } from "./faction-filter-box";
@@ -102,7 +104,7 @@ test("ff-faction-filter-box updates state and dispatches filter-change event on 
 });
 
 test("ff-faction-filter-box supports toggle expand/collapse state saving to localStorage", async () => {
-  localStorage.setItem("ffsv3-faction-filter-collapsed", "true");
+  ffconfig.faction_filter_collapsed = true;
   const el = document.createElement(
     "ff-faction-filter-box",
   ) as FFFactionFilterBox;
@@ -116,10 +118,10 @@ test("ff-faction-filter-box supports toggle expand/collapse state saving to loca
   // Open the accordion
   details.open = true;
   details.dispatchEvent(new Event("toggle"));
-  expect(localStorage.getItem("ffsv3-faction-filter-collapsed")).toBe("false");
+  expect(ffconfig.faction_filter_collapsed).toBe(false);
 
   // Collapse the accordion
   details.open = false;
   details.dispatchEvent(new Event("toggle"));
-  expect(localStorage.getItem("ffsv3-faction-filter-collapsed")).toBe("true");
+  expect(ffconfig.faction_filter_collapsed).toBe(true);
 });

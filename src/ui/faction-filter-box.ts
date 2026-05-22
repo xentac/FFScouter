@@ -1,5 +1,6 @@
 import { html, LitElement } from "lit";
 import { customElement, state } from "lit/decorators.js";
+import { ffconfig } from "../utils/ffconfig";
 import { parse_suffix_number } from "../utils/strings";
 
 export interface FactionFilterState {
@@ -73,28 +74,22 @@ export class FFFactionFilterBox extends LitElement {
   }
 
   private loadState() {
-    this.collapsed =
-      localStorage.getItem("ffsv3-faction-filter-collapsed") === "true";
-    const saved = localStorage.getItem("ffsv3-faction-filter-state");
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        const savedSortBy = parsed.sortBy ?? "none";
-        this.sortBy =
-          savedSortBy === "ff-asc" || savedSortBy === "ff-desc"
-            ? savedSortBy
-            : "none";
-        this.activity = { ...DEFAULT_STATE.activity, ...parsed.activity };
-        this.status = { ...DEFAULT_STATE.status, ...parsed.status };
-        this.levelMin = parsed.levelMin ?? null;
-        this.levelMax = parsed.levelMax ?? null;
-        this.ffMin = parsed.ffMin ?? null;
-        this.ffMax = parsed.ffMax ?? null;
-        this.statsMin = parsed.statsMin ?? null;
-        this.statsMax = parsed.statsMax ?? null;
-      } catch (_e) {
-        // Use defaults on error
-      }
+    this.collapsed = ffconfig.faction_filter_collapsed;
+    const parsed = ffconfig.faction_filter_state;
+    if (parsed) {
+      const savedSortBy = parsed.sortBy ?? "none";
+      this.sortBy =
+        savedSortBy === "ff-asc" || savedSortBy === "ff-desc"
+          ? savedSortBy
+          : "none";
+      this.activity = { ...DEFAULT_STATE.activity, ...parsed.activity };
+      this.status = { ...DEFAULT_STATE.status, ...parsed.status };
+      this.levelMin = parsed.levelMin ?? null;
+      this.levelMax = parsed.levelMax ?? null;
+      this.ffMin = parsed.ffMin ?? null;
+      this.ffMax = parsed.ffMax ?? null;
+      this.statsMin = parsed.statsMin ?? null;
+      this.statsMax = parsed.statsMax ?? null;
     }
     // Dispatch initial state once loaded
     this.dispatchChange();
@@ -103,10 +98,7 @@ export class FFFactionFilterBox extends LitElement {
   private onToggle(e: Event) {
     const details = e.currentTarget as HTMLDetailsElement;
     this.collapsed = !details.open;
-    localStorage.setItem(
-      "ffsv3-faction-filter-collapsed",
-      String(this.collapsed),
-    );
+    ffconfig.faction_filter_collapsed = this.collapsed;
   }
 
   private saveState() {
@@ -121,10 +113,7 @@ export class FFFactionFilterBox extends LitElement {
       statsMin: this.statsMin,
       statsMax: this.statsMax,
     };
-    localStorage.setItem(
-      "ffsv3-faction-filter-state",
-      JSON.stringify(stateObj),
-    );
+    ffconfig.faction_filter_state = stateObj;
   }
 
   private dispatchChange() {
