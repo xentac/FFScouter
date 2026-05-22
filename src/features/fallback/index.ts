@@ -2,6 +2,8 @@ import { apply_ff_gauge_selector } from "@utils/dom";
 import { ffscouter } from "@utils/ffscouter";
 import { type Feature, StartTime } from "../feature";
 
+const FEATURE_NAME_HONOR_BAR = "fallback-honor-bar";
+const FEATURE_NAME_USER_NAME = "fallback-user-name";
 const FEATURE_NAME = "fallback";
 
 export default {
@@ -26,7 +28,7 @@ export default {
         ".user.name",
       ) as NodeListOf<HTMLElement>;
       if (honor_bars.length > 0) {
-        await apply_ff_gauge_selector(honor_bars, FEATURE_NAME);
+        await apply_ff_gauge_selector(honor_bars, FEATURE_NAME_HONOR_BAR);
       } else {
         if (
           window.location.href.startsWith("https://www.torn.com/companies.php")
@@ -129,7 +131,7 @@ export default {
           );
         } else if (name_elems.length > 0) {
           // Fallback for anyone without honor bars enabled
-          await apply_ff_gauge_selector(name_elems, FEATURE_NAME);
+          await apply_ff_gauge_selector(name_elems, FEATURE_NAME_USER_NAME);
         }
       }
       if (
