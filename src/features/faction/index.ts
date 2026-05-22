@@ -18,6 +18,11 @@ const FEATURE_NAME = "faction";
 // Re-entrancy guard to prevent layout loop on DOM mutation sorting
 let isApplying = false;
 
+// ============================================================================
+// SECTION 1: FILTER & SORT ENGINE
+// Core logic for evaluating filters (activity, status, level, FF, stats) and sorting
+// rows (both standard member rows and Ranked War lists). Also manages the active-filter attribute.
+// ============================================================================
 export function apply_filters_and_sort(
   membersList: HTMLElement,
   filters: {
@@ -42,11 +47,13 @@ export function apply_filters_and_sort(
   isApplying = true;
 
   try {
+    // 1. Resolve the container element for list items (supports standard lists and Ranked War lists)
     const tbody =
       membersList.querySelector(".table-body") ||
       membersList.querySelector(".members-list") ||
       membersList;
 
+    // 2. Select all row elements inside the resolved container
     const rows = Array.from(
       tbody.querySelectorAll(":scope > .table-row, .enemy, .your"),
     ) as HTMLElement[];
@@ -67,7 +74,7 @@ export function apply_filters_and_sort(
         (activity === "idle" && filters.activity.idle) ||
         (activity === "offline" && filters.activity.offline);
 
-      // Status
+      // Status: Inspect the class list or inner structure to determine character state
       let status = "okay";
       const statusCell = row.querySelector(".status");
       if (statusCell) {
@@ -157,6 +164,7 @@ export function apply_filters_and_sort(
       }
     }
 
+    // 3. If sorting filter is active, sort rows and append them in the updated order
     if (filters.sortBy !== "none") {
       const isEst =
         ffconfig.factions_col_display === FactionsColDisplay.BATTLE_STATS;
@@ -229,12 +237,19 @@ function is_filter_active(filters: {
   return false;
 }
 
+// ============================================================================
+// SECTION 2: COLUMN DATA POPULATION
+// Fetches Fair Fight (FF) and Battle Stat (BS) estimate data from the FFScouter API,
+// populates the data attributes used by the filter engine, and handles UI column injection/cleanup.
+// ============================================================================
 export async function apply_ff_columns(membersList: HTMLElement) {
+  // 1. Locate the header column cell to position our custom FF/Est column header
   const headerLvl =
     membersList.querySelector(".table-header > .lvl") ||
     membersList.querySelector(".white-grad");
   if (!headerLvl) return;
 
+  // 2. Determine display settings (War lists bypass injection and only use data values for sorting/filtering)
   const isWar = membersList.closest(".faction-war") !== null;
   const colDisplay = isWar
     ? FactionsColDisplay.NONE
@@ -270,6 +285,7 @@ export async function apply_ff_columns(membersList: HTMLElement) {
     }
   }
 
+  // 3. Find list rows and parse player IDs from profile URLs
   const rows = Array.from(
     membersList.querySelectorAll(".table-body > .table-row, .enemy, .your"),
   ) as HTMLElement[];
@@ -295,12 +311,14 @@ export async function apply_ff_columns(membersList: HTMLElement) {
 
   if (rowPlayers.length === 0) return;
 
+  // 4. Batch fetch data from FFScouter API for all visible player IDs
   const playerIds = rowPlayers.map((p) => p.player_id);
   const dataPromises = playerIds.map((id) => ffscouter.get(id));
   ffscouter.complete();
   const dataList = await Promise.all(dataPromises);
   const dataMap = new Map(dataList.map((d) => [d.player_id, d]));
 
+  // 5. Update rows and style the injected cells with the retrieved API data
   for (const rp of rowPlayers) {
     let cell = rp.row.querySelector(".ffscouter-cell") as HTMLElement | null;
     if (isNone) {
@@ -322,6 +340,7 @@ export async function apply_ff_columns(membersList: HTMLElement) {
 
     const data = dataMap.get(rp.player_id);
     if (data && !data.no_data) {
+      // Store values on data-attributes for fast, local filtering and sorting operations
       // biome-ignore lint/complexity/useLiteralKeys: tsc requires index signature lookup
       rp.row.dataset["ffValue"] = String(data.fair_fight);
       // biome-ignore lint/complexity/useLiteralKeys: tsc requires index signature lookup
@@ -383,6 +402,11 @@ export async function apply_ff_columns(membersList: HTMLElement) {
   }
 }
 
+// ============================================================================
+// SECTION 3: STANDARD MEMBERS & CHAIN ATTACK PAGES FLOW
+// Setup, observation, and initialization functions for standard faction member list
+// pages. Monitors additions and status updates to dynamically keep columns and filters updated.
+// ============================================================================
 function inject_filter_box(membersList: HTMLElement) {
   const parent = membersList.parentNode;
   if (!parent) return;
@@ -572,6 +596,12 @@ const apply_ff_members_list = (root: HTMLElement = document.body) => {
   }
 };
 
+// ============================================================================
+// SECTION 4: RANKED WAR PAGES FLOW (SIDE-BY-SIDE LISTS)
+// Dynamic loader and event observers for side-by-side Ranked War faction tables.
+// Sets up a single, borderless configuration panel and binds it to both tables, waiting
+// for asynchronous rows (li.enemy, li.your) to load.
+// ============================================================================
 export function setup_war_features(factionWar: HTMLElement) {
   const lists = Array.from(
     factionWar.querySelectorAll(".enemy-faction, .your-faction"),
@@ -696,6 +726,10 @@ function initialize_war_list(list: HTMLElement) {
   }, 10_000);
 }
 
+// ============================================================================
+// SECTION 5: ENTRY POINTS & PAGE EVENT ROUTER
+// The main page navigation observer, selector router, and extension hooks for Torn Factions step page loads.
+// ============================================================================
 const process_page = () => {
   wait_for_element(".members-list", 10_000).then((node) => {
     if (node instanceof HTMLElement) {
