@@ -66,6 +66,8 @@ enum CONFIG {
   ANALYTICS_ENABLED = "analytics_enabled",
   FACTION_FILTER_STATE = "faction_filter_state",
   FACTION_FILTER_COLLAPSED = "faction_filter_collapsed",
+  WAR_FILTER_STATE = "war_filter_state",
+  WAR_FILTER_COLLAPSED = "war_filter_collapsed",
   CHAIN_MIN_LEVEL = "chain_min_level",
   CHAIN_MAX_LEVEL = "chain_max_level",
   CHAIN_INACTIVE = "chain_inactive",
@@ -301,6 +303,22 @@ export class FFConfig {
     this.storage.set(CONFIG.FACTION_FILTER_COLLAPSED, val);
   }
 
+  get war_filter_state(): any | null {
+    return this.storage.get(CONFIG.WAR_FILTER_STATE) ?? null;
+  }
+
+  set war_filter_state(val: any | null) {
+    this.storage.set(CONFIG.WAR_FILTER_STATE, val);
+  }
+
+  get war_filter_collapsed(): boolean {
+    return this.storage.get(CONFIG.WAR_FILTER_COLLAPSED) ?? false;
+  }
+
+  set war_filter_collapsed(val: boolean) {
+    this.storage.set(CONFIG.WAR_FILTER_COLLAPSED, val);
+  }
+
   get chain_targets(): CachedTargets | null {
     return this.storage.get(CONFIG.CHAIN_TARGETS);
   }
@@ -335,6 +353,8 @@ export class FFConfig {
     this.storage.remove(CONFIG.ANALYTICS_ENABLED);
     this.storage.remove(CONFIG.FACTION_FILTER_STATE);
     this.storage.remove(CONFIG.FACTION_FILTER_COLLAPSED);
+    this.storage.remove(CONFIG.WAR_FILTER_STATE);
+    this.storage.remove(CONFIG.WAR_FILTER_COLLAPSED);
     this.storage.remove(CONFIG.CHAIN_MIN_LEVEL);
     this.storage.remove(CONFIG.CHAIN_MAX_LEVEL);
     this.storage.remove(CONFIG.CHAIN_INACTIVE);

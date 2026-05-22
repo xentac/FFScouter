@@ -4,7 +4,11 @@ import { FactionsColDisplay, ffconfig } from "@utils/ffconfig";
 import { ffscouter } from "@utils/ffscouter";
 import type { PlayerId } from "@utils/types";
 import { beforeEach, expect, test, vi } from "vitest";
-import { apply_ff_columns, apply_filters_and_sort } from "./index";
+import {
+  apply_ff_columns,
+  apply_filters_and_sort,
+  setup_war_features,
+} from "./index";
 
 vi.mock("@utils/ffscouter", () => {
   return {
@@ -554,4 +558,143 @@ test("apply_ff_columns removes elements when configured to NONE but populates da
   expect(row.dataset["ffValue"]).toBe("3.5");
   // biome-ignore lint/complexity/useLiteralKeys: tsc requires index signature lookup
   expect(row.dataset["estValue"]).toBe("5000000");
+});
+
+test("apply_ff_columns forces NONE column display when members-list is inside .faction-war", async () => {
+  // Configured to display FAIR_FIGHT columns by default
+  ffconfig.factions_col_display = FactionsColDisplay.FAIR_FIGHT;
+
+  vi.mocked(ffscouter.get).mockResolvedValue({
+    player_id: 111 as PlayerId,
+    no_data: false,
+    fair_fight: 3.5,
+    bs_estimate: 5000000,
+    bs_estimate_human: "5M",
+  } as any);
+
+  const factionWar = document.createElement("div");
+  factionWar.className = "faction-war";
+
+  const list = document.createElement("div");
+  list.className = "members-list";
+  list.innerHTML = `
+    <ul class="table-header">
+      <li class="member">Member</li>
+      <li class="lvl">Lvl</li>
+    </ul>
+    <ul class="table-body">
+      <li class="table-row">
+        <div class="member"><a href="/profiles.php?XID=111">Player 111</a></div>
+        <div class="lvl">50</div>
+      </li>
+    </ul>
+  `;
+  factionWar.appendChild(list);
+  document.body.appendChild(factionWar);
+
+  await apply_ff_columns(list);
+
+  // Columns should NOT be injected since it is inside .faction-war (embedded mode)
+  expect(list.querySelector(".ffscouter-header")).toBeNull();
+  expect(list.querySelector(".ffscouter-cell")).toBeNull();
+
+  // But data values should still be populated for filtering/sorting
+  const row = list.querySelector(".table-row") as HTMLElement;
+  // biome-ignore lint/complexity/useLiteralKeys: tsc requires index signature lookup
+  expect(row.dataset["ffValue"]).toBe("3.5");
+});
+
+test("apply_filters_and_sort sets and removes data-ffscouter-active-filter attribute", () => {
+  const container = document.createElement("div");
+  container.className = "members-list";
+  container.innerHTML = `
+    <div class="table-body">
+      <div class="table-row" id="row-1" data-ff-value="2.5">
+        <div class="member"><a href="/profiles.php?XID=111">Player 111</a></div>
+        <div class="lvl">50</div>
+        <div class="status okay">Okay</div>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(container);
+
+  const defaultFilters = {
+    sortBy: "none" as const,
+    activity: { online: true, idle: true, offline: true },
+    status: {
+      okay: true,
+      hospital: true,
+      jail: true,
+      abroad: true,
+      traveling: true,
+    },
+    levelMin: null,
+    levelMax: null,
+    ffMin: null,
+    ffMax: null,
+  };
+
+  // 1. With default/cleared filters, attribute should not be present
+  apply_filters_and_sort(container, defaultFilters);
+  expect(container.getAttribute("data-ffscouter-active-filter")).toBeNull();
+
+  // 2. Active sorting should set the attribute
+  apply_filters_and_sort(container, { ...defaultFilters, sortBy: "ff-desc" });
+  expect(container.getAttribute("data-ffscouter-active-filter")).toBe("true");
+
+  // 3. Reset filters: attribute should be removed
+  apply_filters_and_sort(container, defaultFilters);
+  expect(container.getAttribute("data-ffscouter-active-filter")).toBeNull();
+
+  // 4. Active filtering should set the attribute
+  apply_filters_and_sort(container, {
+    ...defaultFilters,
+    activity: { online: true, idle: true, offline: false },
+  });
+  expect(container.getAttribute("data-ffscouter-active-filter")).toBe("true");
+});
+
+test("setup_war_features detects enemy-faction and your-faction lists and setup filter box", async () => {
+  vi.mocked(ffscouter.get).mockResolvedValue({
+    player_id: 111 as PlayerId,
+    no_data: true,
+  } as any);
+
+  const factionWar = document.createElement("div");
+  factionWar.className = "faction-war";
+
+  const enemyList = document.createElement("ul");
+  enemyList.className = "enemy-faction";
+  enemyList.innerHTML = `
+    <li class="table-header"><div class="lvl">Lvl</div></li>
+    <li class="enemy" id="enemy-1">
+      <div class="member"><a href="/profiles.php?XID=111">Enemy 111</a></div>
+      <div class="lvl">50</div>
+    </li>
+  `;
+
+  const yourList = document.createElement("ul");
+  yourList.className = "your-faction";
+  yourList.innerHTML = `
+    <li class="table-header"><div class="lvl">Lvl</div></li>
+    <li class="your" id="your-2">
+      <div class="member"><a href="/profiles.php?XID=222">Your 222</a></div>
+      <div class="lvl">60</div>
+    </li>
+  `;
+
+  factionWar.appendChild(enemyList);
+  factionWar.appendChild(yourList);
+  document.body.appendChild(factionWar);
+
+  setup_war_features(factionWar);
+
+  // Filter box should be injected at the top of the war box container
+  const filterBox = factionWar.querySelector(
+    "ff-faction-filter-box[mode='war']",
+  );
+  expect(filterBox).not.toBeNull();
+
+  // Clean up
+  factionWar.remove();
 });

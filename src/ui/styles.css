@@ -238,6 +238,15 @@ ff-faction-filter-box {
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
 }
 
+.ff-filter-box.no-borders {
+  background-color: var(--default-bg-panel-color);
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 0;
+  margin-bottom: 0;
+}
+
 .ff-filter-box summary {
   cursor: pointer;
   font-size: 14px;

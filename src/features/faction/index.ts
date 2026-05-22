@@ -42,11 +42,13 @@ export function apply_filters_and_sort(
   isApplying = true;
 
   try {
-    const tbody = membersList.querySelector(".table-body");
-    if (!tbody) return;
+    const tbody =
+      membersList.querySelector(".table-body") ||
+      membersList.querySelector(".members-list") ||
+      membersList;
 
     const rows = Array.from(
-      tbody.querySelectorAll(":scope > .table-row"),
+      tbody.querySelectorAll(":scope > .table-row, .enemy, .your"),
     ) as HTMLElement[];
 
     for (const row of rows) {
@@ -108,7 +110,7 @@ export function apply_filters_and_sort(
         (status === "abroad" && filters.status.abroad);
 
       // Level
-      const levelCell = row.querySelector(".lvl:not(.ffscouter-cell)");
+      const levelCell = row.querySelector(".lvl:not(.ffscouter-cell), .level");
       const level = levelCell
         ? Number.parseInt(levelCell.textContent || "0", 10)
         : 0;
@@ -178,16 +180,65 @@ export function apply_filters_and_sort(
         tbody.appendChild(row);
       }
     }
+    if (is_filter_active(filters)) {
+      membersList.setAttribute("data-ffscouter-active-filter", "true");
+    } else {
+      membersList.removeAttribute("data-ffscouter-active-filter");
+    }
   } finally {
     isApplying = false;
   }
 }
 
+function is_filter_active(filters: {
+  sortBy: string;
+  activity: { online: boolean; idle: boolean; offline: boolean };
+  status: {
+    okay: boolean;
+    traveling: boolean;
+    hospital: boolean;
+    jail: boolean;
+    abroad: boolean;
+  };
+  levelMin: number | null;
+  levelMax: number | null;
+  ffMin: number | null;
+  ffMax: number | null;
+  statsMin?: number | null;
+  statsMax?: number | null;
+}): boolean {
+  if (filters.sortBy !== "none") return true;
+  if (
+    !filters.activity.online ||
+    !filters.activity.idle ||
+    !filters.activity.offline
+  )
+    return true;
+  if (
+    !filters.status.okay ||
+    !filters.status.traveling ||
+    !filters.status.hospital ||
+    !filters.status.jail ||
+    !filters.status.abroad
+  )
+    return true;
+  if (filters.levelMin !== null || filters.levelMax !== null) return true;
+  if (filters.ffMin !== null || filters.ffMax !== null) return true;
+  if (filters.statsMin !== undefined && filters.statsMin !== null) return true;
+  if (filters.statsMax !== undefined && filters.statsMax !== null) return true;
+  return false;
+}
+
 export async function apply_ff_columns(membersList: HTMLElement) {
-  const headerLvl = membersList.querySelector(".table-header > .lvl");
+  const headerLvl =
+    membersList.querySelector(".table-header > .lvl") ||
+    membersList.querySelector(".white-grad");
   if (!headerLvl) return;
 
-  const colDisplay = ffconfig.factions_col_display;
+  const isWar = membersList.closest(".faction-war") !== null;
+  const colDisplay = isWar
+    ? FactionsColDisplay.NONE
+    : ffconfig.factions_col_display;
   const isEst = colDisplay === FactionsColDisplay.BATTLE_STATS;
   const isNone = colDisplay === FactionsColDisplay.NONE;
   const expectedText = isEst ? "Est" : "FF";
@@ -220,7 +271,7 @@ export async function apply_ff_columns(membersList: HTMLElement) {
   }
 
   const rows = Array.from(
-    membersList.querySelectorAll(".table-body > .table-row"),
+    membersList.querySelectorAll(".table-body > .table-row, .enemy, .your"),
   ) as HTMLElement[];
   const rowPlayers = rows
     .map((row) => {
@@ -521,6 +572,130 @@ const apply_ff_members_list = (root: HTMLElement = document.body) => {
   }
 };
 
+export function setup_war_features(factionWar: HTMLElement) {
+  const lists = Array.from(
+    factionWar.querySelectorAll(".enemy-faction, .your-faction"),
+  ) as HTMLElement[];
+
+  if (lists.length > 0) {
+    initialize_war_features(factionWar, lists);
+  } else {
+    const loadObserver = new MutationObserver((_mutations, obs) => {
+      const currentLists = Array.from(
+        factionWar.querySelectorAll(".enemy-faction, .your-faction"),
+      ) as HTMLElement[];
+      if (currentLists.length > 0) {
+        obs.disconnect();
+        initialize_war_features(factionWar, currentLists);
+      }
+    });
+    loadObserver.observe(factionWar, { childList: true, subtree: true });
+
+    const cleanupInterval = setInterval(() => {
+      if (!factionWar.isConnected) {
+        clearInterval(cleanupInterval);
+        loadObserver.disconnect();
+      }
+    }, 10_000);
+  }
+}
+
+function initialize_war_features(
+  factionWar: HTMLElement,
+  lists: HTMLElement[],
+) {
+  // Inject single filter box at the top of the war box (factionWar)
+  let filterBox = factionWar.querySelector(
+    "ff-faction-filter-box[mode='war']",
+  ) as any;
+  if (!filterBox) {
+    filterBox = document.createElement("ff-faction-filter-box");
+    filterBox.setAttribute("mode", "war");
+    filterBox.addEventListener("filter-change", (e: any) => {
+      for (const list of lists) {
+        apply_filters_and_sort(list, e.detail);
+      }
+    });
+    factionWar.insertBefore(filterBox, factionWar.firstChild);
+  }
+
+  for (const list of lists) {
+    setup_war_list(list);
+  }
+}
+
+function setup_war_list(list: HTMLElement) {
+  const tbody = list.querySelector(".table-body") || list;
+  const hasRows = tbody.querySelector(".enemy, .your");
+
+  if (hasRows) {
+    initialize_war_list(list);
+  } else {
+    const loadObserver = new MutationObserver((_mutations, obs) => {
+      const currentTbody = list.querySelector(".table-body") || list;
+      if (currentTbody.querySelector(".enemy, .your")) {
+        obs.disconnect();
+        initialize_war_list(list);
+      }
+    });
+    loadObserver.observe(list, { childList: true, subtree: true });
+
+    const cleanupInterval = setInterval(() => {
+      if (!list.isConnected) {
+        clearInterval(cleanupInterval);
+        loadObserver.disconnect();
+      }
+    }, 10_000);
+  }
+}
+
+function initialize_war_list(list: HTMLElement) {
+  apply_ff_columns(list);
+
+  const target = list.querySelector(".table-body") || list;
+  const attributeObserver = new MutationObserver((mutations) => {
+    if (isApplying) return;
+
+    let shouldReapply = false;
+    for (const m of mutations) {
+      if (m.type === "attributes") {
+        if (
+          m.attributeName === "alt" &&
+          m.target instanceof HTMLImageElement &&
+          m.target.closest(".icons")
+        ) {
+          shouldReapply = true;
+          break;
+        }
+        if (
+          m.attributeName === "class" &&
+          m.target instanceof HTMLElement &&
+          m.target.closest(".status")
+        ) {
+          shouldReapply = true;
+          break;
+        }
+      }
+    }
+
+    if (shouldReapply) {
+      apply_ff_columns(list);
+    }
+  });
+
+  attributeObserver.observe(target, {
+    attributes: true,
+    attributeFilter: ["class", "alt"],
+  });
+
+  const cleanupInterval = setInterval(() => {
+    if (!list.isConnected) {
+      clearInterval(cleanupInterval);
+      attributeObserver.disconnect();
+    }
+  }, 10_000);
+}
+
 const process_page = () => {
   wait_for_element(".members-list", 10_000).then((node) => {
     if (node instanceof HTMLElement) {
@@ -556,7 +731,7 @@ const process_page = () => {
             );
             const faction_war = await wait_for_element(".faction-war", 10_000);
             if (faction_war instanceof HTMLElement) {
-              monitor_member_list(faction_war, true);
+              setup_war_features(faction_war);
             }
           }
         }
@@ -573,7 +748,7 @@ const process_page = () => {
         existing_descriptions,
       );
       if (faction_war instanceof HTMLElement) {
-        apply_ff_members_list(faction_war);
+        setup_war_features(faction_war);
       }
     }
   });
@@ -599,7 +774,7 @@ export default {
 
     window.addEventListener("ff-config-updated", () => {
       const lists = document.querySelectorAll(
-        ".members-list, .chain-attacks-list, .faction-war",
+        ".members-list, .chain-attacks-list, .enemy-faction, .your-faction",
       );
       for (const list of lists) {
         if (list instanceof HTMLElement) {

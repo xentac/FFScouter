@@ -1,5 +1,5 @@
 import { html, LitElement } from "lit";
-import { customElement, state } from "lit/decorators.js";
+import { customElement, property, state } from "lit/decorators.js";
 import { FactionsColDisplay, ffconfig } from "../utils/ffconfig";
 import { parse_suffix_number } from "../utils/strings";
 
@@ -53,6 +53,8 @@ export class FFFactionFilterBox extends LitElement {
     return this;
   }
 
+  @property({ type: String }) mode: "faction" | "war" = "faction";
+
   @state() sortBy: FactionFilterState["sortBy"] = "none";
   @state() colDisplay: FactionsColDisplay = FactionsColDisplay.FAIR_FIGHT;
 
@@ -86,9 +88,14 @@ export class FFFactionFilterBox extends LitElement {
   };
 
   private loadState() {
-    this.collapsed = ffconfig.faction_filter_collapsed;
+    const isWar = this.mode === "war";
+    this.collapsed = isWar
+      ? ffconfig.war_filter_collapsed
+      : ffconfig.faction_filter_collapsed;
     this.colDisplay = ffconfig.factions_col_display;
-    const parsed = ffconfig.faction_filter_state;
+    const parsed = isWar
+      ? ffconfig.war_filter_state
+      : ffconfig.faction_filter_state;
     if (parsed) {
       const savedSortBy = parsed.sortBy ?? "none";
       this.sortBy =
@@ -111,7 +118,11 @@ export class FFFactionFilterBox extends LitElement {
   private onToggle(e: Event) {
     const details = e.currentTarget as HTMLDetailsElement;
     this.collapsed = !details.open;
-    ffconfig.faction_filter_collapsed = this.collapsed;
+    if (this.mode === "war") {
+      ffconfig.war_filter_collapsed = this.collapsed;
+    } else {
+      ffconfig.faction_filter_collapsed = this.collapsed;
+    }
   }
 
   private saveState() {
@@ -126,7 +137,11 @@ export class FFFactionFilterBox extends LitElement {
       statsMin: this.statsMin,
       statsMax: this.statsMax,
     };
-    ffconfig.faction_filter_state = stateObj;
+    if (this.mode === "war") {
+      ffconfig.war_filter_state = stateObj;
+    } else {
+      ffconfig.faction_filter_state = stateObj;
+    }
   }
 
   private dispatchChange() {
@@ -231,7 +246,7 @@ export class FFFactionFilterBox extends LitElement {
 
     return html`
       <details
-        class="ff-filter-box"
+        class="ff-filter-box ${this.mode === "war" ? "no-borders" : ""}"
         ?open="${!this.collapsed}"
         @toggle="${this.onToggle}"
       >
@@ -253,16 +268,22 @@ export class FFFactionFilterBox extends LitElement {
                       : `Sort: ${sortText} ▼`
                 }
               </button>
-              <select
-                id="factions-col-display-filter"
-                .value=${this.colDisplay}
-                @change=${this.onDisplayChange}
-                style="padding: 4px; border: 1px solid var(--ffsv3-border-color); border-radius: 4px; background: var(--ffsv3-alt-bg-color); color: var(--ffsv3-text-color); font-size: 11px; cursor: pointer; height: 32px;"
-              >
-                <option value="fair_fight">Show: FF Score</option>
-                <option value="battle_stats">Show: BS Estimate</option>
-                <option value="none">Show: None (Hide)</option>
-              </select>
+              ${
+                this.mode === "war"
+                  ? ""
+                  : html`
+                    <select
+                      id="factions-col-display-filter"
+                      .value=${this.colDisplay}
+                      @change=${this.onDisplayChange}
+                      style="padding: 4px; border: 1px solid var(--ffsv3-border-color); border-radius: 4px; background: var(--ffsv3-alt-bg-color); color: var(--ffsv3-text-color); font-size: 11px; cursor: pointer; height: 32px;"
+                    >
+                      <option value="fair_fight">Show: FF Score</option>
+                      <option value="battle_stats">Show: BS Estimate</option>
+                      <option value="none">Show: None (Hide)</option>
+                    </select>
+                  `
+              }
             </div>
           </div>
 

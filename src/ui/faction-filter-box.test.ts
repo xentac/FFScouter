@@ -183,3 +183,46 @@ test("ff-faction-filter-box handles display mode dropdown and dynamic config upd
     window.removeEventListener("ff-config-updated", onConfigUpdated);
   }
 });
+
+test("ff-faction-filter-box supports mode='war' styling and independent configs", async () => {
+  const el = document.createElement(
+    "ff-faction-filter-box",
+  ) as FFFactionFilterBox;
+  el.mode = "war";
+  document.body.appendChild(el);
+  await new Promise((resolve) => setTimeout(resolve, 0));
+
+  // 1. Check no-borders class
+  const details = el.querySelector("details") as HTMLDetailsElement;
+  expect(details).not.toBeNull();
+  expect(details.classList.contains("no-borders")).toBe(true);
+
+  // 2. Check that display select is not rendered
+  const select = el.querySelector("#factions-col-display-filter");
+  expect(select).toBeNull();
+
+  // 3. Test saving/loading collapsed state in war mode
+  ffconfig.war_filter_collapsed = true;
+  el.disconnectedCallback();
+  el.connectedCallback();
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  expect(details.open).toBe(false);
+
+  // Toggle open
+  details.open = true;
+  details.dispatchEvent(new Event("toggle"));
+  expect(ffconfig.war_filter_collapsed).toBe(false);
+
+  // 4. Test saving state to war_filter_state
+  const onlineCheckbox = el.querySelector(
+    'input[type="checkbox"]',
+  ) as HTMLInputElement;
+  expect(onlineCheckbox).not.toBeNull();
+  if (onlineCheckbox) {
+    onlineCheckbox.checked = false;
+    onlineCheckbox.dispatchEvent(new Event("change"));
+  }
+
+  expect(ffconfig.war_filter_state?.activity?.online).toBe(false);
+  expect(ffconfig.faction_filter_state).toBeNull(); // faction config untouched
+});
