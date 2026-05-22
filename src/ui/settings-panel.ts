@@ -26,6 +26,17 @@ export class FFSettingsPanel extends LitElement {
     CONFIG_DEFAULTS.chain_tab_type;
   @property({ type: Number }) chainFFTarget: number =
     CONFIG_DEFAULTS.chain_ff_target;
+  @property({ type: Number }) chainMinLevel: number | null =
+    CONFIG_DEFAULTS.chain_min_level;
+  @property({ type: Number }) chainMaxLevel: number | null =
+    CONFIG_DEFAULTS.chain_max_level;
+  @property({ type: Boolean }) chainInactive: boolean =
+    CONFIG_DEFAULTS.chain_inactive;
+  @property({ type: Number }) chainMinFF: number | null =
+    CONFIG_DEFAULTS.chain_min_ff;
+  @property({ type: Number }) chainMaxFF: number = CONFIG_DEFAULTS.chain_max_ff;
+  @property({ type: Boolean }) chainFactionless: boolean =
+    CONFIG_DEFAULTS.chain_factionless;
   @property({ type: Boolean }) ffHistoryEnabled: boolean =
     CONFIG_DEFAULTS.ff_history_enabled;
   @property({ type: String }) factionsColDisplay: FactionsColDisplay =
@@ -47,6 +58,16 @@ export class FFSettingsPanel extends LitElement {
   @state() private draftChainTabType: ChainTabType =
     CONFIG_DEFAULTS.chain_tab_type;
   @state() private draftChainFFTarget: number = CONFIG_DEFAULTS.chain_ff_target;
+  @state() private draftChainMinLevel: number | null =
+    CONFIG_DEFAULTS.chain_min_level;
+  @state() private draftChainMaxLevel: number | null =
+    CONFIG_DEFAULTS.chain_max_level;
+  @state() private draftChainInactive: boolean = CONFIG_DEFAULTS.chain_inactive;
+  @state() private draftChainMinFF: number | null =
+    CONFIG_DEFAULTS.chain_min_ff;
+  @state() private draftChainMaxFF: number = CONFIG_DEFAULTS.chain_max_ff;
+  @state() private draftChainFactionless: boolean =
+    CONFIG_DEFAULTS.chain_factionless;
   @state() private draftFFHistoryEnabled: boolean =
     CONFIG_DEFAULTS.ff_history_enabled;
   @state() private draftFactionsColDisplay: FactionsColDisplay =
@@ -73,6 +94,12 @@ export class FFSettingsPanel extends LitElement {
       changedProperties.has("chainLinkType") ||
       changedProperties.has("chainTabType") ||
       changedProperties.has("chainFFTarget") ||
+      changedProperties.has("chainMinLevel") ||
+      changedProperties.has("chainMaxLevel") ||
+      changedProperties.has("chainInactive") ||
+      changedProperties.has("chainMinFF") ||
+      changedProperties.has("chainMaxFF") ||
+      changedProperties.has("chainFactionless") ||
       changedProperties.has("ffHistoryEnabled") ||
       changedProperties.has("factionsColDisplay") ||
       changedProperties.has("debugLogs") ||
@@ -91,6 +118,12 @@ export class FFSettingsPanel extends LitElement {
     this.draftChainLinkType = this.chainLinkType;
     this.draftChainTabType = this.chainTabType;
     this.draftChainFFTarget = this.chainFFTarget;
+    this.draftChainMinLevel = this.chainMinLevel;
+    this.draftChainMaxLevel = this.chainMaxLevel;
+    this.draftChainInactive = this.chainInactive;
+    this.draftChainMinFF = this.chainMinFF;
+    this.draftChainMaxFF = this.chainMaxFF;
+    this.draftChainFactionless = this.chainFactionless;
     this.draftFFHistoryEnabled = this.ffHistoryEnabled;
     this.draftFactionsColDisplay = this.factionsColDisplay;
     this.draftDebugLogs = this.debugLogs;
@@ -134,6 +167,12 @@ export class FFSettingsPanel extends LitElement {
           chainLinkType: this.draftChainLinkType,
           chainTabType: this.draftChainTabType,
           chainFFTarget: this.draftChainFFTarget,
+          chainMinLevel: this.draftChainMinLevel,
+          chainMaxLevel: this.draftChainMaxLevel,
+          chainInactive: this.draftChainInactive,
+          chainMinFF: this.draftChainMinFF,
+          chainMaxFF: this.draftChainMaxFF,
+          chainFactionless: this.draftChainFactionless,
           ffHistoryEnabled: this.draftFFHistoryEnabled,
           factionsColDisplay: this.draftFactionsColDisplay,
           debugLogs: this.draftDebugLogs,
@@ -216,8 +255,39 @@ export class FFSettingsPanel extends LitElement {
     this.showSavedMessage = false;
   }
 
-  private onChainFFTargetInput(e: Event) {
-    this.draftChainFFTarget = Number((e.target as HTMLInputElement).value);
+  private onChainMinLevelInput(e: Event) {
+    const val = (e.target as HTMLInputElement).value;
+    this.draftChainMinLevel = val === "" ? null : Number(val);
+    this.showSavedMessage = false;
+  }
+
+  private onChainMaxLevelInput(e: Event) {
+    const val = (e.target as HTMLInputElement).value;
+    this.draftChainMaxLevel = val === "" ? null : Number(val);
+    this.showSavedMessage = false;
+  }
+
+  private onChainInactiveChange(e: Event) {
+    this.draftChainInactive = (e.target as HTMLInputElement).checked;
+    this.showSavedMessage = false;
+  }
+
+  private onChainMinFFInput(e: Event) {
+    const val = (e.target as HTMLInputElement).value;
+    this.draftChainMinFF = val === "" ? null : Number(val);
+    this.showSavedMessage = false;
+  }
+
+  private onChainMaxFFInput(e: Event) {
+    const val = (e.target as HTMLInputElement).value;
+    const num = Number(val);
+    this.draftChainMaxFF = num;
+    this.draftChainFFTarget = num;
+    this.showSavedMessage = false;
+  }
+
+  private onChainFactionlessChange(e: Event) {
+    this.draftChainFactionless = (e.target as HTMLInputElement).checked;
     this.showSavedMessage = false;
   }
 
@@ -374,18 +444,73 @@ export class FFSettingsPanel extends LitElement {
                   </div>
 
                   <div class="input-row-inline">
-                    <label for="chain-ff-target"
-                      >FF target (Maximum FF the chain button should
-                      open):</label
-                    >
+                    <label for="chain-min-level">Min Level:</label>
                     <input
-                      id="chain-ff-target"
+                      id="chain-min-level"
+                      type="number"
+                      class="ff-number"
+                      placeholder="No min"
+                      .value=${this.draftChainMinLevel === null ? "" : this.draftChainMinLevel.toString()}
+                      @input=${this.onChainMinLevelInput}
+                    />
+                  </div>
+
+                  <div class="input-row-inline">
+                    <label for="chain-max-level">Max Level:</label>
+                    <input
+                      id="chain-max-level"
+                      type="number"
+                      class="ff-number"
+                      placeholder="No max"
+                      .value=${this.draftChainMaxLevel === null ? "" : this.draftChainMaxLevel.toString()}
+                      @input=${this.onChainMaxLevelInput}
+                    />
+                  </div>
+
+                  <div class="input-row-inline">
+                    <label for="chain-min-ff">Min FF:</label>
+                    <input
+                      id="chain-min-ff"
                       type="number"
                       step="0.1"
                       class="ff-number"
-                      .value=${this.draftChainFFTarget.toString()}
-                      @input=${this.onChainFFTargetInput}
+                      placeholder="No min"
+                      .value=${this.draftChainMinFF === null ? "" : this.draftChainMinFF.toString()}
+                      @input=${this.onChainMinFFInput}
                     />
+                  </div>
+
+                  <div class="input-row-inline">
+                    <label for="chain-max-ff">Max FF:</label>
+                    <input
+                      id="chain-max-ff"
+                      type="number"
+                      step="0.1"
+                      class="ff-number"
+                      placeholder="No max"
+                      .value=${this.draftChainMaxFF.toString()}
+                      @input=${this.onChainMaxFFInput}
+                    />
+                  </div>
+
+                  <div class="input-row-inline">
+                    <input
+                      id="chain-inactive"
+                      type="checkbox"
+                      .checked=${this.draftChainInactive}
+                      @change=${this.onChainInactiveChange}
+                    />
+                    <label for="chain-inactive">Inactive Only (14+ days offline)</label>
+                  </div>
+
+                  <div class="input-row-inline">
+                    <input
+                      id="chain-factionless"
+                      type="checkbox"
+                      .checked=${this.draftChainFactionless}
+                      @change=${this.onChainFactionlessChange}
+                    />
+                    <label for="chain-factionless">Factionless Only</label>
                   </div>
                 </div>
               `

@@ -2,6 +2,7 @@ import Attack from "./attack";
 import Faction from "./faction";
 import Fallback from "./fallback";
 import type { Feature } from "./feature";
+import FFButton from "./ff-button";
 import MiniProfile from "./mini-profile";
 import Profile from "./profile";
 import ProfileFlights from "./profile-flights";
@@ -16,6 +17,7 @@ export const Features: Feature[] = [
   Attack,
   Faction,
   MiniProfile,
+  FFButton,
   Fallback,
 ];
 

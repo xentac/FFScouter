@@ -7,6 +7,7 @@ import {
   make_stats_url,
   query_flights,
   query_stats,
+  query_targets,
 } from "./api";
 import { generate_test_ff_data } from "./test";
 
@@ -470,5 +471,101 @@ test("query_flights handle errors", async () => {
         } as any,
       },
     ),
+  );
+});
+
+test("query_targets success with parameters", async () => {
+  const mockTargetsResponse = {
+    parameters: {
+      key: "test-key",
+      preset: null,
+      minlevel: 20,
+      maxlevel: 50,
+      inactiveonly: 1,
+      minff: 1.5,
+      maxff: 2.5,
+      limit: 25,
+      factionless: 1,
+      generated_at: 1640995200,
+    },
+    targets: [
+      {
+        player_id: 12345,
+        name: "PlayerName",
+        level: 25,
+        fair_fight: 1.8,
+        bss_public: 50000,
+        bss_public_timestamp: 1640995000,
+        bs_estimate: 6750000,
+        bs_estimate_human: "6.75m",
+        last_action: 1640994000,
+        source: "bss",
+      },
+    ],
+  };
+
+  const success: typeof gmRequest = vi.fn().mockImplementation((options) => {
+    const url = new URL(options.url);
+    expect(url.searchParams.get("key")).toBe("test-key");
+    expect(url.searchParams.get("minlevel")).toBe("20");
+    expect(url.searchParams.get("maxlevel")).toBe("50");
+    expect(url.searchParams.get("minff")).toBe("1.5");
+    expect(url.searchParams.get("maxff")).toBe("2.5");
+    expect(url.searchParams.get("inactiveonly")).toBe("1");
+    expect(url.searchParams.get("factionless")).toBe("1");
+    expect(url.searchParams.get("limit")).toBe("25");
+
+    return Promise.resolve({
+      responseHeaders: "",
+      readyState: 4,
+      response: "",
+      responseText: JSON.stringify(mockTargetsResponse),
+      responseXML: null,
+      status: 200,
+      statusText: "OK",
+      finalUrl: "",
+      context: {},
+    });
+  });
+
+  const result = await query_targets(
+    "test-key",
+    {
+      minlevel: 20,
+      maxlevel: 50,
+      minff: 1.5,
+      maxff: 2.5,
+      inactiveonly: 1,
+      factionless: 1,
+      limit: 25,
+    },
+    success,
+  );
+
+  expect(result).toEqual(mockTargetsResponse);
+});
+
+test("query_targets empty response error", async () => {
+  const empty: typeof gmRequest = vi.fn().mockResolvedValue(null);
+  await expect(query_targets("test-key", {}, empty)).rejects.toThrow(
+    "Empty response from get-targets",
+  );
+});
+
+test("query_targets HTTP error response", async () => {
+  const error400: typeof gmRequest = vi.fn().mockResolvedValue({
+    responseHeaders: "",
+    readyState: 4,
+    response: "",
+    responseText: JSON.stringify({ error: "Invalid preset" }),
+    responseXML: null,
+    status: 400,
+    statusText: "Bad Request",
+    finalUrl: "",
+    context: {},
+  });
+
+  await expect(query_targets("test-key", {}, error400)).rejects.toThrow(
+    "Invalid preset",
   );
 });

@@ -394,3 +394,99 @@ export const query_flights = async (
 
   return { result: ff_response, blank: false, limits: limits };
 };
+
+export type FFTarget = {
+  player_id: number;
+  name: string;
+  level: number;
+  fair_fight: number;
+  bss_public: number;
+  bss_public_timestamp: number;
+  bs_estimate: number;
+  bs_estimate_human: string;
+  last_action: number;
+  source: string;
+};
+
+export type FFTargetsResponse = {
+  parameters: {
+    key: string;
+    preset: string | null;
+    minlevel: number;
+    maxlevel: number;
+    inactiveonly: number;
+    minff: number;
+    maxff: number;
+    limit: number;
+    factionless: number;
+    generated_at: number;
+  };
+  targets: FFTarget[];
+};
+
+export type FFTargetsQueryParams = {
+  minlevel?: number | null;
+  maxlevel?: number | null;
+  minff?: number | null;
+  maxff?: number | null;
+  inactiveonly?: number | null; // 0 or 1
+  factionless?: number | null; // 0 or 1
+  limit?: number | null;
+};
+
+export const query_targets = async (
+  key: TornApiKey,
+  params: FFTargetsQueryParams,
+  requester: typeof gmRequest = gmRequest,
+): Promise<FFTargetsResponse> => {
+  logger.debug("Calling query_targets with arguments", { key, params });
+  const query = new URLSearchParams([["key", key]]);
+  if (params.minlevel !== undefined && params.minlevel !== null) {
+    query.append("minlevel", params.minlevel.toString());
+  }
+  if (params.maxlevel !== undefined && params.maxlevel !== null) {
+    query.append("maxlevel", params.maxlevel.toString());
+  }
+  if (params.minff !== undefined && params.minff !== null) {
+    query.append("minff", params.minff.toString());
+  }
+  if (params.maxff !== undefined && params.maxff !== null) {
+    query.append("maxff", params.maxff.toString());
+  }
+  if (params.inactiveonly !== undefined && params.inactiveonly !== null) {
+    query.append("inactiveonly", params.inactiveonly.toString());
+  }
+  if (params.factionless !== undefined && params.factionless !== null) {
+    query.append("factionless", params.factionless.toString());
+  }
+  if (params.limit !== undefined && params.limit !== null) {
+    query.append("limit", params.limit.toString());
+  }
+
+  const url = `${FF_SCOUTER_BASE_URL}/get-targets?${query.toString()}`;
+  const resp = await requester({
+    method: "GET",
+    url: url,
+  });
+
+  if (!resp) {
+    throw new Error("Empty response from get-targets");
+  }
+
+  if (resp.status !== 200) {
+    let errMessage = `API request failed with HTTP ${resp.status}`;
+    try {
+      const errJson = JSON.parse(resp.responseText);
+      if (errJson?.error) {
+        errMessage = errJson.error;
+      }
+    } catch {}
+    throw new Error(errMessage);
+  }
+
+  const parsed = JSON.parse(resp.responseText);
+  if (parsed.error) {
+    throw new Error(parsed.error);
+  }
+  return parsed as FFTargetsResponse;
+};

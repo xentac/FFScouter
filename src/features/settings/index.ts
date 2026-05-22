@@ -31,6 +31,12 @@ export default {
     panel.chainLinkType = ffconfig.chain_link_type;
     panel.chainTabType = ffconfig.chain_tab_type;
     panel.chainFFTarget = ffconfig.chain_ff_target;
+    panel.chainMinLevel = ffconfig.chain_min_level;
+    panel.chainMaxLevel = ffconfig.chain_max_level;
+    panel.chainInactive = ffconfig.chain_inactive;
+    panel.chainMinFF = ffconfig.chain_min_ff;
+    panel.chainMaxFF = ffconfig.chain_max_ff;
+    panel.chainFactionless = ffconfig.chain_factionless;
     panel.ffHistoryEnabled = ffconfig.ff_history_enabled;
     panel.factionsColDisplay = ffconfig.factions_col_display;
     panel.debugLogs = ffconfig.debug_logs;
@@ -48,6 +54,12 @@ export default {
       ffconfig.chain_link_type = detail.chainLinkType;
       ffconfig.chain_tab_type = detail.chainTabType;
       ffconfig.chain_ff_target = detail.chainFFTarget;
+      ffconfig.chain_min_level = detail.chainMinLevel;
+      ffconfig.chain_max_level = detail.chainMaxLevel;
+      ffconfig.chain_inactive = detail.chainInactive;
+      ffconfig.chain_min_ff = detail.chainMinFF;
+      ffconfig.chain_max_ff = detail.chainMaxFF;
+      ffconfig.chain_factionless = detail.chainFactionless;
       ffconfig.ff_history_enabled = detail.ffHistoryEnabled;
       ffconfig.factions_col_display = detail.factionsColDisplay;
       ffconfig.debug_logs = detail.debugLogs;
@@ -55,6 +67,7 @@ export default {
       panel.isPremium = await check_key_status.is_premium(true);
 
       toast("Settings saved successfully!");
+      window.dispatchEvent(new CustomEvent("ff-config-updated"));
     });
 
     // Listen for the custom reset event
@@ -70,12 +83,19 @@ export default {
       panel.chainLinkType = ffconfig.chain_link_type;
       panel.chainTabType = ffconfig.chain_tab_type;
       panel.chainFFTarget = ffconfig.chain_ff_target;
+      panel.chainMinLevel = ffconfig.chain_min_level;
+      panel.chainMaxLevel = ffconfig.chain_max_level;
+      panel.chainInactive = ffconfig.chain_inactive;
+      panel.chainMinFF = ffconfig.chain_min_ff;
+      panel.chainMaxFF = ffconfig.chain_max_ff;
+      panel.chainFactionless = ffconfig.chain_factionless;
       panel.ffHistoryEnabled = ffconfig.ff_history_enabled;
       panel.factionsColDisplay = ffconfig.factions_col_display;
       panel.debugLogs = ffconfig.debug_logs;
       panel.analyticsEnabled = ffconfig.analytics_enabled;
 
       toast("Settings reset to defaults!");
+      window.dispatchEvent(new CustomEvent("ff-config-updated"));
     });
 
     // Listen for the custom clear cache event
