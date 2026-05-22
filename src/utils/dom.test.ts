@@ -178,7 +178,14 @@ test("MonitorElements observes DOM mutations and triggers handlers", () => {
   initial.className = "monitored";
   root.appendChild(initial);
 
-  const monitor = new MonitorElements(matcher, handler, root, true, 1000);
+  const monitor = new MonitorElements(
+    matcher,
+    handler,
+    root,
+    true,
+    { added: true },
+    1000,
+  );
   monitor.start();
 
   // Initial scanning triggers handler
