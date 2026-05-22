@@ -1,3 +1,5 @@
+import { ffconfig } from "./ffconfig";
+
 /**
  * Defines the available logging levels in ascending order of severity
  */
@@ -158,4 +160,7 @@ class Logger {
   }
 }
 
-export default new Logger("FFSV3");
+export default new Logger(
+  "FFSV3",
+  ffconfig.debug_logs ? LogLevel.DEBUG : LogLevel.INFO,
+);

@@ -6,6 +6,7 @@ import { check_key, type FFApiCheckResponse } from "@utils/api";
 import { check_key_status } from "@utils/check_key";
 import { torn_page, wait_for_element } from "@utils/dom";
 import { ffscouter } from "@utils/ffscouter";
+import logger, { LogLevel } from "@utils/logger";
 import { format_timestamp } from "@utils/strings";
 
 export default {
@@ -63,6 +64,11 @@ export default {
       ffconfig.ff_history_enabled = detail.ffHistoryEnabled;
       ffconfig.factions_col_display = detail.factionsColDisplay;
       ffconfig.debug_logs = detail.debugLogs;
+      if (detail.debugLogs) {
+        logger.setLevel(LogLevel.DEBUG);
+      } else {
+        logger.setLevel(LogLevel.INFO);
+      }
       ffconfig.analytics_enabled = detail.analyticsEnabled;
       panel.isPremium = await check_key_status.is_premium(true);
 

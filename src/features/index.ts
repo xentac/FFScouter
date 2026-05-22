@@ -3,6 +3,7 @@ import Faction from "./faction";
 import Fallback from "./fallback";
 import type { Feature } from "./feature";
 import FFButton from "./ff-button";
+import ItemMarket from "./item_market";
 import MiniProfile from "./mini-profile";
 import Profile from "./profile";
 import ProfileFlights from "./profile-flights";
@@ -19,6 +20,7 @@ export const Features: Feature[] = [
   MiniProfile,
   FFButton,
   Fallback,
+  ItemMarket,
 ];
 
 // You'll need to add a new export here for each feature

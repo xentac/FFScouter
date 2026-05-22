@@ -237,7 +237,7 @@ export async function wait_for_body(timeout: number): Promise<boolean> {
   return body !== null;
 }
 
-type HandlerFnOptions = {
+export type HandlerFnOptions = {
   target?: HTMLElement;
   added?: HTMLElement;
   removed?: HTMLElement;
@@ -245,6 +245,11 @@ type HandlerFnOptions = {
 
 type NodeMatcherFn = (node: HTMLElement) => boolean;
 type HandlerFn = (options: HandlerFnOptions) => void;
+type MonitorElementsOptions = {
+  target?: boolean;
+  added?: boolean;
+  removed?: boolean;
+};
 
 // Uses querySelector to
 export class MonitorElements {
@@ -252,6 +257,11 @@ export class MonitorElements {
   private handler;
   private root;
   private continuous;
+  private options: MonitorElementsOptions = {
+    target: false,
+    added: false,
+    removed: false,
+  };
 
   private started: boolean = false;
   private observer: MutationObserver;
@@ -263,29 +273,36 @@ export class MonitorElements {
     handler: HandlerFn,
     root: HTMLElement,
     continuous: boolean,
+    options: MonitorElementsOptions,
     _timeout: number,
   ) {
     this.node_matcher = node_matcher;
     this.handler = handler;
     this.root = root;
     this.continuous = continuous;
+    this.options = options;
 
-    this.observer = new MutationObserver((mutations) => {
+    this.observer = new MutationObserver(async (mutations) => {
       for (const mutation of mutations) {
         if (
+          this.options.target &&
           mutation.target instanceof HTMLElement &&
           this.node_matcher(mutation.target)
         ) {
           this.handler({ target: mutation.target });
         }
-        for (const node of mutation.addedNodes) {
-          if (node instanceof HTMLElement && this.node_matcher(node)) {
-            this.handler({ added: node });
+        if (this.options.added) {
+          for (const node of mutation.addedNodes) {
+            if (node instanceof HTMLElement && this.node_matcher(node)) {
+              this.handler({ added: node });
+            }
           }
         }
-        for (const node of mutation.removedNodes) {
-          if (node instanceof HTMLElement && this.node_matcher(node)) {
-            this.handler({ removed: node });
+        if (this.options.removed) {
+          for (const node of mutation.removedNodes) {
+            if (node instanceof HTMLElement && this.node_matcher(node)) {
+              this.handler({ removed: node });
+            }
           }
         }
       }
@@ -308,7 +325,7 @@ export class MonitorElements {
       return;
     }
 
-    this.observer.observe(this.root, { childList: true, attributes: true });
+    this.observer.observe(this.root, { childList: true });
 
     this.timer = setInterval(() => {
       if (!this.root.isConnected) {
