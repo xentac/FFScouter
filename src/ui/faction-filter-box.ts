@@ -1,6 +1,6 @@
 import { html, LitElement } from "lit";
 import { customElement, state } from "lit/decorators.js";
-import { ffconfig } from "../utils/ffconfig";
+import { FactionsColDisplay, ffconfig } from "../utils/ffconfig";
 import { parse_suffix_number } from "../utils/strings";
 
 export interface FactionFilterState {
@@ -54,6 +54,7 @@ export class FFFactionFilterBox extends LitElement {
   }
 
   @state() sortBy: FactionFilterState["sortBy"] = "none";
+  @state() colDisplay: FactionsColDisplay = FactionsColDisplay.FAIR_FIGHT;
 
   @state() activity = { ...DEFAULT_STATE.activity };
 
@@ -71,10 +72,22 @@ export class FFFactionFilterBox extends LitElement {
   override connectedCallback() {
     super.connectedCallback();
     this.loadState();
+    window.addEventListener("ff-config-updated", this.onConfigUpdated);
   }
+
+  override disconnectedCallback() {
+    window.removeEventListener("ff-config-updated", this.onConfigUpdated);
+    super.disconnectedCallback();
+  }
+
+  private onConfigUpdated = () => {
+    this.colDisplay = ffconfig.factions_col_display;
+    this.requestUpdate();
+  };
 
   private loadState() {
     this.collapsed = ffconfig.faction_filter_collapsed;
+    this.colDisplay = ffconfig.factions_col_display;
     const parsed = ffconfig.faction_filter_state;
     if (parsed) {
       const savedSortBy = parsed.sortBy ?? "none";
@@ -148,6 +161,13 @@ export class FFFactionFilterBox extends LitElement {
     this.dispatchChange();
   }
 
+  private onDisplayChange(e: Event) {
+    const val = (e.target as HTMLSelectElement).value as FactionsColDisplay;
+    this.colDisplay = val;
+    ffconfig.factions_col_display = val;
+    window.dispatchEvent(new CustomEvent("ff-config-updated"));
+  }
+
   private onActivityChange(
     key: keyof FactionFilterState["activity"],
     val: boolean,
@@ -206,6 +226,9 @@ export class FFFactionFilterBox extends LitElement {
   }
 
   override render() {
+    const isEst = this.colDisplay === FactionsColDisplay.BATTLE_STATS;
+    const sortText = isEst ? "Stats" : "FF";
+
     return html`
       <details
         class="ff-filter-box"
@@ -219,16 +242,28 @@ export class FFFactionFilterBox extends LitElement {
         </summary>
         <div class="ff-filter-grid" style="margin-top: 12px;">
           <div class="ff-filter-group grp-sort">
-            <strong>Sort Order</strong>
-            <button @click="${this.onSortToggle}">
-              ${
-                this.sortBy === "none"
-                  ? "Sort: Default"
-                  : this.sortBy === "ff-asc"
-                    ? "Sort: FF ▲"
-                    : "Sort: FF ▼"
-              }
-            </button>
+            <strong>Sort & Display</strong>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <button @click="${this.onSortToggle}" style="width: 100%;">
+                ${
+                  this.sortBy === "none"
+                    ? "Sort: Default"
+                    : this.sortBy === "ff-asc"
+                      ? `Sort: ${sortText} ▲`
+                      : `Sort: ${sortText} ▼`
+                }
+              </button>
+              <select
+                id="factions-col-display-filter"
+                .value=${this.colDisplay}
+                @change=${this.onDisplayChange}
+                style="padding: 4px; border: 1px solid var(--ffsv3-border-color); border-radius: 4px; background: var(--ffsv3-alt-bg-color); color: var(--ffsv3-text-color); font-size: 11px; cursor: pointer; height: 32px;"
+              >
+                <option value="fair_fight">Show: FF Score</option>
+                <option value="battle_stats">Show: BS Estimate</option>
+                <option value="none">Show: None (Hide)</option>
+              </select>
+            </div>
           </div>
 
           <div class="ff-filter-group grp-activity">

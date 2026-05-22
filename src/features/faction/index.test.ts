@@ -387,4 +387,171 @@ test("apply_filters_and_sort filters and sorts member rows correctly", () => {
   expect((tbody.querySelector("#row-1") as HTMLElement).style.display).toBe("");
   expect((tbody.querySelector("#row-2") as HTMLElement).style.display).toBe("");
   expect((tbody.querySelector("#row-3") as HTMLElement).style.display).toBe("");
+
+  // Test 9: Sort by BS Estimate Descending when configured to BATTLE_STATS (Row 2 [5M], then Row 1 [1M], then Row 3 [500k])
+  ffconfig.factions_col_display = FactionsColDisplay.BATTLE_STATS;
+  apply_filters_and_sort(
+    container.querySelector(".members-list") as HTMLElement,
+    {
+      sortBy: "ff-desc",
+      activity: { online: true, idle: true, offline: true },
+      status: {
+        okay: true,
+        hospital: true,
+        jail: true,
+        abroad: true,
+        traveling: true,
+      },
+      levelMin: null,
+      levelMax: null,
+      ffMin: null,
+      ffMax: null,
+    },
+  );
+
+  rows = Array.from(tbody.querySelectorAll(".table-row")) as HTMLElement[];
+  expect(rows[0]?.id).toBe("row-2");
+  expect(rows[1]?.id).toBe("row-1");
+  expect(rows[2]?.id).toBe("row-3");
+
+  // Test 10: Sort by BS Estimate Ascending when configured to BATTLE_STATS (Row 3 [500k], then Row 1 [1M], then Row 2 [5M])
+  apply_filters_and_sort(
+    container.querySelector(".members-list") as HTMLElement,
+    {
+      sortBy: "ff-asc",
+      activity: { online: true, idle: true, offline: true },
+      status: {
+        okay: true,
+        hospital: true,
+        jail: true,
+        abroad: true,
+        traveling: true,
+      },
+      levelMin: null,
+      levelMax: null,
+      ffMin: null,
+      ffMax: null,
+    },
+  );
+
+  rows = Array.from(tbody.querySelectorAll(".table-row")) as HTMLElement[];
+  expect(rows[0]?.id).toBe("row-3");
+  expect(rows[1]?.id).toBe("row-1");
+  expect(rows[2]?.id).toBe("row-2");
+});
+
+test("faction features react to ff-config-updated events", async () => {
+  ffconfig.factions_col_display = FactionsColDisplay.FAIR_FIGHT;
+
+  vi.mocked(ffscouter.get).mockResolvedValue({
+    player_id: 111 as PlayerId,
+    no_data: false,
+    fair_fight: 3.2,
+    bs_estimate: 4000000,
+    bs_estimate_human: "4M",
+  } as any);
+
+  const container = document.createElement("div");
+  container.className = "members-list";
+  container.innerHTML = `
+    <ul class="table-header">
+      <li class="member">Member</li>
+      <li class="lvl">Lvl</li>
+    </ul>
+    <ul class="table-body">
+      <li class="table-row">
+        <div class="member"><a href="/profiles.php?XID=111">Player 111</a></div>
+        <div class="lvl">50</div>
+      </li>
+    </ul>
+  `;
+  document.body.appendChild(container);
+
+  // Initialize and check starting state
+  await apply_ff_columns(container);
+  const header = container.querySelector(".ffscouter-header");
+  const cell = container.querySelector(".ffscouter-cell");
+  expect(header?.textContent).toBe("FF");
+  expect(cell?.textContent).toBe("3.20");
+
+  // Mock global feature registration or listen to updates directly as Faction Feature does
+  const onConfigUpdated = () => {
+    apply_ff_columns(container);
+  };
+  window.addEventListener("ff-config-updated", onConfigUpdated);
+
+  try {
+    // Switch display setting and fire updated event
+    ffconfig.factions_col_display = FactionsColDisplay.BATTLE_STATS;
+    window.dispatchEvent(new CustomEvent("ff-config-updated"));
+
+    // Give microtasks time to run
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(header?.textContent).toBe("Est");
+    expect(cell?.textContent).toBe("4M");
+  } finally {
+    window.removeEventListener("ff-config-updated", onConfigUpdated);
+  }
+});
+
+test("apply_ff_columns removes elements when configured to NONE but populates datasets for sorting", async () => {
+  ffconfig.factions_col_display = FactionsColDisplay.NONE;
+
+  vi.mocked(ffscouter.get).mockResolvedValue({
+    player_id: 111 as PlayerId,
+    no_data: false,
+    fair_fight: 3.5,
+    bs_estimate: 5000000,
+    bs_estimate_human: "5M",
+  } as any);
+
+  const container = document.createElement("div");
+  container.className = "members-list";
+  container.innerHTML = `
+    <ul class="table-header">
+      <li class="member">Member</li>
+      <li class="lvl">Lvl</li>
+    </ul>
+    <ul class="table-body">
+      <li class="table-row">
+        <div class="member"><a href="/profiles.php?XID=111">Player 111</a></div>
+        <div class="lvl">50</div>
+      </li>
+    </ul>
+  `;
+  document.body.appendChild(container);
+
+  // Apply with NONE first: should not inject header or cell, but should set dataset values
+  await apply_ff_columns(container);
+
+  const header = container.querySelector(".ffscouter-header");
+  const cell = container.querySelector(".ffscouter-cell");
+  expect(header).toBeNull();
+  expect(cell).toBeNull();
+
+  const row = container.querySelector(".table-row") as HTMLElement;
+  // biome-ignore lint/complexity/useLiteralKeys: tsc requires index signature lookup
+  expect(row.dataset["ffValue"]).toBe("3.5");
+  // biome-ignore lint/complexity/useLiteralKeys: tsc requires index signature lookup
+  expect(row.dataset["estValue"]).toBe("5000000");
+
+  // Now change config to FAIR_FIGHT to inject elements
+  ffconfig.factions_col_display = FactionsColDisplay.FAIR_FIGHT;
+  await apply_ff_columns(container);
+
+  expect(container.querySelector(".ffscouter-header")).not.toBeNull();
+  expect(container.querySelector(".ffscouter-cell")).not.toBeNull();
+
+  // Switch back to NONE: elements should be removed from the DOM
+  ffconfig.factions_col_display = FactionsColDisplay.NONE;
+  await apply_ff_columns(container);
+
+  expect(container.querySelector(".ffscouter-header")).toBeNull();
+  expect(container.querySelector(".ffscouter-cell")).toBeNull();
+  // Dataset values should still remain populated for sorting/filtering
+  // biome-ignore lint/complexity/useLiteralKeys: tsc requires index signature lookup
+  expect(row.dataset["ffValue"]).toBe("3.5");
+  // biome-ignore lint/complexity/useLiteralKeys: tsc requires index signature lookup
+  expect(row.dataset["estValue"]).toBe("5000000");
 });

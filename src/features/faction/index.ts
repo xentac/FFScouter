@@ -156,13 +156,13 @@ export function apply_filters_and_sort(
     }
 
     if (filters.sortBy !== "none") {
+      const isEst =
+        ffconfig.factions_col_display === FactionsColDisplay.BATTLE_STATS;
+      const valKey = isEst ? "estValue" : "ffValue";
       rows.sort((a, b) => {
         const getVal = (row: HTMLElement) => {
-          // biome-ignore lint/complexity/useLiteralKeys: tsc requires index signature lookup
-          return row.dataset["ffValue"]
-            ? // biome-ignore lint/complexity/useLiteralKeys: tsc requires index signature lookup
-              Number.parseFloat(row.dataset["ffValue"])
-            : -1;
+          const dataVal = row.dataset[valKey];
+          return dataVal ? Number.parseFloat(dataVal) : -1;
         };
 
         const valA = getVal(a);
@@ -189,26 +189,34 @@ export async function apply_ff_columns(membersList: HTMLElement) {
 
   const colDisplay = ffconfig.factions_col_display;
   const isEst = colDisplay === FactionsColDisplay.BATTLE_STATS;
+  const isNone = colDisplay === FactionsColDisplay.NONE;
   const expectedText = isEst ? "Est" : "FF";
 
   let headerLi = membersList.querySelector(
     ".ffscouter-header",
   ) as HTMLElement | null;
-  if (!headerLi) {
-    headerLi = document.createElement("li");
-    headerLi.tabIndex = 0;
-    headerLi.classList.add(
-      "table-cell",
-      "lvl",
-      "torn-divider",
-      "divider-vertical",
-      "ffscouter-header",
-    );
-    headerLvl.after(headerLi);
-  }
 
-  if (headerLi.textContent !== expectedText) {
-    headerLi.textContent = expectedText;
+  if (isNone) {
+    if (headerLi) {
+      headerLi.remove();
+    }
+  } else {
+    if (!headerLi) {
+      headerLi = document.createElement("li");
+      headerLi.tabIndex = 0;
+      headerLi.classList.add(
+        "table-cell",
+        "lvl",
+        "torn-divider",
+        "divider-vertical",
+        "ffscouter-header",
+      );
+      headerLvl.after(headerLi);
+    }
+
+    if (headerLi.textContent !== expectedText) {
+      headerLi.textContent = expectedText;
+    }
   }
 
   const rows = Array.from(
@@ -244,14 +252,20 @@ export async function apply_ff_columns(membersList: HTMLElement) {
 
   for (const rp of rowPlayers) {
     let cell = rp.row.querySelector(".ffscouter-cell") as HTMLElement | null;
-    if (!cell) {
-      cell = document.createElement("div");
-      cell.classList.add("table-cell", "lvl", "ffscouter-cell");
-      const rowLvl = rp.row.querySelector(".lvl");
-      if (rowLvl) {
-        rowLvl.after(cell);
-      } else {
-        rp.memberDiv.after(cell);
+    if (isNone) {
+      if (cell) {
+        cell.remove();
+      }
+    } else {
+      if (!cell) {
+        cell = document.createElement("div");
+        cell.classList.add("table-cell", "lvl", "ffscouter-cell");
+        const rowLvl = rp.row.querySelector(".lvl");
+        if (rowLvl) {
+          rowLvl.after(cell);
+        } else {
+          rp.memberDiv.after(cell);
+        }
       }
     }
 
@@ -262,32 +276,36 @@ export async function apply_ff_columns(membersList: HTMLElement) {
       // biome-ignore lint/complexity/useLiteralKeys: tsc requires index signature lookup
       rp.row.dataset["estValue"] = String(data.bs_estimate);
 
-      const text = isEst ? data.bs_estimate_human : format_ff_score(data);
-      const bg_color = get_ff_colour(data);
-      const text_color = get_contrast_color(bg_color);
+      if (cell) {
+        const text = isEst ? data.bs_estimate_human : format_ff_score(data);
+        const bg_color = get_ff_colour(data);
+        const text_color = get_contrast_color(bg_color);
 
-      cell.style.backgroundColor = bg_color;
-      cell.style.color = text_color;
-      cell.style.fontWeight = "bold";
-      cell.textContent = text;
+        cell.style.backgroundColor = bg_color;
+        cell.style.color = text_color;
+        cell.style.fontWeight = "bold";
+        cell.textContent = text;
 
-      if (isEst && data.distribution) {
-        const ageStr = format_relative_time(data.distribution.last_updated);
-        const agePart = ageStr ? ` ${ageStr}` : "";
-        cell.title = `Top Stats: ${data.distribution.distribution_human}${agePart}`;
-      } else {
-        cell.title = "";
+        if (isEst && data.distribution) {
+          const ageStr = format_relative_time(data.distribution.last_updated);
+          const agePart = ageStr ? ` ${ageStr}` : "";
+          cell.title = `Top Stats: ${data.distribution.distribution_human}${agePart}`;
+        } else {
+          cell.title = "";
+        }
       }
     } else {
       // biome-ignore lint/complexity/useLiteralKeys: tsc requires index signature lookup
       rp.row.dataset["ffValue"] = "";
       // biome-ignore lint/complexity/useLiteralKeys: tsc requires index signature lookup
       rp.row.dataset["estValue"] = "";
-      cell.textContent = "-";
-      cell.style.backgroundColor = "";
-      cell.style.color = "";
-      cell.style.fontWeight = "";
-      cell.title = "";
+      if (cell) {
+        cell.textContent = "-";
+        cell.style.backgroundColor = "";
+        cell.style.color = "";
+        cell.style.fontWeight = "";
+        cell.title = "";
+      }
     }
   }
 
@@ -577,6 +595,17 @@ export default {
   async run() {
     window.navigation.addEventListener("navigate", () => {
       process_page();
+    });
+
+    window.addEventListener("ff-config-updated", () => {
+      const lists = document.querySelectorAll(
+        ".members-list, .chain-attacks-list, .faction-war",
+      );
+      for (const list of lists) {
+        if (list instanceof HTMLElement) {
+          apply_ff_columns(list);
+        }
+      }
     });
 
     process_page();

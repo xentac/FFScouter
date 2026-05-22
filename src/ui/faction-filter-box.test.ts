@@ -8,6 +8,7 @@ import type { FFFactionFilterBox } from "./faction-filter-box";
 beforeEach(() => {
   document.body.innerHTML = "";
   localStorage.clear();
+  ffconfig.reset();
 });
 
 test("ff-faction-filter-box renders with default state and dispatches filter-change on connection", async () => {
@@ -124,4 +125,61 @@ test("ff-faction-filter-box supports toggle expand/collapse state saving to loca
   details.open = false;
   details.dispatchEvent(new Event("toggle"));
   expect(ffconfig.faction_filter_collapsed).toBe(true);
+});
+
+test("ff-faction-filter-box handles display mode dropdown and dynamic config updates", async () => {
+  const el = document.createElement(
+    "ff-faction-filter-box",
+  ) as FFFactionFilterBox;
+  document.body.appendChild(el);
+  await new Promise((resolve) => setTimeout(resolve, 0));
+
+  const select = el.querySelector(
+    "#factions-col-display-filter",
+  ) as HTMLSelectElement;
+  expect(select).not.toBeNull();
+  expect(select.value).toBe("battle_stats");
+
+  // Listen for config update event
+  let updatedEventFired = false;
+  const onConfigUpdated = () => {
+    updatedEventFired = true;
+  };
+  window.addEventListener("ff-config-updated", onConfigUpdated);
+
+  try {
+    // Change display to fair fight
+    select.value = "fair_fight";
+    select.dispatchEvent(new Event("change"));
+
+    expect(ffconfig.factions_col_display).toBe("fair_fight");
+    expect(updatedEventFired).toBe(true);
+
+    // Wait for display mode update to render
+    await el.updateComplete;
+
+    // Check that the sort button label changes to reflect "FF" instead of "Stats"
+    const button = el.querySelector("button");
+    button?.click(); // none -> ff-desc
+    await el.updateComplete;
+    expect(button?.textContent?.trim()).toContain("FF ▼");
+
+    // Simulate updating from settings panel (external configuration update)
+    ffconfig.factions_col_display = "battle_stats" as any;
+    window.dispatchEvent(new CustomEvent("ff-config-updated"));
+    await el.updateComplete;
+
+    expect(select.value).toBe("battle_stats");
+    expect(button?.textContent?.trim()).toContain("Stats ▼");
+
+    // Change display to none
+    select.value = "none";
+    select.dispatchEvent(new Event("change"));
+
+    expect(ffconfig.factions_col_display).toBe("none");
+    await el.updateComplete;
+    expect(button?.textContent?.trim()).toContain("FF ▼");
+  } finally {
+    window.removeEventListener("ff-config-updated", onConfigUpdated);
+  }
 });

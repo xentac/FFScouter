@@ -28,6 +28,7 @@ export enum ChainTabType {
 export enum FactionsColDisplay {
   FAIR_FIGHT = "fair_fight",
   BATTLE_STATS = "battle_stats",
+  NONE = "none",
 }
 
 export const CONFIG_DEFAULTS = {

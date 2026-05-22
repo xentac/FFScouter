@@ -540,6 +540,7 @@ export class FFSettingsPanel extends LitElement {
             >
               <option value="fair_fight">FF Score</option>
               <option value="battle_stats">BS Estimate</option>
+              <option value="none">None (Hide Column)</option>
             </select>
           </div>
 
