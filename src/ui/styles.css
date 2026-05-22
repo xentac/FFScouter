@@ -215,3 +215,95 @@ ff-flight-profile-status {
   color: #fff;
   text-decoration: underline;
 }
+
+ff-faction-filter-box {
+  display: block;
+}
+
+.ff-filter-box {
+  background-color: var(--ffsv3-bg-color);
+  border: 1px solid var(--ffsv3-border-color);
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  color: var(--ffsv3-text-color);
+  font-family: Arial, sans-serif;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.ff-filter-box h3 {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  font-weight: bold;
+  border-bottom: 1px solid var(--ffsv3-border-color);
+  padding-bottom: 6px;
+}
+
+.ff-filter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.ff-filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ff-filter-group h4 {
+  margin: 0 0 4px 0;
+  font-size: 12px;
+  font-weight: bold;
+  color: var(--ffsv3-text-color);
+  opacity: 0.8;
+}
+
+.ff-filter-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+}
+
+.ff-filter-options label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.ff-filter-range-inputs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ff-filter-range-inputs input {
+  width: 60px;
+  padding: 4px 6px;
+  border: 1px solid var(--ffsv3-border-color);
+  border-radius: 4px;
+  background: var(--ffsv3-alt-bg-color);
+  color: var(--ffsv3-text-color);
+  font-size: 12px;
+}
+
+.ff-filter-box button {
+  padding: 6px 10px;
+  border: 1px solid var(--ffsv3-border-color);
+  border-radius: 4px;
+  background: var(--ffsv3-alt-bg-color);
+  color: var(--ffsv3-text-color);
+  font-size: 12px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: background-color 0.2s;
+}
+
+.ff-filter-box button:hover {
+  background-color: var(--ffsv3-hover-color);
+}

@@ -10,8 +10,129 @@ import {
 } from "@utils/strings";
 import type { PlayerId } from "@utils/types";
 import { type Feature, StartTime } from "../feature";
+import "@ui/faction-filter-box";
+import type { FactionFilterState } from "@ui/faction-filter-box";
 
 const FEATURE_NAME = "faction";
+
+// Re-entrancy guard to prevent layout loop on DOM mutation sorting
+let isApplying = false;
+
+export function apply_filters_and_sort(
+  membersList: HTMLElement,
+  filters: FactionFilterState,
+) {
+  if (isApplying) return;
+  isApplying = true;
+
+  try {
+    const tbody = membersList.querySelector(".table-body");
+    if (!tbody) return;
+
+    const rows = Array.from(
+      tbody.querySelectorAll(":scope > .table-row"),
+    ) as HTMLElement[];
+
+    for (const row of rows) {
+      // Activity
+      const activityImg = row.querySelector(".icons img");
+      const activity = (
+        activityImg?.getAttribute("alt") || "offline"
+      ).toLowerCase();
+      const matchesActivity =
+        (activity === "online" && filters.activity.online) ||
+        (activity === "idle" && filters.activity.idle) ||
+        (activity === "offline" && filters.activity.offline);
+
+      // Status
+      let status = "okay";
+      const statusCell = row.querySelector(".status");
+      if (statusCell) {
+        if (
+          statusCell.classList.contains("traveling") ||
+          statusCell.querySelector(".traveling")
+        ) {
+          status = "traveling";
+        } else if (
+          statusCell.classList.contains("hospital") ||
+          statusCell.querySelector(".hospital")
+        ) {
+          status = "hospital";
+        } else if (
+          statusCell.classList.contains("jail") ||
+          statusCell.querySelector(".jail")
+        ) {
+          status = "jail";
+        } else if (
+          statusCell.classList.contains("abroad") ||
+          statusCell.querySelector(".abroad")
+        ) {
+          status = "abroad";
+        } else {
+          status = "okay";
+        }
+      }
+      const matchesStatus =
+        (status === "okay" && filters.status.okay) ||
+        (status === "traveling" && filters.status.traveling) ||
+        (status === "hospital" && filters.status.hospital) ||
+        (status === "jail" && filters.status.jail) ||
+        (status === "abroad" && filters.status.abroad);
+
+      // Level
+      const levelCell = row.querySelector(".lvl:not(.ffscouter-cell)");
+      const level = levelCell
+        ? Number.parseInt(levelCell.textContent || "0", 10)
+        : 0;
+      const matchesLevel =
+        (filters.levelMin === null || level >= filters.levelMin) &&
+        (filters.levelMax === null || level <= filters.levelMax);
+
+      // FF Range
+      // biome-ignore lint/complexity/useLiteralKeys: tsc requires index signature lookup
+      const ffVal = row.dataset["ffValue"]
+        ? // biome-ignore lint/complexity/useLiteralKeys: tsc requires index signature lookup
+          Number.parseFloat(row.dataset["ffValue"])
+        : null;
+      const matchesFF =
+        ffVal === null ||
+        ((filters.ffMin === null || ffVal >= filters.ffMin) &&
+          (filters.ffMax === null || ffVal <= filters.ffMax));
+
+      if (matchesActivity && matchesStatus && matchesLevel && matchesFF) {
+        row.style.display = "";
+      } else {
+        row.style.display = "none";
+      }
+    }
+
+    if (filters.sortBy !== "none") {
+      rows.sort((a, b) => {
+        const getVal = (row: HTMLElement) => {
+          // biome-ignore lint/complexity/useLiteralKeys: tsc requires index signature lookup
+          return row.dataset["ffValue"]
+            ? // biome-ignore lint/complexity/useLiteralKeys: tsc requires index signature lookup
+              Number.parseFloat(row.dataset["ffValue"])
+            : -1;
+        };
+
+        const valA = getVal(a);
+        const valB = getVal(b);
+
+        if (filters.sortBy.endsWith("asc")) {
+          return valA - valB;
+        }
+        return valB - valA;
+      });
+
+      for (const row of rows) {
+        tbody.appendChild(row);
+      }
+    }
+  } finally {
+    isApplying = false;
+  }
+}
 
 export async function apply_ff_columns(membersList: HTMLElement) {
   const headerLvl = membersList.querySelector(".table-header > .lvl");
@@ -43,7 +164,7 @@ export async function apply_ff_columns(membersList: HTMLElement) {
 
   const rows = Array.from(
     membersList.querySelectorAll(".table-body > .table-row"),
-  );
+  ) as HTMLElement[];
   const rowPlayers = rows
     .map((row) => {
       const memberDiv = row.querySelector(".member");
@@ -87,6 +208,11 @@ export async function apply_ff_columns(membersList: HTMLElement) {
 
     const data = dataMap.get(rp.player_id);
     if (data && !data.no_data) {
+      // biome-ignore lint/complexity/useLiteralKeys: tsc requires index signature lookup
+      rp.row.dataset["ffValue"] = String(data.fair_fight);
+      // biome-ignore lint/complexity/useLiteralKeys: tsc requires index signature lookup
+      rp.row.dataset["estValue"] = String(data.bs_estimate);
+
       const text = isEst ? data.bs_estimate_human : format_ff_score(data);
       const bg_color = get_ff_colour(data);
       const text_color = get_contrast_color(bg_color);
@@ -104,6 +230,10 @@ export async function apply_ff_columns(membersList: HTMLElement) {
         cell.title = "";
       }
     } else {
+      // biome-ignore lint/complexity/useLiteralKeys: tsc requires index signature lookup
+      rp.row.dataset["ffValue"] = "";
+      // biome-ignore lint/complexity/useLiteralKeys: tsc requires index signature lookup
+      rp.row.dataset["estValue"] = "";
       cell.textContent = "-";
       cell.style.backgroundColor = "";
       cell.style.color = "";
@@ -111,74 +241,187 @@ export async function apply_ff_columns(membersList: HTMLElement) {
       cell.title = "";
     }
   }
+
+  // Trigger filtering and sorting if filter box is connected
+  const filterBox = membersList.parentNode?.querySelector(
+    "ff-faction-filter-box",
+  ) as any;
+  if (filterBox?.activity) {
+    apply_filters_and_sort(membersList, {
+      sortBy: filterBox.sortBy ?? "none",
+      activity: filterBox.activity,
+      status: filterBox.status,
+      levelMin: filterBox.levelMin ?? null,
+      levelMax: filterBox.levelMax ?? null,
+      ffMin: filterBox.ffMin ?? null,
+      ffMax: filterBox.ffMax ?? null,
+    });
+  }
+}
+
+function inject_filter_box(membersList: HTMLElement) {
+  const parent = membersList.parentNode;
+  if (!parent) return;
+
+  let filterBox = parent.querySelector(
+    "ff-faction-filter-box",
+  ) as HTMLElement | null;
+  if (!filterBox) {
+    filterBox = document.createElement("ff-faction-filter-box");
+    filterBox.addEventListener("filter-change", (e: any) => {
+      apply_filters_and_sort(membersList, e.detail);
+    });
+    parent.insertBefore(filterBox, membersList);
+  }
+}
+
+function initialize_features(membersList: HTMLElement) {
+  inject_filter_box(membersList);
+  apply_ff_columns(membersList);
+
+  const target = membersList.querySelector(".table-body") || membersList;
+  const attributeObserver = new MutationObserver((mutations) => {
+    if (isApplying) return;
+
+    let shouldReapply = false;
+    for (const m of mutations) {
+      if (m.type === "attributes") {
+        if (
+          m.attributeName === "alt" &&
+          m.target instanceof HTMLImageElement &&
+          m.target.closest(".icons")
+        ) {
+          shouldReapply = true;
+          break;
+        }
+        if (
+          m.attributeName === "class" &&
+          m.target instanceof HTMLElement &&
+          m.target.closest(".status")
+        ) {
+          shouldReapply = true;
+          break;
+        }
+      }
+    }
+
+    if (shouldReapply) {
+      const filterBox = membersList.parentNode?.querySelector(
+        "ff-faction-filter-box",
+      ) as any;
+      if (filterBox?.activity) {
+        apply_filters_and_sort(membersList, {
+          sortBy: filterBox.sortBy ?? "none",
+          activity: filterBox.activity,
+          status: filterBox.status,
+          levelMin: filterBox.levelMin ?? 1,
+          levelMax: filterBox.levelMax ?? 100,
+          ffMin: filterBox.ffMin ?? 1,
+          ffMax: filterBox.ffMax ?? null,
+        });
+      }
+    }
+  });
+
+  attributeObserver.observe(target, {
+    attributes: true,
+    attributeFilter: ["class", "alt"],
+    subtree: true,
+  });
+
+  const cleanupInterval = setInterval(() => {
+    if (!membersList.isConnected) {
+      clearInterval(cleanupInterval);
+      attributeObserver.disconnect();
+    }
+  }, 10_000);
+}
+
+function setup_faction_features(membersList: HTMLElement) {
+  const tbody = membersList.querySelector(".table-body");
+  const hasRows = tbody?.querySelector(".table-row");
+
+  if (hasRows) {
+    initialize_features(membersList);
+  } else {
+    const loadObserver = new MutationObserver((_mutations, obs) => {
+      const currentTbody = membersList.querySelector(".table-body");
+      if (currentTbody?.querySelector(".table-row")) {
+        obs.disconnect();
+        initialize_features(membersList);
+      }
+    });
+    loadObserver.observe(membersList, { childList: true, subtree: true });
+
+    const cleanupInterval = setInterval(() => {
+      if (!membersList.isConnected) {
+        clearInterval(cleanupInterval);
+        loadObserver.disconnect();
+      }
+    }, 10_000);
+  }
 }
 
 const monitor_member_list = (
   root: HTMLElement = document.body,
   _dynamic = false,
 ) => {
-  if (
-    root.classList.contains("members-list") ||
-    root.querySelector(".members-list")
-  ) {
-    const membersList = root.classList.contains("members-list")
-      ? root
-      : (root.querySelector(".members-list") as HTMLElement);
-    apply_ff_columns(membersList);
-  } else {
-    apply_ff_members_list(root);
-  }
+  const membersList = root.classList.contains("members-list")
+    ? root
+    : (root.querySelector(".members-list") as HTMLElement);
 
-  const m = new MutationObserver((mutations) => {
-    let shouldUpdate = false;
-    for (const mutation of mutations) {
-      for (const node of mutation.addedNodes) {
-        if (
-          node instanceof HTMLElement &&
-          (node.querySelector(".honor-text-wrap") ||
-            node.querySelector(".member") ||
-            node.classList.contains("table-row"))
-        ) {
-          shouldUpdate = true;
-          break;
+  if (membersList) {
+    setup_faction_features(membersList);
+  } else {
+    // Check elements on page load dynamically
+    apply_ff_members_list(root);
+
+    const loadObserver = new MutationObserver((mutations, obs) => {
+      const foundList = root.classList.contains("members-list")
+        ? root
+        : (root.querySelector(".members-list") as HTMLElement);
+      if (foundList) {
+        obs.disconnect();
+        setup_faction_features(foundList);
+      } else {
+        let shouldUpdate = false;
+        for (const m of mutations) {
+          for (const node of m.addedNodes) {
+            if (
+              node instanceof HTMLElement &&
+              (node.querySelector(".honor-text-wrap") ||
+                node.querySelector(".member"))
+            ) {
+              shouldUpdate = true;
+              break;
+            }
+          }
+          if (shouldUpdate) break;
+        }
+        if (shouldUpdate) {
+          apply_ff_members_list(root);
         }
       }
-      if (shouldUpdate) break;
-    }
-    if (shouldUpdate) {
-      if (
-        root.classList.contains("members-list") ||
-        root.querySelector(".members-list")
-      ) {
-        const membersList = root.classList.contains("members-list")
-          ? root
-          : (root.querySelector(".members-list") as HTMLElement);
-        apply_ff_columns(membersList);
-      } else {
-        apply_ff_members_list(root);
+    });
+
+    loadObserver.observe(root, { childList: true, subtree: true });
+
+    const cleanupInterval = setInterval(() => {
+      if (!root.isConnected) {
+        clearInterval(cleanupInterval);
+        loadObserver.disconnect();
       }
-    }
-  });
-
-  m.observe(root, { childList: true, subtree: true });
-
-  const cleanupInterval = setInterval(() => {
-    if (!root.isConnected) {
-      clearInterval(cleanupInterval);
-      m.disconnect();
-    }
-  }, 10_000);
+    }, 10_000);
+  }
 };
 
 const apply_ff_members_list = (root: HTMLElement = document.body) => {
-  if (
-    root.classList.contains("members-list") ||
-    root.querySelector(".members-list")
-  ) {
-    const membersList = root.classList.contains("members-list")
-      ? root
-      : (root.querySelector(".members-list") as HTMLElement);
-    apply_ff_columns(membersList);
+  const membersList = root.classList.contains("members-list")
+    ? root
+    : (root.querySelector(".members-list") as HTMLElement);
+
+  if (membersList) {
+    setup_faction_features(membersList);
     return;
   }
   let found_honor = false;
@@ -246,7 +489,7 @@ const process_page = () => {
     const existing_descriptions = node.querySelector(".descriptions");
     if (existing_descriptions) {
       const faction_war = await wait_for_element(
-        ".faction-war",
+        " .faction-war",
         10_000,
         existing_descriptions,
       );

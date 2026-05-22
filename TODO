@@ -5,5 +5,11 @@
 
 # Before releasing version 3.0
 
-- Add FF/Est column support to faction pages
+- Add FF Chain button again
 - Add improved sorting interface by adding an extra sorting line with options for Default or one of our Fair Fight parameters
+  - Verify that it works with torntools' extra added rows
+  - Stack checkboxes vertically
+- Make exposed summary function which, given a timeframe, returns the number of page/hash and which feature found or was ignored for the arrow
+  - That way we can use the table to monitor migration progress
+- Maybe move the honour bar replacement code to its own feature so that we can track the two separately
+- Add note that war monitor has been removed and users should use Torn War Stuff Enhanced to FF Scouter Settings
