@@ -363,4 +363,28 @@ test("apply_filters_and_sort filters and sorts member rows correctly", () => {
   expect((tbody.querySelector("#row-3") as HTMLElement).style.display).toBe(
     "none",
   );
+
+  // Test 8: Empty activity and status filters act as if everything is checked
+  apply_filters_and_sort(
+    container.querySelector(".members-list") as HTMLElement,
+    {
+      sortBy: "none",
+      activity: { online: false, idle: false, offline: false },
+      status: {
+        okay: false,
+        hospital: false,
+        jail: false,
+        abroad: false,
+        traveling: false,
+      },
+      levelMin: null,
+      levelMax: null,
+      ffMin: null,
+      ffMax: null,
+    },
+  );
+
+  expect((tbody.querySelector("#row-1") as HTMLElement).style.display).toBe("");
+  expect((tbody.querySelector("#row-2") as HTMLElement).style.display).toBe("");
+  expect((tbody.querySelector("#row-3") as HTMLElement).style.display).toBe("");
 });

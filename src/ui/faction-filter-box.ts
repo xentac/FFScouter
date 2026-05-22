@@ -65,6 +65,7 @@ export class FFFactionFilterBox extends LitElement {
   @state() ffMax: number | null = null;
   @state() statsMin: string | null = null;
   @state() statsMax: string | null = null;
+  @state() private collapsed = false;
 
   override connectedCallback() {
     super.connectedCallback();
@@ -72,6 +73,8 @@ export class FFFactionFilterBox extends LitElement {
   }
 
   private loadState() {
+    this.collapsed =
+      localStorage.getItem("ffsv3-faction-filter-collapsed") === "true";
     const saved = localStorage.getItem("ffsv3-faction-filter-state");
     if (saved) {
       try {
@@ -95,6 +98,15 @@ export class FFFactionFilterBox extends LitElement {
     }
     // Dispatch initial state once loaded
     this.dispatchChange();
+  }
+
+  private onToggle(e: Event) {
+    const details = e.currentTarget as HTMLDetailsElement;
+    this.collapsed = !details.open;
+    localStorage.setItem(
+      "ffsv3-faction-filter-collapsed",
+      String(this.collapsed),
+    );
   }
 
   private saveState() {
@@ -137,9 +149,9 @@ export class FFFactionFilterBox extends LitElement {
 
   private onSortToggle() {
     if (this.sortBy === "none") {
-      this.sortBy = "ff-asc";
-    } else if (this.sortBy === "ff-asc") {
       this.sortBy = "ff-desc";
+    } else if (this.sortBy === "ff-desc") {
+      this.sortBy = "ff-asc";
     } else {
       this.sortBy = "none";
     }
@@ -206,10 +218,18 @@ export class FFFactionFilterBox extends LitElement {
 
   override render() {
     return html`
-      <div class="ff-filter-box">
-        <h3>FFScouter Filter & Sort Controls</h3>
-        <div class="ff-filter-grid">
-          <div class="ff-filter-group">
+      <details
+        class="ff-filter-box"
+        ?open="${!this.collapsed}"
+        @toggle="${this.onToggle}"
+      >
+        <summary
+          style="cursor: pointer; font-weight: bold; font-size: 14px; outline: none; user-select: none;"
+        >
+          FFScouter Filter & Sort Controls
+        </summary>
+        <div class="ff-filter-grid" style="margin-top: 12px;">
+          <div class="ff-filter-group grp-sort">
             <strong>Sort Order</strong>
             <button @click="${this.onSortToggle}">
               ${
@@ -222,7 +242,7 @@ export class FFFactionFilterBox extends LitElement {
             </button>
           </div>
 
-          <div class="ff-filter-group">
+          <div class="ff-filter-group grp-activity">
             <strong>Activity</strong>
             <div class="ff-filter-options">
               <label>
@@ -255,7 +275,7 @@ export class FFFactionFilterBox extends LitElement {
             </div>
           </div>
 
-          <div class="ff-filter-group">
+          <div class="ff-filter-group grp-status">
             <strong>Status</strong>
             <div class="ff-filter-options">
               <label>
@@ -306,7 +326,7 @@ export class FFFactionFilterBox extends LitElement {
             </div>
           </div>
 
-          <div class="ff-filter-group">
+          <div class="ff-filter-group grp-level">
             <strong>Level Range</strong>
             <div class="ff-filter-range-inputs">
               <input
@@ -327,7 +347,7 @@ export class FFFactionFilterBox extends LitElement {
             </div>
           </div>
 
-          <div class="ff-filter-group">
+          <div class="ff-filter-group grp-ff">
             <strong>FF Range</strong>
             <div class="ff-filter-range-inputs">
               <input
@@ -348,7 +368,7 @@ export class FFFactionFilterBox extends LitElement {
             </div>
           </div>
 
-          <div class="ff-filter-group">
+          <div class="ff-filter-group grp-stats">
             <strong>Stats Range</strong>
             <div class="ff-filter-range-inputs">
               <input
@@ -367,7 +387,7 @@ export class FFFactionFilterBox extends LitElement {
             </div>
           </div>
         </div>
-      </div>
+      </details>
     `;
   }
 }

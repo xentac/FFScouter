@@ -220,6 +220,13 @@ ff-faction-filter-box {
   display: block;
 }
 
+.ff-filter-box,
+.ff-filter-box *,
+.ff-filter-box *::before,
+.ff-filter-box *::after {
+  box-sizing: border-box !important;
+}
+
 .ff-filter-box {
   background-color: var(--ffsv3-bg-color);
   border: 1px solid var(--ffsv3-border-color);
@@ -231,18 +238,52 @@ ff-faction-filter-box {
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
 }
 
-.ff-filter-box h3 {
-  margin: 0 0 12px 0;
+.ff-filter-box summary {
+  cursor: pointer;
   font-size: 14px;
   font-weight: bold;
+  outline: none;
+  user-select: none;
+}
+
+.ff-filter-box[open] summary {
   border-bottom: 1px solid var(--ffsv3-border-color);
   padding-bottom: 6px;
+  margin-bottom: 12px;
 }
 
 .ff-filter-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.grp-sort {
+  order: 1;
+}
+.grp-level {
+  order: 2;
+}
+.grp-activity {
+  order: 3;
+}
+.grp-status {
+  order: 4;
+}
+.grp-ff {
+  order: 5;
+}
+.grp-stats {
+  order: 6;
+}
+
+@media (min-width: 784px) {
+  .ff-filter-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .ff-filter-grid > * {
+    order: 0;
+  }
 }
 
 .ff-filter-group {
@@ -267,17 +308,21 @@ ff-faction-filter-box {
 .ff-filter-range-inputs {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 4px;
 }
 
 .ff-filter-range-inputs input {
-  width: 60px;
-  padding: 4px 6px;
+  flex: 1;
+  width: 0;
+  min-width: 30px;
+  max-width: 80px;
+  padding: 4px;
   border: 1px solid var(--ffsv3-border-color);
   border-radius: 4px;
   background: var(--ffsv3-alt-bg-color);
   color: var(--ffsv3-text-color);
-  font-size: 12px;
+  font-size: 11px;
+  text-align: center;
 }
 
 .ff-filter-box button {

@@ -27,8 +27,8 @@ test("ff-faction-filter-box renders with default state and dispatches filter-cha
   expect(events[0].activity.online).toBe(true);
   expect(events[0].status.okay).toBe(true);
 
-  const h3 = el.querySelector("h3");
-  expect(h3?.textContent).toBe("FFScouter Filter & Sort Controls");
+  const summary = el.querySelector("summary");
+  expect(summary?.textContent?.trim()).toBe("FFScouter Filter & Sort Controls");
 });
 
 test("ff-faction-filter-box updates state and dispatches filter-change event on input change", async () => {
@@ -46,11 +46,11 @@ test("ff-faction-filter-box updates state and dispatches filter-change event on 
   const button = el.querySelector("button");
   expect(button).not.toBeNull();
   if (button) {
-    button.click(); // none -> ff-asc
-    button.click(); // ff-asc -> ff-desc
+    button.click(); // none -> ff-desc
+    button.click(); // ff-desc -> ff-asc
   }
 
-  expect(events[events.length - 1].sortBy).toBe("ff-desc");
+  expect(events[events.length - 1].sortBy).toBe("ff-asc");
 
   const onlineCheckbox = el.querySelector(
     'input[type="checkbox"]',
@@ -99,4 +99,27 @@ test("ff-faction-filter-box updates state and dispatches filter-change event on 
     maxInput.dispatchEvent(new Event("input"));
     expect(events[events.length - 1].statsMax).toBe(2000000000);
   }
+});
+
+test("ff-faction-filter-box supports toggle expand/collapse state saving to localStorage", async () => {
+  localStorage.setItem("ffsv3-faction-filter-collapsed", "true");
+  const el = document.createElement(
+    "ff-faction-filter-box",
+  ) as FFFactionFilterBox;
+  document.body.appendChild(el);
+  await new Promise((resolve) => setTimeout(resolve, 0));
+
+  const details = el.querySelector("details") as HTMLDetailsElement;
+  expect(details).not.toBeNull();
+  expect(details.open).toBe(false);
+
+  // Open the accordion
+  details.open = true;
+  details.dispatchEvent(new Event("toggle"));
+  expect(localStorage.getItem("ffsv3-faction-filter-collapsed")).toBe("false");
+
+  // Collapse the accordion
+  details.open = false;
+  details.dispatchEvent(new Event("toggle"));
+  expect(localStorage.getItem("ffsv3-faction-filter-collapsed")).toBe("true");
 });

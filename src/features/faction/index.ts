@@ -55,7 +55,12 @@ export function apply_filters_and_sort(
       const activity = (
         activityImg?.getAttribute("alt") || "offline"
       ).toLowerCase();
+      const allActivityUnchecked =
+        !filters.activity.online &&
+        !filters.activity.idle &&
+        !filters.activity.offline;
       const matchesActivity =
+        allActivityUnchecked ||
         (activity === "online" && filters.activity.online) ||
         (activity === "idle" && filters.activity.idle) ||
         (activity === "offline" && filters.activity.offline);
@@ -88,7 +93,14 @@ export function apply_filters_and_sort(
           status = "okay";
         }
       }
+      const allStatusUnchecked =
+        !filters.status.okay &&
+        !filters.status.traveling &&
+        !filters.status.hospital &&
+        !filters.status.jail &&
+        !filters.status.abroad;
       const matchesStatus =
+        allStatusUnchecked ||
         (status === "okay" && filters.status.okay) ||
         (status === "traveling" && filters.status.traveling) ||
         (status === "hospital" && filters.status.hospital) ||
