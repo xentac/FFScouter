@@ -73,4 +73,30 @@ test("ff-faction-filter-box updates state and dispatches filter-change event on 
   }
 
   expect(events[events.length - 1].levelMin).toBe(50);
+
+  const filterGroups = Array.from(el.querySelectorAll(".ff-filter-group"));
+  const statsGroup = filterGroups.find(
+    (g) => g.querySelector("strong")?.textContent === "Stats Range",
+  );
+  expect(statsGroup).toBeDefined();
+
+  if (statsGroup) {
+    const minInput = statsGroup.querySelector(
+      'input[placeholder="Min"]',
+    ) as HTMLInputElement;
+    const maxInput = statsGroup.querySelector(
+      'input[placeholder="Max"]',
+    ) as HTMLInputElement;
+
+    expect(minInput).not.toBeNull();
+    expect(maxInput).not.toBeNull();
+
+    minInput.value = "1.5m";
+    minInput.dispatchEvent(new Event("input"));
+    expect(events[events.length - 1].statsMin).toBe(1500000);
+
+    maxInput.value = "2b";
+    maxInput.dispatchEvent(new Event("input"));
+    expect(events[events.length - 1].statsMax).toBe(2000000000);
+  }
 });

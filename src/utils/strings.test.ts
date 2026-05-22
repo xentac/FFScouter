@@ -9,6 +9,7 @@ import {
   get_contrast_color,
   get_ff_arrow_colour,
   get_ff_colour,
+  parse_suffix_number,
 } from "./strings";
 import type { FFDataComplete } from "./types";
 
@@ -207,4 +208,30 @@ test("format_timestamp formats seconds timestamp correctly", () => {
   const expected = `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())} - ${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear() - 2000}`;
 
   expect(format_timestamp(nowSec)).toEqual(expected);
+});
+
+test("parse_suffix_number parses numeric suffixes correctly", () => {
+  expect(parse_suffix_number("")).toBeNull();
+  expect(parse_suffix_number("   ")).toBeNull();
+  expect(parse_suffix_number("abc")).toBeNull();
+  expect(parse_suffix_number("1.2.3")).toBeNull();
+
+  expect(parse_suffix_number("123")).toEqual(123);
+  expect(parse_suffix_number("12.5")).toEqual(12.5);
+  expect(parse_suffix_number(" 456 ")).toEqual(456);
+
+  expect(parse_suffix_number("10k")).toEqual(10000);
+  expect(parse_suffix_number("1.5M")).toEqual(1500000);
+  expect(parse_suffix_number("2.5 b")).toEqual(2500000000);
+  expect(parse_suffix_number("1t")).toEqual(1000000000000);
+  expect(parse_suffix_number("0.5k")).toEqual(500);
+
+  expect(parse_suffix_number("10K")).toEqual(10000);
+  expect(parse_suffix_number("1.5m")).toEqual(1500000);
+  expect(parse_suffix_number("2.5B")).toEqual(2500000000);
+  expect(parse_suffix_number("1T")).toEqual(1000000000000);
+
+  expect(parse_suffix_number("1,000")).toEqual(1000);
+  expect(parse_suffix_number("1,500k")).toEqual(1500000);
+  expect(parse_suffix_number("1,000,000m")).toEqual(1000000000000);
 });

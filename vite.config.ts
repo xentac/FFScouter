@@ -39,8 +39,8 @@ export default defineConfig(({ mode }) => {
   const edition = EDITIONS[editionKey] || EDITIONS.standard;
   // biome-ignore lint/complexity/useLiteralKeys: tsc requires index signature lookup
   const version = process.env["BUILD_VERSION"] || getFallbackVersion();
-  // biome-ignore lint/complexity/useLiteralKeys: tsc requires index signature lookup
   const userscriptName =
+    // biome-ignore lint/complexity/useLiteralKeys: tsc requires index signature lookup
     process.env["BUILD_NAME"] ||
     (isDev ? `${edition.name} - DEV` : edition.name);
 

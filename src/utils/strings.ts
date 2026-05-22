@@ -174,3 +174,29 @@ export function format_timestamp(ts: TimestampSec) {
   const d = new Date(ts * 1000);
   return `${d.getHours() < 10 ? "0" : ""}${d.getHours()}:${d.getMinutes() < 10 ? "0" : ""}${d.getMinutes()}:${d.getSeconds() < 10 ? "0" : ""}${d.getSeconds()} - ${d.getDate() < 10 ? "0" : ""}${d.getDate()}/${d.getMonth() + 1 < 10 ? "0" : ""}${d.getMonth() + 1}/${d.getFullYear() - 2000}`;
 }
+
+export function parse_suffix_number(valStr: string): number | null {
+  const trimmed = valStr.trim().toLowerCase();
+  if (!trimmed) return null;
+
+  const match = trimmed.match(/^([\d.,]+)\s*([kmbt])?$/);
+  if (!match) return null;
+
+  const matchStr = match[1];
+  if (!matchStr) return null;
+
+  const num = Number(matchStr.replace(/,/g, ""));
+  if (Number.isNaN(num)) return null;
+
+  const suffix = match[2];
+  if (!suffix) return num;
+
+  const multiplier: Record<string, number> = {
+    k: 1_000,
+    m: 1_000_000,
+    b: 1_000_000_000,
+    t: 1_000_000_000_000,
+  };
+
+  return num * (multiplier[suffix] ?? 1);
+}

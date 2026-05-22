@@ -7,11 +7,11 @@ import {
   format_relative_time,
   get_contrast_color,
   get_ff_colour,
+  parse_suffix_number,
 } from "@utils/strings";
 import type { PlayerId } from "@utils/types";
 import { type Feature, StartTime } from "../feature";
 import "@ui/faction-filter-box";
-import type { FactionFilterState } from "@ui/faction-filter-box";
 
 const FEATURE_NAME = "faction";
 
@@ -20,7 +20,23 @@ let isApplying = false;
 
 export function apply_filters_and_sort(
   membersList: HTMLElement,
-  filters: FactionFilterState,
+  filters: {
+    sortBy: "ff-asc" | "ff-desc" | "none";
+    activity: { online: boolean; idle: boolean; offline: boolean };
+    status: {
+      okay: boolean;
+      traveling: boolean;
+      hospital: boolean;
+      jail: boolean;
+      abroad: boolean;
+    };
+    levelMin: number | null;
+    levelMax: number | null;
+    ffMin: number | null;
+    ffMax: number | null;
+    statsMin?: number | null;
+    statsMax?: number | null;
+  },
 ) {
   if (isApplying) return;
   isApplying = true;
@@ -99,7 +115,28 @@ export function apply_filters_and_sort(
         ((filters.ffMin === null || ffVal >= filters.ffMin) &&
           (filters.ffMax === null || ffVal <= filters.ffMax));
 
-      if (matchesActivity && matchesStatus && matchesLevel && matchesFF) {
+      // Stats Range
+      // biome-ignore lint/complexity/useLiteralKeys: tsc requires index signature lookup
+      const estVal = row.dataset["estValue"]
+        ? // biome-ignore lint/complexity/useLiteralKeys: tsc requires index signature lookup
+          Number.parseInt(row.dataset["estValue"], 10)
+        : null;
+      const matchesStats =
+        estVal === null ||
+        ((filters.statsMin === undefined ||
+          filters.statsMin === null ||
+          estVal >= filters.statsMin) &&
+          (filters.statsMax === undefined ||
+            filters.statsMax === null ||
+            estVal <= filters.statsMax));
+
+      if (
+        matchesActivity &&
+        matchesStatus &&
+        matchesLevel &&
+        matchesFF &&
+        matchesStats
+      ) {
         row.style.display = "";
       } else {
         row.style.display = "none";
@@ -255,6 +292,12 @@ export async function apply_ff_columns(membersList: HTMLElement) {
       levelMax: filterBox.levelMax ?? null,
       ffMin: filterBox.ffMin ?? null,
       ffMax: filterBox.ffMax ?? null,
+      statsMin: filterBox.statsMin
+        ? parse_suffix_number(filterBox.statsMin)
+        : null,
+      statsMax: filterBox.statsMax
+        ? parse_suffix_number(filterBox.statsMax)
+        : null,
     });
   }
 }
@@ -318,6 +361,12 @@ function initialize_features(membersList: HTMLElement) {
           levelMax: filterBox.levelMax ?? 100,
           ffMin: filterBox.ffMin ?? 1,
           ffMax: filterBox.ffMax ?? null,
+          statsMin: filterBox.statsMin
+            ? parse_suffix_number(filterBox.statsMin)
+            : null,
+          statsMax: filterBox.statsMax
+            ? parse_suffix_number(filterBox.statsMax)
+            : null,
         });
       }
     }

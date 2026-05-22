@@ -1,5 +1,6 @@
 import { html, LitElement } from "lit";
 import { customElement, state } from "lit/decorators.js";
+import { parse_suffix_number } from "../utils/strings";
 
 export interface FactionFilterState {
   sortBy: "ff-asc" | "ff-desc" | "none";
@@ -19,6 +20,8 @@ export interface FactionFilterState {
   levelMax: number | null;
   ffMin: number | null;
   ffMax: number | null;
+  statsMin: string | null;
+  statsMax: string | null;
 }
 
 const DEFAULT_STATE: FactionFilterState = {
@@ -39,6 +42,8 @@ const DEFAULT_STATE: FactionFilterState = {
   levelMax: 100,
   ffMin: 1,
   ffMax: null,
+  statsMin: null,
+  statsMax: null,
 };
 
 @customElement("ff-faction-filter-box")
@@ -58,6 +63,8 @@ export class FFFactionFilterBox extends LitElement {
 
   @state() ffMin: number | null = null;
   @state() ffMax: number | null = null;
+  @state() statsMin: string | null = null;
+  @state() statsMax: string | null = null;
 
   override connectedCallback() {
     super.connectedCallback();
@@ -80,6 +87,8 @@ export class FFFactionFilterBox extends LitElement {
         this.levelMax = parsed.levelMax ?? null;
         this.ffMin = parsed.ffMin ?? null;
         this.ffMax = parsed.ffMax ?? null;
+        this.statsMin = parsed.statsMin ?? null;
+        this.statsMax = parsed.statsMax ?? null;
       } catch (_e) {
         // Use defaults on error
       }
@@ -97,6 +106,8 @@ export class FFFactionFilterBox extends LitElement {
       levelMax: this.levelMax,
       ffMin: this.ffMin,
       ffMax: this.ffMax,
+      statsMin: this.statsMin,
+      statsMax: this.statsMax,
     };
     localStorage.setItem(
       "ffsv3-faction-filter-state",
@@ -115,6 +126,8 @@ export class FFFactionFilterBox extends LitElement {
           levelMax: this.levelMax,
           ffMin: this.ffMin,
           ffMax: this.ffMax,
+          statsMin: this.statsMin ? parse_suffix_number(this.statsMin) : null,
+          statsMax: this.statsMax ? parse_suffix_number(this.statsMax) : null,
         },
         bubbles: true,
         composed: true,
@@ -124,9 +137,9 @@ export class FFFactionFilterBox extends LitElement {
 
   private onSortToggle() {
     if (this.sortBy === "none") {
-      this.sortBy = "ff-desc";
-    } else if (this.sortBy === "ff-desc") {
       this.sortBy = "ff-asc";
+    } else if (this.sortBy === "ff-asc") {
+      this.sortBy = "ff-desc";
     } else {
       this.sortBy = "none";
     }
@@ -175,6 +188,17 @@ export class FFFactionFilterBox extends LitElement {
       this.ffMin = val;
     } else {
       this.ffMax = val;
+    }
+    this.saveState();
+    this.dispatchChange();
+  }
+
+  private onStatsChange(type: "min" | "max", valStr: string) {
+    const val = valStr.trim() === "" ? null : valStr;
+    if (type === "min") {
+      this.statsMin = val;
+    } else {
+      this.statsMax = val;
     }
     this.saveState();
     this.dispatchChange();
@@ -320,6 +344,25 @@ export class FFFactionFilterBox extends LitElement {
                 placeholder="Max"
                 .value="${this.ffMax !== null ? String(this.ffMax) : ""}"
                 @input="${(e: any) => this.onFFChange("max", e.target.value)}"
+              />
+            </div>
+          </div>
+
+          <div class="ff-filter-group">
+            <strong>Stats Range</strong>
+            <div class="ff-filter-range-inputs">
+              <input
+                type="text"
+                placeholder="Min"
+                .value="${this.statsMin !== null ? this.statsMin : ""}"
+                @input="${(e: any) => this.onStatsChange("min", e.target.value)}"
+              />
+              <span>to</span>
+              <input
+                type="text"
+                placeholder="Max"
+                .value="${this.statsMax !== null ? this.statsMax : ""}"
+                @input="${(e: any) => this.onStatsChange("max", e.target.value)}"
               />
             </div>
           </div>

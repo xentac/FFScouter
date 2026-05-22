@@ -333,4 +333,34 @@ test("apply_filters_and_sort filters and sorts member rows correctly", () => {
   expect(rows[0]?.id).toBe("row-3");
   expect(rows[1]?.id).toBe("row-1");
   expect(rows[2]?.id).toBe("row-2");
+
+  // Test 7: Filter Stats range - stats >= 1,000,000 and <= 4,000,000 (only Player 111 - 1M)
+  apply_filters_and_sort(
+    container.querySelector(".members-list") as HTMLElement,
+    {
+      sortBy: "none",
+      activity: { online: true, idle: true, offline: true },
+      status: {
+        okay: true,
+        hospital: true,
+        jail: true,
+        abroad: true,
+        traveling: true,
+      },
+      levelMin: null,
+      levelMax: null,
+      ffMin: null,
+      ffMax: null,
+      statsMin: 1000000,
+      statsMax: 4000000,
+    },
+  );
+
+  expect((tbody.querySelector("#row-1") as HTMLElement).style.display).toBe("");
+  expect((tbody.querySelector("#row-2") as HTMLElement).style.display).toBe(
+    "none",
+  );
+  expect((tbody.querySelector("#row-3") as HTMLElement).style.display).toBe(
+    "none",
+  );
 });
