@@ -274,3 +274,26 @@ test("can save, recover, and purge analytics entries", async () => {
 
   await c.delete_db();
 });
+
+test("clear_analytics clears all analytics entries in cache", async () => {
+  const c = new FFCache("test-analytics-clear");
+
+  const entry = {
+    feature: "fallback",
+    player_id: 123,
+    status: "applied" as const,
+    url: "https://www.torn.com/profiles.php",
+    params: "?XID=123",
+    hash: "",
+  };
+
+  await c.add_analytics(entry);
+  const logsBefore = await c.get_analytics();
+  expect(logsBefore.length).toEqual(1);
+
+  await c.clear_analytics();
+  const logsAfter = await c.get_analytics();
+  expect(logsAfter.length).toEqual(0);
+
+  await c.delete_db();
+});

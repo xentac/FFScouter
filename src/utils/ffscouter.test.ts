@@ -622,3 +622,126 @@ test("get_flights cache hit rechecking after recheck_until finalizes", async () 
 
   await c.delete_db();
 });
+
+test("get_aggregated_analytics aggregates and groups entries correctly", async () => {
+  const c = new FFCache("test-scouter-analytics-aggregation");
+  const f = new FFScouter(config, c);
+
+  const mockEntries = [
+    {
+      feature: "fallback",
+      player_id: 1,
+      status: "applied" as const,
+      url: "https://www.torn.com/profiles.php",
+      params: "?XID=1&sid=mySession",
+      hash: "",
+      timestamp: Date.now(),
+    },
+    {
+      feature: "fallback",
+      player_id: 2,
+      status: "applied" as const,
+      url: "https://www.torn.com/profiles.php",
+      params: "?XID=2&sid=mySession",
+      hash: "",
+      timestamp: Date.now(),
+    },
+    {
+      feature: "fallback",
+      player_id: 3,
+      status: "ignored" as const,
+      url: "https://www.torn.com/profiles.php",
+      params: "?XID=3&step=profile",
+      hash: "",
+      timestamp: Date.now(),
+    },
+    {
+      feature: "mini-profile",
+      player_id: 4,
+      status: "applied" as const,
+      url: "https://www.torn.com/index.php",
+      params: "",
+      hash: "#/step=profile",
+      timestamp: Date.now(),
+    },
+    {
+      feature: "mini-profile",
+      player_id: 5,
+      status: "applied" as const,
+      url: "https://www.torn.com/index.php",
+      params: "",
+      hash: "#/sid=mySession",
+      timestamp: Date.now(),
+    },
+    {
+      feature: "faction",
+      player_id: 6,
+      status: "applied" as const,
+      url: "https://www.torn.com/factions.php",
+      params: "",
+      hash: "",
+      timestamp: Date.now(),
+    },
+  ];
+
+  vi.spyOn(c, "get_analytics").mockResolvedValue(mockEntries);
+
+  const aggregated = await f.get_aggregated_analytics();
+
+  expect(aggregated).toEqual(
+    expect.arrayContaining([
+      {
+        url: "https://www.torn.com/profiles.php",
+        param: "mySession",
+        feature: "fallback",
+        status: "applied",
+        count: 2,
+      },
+      {
+        url: "https://www.torn.com/profiles.php",
+        param: "profile",
+        feature: "fallback",
+        status: "ignored",
+        count: 1,
+      },
+      {
+        url: "https://www.torn.com/index.php",
+        param: "profile",
+        feature: "mini-profile",
+        status: "applied",
+        count: 1,
+      },
+      {
+        url: "https://www.torn.com/index.php",
+        param: "mySession",
+        feature: "mini-profile",
+        status: "applied",
+        count: 1,
+      },
+      {
+        url: "https://www.torn.com/factions.php",
+        param: "-",
+        feature: "faction",
+        status: "applied",
+        count: 1,
+      },
+    ]),
+  );
+
+  expect(aggregated.length).toBe(5);
+
+  await c.delete_db();
+});
+
+test("clear_analytics on FFScouter calls c.clear_analytics", async () => {
+  const c = new FFCache("test-scouter-analytics-clear");
+  const f = new FFScouter(config, c);
+
+  const spyClear = vi.spyOn(c, "clear_analytics").mockResolvedValue();
+
+  await f.clear_analytics();
+
+  expect(spyClear).toHaveBeenCalledTimes(1);
+
+  await c.delete_db();
+});

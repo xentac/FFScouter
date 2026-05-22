@@ -10,6 +10,7 @@ import { FFCache } from "./ffcache";
 import { type FFConfig, ffconfig } from "./ffconfig";
 import logger from "./logger";
 import type {
+  AggregateAnalyticsRow,
   AnalyticsEntry,
   CachedFlightData,
   FFData,
@@ -488,6 +489,60 @@ export class FFScouter {
     } catch (err) {
       logger.error("Failed to get analytics entries", err);
       return [];
+    }
+  };
+
+  get_aggregated_analytics = async (): Promise<AggregateAnalyticsRow[]> => {
+    const entries = await this.get_analytics_entries();
+    const aggregationMap = new Map<string, AggregateAnalyticsRow>();
+
+    for (const entry of entries) {
+      let param = "";
+      if (entry.params) {
+        const searchParams = new URLSearchParams(entry.params);
+        param = searchParams.get("sid") || searchParams.get("step") || "";
+      }
+      if (!param && entry.hash) {
+        let hashClean = entry.hash;
+        if (hashClean.startsWith("#/")) {
+          hashClean = hashClean.substring(2);
+        } else if (hashClean.startsWith("#") || hashClean.startsWith("/")) {
+          hashClean = hashClean.substring(1);
+        }
+        if (!hashClean.startsWith("!") && !hashClean.startsWith("?")) {
+          hashClean = `?${hashClean}`;
+        }
+        const hashParams = new URLSearchParams(hashClean);
+        param = hashParams.get("sid") || hashParams.get("step") || "";
+      }
+
+      const key = `${entry.url}|${param}|${entry.feature}|${entry.status}`;
+      const existing = aggregationMap.get(key);
+      if (existing) {
+        existing.count++;
+      } else {
+        aggregationMap.set(key, {
+          url: entry.url,
+          param: param || "-",
+          feature: entry.feature,
+          status: entry.status,
+          count: 1,
+        });
+      }
+    }
+
+    return Array.from(aggregationMap.values());
+  };
+
+  get analytics_enabled(): boolean {
+    return this.config.analytics_enabled;
+  }
+
+  clear_analytics = async (): Promise<void> => {
+    try {
+      await this.cache.clear_analytics();
+    } catch (err) {
+      logger.error("Failed to clear analytics entries", err);
     }
   };
 }

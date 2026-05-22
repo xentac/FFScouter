@@ -20,9 +20,10 @@ async function main() {
 
   init_ui();
 
-  (unsafeWindow as any).ffscouter = ffscouter;
-
-  (window as any).ffscouter = ffscouter;
+  if (ffscouter.analytics_enabled) {
+    (unsafeWindow as any).ffscouter = ffscouter;
+    (window as any).ffscouter = ffscouter;
+  }
 
   // todo: settings panel
 

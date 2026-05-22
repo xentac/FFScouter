@@ -67,3 +67,11 @@ export interface AnalyticsEntry {
   hash: string;
   timestamp: Timestamp;
 }
+
+export interface AggregateAnalyticsRow {
+  url: string;
+  param: string;
+  feature: string;
+  status: "applied" | "ignored";
+  count: number;
+}

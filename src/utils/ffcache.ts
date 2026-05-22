@@ -293,6 +293,14 @@ export class FFCache {
     return res;
   };
 
+  clear_analytics = async (): Promise<void> => {
+    const db = await this.open();
+    const tx = db.transaction(STORES.ANALYTICS, "readwrite");
+    await tx.store.clear();
+    await tx.done;
+    this.close();
+  };
+
   dump = async () => {
     const db = await this.open();
 
