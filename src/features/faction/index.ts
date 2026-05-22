@@ -185,13 +185,25 @@ export function apply_filters_and_sort(
       });
 
       for (const row of rows) {
-        let last_action_row = null;
-        if (row.nextElementSibling?.classList.contains("tt-last-action")) {
-          last_action_row = row.nextSibling;
+        const extra_tt_rows = [];
+        let next_sibling = row.nextElementSibling;
+        while (
+          next_sibling &&
+          !next_sibling?.classList.contains("table-row") &&
+          !next_sibling?.classList.contains("enemy") &&
+          !next_sibling?.classList.contains("enemy")
+        ) {
+          if (
+            next_sibling.classList.contains("tt-last-action") ||
+            next_sibling.classList.contains("tt-stats-estimate")
+          ) {
+            extra_tt_rows.push(next_sibling);
+          }
+          next_sibling = next_sibling.nextElementSibling;
         }
         tbody.appendChild(row);
-        if (last_action_row) {
-          tbody.appendChild(last_action_row);
+        for (const r of extra_tt_rows) {
+          tbody.appendChild(r);
         }
       }
     }
