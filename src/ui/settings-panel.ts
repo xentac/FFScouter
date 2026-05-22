@@ -418,102 +418,116 @@ export class FFSettingsPanel extends LitElement {
           ${
             this.draftChainButtonEnabled
               ? html`
-                <div class="chain-options-flex-container">
-                  <div class="input-row-inline">
-                    <label for="chain-link-type">Chain button opens:</label>
-                    <select
-                      id="chain-link-type"
-                      .value=${this.draftChainLinkType}
-                      @change=${this.onChainLinkTypeChange}
-                    >
-                      <option value="attack">Attack page</option>
-                      <option value="profile">Profile page</option>
-                    </select>
-                  </div>
+                  <div class="chain-options-flex-container">
+                    <div class="input-row-inline">
+                      <label for="chain-link-type">Chain button opens:</label>
+                      <select
+                        id="chain-link-type"
+                        .value=${this.draftChainLinkType}
+                        @change=${this.onChainLinkTypeChange}
+                      >
+                        <option value="attack">Attack page</option>
+                        <option value="profile">Profile page</option>
+                      </select>
+                    </div>
 
-                  <div class="input-row-inline">
-                    <label for="chain-tab-type">Open in:</label>
-                    <select
-                      id="chain-tab-type"
-                      .value=${this.draftChainTabType}
-                      @change=${this.onChainTabTypeChange}
-                    >
-                      <option value="newtab">New tab</option>
-                      <option value="sametab">Same tab</option>
-                    </select>
-                  </div>
+                    <div class="input-row-inline">
+                      <label for="chain-tab-type">Open in:</label>
+                      <select
+                        id="chain-tab-type"
+                        .value=${this.draftChainTabType}
+                        @change=${this.onChainTabTypeChange}
+                      >
+                        <option value="newtab">New tab</option>
+                        <option value="sametab">Same tab</option>
+                      </select>
+                    </div>
 
-                  <div class="input-row-inline">
-                    <label for="chain-min-level">Min Level:</label>
-                    <input
-                      id="chain-min-level"
-                      type="number"
-                      class="ff-number"
-                      placeholder="No min"
-                      .value=${this.draftChainMinLevel === null ? "" : this.draftChainMinLevel.toString()}
-                      @input=${this.onChainMinLevelInput}
-                    />
-                  </div>
+                    <div class="input-row-inline">
+                      <label for="chain-min-level">Min Level:</label>
+                      <input
+                        id="chain-min-level"
+                        type="number"
+                        class="ff-number"
+                        placeholder="No min"
+                        .value=${
+                          this.draftChainMinLevel === null
+                            ? ""
+                            : this.draftChainMinLevel.toString()
+                        }
+                        @input=${this.onChainMinLevelInput}
+                      />
+                    </div>
 
-                  <div class="input-row-inline">
-                    <label for="chain-max-level">Max Level:</label>
-                    <input
-                      id="chain-max-level"
-                      type="number"
-                      class="ff-number"
-                      placeholder="No max"
-                      .value=${this.draftChainMaxLevel === null ? "" : this.draftChainMaxLevel.toString()}
-                      @input=${this.onChainMaxLevelInput}
-                    />
-                  </div>
+                    <div class="input-row-inline">
+                      <label for="chain-max-level">Max Level:</label>
+                      <input
+                        id="chain-max-level"
+                        type="number"
+                        class="ff-number"
+                        placeholder="No max"
+                        .value=${
+                          this.draftChainMaxLevel === null
+                            ? ""
+                            : this.draftChainMaxLevel.toString()
+                        }
+                        @input=${this.onChainMaxLevelInput}
+                      />
+                    </div>
 
-                  <div class="input-row-inline">
-                    <label for="chain-min-ff">Min FF:</label>
-                    <input
-                      id="chain-min-ff"
-                      type="number"
-                      step="0.1"
-                      class="ff-number"
-                      placeholder="No min"
-                      .value=${this.draftChainMinFF === null ? "" : this.draftChainMinFF.toString()}
-                      @input=${this.onChainMinFFInput}
-                    />
-                  </div>
+                    <div class="input-row-inline">
+                      <label for="chain-min-ff">Min FF:</label>
+                      <input
+                        id="chain-min-ff"
+                        type="number"
+                        step="0.1"
+                        class="ff-number"
+                        placeholder="No min"
+                        .value=${
+                          this.draftChainMinFF === null
+                            ? ""
+                            : this.draftChainMinFF.toString()
+                        }
+                        @input=${this.onChainMinFFInput}
+                      />
+                    </div>
 
-                  <div class="input-row-inline">
-                    <label for="chain-max-ff">Max FF:</label>
-                    <input
-                      id="chain-max-ff"
-                      type="number"
-                      step="0.1"
-                      class="ff-number"
-                      placeholder="No max"
-                      .value=${this.draftChainMaxFF.toString()}
-                      @input=${this.onChainMaxFFInput}
-                    />
-                  </div>
+                    <div class="input-row-inline">
+                      <label for="chain-max-ff">Max FF:</label>
+                      <input
+                        id="chain-max-ff"
+                        type="number"
+                        step="0.1"
+                        class="ff-number"
+                        placeholder="No max"
+                        .value=${this.draftChainMaxFF.toString()}
+                        @input=${this.onChainMaxFFInput}
+                      />
+                    </div>
 
-                  <div class="input-row-inline">
-                    <input
-                      id="chain-inactive"
-                      type="checkbox"
-                      .checked=${this.draftChainInactive}
-                      @change=${this.onChainInactiveChange}
-                    />
-                    <label for="chain-inactive">Inactive Only (14+ days offline)</label>
-                  </div>
+                    <div class="input-row-inline">
+                      <input
+                        id="chain-inactive"
+                        type="checkbox"
+                        .checked=${this.draftChainInactive}
+                        @change=${this.onChainInactiveChange}
+                      />
+                      <label for="chain-inactive"
+                        >Inactive Only (14+ days offline)</label
+                      >
+                    </div>
 
-                  <div class="input-row-inline">
-                    <input
-                      id="chain-factionless"
-                      type="checkbox"
-                      .checked=${this.draftChainFactionless}
-                      @change=${this.onChainFactionlessChange}
-                    />
-                    <label for="chain-factionless">Factionless Only</label>
+                    <div class="input-row-inline">
+                      <input
+                        id="chain-factionless"
+                        type="checkbox"
+                        .checked=${this.draftChainFactionless}
+                        @change=${this.onChainFactionlessChange}
+                      />
+                      <label for="chain-factionless">Factionless Only</label>
+                    </div>
                   </div>
-                </div>
-              `
+                `
               : ""
           }
 
@@ -527,6 +541,10 @@ export class FFSettingsPanel extends LitElement {
             />
             <label for="ff-history-toggle"
               >Enable FF History button on profile pages</label
+            >
+          </div>
+          <div class="input-row-inline">
+            <label>War Monitor is no longer supported. Use <a target="_blank" href="https://greasyfork.org/en/scripts/529238-torn-war-stuff-enhanced">Torn War Stuff Enhanced</a> instead.</a></label
             >
           </div>
 

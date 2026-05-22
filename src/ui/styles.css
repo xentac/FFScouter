@@ -164,7 +164,7 @@ ff-settings-panel .ff-api-explanation {
   line-height: 1.5;
 }
 
-ff-settings-panel .ff-api-explanation a {
+ff-settings-panel a {
   color: var(--ffsv3-success-color);
   text-decoration: underline;
 }
