@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FF Scouter V3
 // @namespace    xentac-v3
-// @version      3.0-alpha2
+// @version      3.0-alpha3
 // @author       xentac [3354782], MAVRI [2402357], rDacted [2670953], Weav3r [1853324], Glasnost [1844049]
 // @description  Shows the expected Fair Fight score against targets and faction war status
 // @license      GPLv3
@@ -178,6 +178,408 @@
       return `${url}?${query}`;
     }
   }
+  var Time = ((Time2) => {
+    Time2[Time2["Seconds"] = 1e3] = "Seconds";
+    Time2[Time2["Minutes"] = 6e4] = "Minutes";
+    Time2[Time2["Hours"] = 36e5] = "Hours";
+    Time2[Time2["Days"] = 864e5] = "Days";
+    Time2[Time2["Weeks"] = 6048e5] = "Weeks";
+    Time2[Time2["Years"] = 31536e6] = "Years";
+    return Time2;
+  })(Time || {});
+  class Storage {
+constructor(prefix) {
+      this.prefix = prefix;
+    }
+set(key, value, expireConfig) {
+      try {
+        const item = {
+          value,
+          expiration: expireConfig ? Date.now() + expireConfig.amount * (expireConfig.unit || 6e4) : null
+        };
+        localStorage.setItem(this.prefix + key, JSON.stringify(item));
+      } catch (error) {
+        logger.error(`Error storing item '${key}':`, error);
+      }
+    }
+get(key) {
+      try {
+        const itemStr = localStorage.getItem(this.prefix + key);
+        if (!itemStr) {
+          return null;
+        }
+        let item = null;
+        try {
+          item = JSON.parse(itemStr);
+        } catch {
+          item = null;
+        }
+        if (!item) {
+          logger.warn(`Key '${key}' has invalid JSON in it.`);
+          this.remove(key);
+          return null;
+        }
+        if (item.expiration && Date.now() > item.expiration) {
+          this.remove(key);
+          logger.debug(`Key ${key} has expired.`);
+          return null;
+        }
+        return item.value;
+      } catch (error) {
+        logger.error(`Error retrieving item '${key}':`, error);
+        return null;
+      }
+    }
+remove(key) {
+      try {
+        localStorage.removeItem(this.prefix + key);
+      } catch (error) {
+        logger.error(`Error removing item [${key}]:`, error);
+      }
+    }
+has(key) {
+      return this.get(key) !== null;
+    }
+clearAll() {
+      try {
+        Object.keys(localStorage).filter((key) => key.startsWith(this.prefix)).forEach((key) => {
+          localStorage.removeItem(key);
+        });
+      } catch (error) {
+        logger.error("Error clearing storage:", error);
+      }
+    }
+  }
+  var FactionsColDisplay = ((FactionsColDisplay2) => {
+    FactionsColDisplay2["FAIR_FIGHT"] = "fair_fight";
+    FactionsColDisplay2["BATTLE_STATS"] = "battle_stats";
+    FactionsColDisplay2["NONE"] = "none";
+    return FactionsColDisplay2;
+  })(FactionsColDisplay || {});
+  const CONFIG_DEFAULTS = {
+    low_ff_range: 2,
+    high_ff_range: 4,
+    max_ff_range: 8,
+    chain_button_enabled: true,
+    chain_link_type: "attack",
+    chain_tab_type: "newtab",
+    chain_ff_target: 2.5,
+    ff_history_enabled: true,
+    factions_col_display: "battle_stats",
+    debug_logs: false,
+    analytics_enabled: false,
+    chain_min_level: null,
+    chain_max_level: null,
+    chain_inactive: true,
+    chain_min_ff: null,
+    chain_max_ff: 2.5,
+    chain_factionless: false
+  };
+  class FFConfig {
+    constructor(name) {
+      this.name = name;
+      this.storage = new Storage(this.name);
+    }
+    get key() {
+      return this.storage.get(
+        "key"
+) ?? "";
+    }
+    set key(key) {
+      this.storage.set("key", key);
+    }
+    get low_ff_range() {
+      return this.storage.get(
+        "low_ff_range"
+) ?? CONFIG_DEFAULTS.low_ff_range;
+    }
+    set low_ff_range(val) {
+      this.storage.set("low_ff_range", val);
+    }
+    get high_ff_range() {
+      return this.storage.get(
+        "high_ff_range"
+) ?? CONFIG_DEFAULTS.high_ff_range;
+    }
+    set high_ff_range(val) {
+      this.storage.set("high_ff_range", val);
+    }
+    get max_ff_range() {
+      return this.storage.get(
+        "max_ff_range"
+) ?? CONFIG_DEFAULTS.max_ff_range;
+    }
+    set max_ff_range(val) {
+      this.storage.set("max_ff_range", val);
+    }
+    get chain_button_enabled() {
+      return this.storage.get(
+        "chain_button_enabled"
+) ?? CONFIG_DEFAULTS.chain_button_enabled;
+    }
+    set chain_button_enabled(val) {
+      this.storage.set("chain_button_enabled", val);
+    }
+    get chain_link_type() {
+      return this.storage.get(
+        "chain_link_type"
+) ?? CONFIG_DEFAULTS.chain_link_type;
+    }
+    set chain_link_type(val) {
+      this.storage.set("chain_link_type", val);
+    }
+    get chain_tab_type() {
+      return this.storage.get(
+        "chain_tab_type"
+) ?? CONFIG_DEFAULTS.chain_tab_type;
+    }
+    set chain_tab_type(val) {
+      this.storage.set("chain_tab_type", val);
+    }
+    get chain_ff_target() {
+      return this.storage.get(
+        "chain_ff_target"
+) ?? CONFIG_DEFAULTS.chain_ff_target;
+    }
+    set chain_ff_target(val) {
+      this.storage.set("chain_ff_target", val);
+    }
+    get chain_min_level() {
+      return this.storage.get(
+        "chain_min_level"
+) ?? CONFIG_DEFAULTS.chain_min_level;
+    }
+    set chain_min_level(val) {
+      if (val === null) {
+        this.storage.remove(
+          "chain_min_level"
+);
+      } else {
+        this.storage.set("chain_min_level", val);
+      }
+    }
+    get chain_max_level() {
+      return this.storage.get(
+        "chain_max_level"
+) ?? CONFIG_DEFAULTS.chain_max_level;
+    }
+    set chain_max_level(val) {
+      if (val === null) {
+        this.storage.remove(
+          "chain_max_level"
+);
+      } else {
+        this.storage.set("chain_max_level", val);
+      }
+    }
+    get chain_inactive() {
+      return this.storage.get(
+        "chain_inactive"
+) ?? CONFIG_DEFAULTS.chain_inactive;
+    }
+    set chain_inactive(val) {
+      this.storage.set("chain_inactive", val);
+    }
+    get chain_min_ff() {
+      return this.storage.get(
+        "chain_min_ff"
+) ?? CONFIG_DEFAULTS.chain_min_ff;
+    }
+    set chain_min_ff(val) {
+      if (val === null) {
+        this.storage.remove(
+          "chain_min_ff"
+);
+      } else {
+        this.storage.set("chain_min_ff", val);
+      }
+    }
+    get chain_max_ff() {
+      return this.storage.get(
+        "chain_max_ff"
+) ?? this.storage.get(
+        "chain_ff_target"
+) ?? CONFIG_DEFAULTS.chain_max_ff;
+    }
+    set chain_max_ff(val) {
+      this.storage.set("chain_max_ff", val);
+      this.storage.set("chain_ff_target", val);
+    }
+    get chain_factionless() {
+      return this.storage.get(
+        "chain_factionless"
+) ?? CONFIG_DEFAULTS.chain_factionless;
+    }
+    set chain_factionless(val) {
+      this.storage.set("chain_factionless", val);
+    }
+    get ff_history_enabled() {
+      return this.storage.get(
+        "ff_history_enabled"
+) ?? CONFIG_DEFAULTS.ff_history_enabled;
+    }
+    set ff_history_enabled(val) {
+      this.storage.set("ff_history_enabled", val);
+    }
+    get factions_col_display() {
+      return this.storage.get(
+        "factions_col_display"
+) ?? CONFIG_DEFAULTS.factions_col_display;
+    }
+    set factions_col_display(val) {
+      this.storage.set("factions_col_display", val);
+    }
+    get debug_logs() {
+      return this.storage.get(
+        "debug_logs"
+) ?? CONFIG_DEFAULTS.debug_logs;
+    }
+    set debug_logs(val) {
+      this.storage.set("debug_logs", val);
+    }
+    get analytics_enabled() {
+      return this.storage.get(
+        "analytics_enabled"
+) ?? CONFIG_DEFAULTS.analytics_enabled;
+    }
+    set analytics_enabled(val) {
+      this.storage.set("analytics_enabled", val);
+    }
+    get faction_filter_state() {
+      return this.storage.get(
+        "faction_filter_state"
+) ?? null;
+    }
+    set faction_filter_state(val) {
+      this.storage.set("faction_filter_state", val);
+    }
+    get faction_filter_collapsed() {
+      return this.storage.get(
+        "faction_filter_collapsed"
+) ?? false;
+    }
+    set faction_filter_collapsed(val) {
+      this.storage.set("faction_filter_collapsed", val);
+    }
+    get war_filter_state() {
+      return this.storage.get(
+        "war_filter_state"
+) ?? null;
+    }
+    set war_filter_state(val) {
+      this.storage.set("war_filter_state", val);
+    }
+    get war_filter_collapsed() {
+      return this.storage.get(
+        "war_filter_collapsed"
+) ?? false;
+    }
+    set war_filter_collapsed(val) {
+      this.storage.set("war_filter_collapsed", val);
+    }
+    get chain_targets() {
+      return this.storage.get(
+        "chain_targets"
+);
+    }
+    set chain_targets(val) {
+      if (val === null) {
+        this.storage.remove(
+          "chain_targets"
+);
+      } else {
+        this.storage.set("chain_targets", val);
+      }
+    }
+    get chain_target_index() {
+      return this.storage.get(
+        "chain_target_index"
+) ?? 0;
+    }
+    set chain_target_index(val) {
+      this.storage.set("chain_target_index", val);
+    }
+    reset() {
+      this.storage.remove(
+        "low_ff_range"
+);
+      this.storage.remove(
+        "high_ff_range"
+);
+      this.storage.remove(
+        "max_ff_range"
+);
+      this.storage.remove(
+        "chain_button_enabled"
+);
+      this.storage.remove(
+        "chain_link_type"
+);
+      this.storage.remove(
+        "chain_tab_type"
+);
+      this.storage.remove(
+        "chain_ff_target"
+);
+      this.storage.remove(
+        "ff_history_enabled"
+);
+      this.storage.remove(
+        "factions_col_display"
+);
+      this.storage.remove(
+        "debug_logs"
+);
+      this.storage.remove(
+        "analytics_enabled"
+);
+      this.storage.remove(
+        "faction_filter_state"
+);
+      this.storage.remove(
+        "faction_filter_collapsed"
+);
+      this.storage.remove(
+        "war_filter_state"
+);
+      this.storage.remove(
+        "war_filter_collapsed"
+);
+      this.storage.remove(
+        "chain_min_level"
+);
+      this.storage.remove(
+        "chain_max_level"
+);
+      this.storage.remove(
+        "chain_inactive"
+);
+      this.storage.remove(
+        "chain_min_ff"
+);
+      this.storage.remove(
+        "chain_max_ff"
+);
+      this.storage.remove(
+        "chain_factionless"
+);
+      this.storage.remove(
+        "chain_targets"
+);
+      this.storage.remove(
+        "chain_target_index"
+);
+    }
+  }
+  const ffconfig = new FFConfig("ffsv3-config");
+  var LogLevel = ((LogLevel2) => {
+    LogLevel2[LogLevel2["DEBUG"] = 0] = "DEBUG";
+    LogLevel2[LogLevel2["INFO"] = 1] = "INFO";
+    LogLevel2[LogLevel2["WARN"] = 2] = "WARN";
+    LogLevel2[LogLevel2["ERROR"] = 3] = "ERROR";
+    LogLevel2[LogLevel2["NONE"] = 4] = "NONE";
+    return LogLevel2;
+  })(LogLevel || {});
   class Logger {
 constructor(prefix = "", level = 0) {
       this.colors = {
@@ -251,7 +653,10 @@ formatPrefix(level) {
       return level ? `${prefix} - [${level}]: ` : `${prefix}: `;
     }
   }
-  const logger = new Logger("FFSV3");
+  const logger = new Logger(
+    "FFSV3",
+    ffconfig.debug_logs ? 0 : 1
+);
   const FF_SCOUTER_BASE_URL = "https://ffscouter.com/api/v1";
   new TornApiClient({
     defaultComment: "FFScouterV3",
@@ -969,6 +1374,13 @@ event.oldVersion,
         this.close();
         return res;
       };
+      this.clear_analytics = async () => {
+        const db = await this.open();
+        const tx = db.transaction(STORES.ANALYTICS, "readwrite");
+        await tx.store.clear();
+        await tx.done;
+        this.close();
+      };
       this.dump = async () => {
         const db = await this.open();
         const tx = db.transaction(STORES.CACHE, "readonly");
@@ -988,400 +1400,6 @@ event.oldVersion,
       this.db_name = db_name;
     }
   }
-  var Time = ((Time2) => {
-    Time2[Time2["Seconds"] = 1e3] = "Seconds";
-    Time2[Time2["Minutes"] = 6e4] = "Minutes";
-    Time2[Time2["Hours"] = 36e5] = "Hours";
-    Time2[Time2["Days"] = 864e5] = "Days";
-    Time2[Time2["Weeks"] = 6048e5] = "Weeks";
-    Time2[Time2["Years"] = 31536e6] = "Years";
-    return Time2;
-  })(Time || {});
-  class Storage {
-constructor(prefix) {
-      this.prefix = prefix;
-    }
-set(key, value, expireConfig) {
-      try {
-        const item = {
-          value,
-          expiration: expireConfig ? Date.now() + expireConfig.amount * (expireConfig.unit || 6e4) : null
-        };
-        localStorage.setItem(this.prefix + key, JSON.stringify(item));
-      } catch (error) {
-        logger.error(`Error storing item '${key}':`, error);
-      }
-    }
-get(key) {
-      try {
-        const itemStr = localStorage.getItem(this.prefix + key);
-        if (!itemStr) {
-          return null;
-        }
-        let item = null;
-        try {
-          item = JSON.parse(itemStr);
-        } catch {
-          item = null;
-        }
-        if (!item) {
-          logger.warn(`Key '${key}' has invalid JSON in it.`);
-          this.remove(key);
-          return null;
-        }
-        if (item.expiration && Date.now() > item.expiration) {
-          this.remove(key);
-          logger.debug(`Key ${key} has expired.`);
-          return null;
-        }
-        return item.value;
-      } catch (error) {
-        logger.error(`Error retrieving item '${key}':`, error);
-        return null;
-      }
-    }
-remove(key) {
-      try {
-        localStorage.removeItem(this.prefix + key);
-      } catch (error) {
-        logger.error(`Error removing item [${key}]:`, error);
-      }
-    }
-has(key) {
-      return this.get(key) !== null;
-    }
-clearAll() {
-      try {
-        Object.keys(localStorage).filter((key) => key.startsWith(this.prefix)).forEach((key) => {
-          localStorage.removeItem(key);
-        });
-      } catch (error) {
-        logger.error("Error clearing storage:", error);
-      }
-    }
-  }
-  var FactionsColDisplay = ((FactionsColDisplay2) => {
-    FactionsColDisplay2["FAIR_FIGHT"] = "fair_fight";
-    FactionsColDisplay2["BATTLE_STATS"] = "battle_stats";
-    FactionsColDisplay2["NONE"] = "none";
-    return FactionsColDisplay2;
-  })(FactionsColDisplay || {});
-  const CONFIG_DEFAULTS = {
-    low_ff_range: 2,
-    high_ff_range: 4,
-    max_ff_range: 8,
-    chain_button_enabled: true,
-    chain_link_type: "attack",
-    chain_tab_type: "newtab",
-    chain_ff_target: 2.5,
-    ff_history_enabled: true,
-    factions_col_display: "battle_stats",
-    debug_logs: false,
-    analytics_enabled: false,
-    chain_min_level: null,
-    chain_max_level: null,
-    chain_inactive: true,
-    chain_min_ff: null,
-    chain_max_ff: 2.5,
-    chain_factionless: false
-  };
-  class FFConfig {
-    constructor(name) {
-      this.name = name;
-      this.storage = new Storage(this.name);
-    }
-    get key() {
-      return this.storage.get(
-        "key"
-) ?? "";
-    }
-    set key(key) {
-      this.storage.set("key", key);
-    }
-    get low_ff_range() {
-      return this.storage.get(
-        "low_ff_range"
-) ?? CONFIG_DEFAULTS.low_ff_range;
-    }
-    set low_ff_range(val) {
-      this.storage.set("low_ff_range", val);
-    }
-    get high_ff_range() {
-      return this.storage.get(
-        "high_ff_range"
-) ?? CONFIG_DEFAULTS.high_ff_range;
-    }
-    set high_ff_range(val) {
-      this.storage.set("high_ff_range", val);
-    }
-    get max_ff_range() {
-      return this.storage.get(
-        "max_ff_range"
-) ?? CONFIG_DEFAULTS.max_ff_range;
-    }
-    set max_ff_range(val) {
-      this.storage.set("max_ff_range", val);
-    }
-    get chain_button_enabled() {
-      return this.storage.get(
-        "chain_button_enabled"
-) ?? CONFIG_DEFAULTS.chain_button_enabled;
-    }
-    set chain_button_enabled(val) {
-      this.storage.set("chain_button_enabled", val);
-    }
-    get chain_link_type() {
-      return this.storage.get(
-        "chain_link_type"
-) ?? CONFIG_DEFAULTS.chain_link_type;
-    }
-    set chain_link_type(val) {
-      this.storage.set("chain_link_type", val);
-    }
-    get chain_tab_type() {
-      return this.storage.get(
-        "chain_tab_type"
-) ?? CONFIG_DEFAULTS.chain_tab_type;
-    }
-    set chain_tab_type(val) {
-      this.storage.set("chain_tab_type", val);
-    }
-    get chain_ff_target() {
-      return this.storage.get(
-        "chain_ff_target"
-) ?? CONFIG_DEFAULTS.chain_ff_target;
-    }
-    set chain_ff_target(val) {
-      this.storage.set("chain_ff_target", val);
-    }
-    get chain_min_level() {
-      return this.storage.get(
-        "chain_min_level"
-) ?? CONFIG_DEFAULTS.chain_min_level;
-    }
-    set chain_min_level(val) {
-      if (val === null) {
-        this.storage.remove(
-          "chain_min_level"
-);
-      } else {
-        this.storage.set("chain_min_level", val);
-      }
-    }
-    get chain_max_level() {
-      return this.storage.get(
-        "chain_max_level"
-) ?? CONFIG_DEFAULTS.chain_max_level;
-    }
-    set chain_max_level(val) {
-      if (val === null) {
-        this.storage.remove(
-          "chain_max_level"
-);
-      } else {
-        this.storage.set("chain_max_level", val);
-      }
-    }
-    get chain_inactive() {
-      return this.storage.get(
-        "chain_inactive"
-) ?? CONFIG_DEFAULTS.chain_inactive;
-    }
-    set chain_inactive(val) {
-      this.storage.set("chain_inactive", val);
-    }
-    get chain_min_ff() {
-      return this.storage.get(
-        "chain_min_ff"
-) ?? CONFIG_DEFAULTS.chain_min_ff;
-    }
-    set chain_min_ff(val) {
-      if (val === null) {
-        this.storage.remove(
-          "chain_min_ff"
-);
-      } else {
-        this.storage.set("chain_min_ff", val);
-      }
-    }
-    get chain_max_ff() {
-      return this.storage.get(
-        "chain_max_ff"
-) ?? this.storage.get(
-        "chain_ff_target"
-) ?? CONFIG_DEFAULTS.chain_max_ff;
-    }
-    set chain_max_ff(val) {
-      this.storage.set("chain_max_ff", val);
-      this.storage.set("chain_ff_target", val);
-    }
-    get chain_factionless() {
-      return this.storage.get(
-        "chain_factionless"
-) ?? CONFIG_DEFAULTS.chain_factionless;
-    }
-    set chain_factionless(val) {
-      this.storage.set("chain_factionless", val);
-    }
-    get ff_history_enabled() {
-      return this.storage.get(
-        "ff_history_enabled"
-) ?? CONFIG_DEFAULTS.ff_history_enabled;
-    }
-    set ff_history_enabled(val) {
-      this.storage.set("ff_history_enabled", val);
-    }
-    get factions_col_display() {
-      return this.storage.get(
-        "factions_col_display"
-) ?? CONFIG_DEFAULTS.factions_col_display;
-    }
-    set factions_col_display(val) {
-      this.storage.set("factions_col_display", val);
-    }
-    get debug_logs() {
-      return this.storage.get(
-        "debug_logs"
-) ?? CONFIG_DEFAULTS.debug_logs;
-    }
-    set debug_logs(val) {
-      this.storage.set("debug_logs", val);
-    }
-    get analytics_enabled() {
-      return this.storage.get(
-        "analytics_enabled"
-) ?? CONFIG_DEFAULTS.analytics_enabled;
-    }
-    set analytics_enabled(val) {
-      this.storage.set("analytics_enabled", val);
-    }
-    get faction_filter_state() {
-      return this.storage.get(
-        "faction_filter_state"
-) ?? null;
-    }
-    set faction_filter_state(val) {
-      this.storage.set("faction_filter_state", val);
-    }
-    get faction_filter_collapsed() {
-      return this.storage.get(
-        "faction_filter_collapsed"
-) ?? false;
-    }
-    set faction_filter_collapsed(val) {
-      this.storage.set("faction_filter_collapsed", val);
-    }
-    get war_filter_state() {
-      return this.storage.get(
-        "war_filter_state"
-) ?? null;
-    }
-    set war_filter_state(val) {
-      this.storage.set("war_filter_state", val);
-    }
-    get war_filter_collapsed() {
-      return this.storage.get(
-        "war_filter_collapsed"
-) ?? false;
-    }
-    set war_filter_collapsed(val) {
-      this.storage.set("war_filter_collapsed", val);
-    }
-    get chain_targets() {
-      return this.storage.get(
-        "chain_targets"
-);
-    }
-    set chain_targets(val) {
-      if (val === null) {
-        this.storage.remove(
-          "chain_targets"
-);
-      } else {
-        this.storage.set("chain_targets", val);
-      }
-    }
-    get chain_target_index() {
-      return this.storage.get(
-        "chain_target_index"
-) ?? 0;
-    }
-    set chain_target_index(val) {
-      this.storage.set("chain_target_index", val);
-    }
-    reset() {
-      this.storage.remove(
-        "low_ff_range"
-);
-      this.storage.remove(
-        "high_ff_range"
-);
-      this.storage.remove(
-        "max_ff_range"
-);
-      this.storage.remove(
-        "chain_button_enabled"
-);
-      this.storage.remove(
-        "chain_link_type"
-);
-      this.storage.remove(
-        "chain_tab_type"
-);
-      this.storage.remove(
-        "chain_ff_target"
-);
-      this.storage.remove(
-        "ff_history_enabled"
-);
-      this.storage.remove(
-        "factions_col_display"
-);
-      this.storage.remove(
-        "debug_logs"
-);
-      this.storage.remove(
-        "analytics_enabled"
-);
-      this.storage.remove(
-        "faction_filter_state"
-);
-      this.storage.remove(
-        "faction_filter_collapsed"
-);
-      this.storage.remove(
-        "war_filter_state"
-);
-      this.storage.remove(
-        "war_filter_collapsed"
-);
-      this.storage.remove(
-        "chain_min_level"
-);
-      this.storage.remove(
-        "chain_max_level"
-);
-      this.storage.remove(
-        "chain_inactive"
-);
-      this.storage.remove(
-        "chain_min_ff"
-);
-      this.storage.remove(
-        "chain_max_ff"
-);
-      this.storage.remove(
-        "chain_factionless"
-);
-      this.storage.remove(
-        "chain_targets"
-);
-      this.storage.remove(
-        "chain_target_index"
-);
-    }
-  }
-  const ffconfig = new FFConfig("ffsv3-config");
   const DB_NAME = "FFSV3-cache";
   class FFScouter {
     constructor(config, cache) {
@@ -1750,10 +1768,58 @@ clearAll() {
           return [];
         }
       };
+      this.get_aggregated_analytics = async () => {
+        const entries = await this.get_analytics_entries();
+        const aggregationMap = new Map();
+        for (const entry of entries) {
+          let param = "";
+          if (entry.params) {
+            const searchParams = new URLSearchParams(entry.params);
+            param = searchParams.get("sid") || searchParams.get("step") || "";
+          }
+          if (!param && entry.hash) {
+            let hashClean = entry.hash;
+            if (hashClean.startsWith("#/")) {
+              hashClean = hashClean.substring(2);
+            } else if (hashClean.startsWith("#") || hashClean.startsWith("/")) {
+              hashClean = hashClean.substring(1);
+            }
+            if (!hashClean.startsWith("!") && !hashClean.startsWith("?")) {
+              hashClean = `?${hashClean}`;
+            }
+            const hashParams = new URLSearchParams(hashClean);
+            param = hashParams.get("sid") || hashParams.get("step") || "";
+          }
+          const key = `${entry.url}|${param}|${entry.feature}|${entry.status}`;
+          const existing = aggregationMap.get(key);
+          if (existing) {
+            existing.count++;
+          } else {
+            aggregationMap.set(key, {
+              url: entry.url,
+              param: param || "-",
+              feature: entry.feature,
+              status: entry.status,
+              count: 1
+            });
+          }
+        }
+        return Array.from(aggregationMap.values());
+      };
+      this.clear_analytics = async () => {
+        try {
+          await this.cache.clear_analytics();
+        } catch (err) {
+          logger.error("Failed to clear analytics entries", err);
+        }
+      };
       this.config = config;
       if (cache) {
         this.cache = cache;
       }
+    }
+    get analytics_enabled() {
+      return this.config.analytics_enabled;
     }
   }
   const ffscouter = new FFScouter(ffconfig);
@@ -2053,6 +2119,73 @@ clearAll() {
       document.documentElement
     );
     return body !== null;
+  }
+  class MonitorElements {
+    constructor(node_matcher, handler, root, continuous, options, _timeout) {
+      this.options = {
+        target: false,
+        added: false,
+        removed: false
+      };
+      this.started = false;
+      this.timer = null;
+      this.start = () => {
+        if (this.started) {
+          return;
+        }
+        let initial = false;
+        for (const child of this.root.childNodes) {
+          if (child instanceof HTMLElement && this.node_matcher(child)) {
+            this.handler({ added: child });
+            initial = true;
+          }
+        }
+        if (!this.continuous && initial) {
+          this.started = false;
+          return;
+        }
+        this.observer.observe(this.root, { childList: true });
+        this.timer = setInterval(() => {
+          if (!this.root.isConnected) {
+            this.cleanup();
+          }
+        }, 1e4);
+        this.started = true;
+      };
+      this.cleanup = () => {
+        this.observer.disconnect();
+        if (this.timer) {
+          clearInterval(this.timer);
+        }
+        this.timer = null;
+      };
+      this.node_matcher = node_matcher;
+      this.handler = handler;
+      this.root = root;
+      this.continuous = continuous;
+      this.options = options;
+      this.observer = new MutationObserver(async (mutations) => {
+        for (const mutation of mutations) {
+          if (this.options.target && mutation.target instanceof HTMLElement && this.node_matcher(mutation.target)) {
+            this.handler({ target: mutation.target });
+          }
+          if (this.options.added) {
+            for (const node of mutation.addedNodes) {
+              if (node instanceof HTMLElement && this.node_matcher(node)) {
+                this.handler({ added: node });
+              }
+            }
+          }
+          if (this.options.removed) {
+            for (const node of mutation.removedNodes) {
+              if (node instanceof HTMLElement && this.node_matcher(node)) {
+                this.handler({ removed: node });
+              }
+            }
+          }
+        }
+      });
+    }
   }
   function create_info_line() {
     const info_line = document.createElement("div");
@@ -3166,7 +3299,7 @@ async willUpdate(changedProperties) {
   FFFactionFilterBox = __decorateClass$2([
     t("ff-faction-filter-box")
   ], FFFactionFilterBox);
-  const FEATURE_NAME$2 = "faction";
+  const FEATURE_NAME$4 = "faction";
   let isApplying = false;
   function apply_filters_and_sort(membersList, filters) {
     if (isApplying) return;
@@ -3231,7 +3364,18 @@ Number.parseInt(row.dataset["estValue"], 10)
           return valB - valA;
         });
         for (const row of rows) {
+          const extra_tt_rows = [];
+          let next_sibling = row.nextElementSibling;
+          while (next_sibling && !next_sibling?.classList.contains("table-row") && !next_sibling?.classList.contains("enemy") && !next_sibling?.classList.contains("enemy")) {
+            if (next_sibling.classList.contains("tt-last-action") || next_sibling.classList.contains("tt-stats-estimate")) {
+              extra_tt_rows.push(next_sibling);
+            }
+            next_sibling = next_sibling.nextElementSibling;
+          }
           tbody.appendChild(row);
+          for (const r2 of extra_tt_rows) {
+            tbody.appendChild(r2);
+          }
         }
       }
       if (is_filter_active(filters)) {
@@ -3508,14 +3652,14 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     }
     let found_honor = false;
     for (const bar of root.querySelectorAll(".honor-text-wrap")) {
-      apply_ff_gauge(bar, FEATURE_NAME$2);
+      apply_ff_gauge(bar, FEATURE_NAME$4);
       found_honor = true;
     }
     if (found_honor) {
       return;
     }
     for (const bar of root.querySelectorAll(".member")) {
-      apply_ff_gauge(bar, FEATURE_NAME$2);
+      apply_ff_gauge(bar, FEATURE_NAME$4);
     }
     for (const l2 of root.querySelectorAll(".members-list, .chain-attacks-list")) {
       if (l2 instanceof HTMLElement) {
@@ -3702,13 +3846,81 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       }
     }
   };
-  const FEATURE_NAME$1 = "fallback";
+  const FEATURE_NAME_HONOR_BAR = "fallback-honor-bar";
+  const FEATURE_NAME_USER_NAME = "fallback-user-name";
+  const FEATURE_NAME$3 = "fallback";
   const Fallback = {
     name: "Fallback mutation observer",
     description: "Catch all mutations and see if we can apply FF data",
     executionTime: StartTime.DocumentBody,
     async shouldRun() {
-      return true;
+      switch (true) {
+        case torn_page("gym"):
+        case torn_page("item"):
+        case torn_page("city"):
+        case torn_page("casino"):
+        case torn_page("calendar"):
+        case torn_page("preferences"):
+        case torn_page("estateagents"):
+        case torn_page("profiles"):
+        case torn_page("pc"):
+        case torn_page("citystats"):
+        case torn_page("usersonline"):
+        case torn_page("displaycase"):
+        case torn_page("bank"):
+        case torn_page("loan"):
+        case torn_page("donator"):
+        case torn_page("token_shop"):
+        case torn_page("freebies"):
+        case torn_page("bigalgunshop"):
+        case torn_page("shops"):
+        case torn_page("joblist"):
+        case torn_page("joblisting"):
+        case torn_page("messageinc"):
+        case torn_page("comics"):
+        case torn_page("archives"):
+        case torn_page("rules"):
+        case torn_page("credits"):
+        case torn_page("committee"):
+        case torn_page("church"):
+        case torn_page("christmas_town"):
+        case torn_page("index", {}):
+        case torn_page("index", {}):
+        case torn_page("page", { sid: "slotsLastRolls" }):
+        case torn_page("page", { sid: "rouletteLastSpins" }):
+        case torn_page("page", { sid: "highlowLastGames" }):
+        case torn_page("page", { sid: "kenoLastGames" }):
+        case torn_page("page", { sid: "crapsLastRolls" }):
+        case torn_page("page", { sid: "blackjackLastGames" }):
+        case torn_page("page", { sid: "spinTheWheelLastSpins" }):
+        case torn_page("page", { sid: "bunker" }):
+        case torn_page("page", { sid: "points" }):
+        case torn_page("page", { sid: "itemsMods" }):
+        case torn_page("page", { sid: "keepsakes" }):
+        case torn_page("page", { sid: "ammo" }):
+        case torn_page("page", { sid: "awards" }):
+        case torn_page("page", { sid: "log" }):
+        case torn_page("page", { sid: "events" }):
+        case torn_page("page", { sid: "crimes" }):
+        case torn_page("page", { sid: "crimesRecord" }):
+        case torn_page("page", { sid: "factionWarfare" }):
+        case torn_page("page", { sid: "travel" }):
+        case torn_page("page", { sid: "missions" }):
+        case torn_page("page", { sid: "stocks" }):
+        case torn_page("page", { sid: "slots" }):
+        case torn_page("page", { sid: "roulette" }):
+        case torn_page("page", { sid: "highlow" }):
+        case torn_page("page", { sid: "keno" }):
+        case torn_page("page", { sid: "craps" }):
+        case torn_page("page", { sid: "bookie" }):
+        case torn_page("page", { sid: "blackjack" }):
+        case torn_page("page", { sid: "spinTheWheel" }):
+        case torn_page("page", { sid: "education" }):
+          logger.warn("NOT RUNNING FALLBACK ON THIS PAGE");
+          return false;
+        default:
+          return true;
+      }
     },
     async run() {
       const check_mutation = async (node) => {
@@ -3722,89 +3934,89 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
           ".user.name"
         );
         if (honor_bars.length > 0) {
-          await apply_ff_gauge_selector(honor_bars, FEATURE_NAME$1);
+          await apply_ff_gauge_selector(honor_bars, FEATURE_NAME_HONOR_BAR);
         } else {
           if (window.location.href.startsWith("https://www.torn.com/companies.php")) {
             await apply_ff_gauge_selector(
               node.querySelectorAll(".employee"),
-              FEATURE_NAME$1
+              FEATURE_NAME$3
             );
           } else if (window.location.href.startsWith(
             "https://www.torn.com/page.php?sid=competition#/team"
           )) {
             await apply_ff_gauge_selector(
               node.querySelectorAll('[class*="name__"]'),
-              FEATURE_NAME$1
+              FEATURE_NAME$3
             );
           } else if (window.location.href.startsWith("https://www.torn.com/joblist.php")) {
             await apply_ff_gauge_selector(
               node.querySelectorAll(".employee"),
-              FEATURE_NAME$1
+              FEATURE_NAME$3
             );
           } else if (window.location.href.startsWith("https://www.torn.com/messages.php")) {
             await apply_ff_gauge_selector(
               node.querySelectorAll(".name"),
-              FEATURE_NAME$1
+              FEATURE_NAME$3
             );
           } else if (window.location.href.startsWith("https://www.torn.com/index.php")) {
             await apply_ff_gauge_selector(
               node.querySelectorAll(".name"),
-              FEATURE_NAME$1
+              FEATURE_NAME$3
             );
           } else if (window.location.href.startsWith(
             "https://www.torn.com/hospitalview.php"
           )) {
             await apply_ff_gauge_selector(
               node.querySelectorAll(".name"),
-              FEATURE_NAME$1
+              FEATURE_NAME$3
             );
           } else if (window.location.href.startsWith(
             "https://www.torn.com/page.php?sid=UserList"
           )) {
             await apply_ff_gauge_selector(
               node.querySelectorAll(".name"),
-              FEATURE_NAME$1
+              FEATURE_NAME$3
             );
           } else if (window.location.href.startsWith("https://www.torn.com/bounties.php")) {
             await apply_ff_gauge_selector(
               node.querySelectorAll(".target"),
-              FEATURE_NAME$1
+              FEATURE_NAME$3
             );
             await apply_ff_gauge_selector(
               node.querySelectorAll(".listed"),
-              FEATURE_NAME$1
+              FEATURE_NAME$3
             );
           } else if (window.location.href.startsWith(
             "https://www.torn.com/page.php?sid=attackLog"
           )) {
             await apply_ff_gauge_selector(
               node.querySelectorAll("ul.participants-list li"),
-              FEATURE_NAME$1
+              FEATURE_NAME$3
             );
           } else if (window.location.href.startsWith("https://www.torn.com/forums.php")) {
             await apply_ff_gauge_selector(
               node.querySelectorAll(".last-poster"),
-              FEATURE_NAME$1
+              FEATURE_NAME$3
             );
             await apply_ff_gauge_selector(
               node.querySelectorAll(".starter"),
-              FEATURE_NAME$1
+              FEATURE_NAME$3
             );
             await apply_ff_gauge_selector(
               node.querySelectorAll(".last-post"),
-              FEATURE_NAME$1
+              FEATURE_NAME$3
             );
             await apply_ff_gauge_selector(
               node.querySelectorAll(".poster"),
-              FEATURE_NAME$1
+              FEATURE_NAME$3
             );
           } else if (window.location.href.includes("page.php?sid=hof")) {
             await apply_ff_gauge_selector(
               node.querySelectorAll('[class*="userInfoBox__"]'),
-              FEATURE_NAME$1
+              FEATURE_NAME$3
             );
           } else if (name_elems.length > 0) {
-            await apply_ff_gauge_selector(name_elems, FEATURE_NAME$1);
+            await apply_ff_gauge_selector(name_elems, FEATURE_NAME_USER_NAME);
           }
         }
         if (window.location.href.startsWith(
@@ -3814,7 +4026,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
             node.querySelectorAll(
               "div.bazaar-listing-card div:first-child div:first-child > a"
             ),
-            FEATURE_NAME$1
+            FEATURE_NAME$3
           );
         }
         ffscouter.complete();
@@ -4068,7 +4280,133 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       });
     }
   };
-  const FEATURE_NAME = "mini-profile";
+  const FEATURE_NAME$2 = "item_market";
+  const ItemMarket = {
+    name: "Item market FF display",
+    description: "Shows FF on the item market page",
+    executionTime: StartTime.DocumentBody,
+    async shouldRun() {
+      return torn_page("page", { sid: "ItemMarket" });
+    },
+    async run() {
+      const category_list = await wait_for_element(
+        '[class*="itemListWrapper__"]',
+        2e4
+      );
+      if (!category_list || !(category_list instanceof HTMLElement)) {
+        return;
+      }
+      logger.debug("Found category list!");
+      logger.debug(category_list);
+      const category_matcher = (node) => {
+        const item_list = node.querySelector('[class*="itemList__"]');
+        return item_list !== void 0;
+      };
+      const category_handler = (options) => {
+        if (!options.added) {
+          return;
+        }
+        const item_list = options.added.querySelector('[class*="itemList__"]');
+        if (!item_list || !(item_list instanceof HTMLElement)) {
+          return;
+        }
+        logger.debug("Found item_list!");
+        logger.debug(item_list);
+        const item_list_monitor = new MonitorElements(
+          item_list_matcher,
+          item_list_handler,
+          item_list,
+          true,
+          { added: true },
+          0
+        );
+        item_list_monitor.start();
+      };
+      const item_list_matcher = (node) => {
+        const seller_list_wrapper = node.className.match(/sellerListWrapper__/);
+        return seller_list_wrapper !== null;
+      };
+      const item_list_handler = (options) => {
+        if (!options.added) {
+          return;
+        }
+        const seller_list_wrapper = options.added;
+        logger.debug("Found seller_list_wrapper!");
+        logger.debug(seller_list_wrapper);
+        const seller_list_wrapper_monitor = new MonitorElements(
+          seller_list_wrapper_matcher,
+          seller_list_wrapper_handler,
+          seller_list_wrapper,
+          true,
+          { added: true },
+          0
+        );
+        seller_list_wrapper_monitor.start();
+      };
+      const seller_list_wrapper_matcher = (node) => {
+        const seller_list = node.className.match(/sellerList__/);
+        return seller_list !== void 0;
+      };
+      const seller_list_wrapper_handler = (options) => {
+        if (!options.added) {
+          return;
+        }
+        const seller_list = options.added;
+        logger.debug("Found seller_list!");
+        logger.debug(seller_list);
+        const seller_list_monitor = new MonitorElements(
+          seller_list_matcher,
+          seller_list_handler,
+          seller_list,
+          true,
+          { added: true },
+          0
+        );
+        seller_list_monitor.start();
+      };
+      const seller_list_matcher = (node) => {
+        const user_info_wrapper = node.querySelector(
+          '.honor-text-wrap, [class*="userInfoWrapper__"]'
+        );
+        return user_info_wrapper !== void 0;
+      };
+      const seller_list_handler = (options) => {
+        if (!options.added) {
+          return;
+        }
+        const honor_bar = options.added.querySelector(".honor-text-wrap");
+        if (honor_bar) {
+          apply_ff_gauge(honor_bar, FEATURE_NAME$2);
+          return;
+        }
+        const user_info_wrapper = options.added.querySelector(
+          '[class*="userInfoWrapper__"]'
+        );
+        if (user_info_wrapper) {
+          apply_ff_gauge(user_info_wrapper, FEATURE_NAME$2);
+          return;
+        }
+      };
+      const category_monitor = new MonitorElements(
+        category_matcher,
+        category_handler,
+        category_list,
+        true,
+        { added: true },
+        0
+      );
+      category_monitor.start();
+    },
+    httpIntercept: {
+      before(_url, _init) {
+        return void 0;
+      },
+      after(_bodyText, _response, _ctx) {
+        return void 0;
+      }
+    }
+  };
+  const FEATURE_NAME$1 = "mini-profile";
   const monitor_mini_profile_root = () => {
     const miniprofile = document.querySelector("#profile-mini-root");
     if (miniprofile) {
@@ -4116,7 +4454,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
           `Found mini profile update for ${player_id}, adding ff data`
         );
         for (const bar of miniroot.querySelectorAll(".honor-text-wrap")) {
-          apply_ff_gauge(bar, FEATURE_NAME);
+          apply_ff_gauge(bar, FEATURE_NAME$1);
         }
         miniroot.querySelector(".ffsv3-mini-desc")?.remove();
         const ff_string = format_ff_score(d2);
@@ -4512,6 +4850,64 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       }
     }
   };
+  const FEATURE_NAME = "rr";
+  const RR = {
+    name: "Russian Roulette FF display",
+    description: "Shows FF on the Russian Roulette page",
+    executionTime: StartTime.DocumentBody,
+    async shouldRun() {
+      return torn_page("page", { sid: "russianRoulette" });
+    },
+    async run() {
+      const rows_wrapper = await wait_for_element(
+        '[class*="rowsWrap__"]',
+        2e4
+      );
+      if (!rows_wrapper || !(rows_wrapper instanceof HTMLElement)) {
+        return;
+      }
+      const row_matcher = (node) => {
+        const user_info_wrapper = node.querySelector(
+          '.honor-text-wrap, [class*="userInfoBlock__"]'
+        );
+        return user_info_wrapper !== void 0;
+      };
+      const row_handler = (options) => {
+        if (!options.added) {
+          return;
+        }
+        const honor_bar = options.added.querySelector(".honor-text-wrap");
+        if (honor_bar) {
+          apply_ff_gauge(honor_bar, FEATURE_NAME);
+          return;
+        }
+        const user_info_wrapper = options.added.querySelector(
+          '[class*="userInfoBlock__"]'
+        );
+        if (user_info_wrapper) {
+          apply_ff_gauge(user_info_wrapper, FEATURE_NAME);
+          return;
+        }
+      };
+      const rows_monitor = new MonitorElements(
+        row_matcher,
+        row_handler,
+        rows_wrapper,
+        true,
+        { added: true },
+        0
+      );
+      rows_monitor.start();
+    },
+    httpIntercept: {
+      before(_url, _init) {
+        return void 0;
+      },
+      after(_bodyText, _response, _ctx) {
+        return void 0;
+      }
+    }
+  };
   var __defProp = Object.defineProperty;
   var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
   var __decorateClass = (decorators, target, key, kind) => {
@@ -4850,102 +5246,104 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
           </div>
 
           ${this.draftChainButtonEnabled ? b`
-                <div style="margin-left: 20px;">
-                  <div class="input-row-inline">
-                    <label for="chain-link-type">Chain button opens:</label>
-                    <select
-                      id="chain-link-type"
-                      .value=${this.draftChainLinkType}
-                      @change=${this.onChainLinkTypeChange}
-                    >
-                      <option value="attack">Attack page</option>
-                      <option value="profile">Profile page</option>
-                    </select>
-                  </div>
+                  <div class="chain-options-flex-container">
+                    <div class="input-row-inline">
+                      <label for="chain-link-type">Chain button opens:</label>
+                      <select
+                        id="chain-link-type"
+                        .value=${this.draftChainLinkType}
+                        @change=${this.onChainLinkTypeChange}
+                      >
+                        <option value="attack">Attack page</option>
+                        <option value="profile">Profile page</option>
+                      </select>
+                    </div>
 
-                  <div class="input-row-inline">
-                    <label for="chain-tab-type">Open in:</label>
-                    <select
-                      id="chain-tab-type"
-                      .value=${this.draftChainTabType}
-                      @change=${this.onChainTabTypeChange}
-                    >
-                      <option value="newtab">New tab</option>
-                      <option value="sametab">Same tab</option>
-                    </select>
-                  </div>
+                    <div class="input-row-inline">
+                      <label for="chain-tab-type">Open in:</label>
+                      <select
+                        id="chain-tab-type"
+                        .value=${this.draftChainTabType}
+                        @change=${this.onChainTabTypeChange}
+                      >
+                        <option value="newtab">New tab</option>
+                        <option value="sametab">Same tab</option>
+                      </select>
+                    </div>
 
-                  <div class="input-row-inline">
-                    <label for="chain-min-level">Min Level:</label>
-                    <input
-                      id="chain-min-level"
-                      type="number"
-                      class="ff-number"
-                      placeholder="No min"
-                      .value=${this.draftChainMinLevel === null ? "" : this.draftChainMinLevel.toString()}
-                      @input=${this.onChainMinLevelInput}
-                    />
-                  </div>
+                    <div class="input-row-inline">
+                      <label for="chain-min-level">Min Level:</label>
+                      <input
+                        id="chain-min-level"
+                        type="number"
+                        class="ff-number"
+                        placeholder="No min"
+                        .value=${this.draftChainMinLevel === null ? "" : this.draftChainMinLevel.toString()}
+                        @input=${this.onChainMinLevelInput}
+                      />
+                    </div>
 
-                  <div class="input-row-inline">
-                    <label for="chain-max-level">Max Level:</label>
-                    <input
-                      id="chain-max-level"
-                      type="number"
-                      class="ff-number"
-                      placeholder="No max"
-                      .value=${this.draftChainMaxLevel === null ? "" : this.draftChainMaxLevel.toString()}
-                      @input=${this.onChainMaxLevelInput}
-                    />
-                  </div>
+                    <div class="input-row-inline">
+                      <label for="chain-max-level">Max Level:</label>
+                      <input
+                        id="chain-max-level"
+                        type="number"
+                        class="ff-number"
+                        placeholder="No max"
+                        .value=${this.draftChainMaxLevel === null ? "" : this.draftChainMaxLevel.toString()}
+                        @input=${this.onChainMaxLevelInput}
+                      />
+                    </div>
 
-                  <div class="input-row-inline">
-                    <label for="chain-min-ff">Min FF:</label>
-                    <input
-                      id="chain-min-ff"
-                      type="number"
-                      step="0.1"
-                      class="ff-number"
-                      placeholder="No min"
-                      .value=${this.draftChainMinFF === null ? "" : this.draftChainMinFF.toString()}
-                      @input=${this.onChainMinFFInput}
-                    />
-                  </div>
+                    <div class="input-row-inline">
+                      <label for="chain-min-ff">Min FF:</label>
+                      <input
+                        id="chain-min-ff"
+                        type="number"
+                        step="0.1"
+                        class="ff-number"
+                        placeholder="No min"
+                        .value=${this.draftChainMinFF === null ? "" : this.draftChainMinFF.toString()}
+                        @input=${this.onChainMinFFInput}
+                      />
+                    </div>
 
-                  <div class="input-row-inline">
-                    <label for="chain-max-ff">Max FF:</label>
-                    <input
-                      id="chain-max-ff"
-                      type="number"
-                      step="0.1"
-                      class="ff-number"
-                      placeholder="No max"
-                      .value=${this.draftChainMaxFF.toString()}
-                      @input=${this.onChainMaxFFInput}
-                    />
-                  </div>
+                    <div class="input-row-inline">
+                      <label for="chain-max-ff">Max FF:</label>
+                      <input
+                        id="chain-max-ff"
+                        type="number"
+                        step="0.1"
+                        class="ff-number"
+                        placeholder="No max"
+                        .value=${this.draftChainMaxFF.toString()}
+                        @input=${this.onChainMaxFFInput}
+                      />
+                    </div>
 
-                  <div class="input-row-inline">
-                    <input
-                      id="chain-inactive"
-                      type="checkbox"
-                      .checked=${this.draftChainInactive}
-                      @change=${this.onChainInactiveChange}
-                    />
-                    <label for="chain-inactive">Inactive Only (14+ days offline)</label>
-                  </div>
+                    <div class="input-row-inline">
+                      <input
+                        id="chain-inactive"
+                        type="checkbox"
+                        .checked=${this.draftChainInactive}
+                        @change=${this.onChainInactiveChange}
+                      />
+                      <label for="chain-inactive"
+                        >Inactive Only (14+ days offline)</label
+                      >
+                    </div>
 
-                  <div class="input-row-inline">
-                    <input
-                      id="chain-factionless"
-                      type="checkbox"
-                      .checked=${this.draftChainFactionless}
-                      @change=${this.onChainFactionlessChange}
-                    />
-                    <label for="chain-factionless">Factionless Only</label>
+                    <div class="input-row-inline">
+                      <input
+                        id="chain-factionless"
+                        type="checkbox"
+                        .checked=${this.draftChainFactionless}
+                        @change=${this.onChainFactionlessChange}
+                      />
+                      <label for="chain-factionless">Factionless Only</label>
+                    </div>
                   </div>
-                </div>
-              ` : ""}
+                ` : ""}
 
           <!-- FF History Toggle -->
           <div class="input-row-inline">
@@ -4957,6 +5355,10 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
             />
             <label for="ff-history-toggle"
               >Enable FF History button on profile pages</label
+            >
+          </div>
+          <div class="input-row-inline">
+            <label>War Monitor is no longer supported. Use <a target="_blank" href="https://greasyfork.org/en/scripts/529238-torn-war-stuff-enhanced">Torn War Stuff Enhanced</a> instead.</a></label
             >
           </div>
 
@@ -5189,6 +5591,11 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
         ffconfig.ff_history_enabled = detail.ffHistoryEnabled;
         ffconfig.factions_col_display = detail.factionsColDisplay;
         ffconfig.debug_logs = detail.debugLogs;
+        if (detail.debugLogs) {
+          logger.setLevel(LogLevel.DEBUG);
+        } else {
+          logger.setLevel(LogLevel.INFO);
+        }
         ffconfig.analytics_enabled = detail.analyticsEnabled;
         panel.isPremium = await check_key_status.is_premium(true);
         toast("Settings saved successfully!");
@@ -5277,7 +5684,9 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     Faction,
     MiniProfile,
     FFButton,
-    Fallback
+    Fallback,
+    ItemMarket,
+    RR
   ];
   const pageWindow = unsafeWindow || window;
   let httpInterceptor = null;
@@ -5358,7 +5767,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       logger.error("Failed to patch fetch:", err);
     }
   }
-  const stylesCss = ".ffsv3-gauge{position:relative;display:block;padding:0}.ffsv3-arrow{position:absolute;transform:translate(-50%,-30%);padding:0;top:0;left:calc(var(--ffsv3-arrow-width) / 2 + var(--band-percent) * (100% - var(--ffsv3-arrow-width)) / 100);width:var(--ffsv3-arrow-width);object-fit:cover;pointer-events:none}.ffsv3-mini-desc{padding:0 5px}body{--ffsv3-bg-color: #f0f0f0;--ffsv3-alt-bg-color: #fff;--ffsv3-border-color: #ccc;--ffsv3-input-color: #ccc;--ffsv3-text-color: #000;--ffsv3-hover-color: #ddd;--ffsv3-glow-color: #4caf50;--ffsv3-success-color: #4caf50;--ffsv3-arrow-width: 20px}body.dark-mode{--ffsv3-bg-color: #333;--ffsv3-alt-bg-color: #383838;--ffsv3-border-color: #444;--ffsv3-input-color: #504f4f;--ffsv3-text-color: #ccc;--ffsv3-hover-color: #555;--ffsv3-glow-color: #4caf50;--ffsv3-success-color: #4caf50}.ff-premium-upgrade-line{display:block;margin-top:4px;line-height:1.3;white-space:nowrap;font-size:12px;font-style:normal}@media(max-width:768px){.ff-premium-upgrade-line{margin-top:6px;line-height:1.35;white-space:normal;overflow-wrap:anywhere}}ff-settings-panel{display:block}ff-settings-panel .accordion{margin:10px 0;padding:15px;background-color:var(--ffsv3-bg-color);border:1px solid var(--ffsv3-border-color);border-radius:5px;color:var(--ffsv3-text-color)}ff-settings-panel .accordion.glow{border-color:var(--ffsv3-glow-color);box-shadow:0 0 8px #4caf5080}ff-settings-panel .input-row{display:flex;flex-direction:column;gap:5px;margin-bottom:15px}ff-settings-panel .input-row-inline{display:flex;align-items:center;gap:10px;margin-bottom:15px}ff-settings-panel .blur-mode{filter:blur(4px);transition:filter .2s ease}ff-settings-panel .blur-mode:hover,ff-settings-panel .blur-mode:focus{filter:blur(0)}ff-settings-panel .error-msg{color:#f33;font-size:13px;margin-top:5px}ff-settings-panel input[type=text],ff-settings-panel input[type=number]{text-align:left;vertical-align:top;width:178px;height:14px;margin-right:8px;padding:9px 10px;line-height:14px;display:inline-block}ff-settings-panel input[type=number].ff-number{width:52px}ff-settings-panel select{box-sizing:border-box;text-align:left;vertical-align:top;width:178px;height:34px;margin-right:8px;padding:8px 10px;line-height:14px;display:inline-block;border:var(--input-border-color);border-radius:5px;font-family:Arial,serif;color:var(--input-color);background:var(--input-background-color)}:root .dark-mode ff-settings-panel select option{background-color:#000;color:var(--input-color)}ff-settings-panel .ff-api-explanation{background-color:var(--ffsv3-alt-bg-color);border:1px solid var(--ffsv3-border-color);border-radius:8px;color:var(--ffsv3-text-color);margin-bottom:20px;padding:12px 16px;font-size:13px;line-height:1.5}ff-settings-panel .ff-api-explanation a{color:var(--ffsv3-success-color);text-decoration:underline}ff-settings-panel .is_premium_enabled{display:inline-block;background:#4caf50;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;vertical-align:middle}ff-settings-panel .is_premium_disabled{display:inline-block;background:#c62828;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;vertical-align:middle}.profile-status{position:relative}ff-flight-profile-status{position:absolute;right:10px;bottom:2px;z-index:2}.ff-scouter-profile-flight-info{display:inline-block;text-align:right;font-size:11px;line-height:1.25;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.85)}.profile-status .ff-scouter-profile-flight-info a{color:#fff;text-decoration:underline}ff-faction-filter-box{display:block}.ff-filter-box,.ff-filter-box *,.ff-filter-box *:before,.ff-filter-box *:after{box-sizing:border-box!important}.ff-filter-box{background-color:var(--ffsv3-bg-color);border:1px solid var(--ffsv3-border-color);border-radius:8px;padding:12px 16px;margin-bottom:16px;color:var(--ffsv3-text-color);font-family:Arial,sans-serif;box-shadow:0 2px 5px #0000000d}.ff-filter-box.no-borders{background-color:var(--default-bg-panel-color);border:none;border-radius:0;box-shadow:none;padding:0;margin-bottom:0}.ff-filter-box summary{cursor:pointer;font-size:14px;font-weight:700;outline:none;-webkit-user-select:none;user-select:none}.ff-filter-box[open] summary{border-bottom:1px solid var(--ffsv3-border-color);padding-bottom:6px;margin-bottom:12px}.ff-filter-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.grp-sort{order:1}.grp-level{order:2}.grp-activity{order:3}.grp-status{order:4}.grp-ff{order:5}.grp-stats{order:6}@media(min-width:784px){.ff-filter-grid{grid-template-columns:repeat(3,1fr)}.ff-filter-grid>*{order:0}}.ff-filter-group{display:flex;flex-direction:column;gap:2px}.ff-filter-options{display:flex;flex-direction:column}.ff-filter-options label{display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer}.ff-filter-range-inputs{display:flex;align-items:center;gap:4px}.ff-filter-range-inputs input{flex:1;width:0;min-width:30px;max-width:80px;padding:4px;border:1px solid var(--ffsv3-border-color);border-radius:4px;background:var(--ffsv3-alt-bg-color);color:var(--ffsv3-text-color);font-size:11px;text-align:center}.ff-filter-box button{padding:6px 10px;border:1px solid var(--ffsv3-border-color);border-radius:4px;background:var(--ffsv3-alt-bg-color);color:var(--ffsv3-text-color);font-size:12px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;transition:background-color .2s}.ff-filter-box button:hover{background-color:var(--ffsv3-hover-color)}";
+  const stylesCss = ".ffsv3-gauge{position:relative;display:block;padding:0}.ffsv3-arrow{position:absolute;transform:translate(-50%,-30%);padding:0;top:0;left:calc(var(--ffsv3-arrow-width) / 2 + var(--band-percent) * (100% - var(--ffsv3-arrow-width)) / 100);width:var(--ffsv3-arrow-width);object-fit:cover;pointer-events:none}.ffsv3-mini-desc{padding:0 5px}body{--ffsv3-bg-color: #f0f0f0;--ffsv3-alt-bg-color: #fff;--ffsv3-border-color: #ccc;--ffsv3-input-color: #ccc;--ffsv3-text-color: #000;--ffsv3-hover-color: #ddd;--ffsv3-glow-color: #4caf50;--ffsv3-success-color: #4caf50;--ffsv3-arrow-width: 20px}body.dark-mode{--ffsv3-bg-color: #333;--ffsv3-alt-bg-color: #383838;--ffsv3-border-color: #444;--ffsv3-input-color: #504f4f;--ffsv3-text-color: #ccc;--ffsv3-hover-color: #555;--ffsv3-glow-color: #4caf50;--ffsv3-success-color: #4caf50}.ff-premium-upgrade-line{display:block;margin-top:4px;line-height:1.3;white-space:nowrap;font-size:12px;font-style:normal}@media(max-width:768px){.ff-premium-upgrade-line{margin-top:6px;line-height:1.35;white-space:normal;overflow-wrap:anywhere}}ff-settings-panel{display:block}ff-settings-panel .accordion{margin:10px 0;padding:15px;background-color:var(--ffsv3-bg-color);border:1px solid var(--ffsv3-border-color);border-radius:5px;color:var(--ffsv3-text-color)}ff-settings-panel .accordion.glow{border-color:var(--ffsv3-glow-color);box-shadow:0 0 8px #4caf5080}ff-settings-panel .input-row{display:flex;flex-direction:column;gap:5px;margin-bottom:15px}ff-settings-panel .input-row-inline{display:flex;align-items:center;gap:10px;margin-bottom:15px}ff-settings-panel .blur-mode{filter:blur(4px);transition:filter .2s ease}ff-settings-panel .blur-mode:hover,ff-settings-panel .blur-mode:focus{filter:blur(0)}ff-settings-panel .error-msg{color:#f33;font-size:13px;margin-top:5px}ff-settings-panel input[type=text],ff-settings-panel input[type=number]{text-align:left;vertical-align:top;width:178px;height:14px;margin-right:8px;padding:9px 10px;line-height:14px;display:inline-block}ff-settings-panel input[type=number].ff-number{width:52px}ff-settings-panel select{box-sizing:border-box;text-align:left;vertical-align:top;width:178px;height:34px;margin-right:8px;padding:8px 10px;line-height:14px;display:inline-block;border:var(--input-border-color);border-radius:5px;font-family:Arial,serif;color:var(--input-color);background:var(--input-background-color)}:root .dark-mode ff-settings-panel select option{background-color:#000;color:var(--input-color)}ff-settings-panel .ff-api-explanation{background-color:var(--ffsv3-alt-bg-color);border:1px solid var(--ffsv3-border-color);border-radius:8px;color:var(--ffsv3-text-color);margin-bottom:20px;padding:12px 16px;font-size:13px;line-height:1.5}ff-settings-panel a{color:var(--ffsv3-success-color);text-decoration:underline}ff-settings-panel .is_premium_enabled{display:inline-block;background:#4caf50;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;vertical-align:middle}ff-settings-panel .is_premium_disabled{display:inline-block;background:#c62828;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;vertical-align:middle}.profile-status{position:relative}ff-flight-profile-status{position:absolute;right:10px;bottom:2px;z-index:2}.ff-scouter-profile-flight-info{display:inline-block;text-align:right;font-size:11px;line-height:1.25;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.85)}.profile-status .ff-scouter-profile-flight-info a{color:#fff;text-decoration:underline}ff-faction-filter-box{display:block}.ff-filter-box,.ff-filter-box *,.ff-filter-box *:before,.ff-filter-box *:after{box-sizing:border-box!important}.ff-filter-box{background-color:var(--ffsv3-bg-color);border:1px solid var(--ffsv3-border-color);border-radius:8px;padding:12px 16px;margin-bottom:16px;color:var(--ffsv3-text-color);font-family:Arial,sans-serif;box-shadow:0 2px 5px #0000000d}.ff-filter-box.no-borders{background-color:var(--default-bg-panel-color);border:none;border-radius:0;box-shadow:none;padding:0;margin-bottom:0}.ff-filter-box summary{cursor:pointer;font-size:14px;font-weight:700;outline:none;-webkit-user-select:none;user-select:none}.ff-filter-box[open] summary{border-bottom:1px solid var(--ffsv3-border-color);padding-bottom:6px;margin-bottom:12px}.ff-filter-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.grp-sort{order:1}.grp-level{order:2}.grp-activity{order:3}.grp-status{order:4}.grp-ff{order:5}.grp-stats{order:6}@media(min-width:784px){.ff-filter-grid{grid-template-columns:repeat(3,1fr)}.ff-filter-grid>*{order:0}}.ff-filter-group{display:flex;flex-direction:column;gap:2px}.ff-filter-options{display:flex;flex-direction:column}.ff-filter-options label{display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer}.ff-filter-range-inputs{display:flex;align-items:center;gap:4px}.ff-filter-range-inputs input{flex:1;width:0;min-width:30px;max-width:80px;padding:4px;border:1px solid var(--ffsv3-border-color);border-radius:4px;background:var(--ffsv3-alt-bg-color);color:var(--ffsv3-text-color);font-size:11px;text-align:center}.ff-filter-box button{padding:6px 10px;border:1px solid var(--ffsv3-border-color);border-radius:4px;background:var(--ffsv3-alt-bg-color);color:var(--ffsv3-text-color);font-size:12px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;transition:background-color .2s}.ff-filter-box button:hover{background-color:var(--ffsv3-hover-color)}.chain-options-flex-container{display:flex;flex-wrap:wrap;gap:10px 20px;align-items:center;justify-content:flex-start;margin-left:20px;margin-top:10px;margin-bottom:15px}.chain-options-flex-container .input-row-inline{margin-bottom:0}";
   importCSS(stylesCss);
   const INJECTION_KEY = "__FF_SCOUTER_V3_INJECTED__";
   async function main() {
@@ -5368,9 +5777,11 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       return;
     }
     w[INJECTION_KEY] = true;
-    logger.info("Initializing", "3.0-alpha2");
-    unsafeWindow.ffscouter = ffscouter;
-    window.ffscouter = ffscouter;
+    logger.info("Initializing", "3.0-alpha3");
+    if (ffscouter.analytics_enabled) {
+      unsafeWindow.ffscouter = ffscouter;
+      window.ffscouter = ffscouter;
+    }
     setHttpInterceptor({
 
 before(url, init) {
