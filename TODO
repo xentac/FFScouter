@@ -7,5 +7,3 @@
 
 - Make exposed summary function which, given a timeframe, returns the number of page/hash and which feature found or was ignored for the arrow
   - That way we can use the table to monitor migration progress
-- Maybe move the honour bar replacement code to its own feature so that we can track the two separately
-- Add note that war monitor has been removed and users should use Torn War Stuff Enhanced to FF Scouter Settings
