@@ -8,6 +8,7 @@ import MiniProfile from "./mini-profile";
 import Profile from "./profile";
 import ProfileFlights from "./profile-flights";
 import ProfileHistory from "./profile-history";
+import RR from "./rr";
 import Settings from "./settings";
 
 export const Features: Feature[] = [
@@ -21,6 +22,7 @@ export const Features: Feature[] = [
   FFButton,
   Fallback,
   ItemMarket,
+  RR,
 ];
 
 // You'll need to add a new export here for each feature
