@@ -418,7 +418,7 @@ export class FFSettingsPanel extends LitElement {
           ${
             this.draftChainButtonEnabled
               ? html`
-                <div style="margin-left: 20px;">
+                <div class="chain-options-flex-container">
                   <div class="input-row-inline">
                     <label for="chain-link-type">Chain button opens:</label>
                     <select

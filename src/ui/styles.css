@@ -352,3 +352,18 @@ ff-faction-filter-box {
 .ff-filter-box button:hover {
   background-color: var(--ffsv3-hover-color);
 }
+
+.chain-options-flex-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 20px;
+  align-items: center;
+  justify-content: flex-start;
+  margin-left: 20px;
+  margin-top: 10px;
+  margin-bottom: 15px;
+}
+
+.chain-options-flex-container .input-row-inline {
+  margin-bottom: 0;
+}
