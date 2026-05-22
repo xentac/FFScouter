@@ -1,5 +1,6 @@
-import { apply_ff_gauge_selector } from "@utils/dom";
+import { apply_ff_gauge_selector, torn_page } from "@utils/dom";
 import { ffscouter } from "@utils/ffscouter";
+import logger from "@utils/logger";
 import { type Feature, StartTime } from "../feature";
 
 const FEATURE_NAME_HONOR_BAR = "fallback-honor-bar";
@@ -13,7 +14,75 @@ export default {
 
   async shouldRun() {
     // Run on all pages
-    return true;
+    // Exclude a bunch of safe pages that never have players on them
+    switch (true) {
+      case torn_page("gym"):
+      case torn_page("item"):
+      case torn_page("city"):
+      case torn_page("casino"):
+      case torn_page("calendar"):
+      case torn_page("preferences"):
+      case torn_page("estateagents"):
+      case torn_page("profiles"):
+      case torn_page("pc"):
+      case torn_page("citystats"):
+      case torn_page("usersonline"):
+      case torn_page("displaycase"):
+      case torn_page("bank"):
+      case torn_page("loan"):
+      case torn_page("donator"):
+      case torn_page("token_shop"):
+      case torn_page("freebies"):
+      case torn_page("bigalgunshop"):
+      case torn_page("shops"):
+      case torn_page("joblist"):
+      case torn_page("joblisting"):
+      case torn_page("messageinc"):
+      case torn_page("comics"):
+      case torn_page("archives"):
+      case torn_page("rules"):
+      case torn_page("credits"):
+      case torn_page("committee"):
+      case torn_page("church"):
+      case torn_page("christmas_town"):
+      case torn_page("index", { page: "hunting" }):
+      case torn_page("index", { page: "bank" }):
+      case torn_page("page", { sid: "slotsLastRolls" }):
+      case torn_page("page", { sid: "rouletteLastSpins" }):
+      case torn_page("page", { sid: "highlowLastGames" }):
+      case torn_page("page", { sid: "kenoLastGames" }):
+      case torn_page("page", { sid: "crapsLastRolls" }):
+      case torn_page("page", { sid: "blackjackLastGames" }):
+      case torn_page("page", { sid: "spinTheWheelLastSpins" }):
+      case torn_page("page", { sid: "bunker" }):
+      case torn_page("page", { sid: "points" }):
+      case torn_page("page", { sid: "itemsMods" }):
+      case torn_page("page", { sid: "keepsakes" }):
+      case torn_page("page", { sid: "ammo" }):
+      case torn_page("page", { sid: "awards" }):
+      case torn_page("page", { sid: "log" }):
+      case torn_page("page", { sid: "events" }):
+      case torn_page("page", { sid: "crimes" }):
+      case torn_page("page", { sid: "crimesRecord" }):
+      case torn_page("page", { sid: "factionWarfare" }):
+      case torn_page("page", { sid: "travel" }):
+      case torn_page("page", { sid: "missions" }):
+      case torn_page("page", { sid: "stocks" }):
+      case torn_page("page", { sid: "slots" }):
+      case torn_page("page", { sid: "roulette" }):
+      case torn_page("page", { sid: "highlow" }):
+      case torn_page("page", { sid: "keno" }):
+      case torn_page("page", { sid: "craps" }):
+      case torn_page("page", { sid: "bookie" }):
+      case torn_page("page", { sid: "blackjack" }):
+      case torn_page("page", { sid: "spinTheWheel" }):
+      case torn_page("page", { sid: "education" }):
+        logger.warn("NOT RUNNING FALLBACK ON THIS PAGE");
+        return false;
+
+      default:
+        return true;
+    }
   },
 
   async run() {

@@ -23,6 +23,7 @@ export function extract_id_from_url(url: string): PlayerId | null {
 type TornPageParams = {
   sid?: string;
   step?: string;
+  page?: string;
 };
 
 export function torn_page(page: string, params: TornPageParams = {}) {
