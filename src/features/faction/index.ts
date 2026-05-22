@@ -185,7 +185,14 @@ export function apply_filters_and_sort(
       });
 
       for (const row of rows) {
+        let last_action_row = null;
+        if (row.nextElementSibling?.classList.contains("tt-last-action")) {
+          last_action_row = row.nextSibling;
+        }
         tbody.appendChild(row);
+        if (last_action_row) {
+          tbody.appendChild(last_action_row);
+        }
       }
     }
     if (is_filter_active(filters)) {
