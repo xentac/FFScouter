@@ -1,5 +1,5 @@
 import { execSync, spawnSync } from "node:child_process";
-import { copyFileSync, existsSync, rmSync } from "node:fs";
+import { copyFileSync, existsSync, rmSync, writeFileSync } from "node:fs";
 import { stdin as input, stdout as output } from "node:process";
 import readline from "node:readline/promises";
 
@@ -58,10 +58,11 @@ async function main() {
       process.exit(1);
     }
 
-    // Get current branch
-    const currentBranch = execSync("git branch --show-current")
-      .toString()
-      .trim();
+    // Get current branch and commit details
+    const currentBranch =
+      execSync("git branch --show-current").toString().trim() ||
+      "DETACHED_HEAD";
+    const sourceCommit = execSync("git rev-parse HEAD").toString().trim();
 
     // 2. Determine Edition
     const args = process.argv.slice(2);
@@ -228,15 +229,28 @@ async function main() {
     copyFileSync(builtFilePath, `${worktreeDir}/${edition.fileName}`);
 
     // Commit to the release branch
-    console.log("Committing built script to release branch...");
+    console.log("Committing built script and metadata to release branch...");
     runCmd("git", ["-C", worktreeDir, "add", edition.fileName]);
+
+    // Write release metadata
+    const metadataPath = `${worktreeDir}/release-metadata.json`;
+    const metadata = {
+      edition: editionKey,
+      version: version,
+      buildDate: new Date().toISOString(),
+      sourceCommit: sourceCommit,
+      sourceBranch: currentBranch,
+    };
+    writeFileSync(metadataPath, `${JSON.stringify(metadata, null, 2)}\n`);
+    runCmd("git", ["-C", worktreeDir, "add", "release-metadata.json"]);
 
     // Check if there are changes to commit (could be already up to date)
     const hasChanges = execSync(`git -C ${worktreeDir} status --porcelain`)
       .toString()
       .trim();
     if (hasChanges) {
-      runCmd("git", ["-C", worktreeDir, "commit", "-m", `Release ${version}`]);
+      const commitMessage = `Release ${version}\n\nBuilt from commit: ${sourceCommit}\nSource branch: ${currentBranch}`;
+      runCmd("git", ["-C", worktreeDir, "commit", "-m", commitMessage]);
     } else {
       console.log(
         "No changes detected in build output. Re-tagging latest commit.",
