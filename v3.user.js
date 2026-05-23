@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FF Scouter V3
 // @namespace    xentac-v3
-// @version      3.0-alpha4
+// @version      3.0-alpha5
 // @author       xentac [3354782], MAVRI [2402357], rDacted [2670953], Weav3r [1853324], Glasnost [1844049]
 // @description  Shows the expected Fair Fight score against targets and faction war status
 // @license      GPLv3
@@ -4280,7 +4280,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       return torn_page("page", { sid: "ItemMarket" });
     },
     async run() {
-      const root = await wait_for_element('[class*="itemListWrapper__"', 1e4);
+      const root = await wait_for_element('[class*="marketWrapper__"', 1e4);
       if (!root) {
         return;
       }
@@ -5692,7 +5692,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       return;
     }
     w[INJECTION_KEY] = true;
-    logger.info("Initializing", "3.0-alpha4");
+    logger.info("Initializing", "3.0-alpha5");
     if (ffscouter.analytics_enabled) {
       unsafeWindow.ffscouter = ffscouter;
       window.ffscouter = ffscouter;
