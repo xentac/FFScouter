@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FF Scouter V3
 // @namespace    xentac-v3
-// @version      3.0-alpha3
+// @version      3.0-alpha4
 // @author       xentac [3354782], MAVRI [2402357], rDacted [2670953], Weav3r [1853324], Glasnost [1844049]
 // @description  Shows the expected Fair Fight score against targets and faction war status
 // @license      GPLv3
@@ -3916,6 +3916,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
         case torn_page("page", { sid: "blackjack" }):
         case torn_page("page", { sid: "spinTheWheel" }):
         case torn_page("page", { sid: "education" }):
+        case torn_page("page", { sid: "itemMarket" }):
           logger.warn("NOT RUNNING FALLBACK ON THIS PAGE");
           return false;
         default:
@@ -4010,7 +4011,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
               node.querySelectorAll(".poster"),
               FEATURE_NAME$3
             );
-          } else if (window.location.href.includes("page.php?sid=hof")) {
+          } else if (window.location.href.includes("page.php?sid=hof") || torn_page("factions", { step: "profile" }) || torn_page("factions", { step: "your" })) {
             await apply_ff_gauge_selector(
               node.querySelectorAll('[class*="userInfoBox__"]'),
               FEATURE_NAME$3
@@ -4018,16 +4019,6 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
           } else if (name_elems.length > 0) {
             await apply_ff_gauge_selector(name_elems, FEATURE_NAME_USER_NAME);
           }
-        }
-        if (window.location.href.startsWith(
-          "https://www.torn.com/page.php?sid=ItemMarket"
-        )) {
-          await apply_ff_gauge_selector(
-            node.querySelectorAll(
-              "div.bazaar-listing-card div:first-child div:first-child > a"
-            ),
-            FEATURE_NAME$3
-          );
         }
         ffscouter.complete();
       };
@@ -4289,113 +4280,37 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       return torn_page("page", { sid: "ItemMarket" });
     },
     async run() {
-      const category_list = await wait_for_element(
-        '[class*="itemListWrapper__"]',
-        2e4
-      );
-      if (!category_list || !(category_list instanceof HTMLElement)) {
+      const root = await wait_for_element('[class*="itemListWrapper__"', 1e4);
+      if (!root) {
         return;
       }
-      logger.debug("Found category list!");
-      logger.debug(category_list);
-      const category_matcher = (node) => {
-        const item_list = node.querySelector('[class*="itemList__"]');
-        return item_list !== void 0;
-      };
-      const category_handler = (options) => {
-        if (!options.added) {
-          return;
-        }
-        const item_list = options.added.querySelector('[class*="itemList__"]');
-        if (!item_list || !(item_list instanceof HTMLElement)) {
-          return;
-        }
-        logger.debug("Found item_list!");
-        logger.debug(item_list);
-        const item_list_monitor = new MonitorElements(
-          item_list_matcher,
-          item_list_handler,
-          item_list,
-          true,
-          { added: true },
-          0
+      console.log("Found item list wrapper!");
+      console.log(root);
+      const process = () => {
+        apply_ff_gauge_selector(
+          root.querySelectorAll(
+            "div.bazaar-listing-card div:first-child div:first-child > a"
+          ),
+          FEATURE_NAME$2
         );
-        item_list_monitor.start();
-      };
-      const item_list_matcher = (node) => {
-        const seller_list_wrapper = node.className.match(/sellerListWrapper__/);
-        return seller_list_wrapper !== null;
-      };
-      const item_list_handler = (options) => {
-        if (!options.added) {
-          return;
-        }
-        const seller_list_wrapper = options.added;
-        logger.debug("Found seller_list_wrapper!");
-        logger.debug(seller_list_wrapper);
-        const seller_list_wrapper_monitor = new MonitorElements(
-          seller_list_wrapper_matcher,
-          seller_list_wrapper_handler,
-          seller_list_wrapper,
-          true,
-          { added: true },
-          0
+        apply_ff_gauge_selector(
+          root.querySelectorAll(".bazaar-card a"),
+          FEATURE_NAME$2
         );
-        seller_list_wrapper_monitor.start();
-      };
-      const seller_list_wrapper_matcher = (node) => {
-        const seller_list = node.className.match(/sellerList__/);
-        return seller_list !== void 0;
-      };
-      const seller_list_wrapper_handler = (options) => {
-        if (!options.added) {
-          return;
-        }
-        const seller_list = options.added;
-        logger.debug("Found seller_list!");
-        logger.debug(seller_list);
-        const seller_list_monitor = new MonitorElements(
-          seller_list_matcher,
-          seller_list_handler,
-          seller_list,
-          true,
-          { added: true },
-          0
+        apply_ff_gauge_selector(
+          root.querySelectorAll(".honor-text-wrap"),
+          FEATURE_NAME$2
         );
-        seller_list_monitor.start();
-      };
-      const seller_list_matcher = (node) => {
-        const user_info_wrapper = node.querySelector(
-          '.honor-text-wrap, [class*="userInfoWrapper__"]'
+        apply_ff_gauge_selector(
+          root.querySelectorAll('[class*="userInfoWrapper__"]'),
+          FEATURE_NAME$2
         );
-        return user_info_wrapper !== void 0;
       };
-      const seller_list_handler = (options) => {
-        if (!options.added) {
-          return;
-        }
-        const honor_bar = options.added.querySelector(".honor-text-wrap");
-        if (honor_bar) {
-          apply_ff_gauge(honor_bar, FEATURE_NAME$2);
-          return;
-        }
-        const user_info_wrapper = options.added.querySelector(
-          '[class*="userInfoWrapper__"]'
-        );
-        if (user_info_wrapper) {
-          apply_ff_gauge(user_info_wrapper, FEATURE_NAME$2);
-          return;
-        }
-      };
-      const category_monitor = new MonitorElements(
-        category_matcher,
-        category_handler,
-        category_list,
-        true,
-        { added: true },
-        0
-      );
-      category_monitor.start();
+      const observer = new MutationObserver(process);
+      observer.observe(root, {
+        childList: true,
+        subtree: true
+      });
     },
     httpIntercept: {
       before(_url, _init) {
@@ -5777,7 +5692,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       return;
     }
     w[INJECTION_KEY] = true;
-    logger.info("Initializing", "3.0-alpha3");
+    logger.info("Initializing", "3.0-alpha4");
     if (ffscouter.analytics_enabled) {
       unsafeWindow.ffscouter = ffscouter;
       window.ffscouter = ffscouter;
