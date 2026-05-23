@@ -1,12 +1,8 @@
 import {
-  apply_ff_gauge,
   apply_ff_gauge_selector,
-  type HandlerFnOptions,
-  MonitorElements,
   torn_page,
   wait_for_element,
 } from "@utils/dom";
-import logger, { LogLevel } from "@utils/logger";
 import { type Feature, StartTime } from "../feature";
 
 const FEATURE_NAME = "item_market";
@@ -23,7 +19,7 @@ export default {
 
   async run() {
     // Monitor the sellerListWrapper___PN32N for player_ids
-    const root = await wait_for_element('[class*="itemListWrapper__"', 10_000);
+    const root = await wait_for_element('[class*="marketWrapper__"', 10_000);
     if (!root) {
       return;
     }
