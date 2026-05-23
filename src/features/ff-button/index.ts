@@ -4,7 +4,8 @@ import { type CachedTargets, ffconfig } from "@utils/ffconfig";
 import logger from "@utils/logger";
 import { type Feature, StartTime } from "../feature";
 
-export const POLL_INTERVAL_MS = 24 * 60 * 60 * 1000; // 1 day in milliseconds (change to 1 * 60 * 60 * 1000 for 1 hour)
+export const CACHE_LIFETIME_MS = 7 * 24 * 60 * 60 * 1000; // Keep cache for 7 days
+export const POLL_INTERVAL_MS = 24 * 60 * 60 * 1000; // Refresh once a day
 
 export function get_active_filters() {
   return {
@@ -41,13 +42,18 @@ export async function update_ff_targets(force = false): Promise<void> {
   const currentFilters = get_active_filters();
   const cached = ffconfig.chain_targets;
 
-  if (
-    !force &&
+  const hasNoCacheOrExpired = !cached || Date.now() > cached.expiry;
+  const filtersChanged =
+    cached && filters_changed(cached.filters, currentFilters);
+  const timeToRefresh =
     cached &&
-    Date.now() < cached.expiry &&
-    !filters_changed(cached.filters, currentFilters)
-  ) {
-    logger.debug("Using cached targets, not expired and filters match");
+    (!cached.last_updated ||
+      Date.now() - cached.last_updated > POLL_INTERVAL_MS);
+
+  if (!force && !hasNoCacheOrExpired && !filtersChanged && !timeToRefresh) {
+    logger.debug(
+      "Using cached targets, not expired, filters match, and not time to poll yet",
+    );
     return;
   }
 
@@ -65,7 +71,8 @@ export async function update_ff_targets(force = false): Promise<void> {
     if (response?.targets) {
       ffconfig.chain_targets = {
         targets: response.targets,
-        expiry: Date.now() + POLL_INTERVAL_MS,
+        expiry: Date.now() + CACHE_LIFETIME_MS,
+        last_updated: Date.now(),
         filters: currentFilters,
       };
       ffconfig.chain_target_index = 0; // Reset index on successful new fetch

@@ -13,6 +13,7 @@ export interface CachedTargets {
     inactive: boolean;
     factionless: boolean;
   };
+  last_updated?: number;
 }
 
 export enum ChainLinkType {
