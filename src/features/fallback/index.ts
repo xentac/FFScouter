@@ -77,6 +77,7 @@ export default {
       case torn_page("page", { sid: "blackjack" }):
       case torn_page("page", { sid: "spinTheWheel" }):
       case torn_page("page", { sid: "education" }):
+      case torn_page("page", { sid: "itemMarket" }):
         logger.warn("NOT RUNNING FALLBACK ON THIS PAGE");
         return false;
 
@@ -206,18 +207,6 @@ export default {
           // Fallback for anyone without honor bars enabled
           await apply_ff_gauge_selector(name_elems, FEATURE_NAME_USER_NAME);
         }
-      }
-      if (
-        window.location.href.startsWith(
-          "https://www.torn.com/page.php?sid=ItemMarket",
-        )
-      ) {
-        await apply_ff_gauge_selector(
-          node.querySelectorAll(
-            "div.bazaar-listing-card div:first-child div:first-child > a",
-          ),
-          FEATURE_NAME,
-        );
       }
       ffscouter.complete();
     };
