@@ -104,62 +104,110 @@ export function remove_chain_button() {
   }
 }
 
+export function update_anchor_attributes(anchor: HTMLAnchorElement) {
+  const cached = ffconfig.chain_targets;
+  if (!cached || !cached.targets || cached.targets.length === 0) {
+    anchor.href = "#";
+    anchor.removeAttribute("target");
+    return;
+  }
+
+  const idx = ffconfig.chain_target_index;
+  const currentTarget = cached.targets[idx < cached.targets.length ? idx : 0];
+  if (!currentTarget) {
+    anchor.href = "#";
+    anchor.removeAttribute("target");
+    return;
+  }
+
+  const linkType = ffconfig.chain_link_type;
+  anchor.href =
+    linkType === "profile"
+      ? `https://www.torn.com/profiles.php?XID=${currentTarget.player_id}`
+      : `https://www.torn.com/page.php?sid=attack&user2ID=${currentTarget.player_id}`;
+
+  anchor.target = ffconfig.chain_tab_type === "sametab" ? "_self" : "_blank";
+}
+
 export function create_chain_button() {
   if (!ffconfig.chain_button_enabled || !ffconfig.key) {
     remove_chain_button();
     return;
   }
 
-  if (document.getElementById("ff-scouter-chain-btn")) {
+  const existing = document.getElementById(
+    "ff-scouter-chain-btn",
+  ) as HTMLAnchorElement | null;
+  if (existing) {
+    update_anchor_attributes(existing);
     return;
   }
 
-  const button = document.createElement("button");
-  button.id = "ff-scouter-chain-btn";
-  button.innerHTML = "FF";
-  button.style.position = "fixed";
-  button.style.top = "32%";
-  button.style.right = "0%";
-  button.style.zIndex = "9999";
-  button.style.backgroundColor = "green";
-  button.style.color = "white";
-  button.style.border = "none";
-  button.style.padding = "6px";
-  button.style.borderRadius = "6px";
-  button.style.cursor = "pointer";
+  const anchor = document.createElement("a");
+  anchor.id = "ff-scouter-chain-btn";
+  anchor.innerHTML = "FF";
+  anchor.style.position = "fixed";
+  anchor.style.top = "32%";
+  anchor.style.right = "0%";
+  anchor.style.zIndex = "9999";
+  anchor.style.backgroundColor = "green";
+  anchor.style.color = "white";
+  anchor.style.border = "none";
+  anchor.style.padding = "6px";
+  anchor.style.borderRadius = "6px";
+  anchor.style.cursor = "pointer";
+  anchor.style.display = "block";
+  anchor.style.textDecoration = "none";
 
-  button.addEventListener("click", async () => {
-    let rando = get_random_chain_target();
-    if (!rando) {
-      toast("No cached targets found. Fetching...", TOAST_LEVEL.WARNING);
-      await update_ff_targets(true);
-      rando = get_random_chain_target();
-      if (!rando) {
-        toast(
-          "No targets available matching your criteria.",
-          TOAST_LEVEL.ERROR,
-        );
+  update_anchor_attributes(anchor);
+
+  const handler = async (e: Event) => {
+    if (e instanceof KeyboardEvent) {
+      if (e.key !== "Enter") {
+        return;
+      }
+    } else if (e instanceof MouseEvent) {
+      if (e.button !== 0 && e.button !== 1 && e.button !== 2) {
         return;
       }
     }
 
-    const linkType = ffconfig.chain_link_type;
-    const tabType = ffconfig.chain_tab_type;
-    let url: string;
-    if (linkType === "profile") {
-      url = `https://www.torn.com/profiles.php?XID=${rando.player_id}`;
-    } else {
-      url = `https://www.torn.com/page.php?sid=attack&user2ID=${rando.player_id}`;
+    const cached = ffconfig.chain_targets;
+    if (!cached || !cached.targets || cached.targets.length === 0) {
+      e.preventDefault();
+      const isPrimary =
+        (e instanceof MouseEvent && e.button === 0) ||
+        e instanceof KeyboardEvent;
+      if (isPrimary) {
+        toast("No cached targets found. Fetching...", TOAST_LEVEL.WARNING);
+        update_ff_targets(true).then(() => {
+          const newCached = ffconfig.chain_targets;
+          if (
+            !newCached ||
+            !newCached.targets ||
+            newCached.targets.length === 0
+          ) {
+            toast(
+              "No targets available matching your criteria.",
+              TOAST_LEVEL.ERROR,
+            );
+            return;
+          }
+          update_anchor_attributes(anchor);
+          toast("Targets loaded. Click to navigate!", TOAST_LEVEL.INFO);
+        });
+      }
+      return;
     }
 
-    if (tabType === "sametab") {
-      window.location.href = url;
-    } else {
-      window.open(url, "_blank");
-    }
-  });
+    get_next_target_index(cached.targets.length);
+    update_anchor_attributes(anchor);
+  };
 
-  document.body.appendChild(button);
+  anchor.addEventListener("mousedown", handler);
+  anchor.addEventListener("keydown", handler);
+
+  document.body.appendChild(anchor);
 }
 
 export default {
@@ -180,7 +228,14 @@ export default {
     }
 
     // Try fetching/updating targets (async background)
-    update_ff_targets();
+    update_ff_targets().then(() => {
+      const button = document.getElementById(
+        "ff-scouter-chain-btn",
+      ) as HTMLAnchorElement | null;
+      if (button) {
+        update_anchor_attributes(button);
+      }
+    });
 
     // Create the button in DOM
     create_chain_button();

@@ -103,15 +103,18 @@ test("update_ff_targets queries API and resets index on success", async () => {
   expect(ffconfig.chain_target_index).toBe(0);
 });
 
-test("create_chain_button inserts element and handles clicks", () => {
+test("create_chain_button inserts element and handles clicks", async () => {
   ffconfig.key = "api-key";
   ffconfig.chain_button_enabled = true;
   ffconfig.chain_link_type = "profile" as any;
   ffconfig.chain_tab_type = "sametab" as any;
 
-  const mockTarget = { player_id: 777, name: "T7" };
+  const mockTargets = [
+    { player_id: 777, name: "T7" },
+    { player_id: 888, name: "T8" },
+  ];
   ffconfig.chain_targets = {
-    targets: [mockTarget as any],
+    targets: mockTargets as any[],
     expiry: Date.now() + 100000,
     filters: get_active_filters(),
   };
@@ -119,21 +122,22 @@ test("create_chain_button inserts element and handles clicks", () => {
 
   create_chain_button();
 
-  const button = document.getElementById("ff-scouter-chain-btn");
-  expect(button).not.toBeNull();
-  expect(button?.innerHTML).toBe("FF");
-
-  const originalLocation = window.location;
-  delete (window as any).location;
-  window.location = { href: "" } as any;
-
-  button?.dispatchEvent(new Event("click"));
-
-  expect(window.location.href).toBe(
+  const anchor = document.getElementById(
+    "ff-scouter-chain-btn",
+  ) as HTMLAnchorElement | null;
+  expect(anchor).not.toBeNull();
+  expect(anchor?.tagName.toLowerCase()).toBe("a");
+  expect(anchor?.getAttribute("href")).toBe(
     "https://www.torn.com/profiles.php?XID=777",
   );
+  expect(anchor?.getAttribute("target")).toBe("_self");
 
-  (window as any).location = originalLocation;
+  anchor?.dispatchEvent(new MouseEvent("mousedown", { button: 0 }));
+
+  expect(ffconfig.chain_target_index).toBe(1);
+  expect(anchor?.getAttribute("href")).toBe(
+    "https://www.torn.com/profiles.php?XID=888",
+  );
 
   remove_chain_button();
   expect(document.getElementById("ff-scouter-chain-btn")).toBeNull();

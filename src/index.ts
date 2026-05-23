@@ -1,8 +1,9 @@
 import { StartTime } from "@features/feature";
 import { Features } from "@features/index";
 import { wait_for_body } from "@utils/dom";
+import { ffconfig } from "@utils/ffconfig";
 import { ffscouter } from "@utils/ffscouter";
-import logger from "@utils/logger";
+import logger, { LogLevel } from "@utils/logger";
 import { setHttpInterceptor } from "@utils/network";
 import { init_ui } from "./ui";
 
@@ -15,6 +16,7 @@ async function main() {
     return;
   }
   w[INJECTION_KEY] = true;
+  logger.setLevel(ffconfig.debug_logs ? LogLevel.DEBUG : LogLevel.INFO);
 
   logger.info("Initializing", __FF_SCOUTER_V2_VERSION__);
 
