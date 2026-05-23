@@ -193,7 +193,11 @@ export default {
             node.querySelectorAll(".poster"),
             FEATURE_NAME,
           );
-        } else if (window.location.href.includes("page.php?sid=hof")) {
+        } else if (
+          window.location.href.includes("page.php?sid=hof") ||
+          torn_page("factions", { step: "profile" }) ||
+          torn_page("factions", { step: "your" })
+        ) {
           await apply_ff_gauge_selector(
             node.querySelectorAll('[class*="userInfoBox__"]'),
             FEATURE_NAME,
