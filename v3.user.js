@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FF Scouter V3
 // @namespace    xentac-v3
-// @version      3.0-alpha5
+// @version      3.0-alpha6
 // @author       xentac [3354782], MAVRI [2402357], rDacted [2670953], Weav3r [1853324], Glasnost [1844049]
 // @description  Shows the expected Fair Fight score against targets and faction war status
 // @license      GPLv3
@@ -178,400 +178,6 @@
       return `${url}?${query}`;
     }
   }
-  var Time = ((Time2) => {
-    Time2[Time2["Seconds"] = 1e3] = "Seconds";
-    Time2[Time2["Minutes"] = 6e4] = "Minutes";
-    Time2[Time2["Hours"] = 36e5] = "Hours";
-    Time2[Time2["Days"] = 864e5] = "Days";
-    Time2[Time2["Weeks"] = 6048e5] = "Weeks";
-    Time2[Time2["Years"] = 31536e6] = "Years";
-    return Time2;
-  })(Time || {});
-  class Storage {
-constructor(prefix) {
-      this.prefix = prefix;
-    }
-set(key, value, expireConfig) {
-      try {
-        const item = {
-          value,
-          expiration: expireConfig ? Date.now() + expireConfig.amount * (expireConfig.unit || 6e4) : null
-        };
-        localStorage.setItem(this.prefix + key, JSON.stringify(item));
-      } catch (error) {
-        logger.error(`Error storing item '${key}':`, error);
-      }
-    }
-get(key) {
-      try {
-        const itemStr = localStorage.getItem(this.prefix + key);
-        if (!itemStr) {
-          return null;
-        }
-        let item = null;
-        try {
-          item = JSON.parse(itemStr);
-        } catch {
-          item = null;
-        }
-        if (!item) {
-          logger.warn(`Key '${key}' has invalid JSON in it.`);
-          this.remove(key);
-          return null;
-        }
-        if (item.expiration && Date.now() > item.expiration) {
-          this.remove(key);
-          logger.debug(`Key ${key} has expired.`);
-          return null;
-        }
-        return item.value;
-      } catch (error) {
-        logger.error(`Error retrieving item '${key}':`, error);
-        return null;
-      }
-    }
-remove(key) {
-      try {
-        localStorage.removeItem(this.prefix + key);
-      } catch (error) {
-        logger.error(`Error removing item [${key}]:`, error);
-      }
-    }
-has(key) {
-      return this.get(key) !== null;
-    }
-clearAll() {
-      try {
-        Object.keys(localStorage).filter((key) => key.startsWith(this.prefix)).forEach((key) => {
-          localStorage.removeItem(key);
-        });
-      } catch (error) {
-        logger.error("Error clearing storage:", error);
-      }
-    }
-  }
-  var FactionsColDisplay = ((FactionsColDisplay2) => {
-    FactionsColDisplay2["FAIR_FIGHT"] = "fair_fight";
-    FactionsColDisplay2["BATTLE_STATS"] = "battle_stats";
-    FactionsColDisplay2["NONE"] = "none";
-    return FactionsColDisplay2;
-  })(FactionsColDisplay || {});
-  const CONFIG_DEFAULTS = {
-    low_ff_range: 2,
-    high_ff_range: 4,
-    max_ff_range: 8,
-    chain_button_enabled: true,
-    chain_link_type: "attack",
-    chain_tab_type: "newtab",
-    chain_ff_target: 2.5,
-    ff_history_enabled: true,
-    factions_col_display: "battle_stats",
-    debug_logs: false,
-    analytics_enabled: false,
-    chain_min_level: null,
-    chain_max_level: null,
-    chain_inactive: true,
-    chain_min_ff: null,
-    chain_max_ff: 2.5,
-    chain_factionless: false
-  };
-  class FFConfig {
-    constructor(name) {
-      this.name = name;
-      this.storage = new Storage(this.name);
-    }
-    get key() {
-      return this.storage.get(
-        "key"
-) ?? "";
-    }
-    set key(key) {
-      this.storage.set("key", key);
-    }
-    get low_ff_range() {
-      return this.storage.get(
-        "low_ff_range"
-) ?? CONFIG_DEFAULTS.low_ff_range;
-    }
-    set low_ff_range(val) {
-      this.storage.set("low_ff_range", val);
-    }
-    get high_ff_range() {
-      return this.storage.get(
-        "high_ff_range"
-) ?? CONFIG_DEFAULTS.high_ff_range;
-    }
-    set high_ff_range(val) {
-      this.storage.set("high_ff_range", val);
-    }
-    get max_ff_range() {
-      return this.storage.get(
-        "max_ff_range"
-) ?? CONFIG_DEFAULTS.max_ff_range;
-    }
-    set max_ff_range(val) {
-      this.storage.set("max_ff_range", val);
-    }
-    get chain_button_enabled() {
-      return this.storage.get(
-        "chain_button_enabled"
-) ?? CONFIG_DEFAULTS.chain_button_enabled;
-    }
-    set chain_button_enabled(val) {
-      this.storage.set("chain_button_enabled", val);
-    }
-    get chain_link_type() {
-      return this.storage.get(
-        "chain_link_type"
-) ?? CONFIG_DEFAULTS.chain_link_type;
-    }
-    set chain_link_type(val) {
-      this.storage.set("chain_link_type", val);
-    }
-    get chain_tab_type() {
-      return this.storage.get(
-        "chain_tab_type"
-) ?? CONFIG_DEFAULTS.chain_tab_type;
-    }
-    set chain_tab_type(val) {
-      this.storage.set("chain_tab_type", val);
-    }
-    get chain_ff_target() {
-      return this.storage.get(
-        "chain_ff_target"
-) ?? CONFIG_DEFAULTS.chain_ff_target;
-    }
-    set chain_ff_target(val) {
-      this.storage.set("chain_ff_target", val);
-    }
-    get chain_min_level() {
-      return this.storage.get(
-        "chain_min_level"
-) ?? CONFIG_DEFAULTS.chain_min_level;
-    }
-    set chain_min_level(val) {
-      if (val === null) {
-        this.storage.remove(
-          "chain_min_level"
-);
-      } else {
-        this.storage.set("chain_min_level", val);
-      }
-    }
-    get chain_max_level() {
-      return this.storage.get(
-        "chain_max_level"
-) ?? CONFIG_DEFAULTS.chain_max_level;
-    }
-    set chain_max_level(val) {
-      if (val === null) {
-        this.storage.remove(
-          "chain_max_level"
-);
-      } else {
-        this.storage.set("chain_max_level", val);
-      }
-    }
-    get chain_inactive() {
-      return this.storage.get(
-        "chain_inactive"
-) ?? CONFIG_DEFAULTS.chain_inactive;
-    }
-    set chain_inactive(val) {
-      this.storage.set("chain_inactive", val);
-    }
-    get chain_min_ff() {
-      return this.storage.get(
-        "chain_min_ff"
-) ?? CONFIG_DEFAULTS.chain_min_ff;
-    }
-    set chain_min_ff(val) {
-      if (val === null) {
-        this.storage.remove(
-          "chain_min_ff"
-);
-      } else {
-        this.storage.set("chain_min_ff", val);
-      }
-    }
-    get chain_max_ff() {
-      return this.storage.get(
-        "chain_max_ff"
-) ?? this.storage.get(
-        "chain_ff_target"
-) ?? CONFIG_DEFAULTS.chain_max_ff;
-    }
-    set chain_max_ff(val) {
-      this.storage.set("chain_max_ff", val);
-      this.storage.set("chain_ff_target", val);
-    }
-    get chain_factionless() {
-      return this.storage.get(
-        "chain_factionless"
-) ?? CONFIG_DEFAULTS.chain_factionless;
-    }
-    set chain_factionless(val) {
-      this.storage.set("chain_factionless", val);
-    }
-    get ff_history_enabled() {
-      return this.storage.get(
-        "ff_history_enabled"
-) ?? CONFIG_DEFAULTS.ff_history_enabled;
-    }
-    set ff_history_enabled(val) {
-      this.storage.set("ff_history_enabled", val);
-    }
-    get factions_col_display() {
-      return this.storage.get(
-        "factions_col_display"
-) ?? CONFIG_DEFAULTS.factions_col_display;
-    }
-    set factions_col_display(val) {
-      this.storage.set("factions_col_display", val);
-    }
-    get debug_logs() {
-      return this.storage.get(
-        "debug_logs"
-) ?? CONFIG_DEFAULTS.debug_logs;
-    }
-    set debug_logs(val) {
-      this.storage.set("debug_logs", val);
-    }
-    get analytics_enabled() {
-      return this.storage.get(
-        "analytics_enabled"
-) ?? CONFIG_DEFAULTS.analytics_enabled;
-    }
-    set analytics_enabled(val) {
-      this.storage.set("analytics_enabled", val);
-    }
-    get faction_filter_state() {
-      return this.storage.get(
-        "faction_filter_state"
-) ?? null;
-    }
-    set faction_filter_state(val) {
-      this.storage.set("faction_filter_state", val);
-    }
-    get faction_filter_collapsed() {
-      return this.storage.get(
-        "faction_filter_collapsed"
-) ?? false;
-    }
-    set faction_filter_collapsed(val) {
-      this.storage.set("faction_filter_collapsed", val);
-    }
-    get war_filter_state() {
-      return this.storage.get(
-        "war_filter_state"
-) ?? null;
-    }
-    set war_filter_state(val) {
-      this.storage.set("war_filter_state", val);
-    }
-    get war_filter_collapsed() {
-      return this.storage.get(
-        "war_filter_collapsed"
-) ?? false;
-    }
-    set war_filter_collapsed(val) {
-      this.storage.set("war_filter_collapsed", val);
-    }
-    get chain_targets() {
-      return this.storage.get(
-        "chain_targets"
-);
-    }
-    set chain_targets(val) {
-      if (val === null) {
-        this.storage.remove(
-          "chain_targets"
-);
-      } else {
-        this.storage.set("chain_targets", val);
-      }
-    }
-    get chain_target_index() {
-      return this.storage.get(
-        "chain_target_index"
-) ?? 0;
-    }
-    set chain_target_index(val) {
-      this.storage.set("chain_target_index", val);
-    }
-    reset() {
-      this.storage.remove(
-        "low_ff_range"
-);
-      this.storage.remove(
-        "high_ff_range"
-);
-      this.storage.remove(
-        "max_ff_range"
-);
-      this.storage.remove(
-        "chain_button_enabled"
-);
-      this.storage.remove(
-        "chain_link_type"
-);
-      this.storage.remove(
-        "chain_tab_type"
-);
-      this.storage.remove(
-        "chain_ff_target"
-);
-      this.storage.remove(
-        "ff_history_enabled"
-);
-      this.storage.remove(
-        "factions_col_display"
-);
-      this.storage.remove(
-        "debug_logs"
-);
-      this.storage.remove(
-        "analytics_enabled"
-);
-      this.storage.remove(
-        "faction_filter_state"
-);
-      this.storage.remove(
-        "faction_filter_collapsed"
-);
-      this.storage.remove(
-        "war_filter_state"
-);
-      this.storage.remove(
-        "war_filter_collapsed"
-);
-      this.storage.remove(
-        "chain_min_level"
-);
-      this.storage.remove(
-        "chain_max_level"
-);
-      this.storage.remove(
-        "chain_inactive"
-);
-      this.storage.remove(
-        "chain_min_ff"
-);
-      this.storage.remove(
-        "chain_max_ff"
-);
-      this.storage.remove(
-        "chain_factionless"
-);
-      this.storage.remove(
-        "chain_targets"
-);
-      this.storage.remove(
-        "chain_target_index"
-);
-    }
-  }
-  const ffconfig = new FFConfig("ffsv3-config");
   var LogLevel = ((LogLevel2) => {
     LogLevel2[LogLevel2["DEBUG"] = 0] = "DEBUG";
     LogLevel2[LogLevel2["INFO"] = 1] = "INFO";
@@ -655,7 +261,7 @@ formatPrefix(level) {
   }
   const logger = new Logger(
     "FFSV3",
-    ffconfig.debug_logs ? 0 : 1
+    0
 );
   const FF_SCOUTER_BASE_URL = "https://ffscouter.com/api/v1";
   new TornApiClient({
@@ -1400,6 +1006,400 @@ event.oldVersion,
       this.db_name = db_name;
     }
   }
+  var Time = ((Time2) => {
+    Time2[Time2["Seconds"] = 1e3] = "Seconds";
+    Time2[Time2["Minutes"] = 6e4] = "Minutes";
+    Time2[Time2["Hours"] = 36e5] = "Hours";
+    Time2[Time2["Days"] = 864e5] = "Days";
+    Time2[Time2["Weeks"] = 6048e5] = "Weeks";
+    Time2[Time2["Years"] = 31536e6] = "Years";
+    return Time2;
+  })(Time || {});
+  class Storage {
+constructor(prefix) {
+      this.prefix = prefix;
+    }
+set(key, value, expireConfig) {
+      try {
+        const item = {
+          value,
+          expiration: expireConfig ? Date.now() + expireConfig.amount * (expireConfig.unit || 6e4) : null
+        };
+        localStorage.setItem(this.prefix + key, JSON.stringify(item));
+      } catch (error) {
+        logger.error(`Error storing item '${key}':`, error);
+      }
+    }
+get(key) {
+      try {
+        const itemStr = localStorage.getItem(this.prefix + key);
+        if (!itemStr) {
+          return null;
+        }
+        let item = null;
+        try {
+          item = JSON.parse(itemStr);
+        } catch {
+          item = null;
+        }
+        if (!item) {
+          logger.warn(`Key '${key}' has invalid JSON in it.`);
+          this.remove(key);
+          return null;
+        }
+        if (item.expiration && Date.now() > item.expiration) {
+          this.remove(key);
+          logger.debug(`Key ${key} has expired.`);
+          return null;
+        }
+        return item.value;
+      } catch (error) {
+        logger.error(`Error retrieving item '${key}':`, error);
+        return null;
+      }
+    }
+remove(key) {
+      try {
+        localStorage.removeItem(this.prefix + key);
+      } catch (error) {
+        logger.error(`Error removing item [${key}]:`, error);
+      }
+    }
+has(key) {
+      return this.get(key) !== null;
+    }
+clearAll() {
+      try {
+        Object.keys(localStorage).filter((key) => key.startsWith(this.prefix)).forEach((key) => {
+          localStorage.removeItem(key);
+        });
+      } catch (error) {
+        logger.error("Error clearing storage:", error);
+      }
+    }
+  }
+  var FactionsColDisplay = ((FactionsColDisplay2) => {
+    FactionsColDisplay2["FAIR_FIGHT"] = "fair_fight";
+    FactionsColDisplay2["BATTLE_STATS"] = "battle_stats";
+    FactionsColDisplay2["NONE"] = "none";
+    return FactionsColDisplay2;
+  })(FactionsColDisplay || {});
+  const CONFIG_DEFAULTS = {
+    low_ff_range: 2,
+    high_ff_range: 4,
+    max_ff_range: 8,
+    chain_button_enabled: true,
+    chain_link_type: "attack",
+    chain_tab_type: "newtab",
+    chain_ff_target: 2.5,
+    ff_history_enabled: true,
+    factions_col_display: "battle_stats",
+    debug_logs: false,
+    analytics_enabled: false,
+    chain_min_level: null,
+    chain_max_level: null,
+    chain_inactive: true,
+    chain_min_ff: null,
+    chain_max_ff: 2.5,
+    chain_factionless: false
+  };
+  class FFConfig {
+    constructor(name) {
+      this.name = name;
+      this.storage = new Storage(this.name);
+    }
+    get key() {
+      return this.storage.get(
+        "key"
+) ?? "";
+    }
+    set key(key) {
+      this.storage.set("key", key);
+    }
+    get low_ff_range() {
+      return this.storage.get(
+        "low_ff_range"
+) ?? CONFIG_DEFAULTS.low_ff_range;
+    }
+    set low_ff_range(val) {
+      this.storage.set("low_ff_range", val);
+    }
+    get high_ff_range() {
+      return this.storage.get(
+        "high_ff_range"
+) ?? CONFIG_DEFAULTS.high_ff_range;
+    }
+    set high_ff_range(val) {
+      this.storage.set("high_ff_range", val);
+    }
+    get max_ff_range() {
+      return this.storage.get(
+        "max_ff_range"
+) ?? CONFIG_DEFAULTS.max_ff_range;
+    }
+    set max_ff_range(val) {
+      this.storage.set("max_ff_range", val);
+    }
+    get chain_button_enabled() {
+      return this.storage.get(
+        "chain_button_enabled"
+) ?? CONFIG_DEFAULTS.chain_button_enabled;
+    }
+    set chain_button_enabled(val) {
+      this.storage.set("chain_button_enabled", val);
+    }
+    get chain_link_type() {
+      return this.storage.get(
+        "chain_link_type"
+) ?? CONFIG_DEFAULTS.chain_link_type;
+    }
+    set chain_link_type(val) {
+      this.storage.set("chain_link_type", val);
+    }
+    get chain_tab_type() {
+      return this.storage.get(
+        "chain_tab_type"
+) ?? CONFIG_DEFAULTS.chain_tab_type;
+    }
+    set chain_tab_type(val) {
+      this.storage.set("chain_tab_type", val);
+    }
+    get chain_ff_target() {
+      return this.storage.get(
+        "chain_ff_target"
+) ?? CONFIG_DEFAULTS.chain_ff_target;
+    }
+    set chain_ff_target(val) {
+      this.storage.set("chain_ff_target", val);
+    }
+    get chain_min_level() {
+      return this.storage.get(
+        "chain_min_level"
+) ?? CONFIG_DEFAULTS.chain_min_level;
+    }
+    set chain_min_level(val) {
+      if (val === null) {
+        this.storage.remove(
+          "chain_min_level"
+);
+      } else {
+        this.storage.set("chain_min_level", val);
+      }
+    }
+    get chain_max_level() {
+      return this.storage.get(
+        "chain_max_level"
+) ?? CONFIG_DEFAULTS.chain_max_level;
+    }
+    set chain_max_level(val) {
+      if (val === null) {
+        this.storage.remove(
+          "chain_max_level"
+);
+      } else {
+        this.storage.set("chain_max_level", val);
+      }
+    }
+    get chain_inactive() {
+      return this.storage.get(
+        "chain_inactive"
+) ?? CONFIG_DEFAULTS.chain_inactive;
+    }
+    set chain_inactive(val) {
+      this.storage.set("chain_inactive", val);
+    }
+    get chain_min_ff() {
+      return this.storage.get(
+        "chain_min_ff"
+) ?? CONFIG_DEFAULTS.chain_min_ff;
+    }
+    set chain_min_ff(val) {
+      if (val === null) {
+        this.storage.remove(
+          "chain_min_ff"
+);
+      } else {
+        this.storage.set("chain_min_ff", val);
+      }
+    }
+    get chain_max_ff() {
+      return this.storage.get(
+        "chain_max_ff"
+) ?? this.storage.get(
+        "chain_ff_target"
+) ?? CONFIG_DEFAULTS.chain_max_ff;
+    }
+    set chain_max_ff(val) {
+      this.storage.set("chain_max_ff", val);
+      this.storage.set("chain_ff_target", val);
+    }
+    get chain_factionless() {
+      return this.storage.get(
+        "chain_factionless"
+) ?? CONFIG_DEFAULTS.chain_factionless;
+    }
+    set chain_factionless(val) {
+      this.storage.set("chain_factionless", val);
+    }
+    get ff_history_enabled() {
+      return this.storage.get(
+        "ff_history_enabled"
+) ?? CONFIG_DEFAULTS.ff_history_enabled;
+    }
+    set ff_history_enabled(val) {
+      this.storage.set("ff_history_enabled", val);
+    }
+    get factions_col_display() {
+      return this.storage.get(
+        "factions_col_display"
+) ?? CONFIG_DEFAULTS.factions_col_display;
+    }
+    set factions_col_display(val) {
+      this.storage.set("factions_col_display", val);
+    }
+    get debug_logs() {
+      return this.storage.get(
+        "debug_logs"
+) ?? CONFIG_DEFAULTS.debug_logs;
+    }
+    set debug_logs(val) {
+      this.storage.set("debug_logs", val);
+    }
+    get analytics_enabled() {
+      return this.storage.get(
+        "analytics_enabled"
+) ?? CONFIG_DEFAULTS.analytics_enabled;
+    }
+    set analytics_enabled(val) {
+      this.storage.set("analytics_enabled", val);
+    }
+    get faction_filter_state() {
+      return this.storage.get(
+        "faction_filter_state"
+) ?? null;
+    }
+    set faction_filter_state(val) {
+      this.storage.set("faction_filter_state", val);
+    }
+    get faction_filter_collapsed() {
+      return this.storage.get(
+        "faction_filter_collapsed"
+) ?? false;
+    }
+    set faction_filter_collapsed(val) {
+      this.storage.set("faction_filter_collapsed", val);
+    }
+    get war_filter_state() {
+      return this.storage.get(
+        "war_filter_state"
+) ?? null;
+    }
+    set war_filter_state(val) {
+      this.storage.set("war_filter_state", val);
+    }
+    get war_filter_collapsed() {
+      return this.storage.get(
+        "war_filter_collapsed"
+) ?? false;
+    }
+    set war_filter_collapsed(val) {
+      this.storage.set("war_filter_collapsed", val);
+    }
+    get chain_targets() {
+      return this.storage.get(
+        "chain_targets"
+);
+    }
+    set chain_targets(val) {
+      if (val === null) {
+        this.storage.remove(
+          "chain_targets"
+);
+      } else {
+        this.storage.set("chain_targets", val);
+      }
+    }
+    get chain_target_index() {
+      return this.storage.get(
+        "chain_target_index"
+) ?? 0;
+    }
+    set chain_target_index(val) {
+      this.storage.set("chain_target_index", val);
+    }
+    reset() {
+      this.storage.remove(
+        "low_ff_range"
+);
+      this.storage.remove(
+        "high_ff_range"
+);
+      this.storage.remove(
+        "max_ff_range"
+);
+      this.storage.remove(
+        "chain_button_enabled"
+);
+      this.storage.remove(
+        "chain_link_type"
+);
+      this.storage.remove(
+        "chain_tab_type"
+);
+      this.storage.remove(
+        "chain_ff_target"
+);
+      this.storage.remove(
+        "ff_history_enabled"
+);
+      this.storage.remove(
+        "factions_col_display"
+);
+      this.storage.remove(
+        "debug_logs"
+);
+      this.storage.remove(
+        "analytics_enabled"
+);
+      this.storage.remove(
+        "faction_filter_state"
+);
+      this.storage.remove(
+        "faction_filter_collapsed"
+);
+      this.storage.remove(
+        "war_filter_state"
+);
+      this.storage.remove(
+        "war_filter_collapsed"
+);
+      this.storage.remove(
+        "chain_min_level"
+);
+      this.storage.remove(
+        "chain_max_level"
+);
+      this.storage.remove(
+        "chain_inactive"
+);
+      this.storage.remove(
+        "chain_min_ff"
+);
+      this.storage.remove(
+        "chain_max_ff"
+);
+      this.storage.remove(
+        "chain_factionless"
+);
+      this.storage.remove(
+        "chain_targets"
+);
+      this.storage.remove(
+        "chain_target_index"
+);
+    }
+  }
+  const ffconfig = new FFConfig("ffsv3-config");
   const DB_NAME = "FFSV3-cache";
   class FFScouter {
     constructor(config, cache) {
@@ -4117,6 +4117,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       }
     }, 4e3);
   }
+  const CACHE_LIFETIME_MS = 7 * 24 * 60 * 60 * 1e3;
   const POLL_INTERVAL_MS = 24 * 60 * 60 * 1e3;
   function get_active_filters() {
     return {
@@ -4139,8 +4140,13 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     }
     const currentFilters = get_active_filters();
     const cached = ffconfig.chain_targets;
-    if (!force && cached && Date.now() < cached.expiry && !filters_changed(cached.filters, currentFilters)) {
-      logger.debug("Using cached targets, not expired and filters match");
+    const hasNoCacheOrExpired = !cached || Date.now() > cached.expiry;
+    const filtersChanged = cached && filters_changed(cached.filters, currentFilters);
+    const timeToRefresh = cached && (!cached.last_updated || Date.now() - cached.last_updated > POLL_INTERVAL_MS);
+    if (!force && !hasNoCacheOrExpired && !filtersChanged && !timeToRefresh) {
+      logger.debug(
+        "Using cached targets, not expired, filters match, and not time to poll yet"
+      );
       return;
     }
     try {
@@ -4156,7 +4162,8 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       if (response?.targets) {
         ffconfig.chain_targets = {
           targets: response.targets,
-          expiry: Date.now() + POLL_INTERVAL_MS,
+          expiry: Date.now() + CACHE_LIFETIME_MS,
+          last_updated: Date.now(),
           filters: currentFilters
         };
         ffconfig.chain_target_index = 0;
@@ -4177,70 +4184,95 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     ffconfig.chain_target_index = nextVal;
     return val < maxLen ? val : 0;
   }
-  function get_random_chain_target() {
-    const cached = ffconfig.chain_targets;
-    if (!cached || !cached.targets || cached.targets.length === 0) {
-      return null;
-    }
-    const index = get_next_target_index(cached.targets.length);
-    return cached.targets[index] ?? null;
-  }
   function remove_chain_button() {
     const button = document.getElementById("ff-scouter-chain-btn");
     if (button) {
       button.remove();
     }
   }
+  function update_anchor_attributes(anchor) {
+    const cached = ffconfig.chain_targets;
+    if (!cached || !cached.targets || cached.targets.length === 0) {
+      anchor.href = "#";
+      anchor.removeAttribute("target");
+      return;
+    }
+    const idx = ffconfig.chain_target_index;
+    const currentTarget = cached.targets[idx < cached.targets.length ? idx : 0];
+    if (!currentTarget) {
+      anchor.href = "#";
+      anchor.removeAttribute("target");
+      return;
+    }
+    const linkType = ffconfig.chain_link_type;
+    anchor.href = linkType === "profile" ? `https://www.torn.com/profiles.php?XID=${currentTarget.player_id}` : `https://www.torn.com/page.php?sid=attack&user2ID=${currentTarget.player_id}`;
+    anchor.target = ffconfig.chain_tab_type === "sametab" ? "_self" : "_blank";
+  }
   function create_chain_button() {
     if (!ffconfig.chain_button_enabled || !ffconfig.key) {
       remove_chain_button();
       return;
     }
-    if (document.getElementById("ff-scouter-chain-btn")) {
+    const existing = document.getElementById(
+      "ff-scouter-chain-btn"
+    );
+    if (existing) {
+      update_anchor_attributes(existing);
       return;
     }
-    const button = document.createElement("button");
-    button.id = "ff-scouter-chain-btn";
-    button.innerHTML = "FF";
-    button.style.position = "fixed";
-    button.style.top = "32%";
-    button.style.right = "0%";
-    button.style.zIndex = "9999";
-    button.style.backgroundColor = "green";
-    button.style.color = "white";
-    button.style.border = "none";
-    button.style.padding = "6px";
-    button.style.borderRadius = "6px";
-    button.style.cursor = "pointer";
-    button.addEventListener("click", async () => {
-      let rando = get_random_chain_target();
-      if (!rando) {
-        toast("No cached targets found. Fetching...", TOAST_LEVEL.WARNING);
-        await update_ff_targets(true);
-        rando = get_random_chain_target();
-        if (!rando) {
-          toast(
-            "No targets available matching your criteria.",
-            TOAST_LEVEL.ERROR
-          );
+    const anchor = document.createElement("a");
+    anchor.id = "ff-scouter-chain-btn";
+    anchor.innerHTML = "FF";
+    anchor.style.position = "fixed";
+    anchor.style.top = "32%";
+    anchor.style.right = "0%";
+    anchor.style.zIndex = "9999";
+    anchor.style.backgroundColor = "green";
+    anchor.style.color = "white";
+    anchor.style.border = "none";
+    anchor.style.padding = "6px";
+    anchor.style.borderRadius = "6px";
+    anchor.style.cursor = "pointer";
+    anchor.style.display = "block";
+    anchor.style.textDecoration = "none";
+    update_anchor_attributes(anchor);
+    const handler = async (e2) => {
+      if (e2 instanceof KeyboardEvent) {
+        if (e2.key !== "Enter") {
+          return;
+        }
+      } else if (e2 instanceof MouseEvent) {
+        if (e2.button !== 0 && e2.button !== 1 && e2.button !== 2) {
           return;
         }
       }
-      const linkType = ffconfig.chain_link_type;
-      const tabType = ffconfig.chain_tab_type;
-      let url;
-      if (linkType === "profile") {
-        url = `https://www.torn.com/profiles.php?XID=${rando.player_id}`;
-      } else {
-        url = `https://www.torn.com/page.php?sid=attack&user2ID=${rando.player_id}`;
+      const cached = ffconfig.chain_targets;
+      if (!cached || !cached.targets || cached.targets.length === 0) {
+        e2.preventDefault();
+        const isPrimary = e2 instanceof MouseEvent && e2.button === 0 || e2 instanceof KeyboardEvent;
+        if (isPrimary) {
+          toast("No cached targets found. Fetching...", TOAST_LEVEL.WARNING);
+          update_ff_targets(true).then(() => {
+            const newCached = ffconfig.chain_targets;
+            if (!newCached || !newCached.targets || newCached.targets.length === 0) {
+              toast(
+                "No targets available matching your criteria.",
+                TOAST_LEVEL.ERROR
+              );
+              return;
+            }
+            update_anchor_attributes(anchor);
+            toast("Targets loaded. Click to navigate!", TOAST_LEVEL.INFO);
+          });
+        }
+        return;
       }
-      if (tabType === "sametab") {
-        window.location.href = url;
-      } else {
-        window.open(url, "_blank");
-      }
-    });
-    document.body.appendChild(button);
+      get_next_target_index(cached.targets.length);
+      update_anchor_attributes(anchor);
+    };
+    anchor.addEventListener("mousedown", handler);
+    anchor.addEventListener("keydown", handler);
+    document.body.appendChild(anchor);
   }
   const FFButton = {
     name: "FF Target Finder Button",
@@ -4254,7 +4286,14 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
         remove_chain_button();
         return;
       }
-      update_ff_targets();
+      update_ff_targets().then(() => {
+        const button = document.getElementById(
+          "ff-scouter-chain-btn"
+        );
+        if (button) {
+          update_anchor_attributes(button);
+        }
+      });
       create_chain_button();
       window.addEventListener("ff-config-updated", async () => {
         if (!ffconfig.chain_button_enabled || !ffconfig.key) {
@@ -5692,7 +5731,8 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       return;
     }
     w[INJECTION_KEY] = true;
-    logger.info("Initializing", "3.0-alpha5");
+    logger.setLevel(ffconfig.debug_logs ? LogLevel.DEBUG : LogLevel.INFO);
+    logger.info("Initializing", "3.0-alpha6");
     if (ffscouter.analytics_enabled) {
       unsafeWindow.ffscouter = ffscouter;
       window.ffscouter = ffscouter;
