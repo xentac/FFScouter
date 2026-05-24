@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FF Scouter V3
 // @namespace    xentac-v3
-// @version      3.0-alpha8
+// @version      3.0-alpha9
 // @author       xentac [3354782], MAVRI [2402357], rDacted [2670953], Weav3r [1853324], Glasnost [1844049]
 // @description  Shows the expected Fair Fight score against targets and faction war status
 // @license      GPLv3
@@ -798,6 +798,9 @@ event.oldVersion,
       this.db = null;
       this.db_version = 3;
       this.cache_interval = 60 * 60 * 1e3;
+      this.last_clean = 0;
+      this.active_operations = 0;
+      this.close_timer = null;
       this.migrations = new Map([
         [
           1,
@@ -868,7 +871,31 @@ event.oldVersion,
           this.db = null;
         }
       };
+      this.start_op = async () => {
+        this.active_operations++;
+        if (this.close_timer) {
+          clearTimeout(this.close_timer);
+          this.close_timer = null;
+        }
+        return await this.open();
+      };
+      this.end_op = () => {
+        this.active_operations = Math.max(0, this.active_operations - 1);
+        if (this.active_operations === 0) {
+          if (this.close_timer) {
+            clearTimeout(this.close_timer);
+          }
+          this.close_timer = setTimeout(() => {
+            this.close();
+            this.close_timer = null;
+          }, 1e3);
+        }
+      };
       this.delete_db = async () => {
+        if (this.close_timer) {
+          clearTimeout(this.close_timer);
+          this.close_timer = null;
+        }
         this.close();
         await deleteDB(this.db_name, {
           blocked: () => {
@@ -878,130 +905,167 @@ event.oldVersion,
         logger.info(`Successfully deleted ${this.db_name} IndexedDB.`);
       };
       this.get = async (player_ids) => {
-        const db = await this.open();
-        const tx = db.transaction(STORES.CACHE, "readonly");
-        const requests = player_ids.map((id) => tx.store.get(id));
-        const entries = await Promise.all(requests);
-        await tx.done;
-        const result = new Map();
-        player_ids.forEach((id, idx) => {
-          const value = entries[idx];
-          result.set(id, !value || value.expiry <= Date.now() ? null : value);
-        });
-        this.close();
-        return result;
+        const db = await this.start_op();
+        try {
+          const tx = db.transaction(STORES.CACHE, "readonly");
+          const requests = player_ids.map((id) => tx.store.get(id));
+          const entries = await Promise.all(requests);
+          await tx.done;
+          const result = new Map();
+          player_ids.forEach((id, idx) => {
+            const value = entries[idx];
+            result.set(id, !value || value.expiry <= Date.now() ? null : value);
+          });
+          return result;
+        } finally {
+          this.end_op();
+        }
       };
       this.update = async (values) => {
-        const db = await this.open();
-        const tx = db.transaction(STORES.CACHE, "readwrite");
-        const values_expiry = values.map((value) => {
-          return {
-            ...value,
-            expiry: Date.now() + this.cache_interval
-          };
-        });
-        const requests = values_expiry.map((value) => {
-          return tx.store.put(value);
-        });
-        await Promise.all(requests);
-        await tx.done;
-        this.close();
-      };
-      this.clean_expired = async () => {
-        const db = await this.open();
-        {
+        const db = await this.start_op();
+        try {
           const tx = db.transaction(STORES.CACHE, "readwrite");
-          const index = tx.store.index("expiry");
-          const range = IDBKeyRange.upperBound(Date.now());
-          const r2 = await index.getAllKeys(range);
-          logger.info(`Found ${r2.length} expired values to delete from cache.`);
-          await Promise.all(r2.map((id) => tx.store.delete(id)));
+          const values_expiry = values.map((value) => {
+            return {
+              ...value,
+              expiry: Date.now() + this.cache_interval
+            };
+          });
+          const requests = values_expiry.map((value) => {
+            return tx.store.put(value);
+          });
+          await Promise.all(requests);
           await tx.done;
+        } finally {
+          this.end_op();
         }
-        {
-          const tx = db.transaction(STORES.FLIGHTS, "readwrite");
-          const index = tx.store.index("expiry");
-          const range = IDBKeyRange.upperBound(Date.now());
-          const r2 = await index.getAllKeys(range);
-          logger.info(`Found ${r2.length} expired values to delete from flights.`);
-          await Promise.all(r2.map((id) => tx.store.delete(id)));
-          await tx.done;
+      };
+      this.clean_expired = async (force = false) => {
+        const now = Date.now();
+        if (!force && now - this.last_clean < 5 * 60 * 1e3) {
+          return;
         }
-        {
-          const tx = db.transaction(STORES.ANALYTICS, "readwrite");
-          const index = tx.store.index("timestamp");
-          const thirty_days_ago = Date.now() - 30 * 24 * 60 * 60 * 1e3;
-          const range = IDBKeyRange.upperBound(thirty_days_ago);
-          const r2 = await index.getAllKeys(range);
-          logger.info(`Found ${r2.length} expired values to delete from analytics.`);
-          await Promise.all(r2.map((id) => tx.store.delete(id)));
-          await tx.done;
+        this.last_clean = now;
+        const db = await this.start_op();
+        try {
+          {
+            const tx = db.transaction(STORES.CACHE, "readwrite");
+            const index = tx.store.index("expiry");
+            const range = IDBKeyRange.upperBound(Date.now());
+            const r2 = await index.getAllKeys(range);
+            logger.info(`Found ${r2.length} expired values to delete from cache.`);
+            await Promise.all(r2.map((id) => tx.store.delete(id)));
+            await tx.done;
+          }
+          {
+            const tx = db.transaction(STORES.FLIGHTS, "readwrite");
+            const index = tx.store.index("expiry");
+            const range = IDBKeyRange.upperBound(Date.now());
+            const r2 = await index.getAllKeys(range);
+            logger.info(`Found ${r2.length} expired values to delete from flights.`);
+            await Promise.all(r2.map((id) => tx.store.delete(id)));
+            await tx.done;
+          }
+          {
+            const tx = db.transaction(STORES.ANALYTICS, "readwrite");
+            const index = tx.store.index("timestamp");
+            const thirty_days_ago = Date.now() - 30 * 24 * 60 * 60 * 1e3;
+            const range = IDBKeyRange.upperBound(thirty_days_ago);
+            const r2 = await index.getAllKeys(range);
+            logger.info(
+              `Found ${r2.length} expired values to delete from analytics.`
+            );
+            await Promise.all(r2.map((id) => tx.store.delete(id)));
+            await tx.done;
+          }
+        } finally {
+          this.end_op();
         }
-        this.close();
       };
       this.get_flight = async (player_id) => {
-        const db = await this.open();
-        const tx = db.transaction(STORES.FLIGHTS, "readonly");
-        const entry = await tx.store.get(player_id);
-        await tx.done;
-        this.close();
-        if (!entry || entry.expiry <= Date.now()) {
-          return null;
+        const db = await this.start_op();
+        try {
+          const tx = db.transaction(STORES.FLIGHTS, "readonly");
+          const entry = await tx.store.get(player_id);
+          await tx.done;
+          if (!entry || entry.expiry <= Date.now()) {
+            return null;
+          }
+          return entry;
+        } finally {
+          this.end_op();
         }
-        return entry;
       };
       this.update_flight = async (value, cache_interval = 60 * 1e3) => {
-        const db = await this.open();
-        const tx = db.transaction(STORES.FLIGHTS, "readwrite");
-        const value_expiry = {
-          ...value,
-          expiry: Date.now() + cache_interval
-        };
-        await tx.store.put(value_expiry);
-        await tx.done;
-        this.close();
+        const db = await this.start_op();
+        try {
+          const tx = db.transaction(STORES.FLIGHTS, "readwrite");
+          const value_expiry = {
+            ...value,
+            expiry: Date.now() + cache_interval
+          };
+          await tx.store.put(value_expiry);
+          await tx.done;
+        } finally {
+          this.end_op();
+        }
       };
       this.add_analytics = async (entry) => {
-        const db = await this.open();
-        const tx = db.transaction(STORES.ANALYTICS, "readwrite");
-        const value = {
-          ...entry,
-          timestamp: Date.now()
-        };
-        await tx.store.add(value);
-        await tx.done;
-        this.close();
+        const db = await this.start_op();
+        try {
+          const tx = db.transaction(STORES.ANALYTICS, "readwrite");
+          const value = {
+            ...entry,
+            timestamp: Date.now()
+          };
+          await tx.store.add(value);
+          await tx.done;
+        } finally {
+          this.end_op();
+        }
       };
       this.get_analytics = async () => {
-        const db = await this.open();
-        const tx = db.transaction(STORES.ANALYTICS, "readonly");
-        const res = await tx.store.getAll();
-        await tx.done;
-        this.close();
-        return res;
+        const db = await this.start_op();
+        try {
+          const tx = db.transaction(STORES.ANALYTICS, "readonly");
+          const res = await tx.store.getAll();
+          await tx.done;
+          return res;
+        } finally {
+          this.end_op();
+        }
       };
       this.clear_analytics = async () => {
-        const db = await this.open();
-        const tx = db.transaction(STORES.ANALYTICS, "readwrite");
-        await tx.store.clear();
-        await tx.done;
-        this.close();
+        const db = await this.start_op();
+        try {
+          const tx = db.transaction(STORES.ANALYTICS, "readwrite");
+          await tx.store.clear();
+          await tx.done;
+        } finally {
+          this.end_op();
+        }
       };
       this.dump = async () => {
-        const db = await this.open();
-        const tx = db.transaction(STORES.CACHE, "readonly");
-        const res = await tx.store.getAll();
-        await tx.done;
-        this.close();
-        return res;
+        const db = await this.start_op();
+        try {
+          const tx = db.transaction(STORES.CACHE, "readonly");
+          const res = await tx.store.getAll();
+          await tx.done;
+          return res;
+        } finally {
+          this.end_op();
+        }
       };
       this.dump_flights = async () => {
-        const db = await this.open();
-        const tx = db.transaction(STORES.FLIGHTS, "readonly");
-        const res = await tx.store.getAll();
-        await tx.done;
-        this.close();
-        return res;
+        const db = await this.start_op();
+        try {
+          const tx = db.transaction(STORES.FLIGHTS, "readonly");
+          const res = await tx.store.getAll();
+          await tx.done;
+          return res;
+        } finally {
+          this.end_op();
+        }
       };
       this.db_name = db_name;
     }
@@ -3488,15 +3552,55 @@ Number.parseInt(row.dataset["estValue"], 10)
   }
   function is_filter_active(filters) {
     if (filters.sortBy !== "none") return true;
-    if (!filters.activity.online || !filters.activity.idle || !filters.activity.offline)
-      return true;
-    if (!filters.status.okay || !filters.status.traveling || !filters.status.hospital || !filters.status.jail || !filters.status.abroad)
-      return true;
-    if (filters.levelMin !== null || filters.levelMax !== null) return true;
-    if (filters.ffMin !== null || filters.ffMax !== null) return true;
-    if (filters.statsMin !== void 0 && filters.statsMin !== null) return true;
-    if (filters.statsMax !== void 0 && filters.statsMax !== null) return true;
     return false;
+  }
+  async function poll_traveling_flights(membersList) {
+    const rows = Array.from(
+      membersList.querySelectorAll(".enemy, .your")
+    );
+    const travelingPlayers = rows.map((row) => {
+      const player_id = get_player_id_in_element(row);
+      if (!player_id) return null;
+      const statusCell = row.querySelector(".status");
+      const statusText = statusCell?.textContent?.trim() || "";
+      const isTraveling = statusText === "Traveling";
+      return { row, player_id, isTraveling };
+    }).filter((item) => item !== null);
+    for (const p2 of travelingPlayers) {
+      if (!p2.isTraveling) {
+        p2.row.removeAttribute("data-earliest-arrival");
+        p2.row.removeAttribute("data-latest-arrival");
+      }
+    }
+    const traveling = travelingPlayers.filter((p2) => p2.isTraveling);
+    if (traveling.length === 0) return;
+    const isPremium = await check_key_status.is_premium();
+    if (!isPremium) {
+      for (const p2 of traveling) {
+        p2.row.removeAttribute("data-earliest-arrival");
+        p2.row.removeAttribute("data-latest-arrival");
+      }
+      return;
+    }
+    await Promise.all(
+      traveling.map(async (p2) => {
+        try {
+          const flights = await ffscouter.get_flights(p2.player_id);
+          const current = flights?.current;
+          if (current) {
+            const earliest = current.earliest_arrival_time;
+            const latest = current.latest_arrival_time;
+            p2.row.setAttribute("data-earliest-arrival", String(earliest));
+            p2.row.setAttribute("data-latest-arrival", String(latest));
+          } else {
+            p2.row.removeAttribute("data-earliest-arrival");
+            p2.row.removeAttribute("data-latest-arrival");
+          }
+        } catch (err) {
+          logger.error(`Failed to fetch flights for player ${p2.player_id}`, err);
+        }
+      })
+    );
   }
   async function apply_ff_columns(membersList) {
     const headerLvl = membersList.querySelector(".table-header > .lvl") || membersList.querySelector(".white-grad");
@@ -3676,6 +3780,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
         statsMax: filterBox.statsMax ? parse_suffix_number(filterBox.statsMax) : null
       });
     }
+    poll_traveling_flights(membersList);
   }
   function inject_filter_box(membersList) {
     const parent = membersList.parentNode;
@@ -3734,9 +3839,13 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       attributeFilter: ["class", "alt"],
       subtree: true
     });
+    const flightInterval = setInterval(() => {
+      poll_traveling_flights(membersList);
+    }, 5e3);
     const cleanupInterval = setInterval(() => {
       if (!membersList.isConnected) {
         clearInterval(cleanupInterval);
+        clearInterval(flightInterval);
         attributeObserver.disconnect();
       }
     }, 1e4);
@@ -3913,9 +4022,13 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       attributes: true,
       attributeFilter: ["class", "alt"]
     });
+    const flightInterval = setInterval(() => {
+      poll_traveling_flights(list);
+    }, 5e3);
     const cleanupInterval = setInterval(() => {
       if (!list.isConnected) {
         clearInterval(cleanupInterval);
+        clearInterval(flightInterval);
         attributeObserver.disconnect();
       }
     }, 1e4);
@@ -4109,37 +4222,14 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
               node.querySelectorAll(".employee"),
               FEATURE_NAME$3
             );
-          } else if (window.location.href.startsWith("https://www.torn.com/messages.php")) {
-            await apply_ff_gauge_selector(
-              node.querySelectorAll(".name"),
-              FEATURE_NAME$3
-            );
-          } else if (window.location.href.startsWith("https://www.torn.com/index.php")) {
-            await apply_ff_gauge_selector(
-              node.querySelectorAll(".name"),
-              FEATURE_NAME$3
-            );
-          } else if (window.location.href.startsWith(
-            "https://www.torn.com/hospitalview.php"
-          )) {
-            await apply_ff_gauge_selector(
-              node.querySelectorAll(".name"),
-              FEATURE_NAME$3
-            );
-          } else if (window.location.href.startsWith(
-            "https://www.torn.com/page.php?sid=UserList"
-          )) {
+          } else if (torn_page("messages") || torn_page("index") || torn_page("hospitalview") || torn_page("page", { sid: "UserList" })) {
             await apply_ff_gauge_selector(
               node.querySelectorAll(".name"),
               FEATURE_NAME$3
             );
           } else if (window.location.href.startsWith("https://www.torn.com/bounties.php")) {
             await apply_ff_gauge_selector(
-              node.querySelectorAll(".target"),
-              FEATURE_NAME$3
-            );
-            await apply_ff_gauge_selector(
-              node.querySelectorAll(".listed"),
+              node.querySelectorAll(".target, .listed"),
               FEATURE_NAME$3
             );
           } else if (window.location.href.startsWith(
@@ -4151,19 +4241,9 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
             );
           } else if (window.location.href.startsWith("https://www.torn.com/forums.php")) {
             await apply_ff_gauge_selector(
-              node.querySelectorAll(".last-poster"),
-              FEATURE_NAME$3
-            );
-            await apply_ff_gauge_selector(
-              node.querySelectorAll(".starter"),
-              FEATURE_NAME$3
-            );
-            await apply_ff_gauge_selector(
-              node.querySelectorAll(".last-post"),
-              FEATURE_NAME$3
-            );
-            await apply_ff_gauge_selector(
-              node.querySelectorAll(".poster"),
+              node.querySelectorAll(
+                ".last-poster, .starter, .last-post, .poster"
+              ),
               FEATURE_NAME$3
             );
           } else if (window.location.href.includes("page.php?sid=hof") || torn_page("factions", { step: "profile" }) || torn_page("factions", { step: "your" })) {
@@ -5918,7 +5998,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     }
     w[INJECTION_KEY] = true;
     logger.setLevel(ffconfig.debug_logs ? LogLevel.DEBUG : LogLevel.INFO);
-    logger.info("Initializing", "3.0-alpha8");
+    logger.info("Initializing", "3.0-alpha9");
     if (ffscouter.analytics_enabled) {
       unsafeWindow.ffscouter = ffscouter;
       window.ffscouter = ffscouter;
