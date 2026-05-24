@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FF Scouter V3
 // @namespace    xentac-v3
-// @version      3.0-alpha9
+// @version      3.0-alpha10
 // @author       xentac [3354782], MAVRI [2402357], rDacted [2670953], Weav3r [1853324], Glasnost [1844049]
 // @description  Shows the expected Fair Fight score against targets and faction war status
 // @license      GPLv3
@@ -3975,13 +3975,13 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     }
   }
   function setup_war_list(list) {
-    const tbody = list.querySelector(".table-body") || list;
+    const tbody = list;
     const hasRows = tbody.querySelector(".enemy, .your");
     if (hasRows) {
       initialize_war_list(list);
     } else {
       const loadObserver = new MutationObserver((_mutations, obs) => {
-        const currentTbody = list.querySelector(".table-body") || list;
+        const currentTbody = list;
         if (currentTbody.querySelector(".enemy, .your")) {
           obs.disconnect();
           initialize_war_list(list);
@@ -3998,7 +3998,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
   }
   function initialize_war_list(list) {
     apply_ff_columns(list);
-    const target = list.querySelector(".table-body") || list;
+    const target = list;
     const attributeObserver = new MutationObserver((mutations) => {
       if (isApplying) return;
       let shouldReapply = false;
@@ -4884,7 +4884,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
           const now = Date.now();
           const seconds = Math.max(0, Math.ceil((next - now) / 1e3));
           content = b`No data. Rechecking in ${seconds} seconds.`;
-        } else if (!current) {
+        } else if (!current || !current.earliest_arrival_time && !current.latest_arrival_time) {
           content = b`Landing: unavailable for current route`;
         } else {
           const earliest = Number(current.earliest_arrival_time);
@@ -4893,11 +4893,19 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
             content = b`Landing: unavailable for current route`;
           } else {
             const nowUnix = this.current_time_seconds;
-            const earliestRemaining = Math.max(0, earliest - nowUnix);
-            const latestRemaining = Math.max(0, latest - nowUnix);
+            const earliestRemaining = earliest - nowUnix;
+            const latestRemaining = latest - nowUnix;
             const earliestTct = format_tct_time(earliest);
             const latestTct = format_tct_time(latest);
-            if (latestRemaining <= 0) {
+            console.log({
+              earliestRemaining,
+              latestRemaining,
+              earliestTct,
+              latestTct
+            });
+            if (latestRemaining <= -5 * 60) {
+              content = b`Landing: Estimate is wrong. Landing time unknown.`;
+            } else if (latestRemaining <= 0) {
               content = b`Landing: just landed<br />(${latestTct} TCT latest)`;
             } else if (earliestRemaining <= 0) {
               content = b`Landing: imminent -
@@ -5998,7 +6006,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     }
     w[INJECTION_KEY] = true;
     logger.setLevel(ffconfig.debug_logs ? LogLevel.DEBUG : LogLevel.INFO);
-    logger.info("Initializing", "3.0-alpha9");
+    logger.info("Initializing", "3.0-alpha10");
     if (ffscouter.analytics_enabled) {
       unsafeWindow.ffscouter = ffscouter;
       window.ffscouter = ffscouter;
