@@ -108,7 +108,7 @@ test("renders landed when latest arrival time is in the past", async () => {
       takeoff_time: nowUnix - 3600,
       status_description: "flying",
       earliest_arrival_time: nowUnix - 1200,
-      latest_arrival_time: nowUnix - 300, // 5 min ago
+      latest_arrival_time: nowUnix - 120, // 2 min ago (safely under the 5 min limit)
       travel_method: "Airline",
       book_likely_being_used: false,
     },
@@ -124,6 +124,36 @@ test("renders landed when latest arrival time is in the past", async () => {
   await el.updateComplete;
 
   expect(el.textContent).toContain("Landing: just landed");
+});
+
+test("renders estimate wrong when latest arrival time is more than 5 minutes in the past", async () => {
+  vi.mocked(check_key_status.is_premium).mockResolvedValue(true);
+
+  const nowUnix = mockNowTime / 1000;
+  vi.mocked(ffscouter.get_flights).mockResolvedValue({
+    player_id: 123,
+    current: {
+      takeoff_time: nowUnix - 3600,
+      status_description: "flying",
+      earliest_arrival_time: nowUnix - 1200,
+      latest_arrival_time: nowUnix - 360, // 6 min ago (over the 5 min limit)
+      travel_method: "Airline",
+      book_likely_being_used: false,
+    },
+    recent_flights: [],
+  });
+
+  const el = document.createElement("ff-flight-profile-status");
+  el.playerId = 123;
+  document.body.appendChild(el);
+
+  await el.updateComplete;
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  await el.updateComplete;
+
+  expect(el.textContent).toContain(
+    "Landing: Estimate is wrong. Landing time unknown.",
+  );
 });
 
 test("renders landing window range when earliest arrival is in the future", async () => {

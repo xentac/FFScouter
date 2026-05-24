@@ -231,53 +231,67 @@ export class FFCache {
     }
   };
 
-  clean_expired = async (force = false) => {
+  clean_expired = (force = false): Promise<void> => {
     const now = Date.now();
-    if (!force && now - this.last_clean < 5 * 60 * 1000) {
-      return;
+    if (!force && now - this.last_clean < 60 * 60 * 1000) {
+      return Promise.resolve();
     }
     this.last_clean = now;
 
-    const db = await this.start_op();
-    try {
-      // Clean CACHE
-      {
-        const tx = db.transaction(STORES.CACHE, "readwrite");
-        const index = tx.store.index("expiry");
-        const range = IDBKeyRange.upperBound(Date.now());
-        const r = await index.getAllKeys(range);
-        logger.info(`Found ${r.length} expired values to delete from cache.`);
-        await Promise.all(r.map((id) => tx.store.delete(id)));
-        await tx.done;
-      }
+    const runClean = async () => {
+      const db = await this.start_op();
+      try {
+        // Clean CACHE
+        {
+          const tx = db.transaction(STORES.CACHE, "readwrite");
+          const index = tx.store.index("expiry");
+          const range = IDBKeyRange.upperBound(Date.now());
+          const r = await index.getAllKeys(range);
+          logger.info(`Found ${r.length} expired values to delete from cache.`);
+          await Promise.all(r.map((id) => tx.store.delete(id)));
+          await tx.done;
+        }
 
-      // Clean FLIGHTS
-      {
-        const tx = db.transaction(STORES.FLIGHTS, "readwrite");
-        const index = tx.store.index("expiry");
-        const range = IDBKeyRange.upperBound(Date.now());
-        const r = await index.getAllKeys(range);
-        logger.info(`Found ${r.length} expired values to delete from flights.`);
-        await Promise.all(r.map((id) => tx.store.delete(id)));
-        await tx.done;
-      }
+        // Clean FLIGHTS
+        {
+          const tx = db.transaction(STORES.FLIGHTS, "readwrite");
+          const index = tx.store.index("expiry");
+          const range = IDBKeyRange.upperBound(Date.now());
+          const r = await index.getAllKeys(range);
+          logger.info(
+            `Found ${r.length} expired values to delete from flights.`,
+          );
+          await Promise.all(r.map((id) => tx.store.delete(id)));
+          await tx.done;
+        }
 
-      // Clean ANALYTICS
-      {
-        const tx = db.transaction(STORES.ANALYTICS, "readwrite");
-        const index = tx.store.index("timestamp");
-        const thirty_days_ago = Date.now() - 30 * 24 * 60 * 60 * 1000;
-        const range = IDBKeyRange.upperBound(thirty_days_ago);
-        const r = await index.getAllKeys(range);
-        logger.info(
-          `Found ${r.length} expired values to delete from analytics.`,
-        );
-        await Promise.all(r.map((id) => tx.store.delete(id)));
-        await tx.done;
+        // Clean ANALYTICS
+        {
+          const tx = db.transaction(STORES.ANALYTICS, "readwrite");
+          const index = tx.store.index("timestamp");
+          const thirty_days_ago = Date.now() - 30 * 24 * 60 * 60 * 1000;
+          const range = IDBKeyRange.upperBound(thirty_days_ago);
+          const r = await index.getAllKeys(range);
+          logger.info(
+            `Found ${r.length} expired values to delete from analytics.`,
+          );
+          await Promise.all(r.map((id) => tx.store.delete(id)));
+          await tx.done;
+        }
+      } finally {
+        this.end_op();
       }
-    } finally {
-      this.end_op();
+    };
+
+    if (typeof window !== "undefined" && "requestIdleCallback" in window) {
+      return new Promise<void>((resolve, reject) => {
+        window.requestIdleCallback(() => {
+          runClean().then(resolve, reject);
+        });
+      });
     }
+
+    return runClean();
   };
 
   get_flight = async (

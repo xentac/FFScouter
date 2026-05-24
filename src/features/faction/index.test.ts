@@ -679,12 +679,12 @@ test("apply_filters_and_sort sets and removes data-ffscouter-active-filter attri
   apply_filters_and_sort(container, defaultFilters);
   expect(tbody.getAttribute("data-ffscouter-active-filter")).toBeNull();
 
-  // 4. Active filtering should set the attribute
+  // 4. Activity/status filtering alone should NOT set the attribute (only sortBy does)
   apply_filters_and_sort(container, {
     ...defaultFilters,
     activity: { online: true, idle: true, offline: false },
   });
-  expect(tbody.getAttribute("data-ffscouter-active-filter")).toBe("true");
+  expect(tbody.getAttribute("data-ffscouter-active-filter")).toBeNull();
 });
 
 test("setup_war_features detects enemy-faction and your-faction lists and setup filter box", async () => {
