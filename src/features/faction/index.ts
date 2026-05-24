@@ -799,14 +799,14 @@ function initialize_war_features(
 }
 
 function setup_war_list(list: HTMLElement) {
-  const tbody = list.querySelector(".table-body") || list;
+  const tbody = list;
   const hasRows = tbody.querySelector(".enemy, .your");
 
   if (hasRows) {
     initialize_war_list(list);
   } else {
     const loadObserver = new MutationObserver((_mutations, obs) => {
-      const currentTbody = list.querySelector(".table-body") || list;
+      const currentTbody = list;
       if (currentTbody.querySelector(".enemy, .your")) {
         obs.disconnect();
         initialize_war_list(list);
@@ -826,7 +826,7 @@ function setup_war_list(list: HTMLElement) {
 function initialize_war_list(list: HTMLElement) {
   apply_ff_columns(list);
 
-  const target = list.querySelector(".table-body") || list;
+  const target = list;
   const attributeObserver = new MutationObserver((mutations) => {
     if (isApplying) return;
 
