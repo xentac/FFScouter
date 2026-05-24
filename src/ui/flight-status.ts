@@ -202,7 +202,8 @@ export class FFFlightProfileStatus extends LitElement {
             latestTct: latestTct,
           });
           if (latestRemaining <= -5 * 60) {
-            content = html`Landing: Estimate is wrong. Landing time unknown.`;
+            content = html`Landing: Late, probably flight delayed.<br />(${latestTct}
+              TCT latest)`;
           } else if (latestRemaining <= 0) {
             content = html`Landing: just landed<br />(${latestTct} TCT latest)`;
           } else if (earliestRemaining <= 0) {
