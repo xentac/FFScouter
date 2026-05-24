@@ -235,3 +235,61 @@ test("ff-faction-filter-box supports mode='war' styling and independent configs"
   expect(ffconfig.war_filter_state?.activity?.online).toBe(false);
   expect(ffconfig.faction_filter_state).toBeNull(); // faction config untouched
 });
+
+test("ff-faction-filter-box supports column visibility toggles and reactive container attributes in mode='war'", async () => {
+  // Create a wrapper faction-war container to simulate the Torn war view
+  const warWrapper = document.createElement("div");
+  warWrapper.className = "faction-war";
+  document.body.appendChild(warWrapper);
+
+  const el = document.createElement(
+    "ff-faction-filter-box",
+  ) as FFFactionFilterBox;
+  el.mode = "war";
+  warWrapper.appendChild(el);
+  await new Promise((resolve) => setTimeout(resolve, 0));
+
+  // 1. Verify Visible Columns section exists
+  const grpColumns = el.querySelector(".grp-columns");
+  expect(grpColumns).not.toBeNull();
+  expect(grpColumns?.querySelector("strong")?.textContent).toBe(
+    "Visible Columns",
+  );
+
+  // 2. Checkboxes exist and are checked by default
+  const checkboxes = Array.from(
+    grpColumns?.querySelectorAll('input[type="checkbox"]') || [],
+  ) as HTMLInputElement[];
+  expect(checkboxes.length).toBe(3); // Level, Status, Score
+
+  const [lvlCheckbox, statusCheckbox, scoreCheckbox] = checkboxes;
+  expect(lvlCheckbox.checked).toBe(true);
+  expect(statusCheckbox.checked).toBe(true);
+  expect(scoreCheckbox.checked).toBe(true);
+
+  // 3. Verify no hiding attributes on wrapper initially
+  expect(warWrapper.hasAttribute("data-ffscouter-hide-level")).toBe(false);
+  expect(warWrapper.hasAttribute("data-ffscouter-hide-status")).toBe(false);
+  expect(warWrapper.hasAttribute("data-ffscouter-hide-score")).toBe(false);
+
+  // 4. Toggle Level visibility checkbox to off (hide) and verify wrapper attribute is set
+  lvlCheckbox.checked = false;
+  lvlCheckbox.dispatchEvent(new Event("change"));
+  await el.updateComplete;
+
+  expect(warWrapper.getAttribute("data-ffscouter-hide-level")).toBe("true");
+  expect(ffconfig.war_filter_state?.hiddenColumns?.level).toBe(true);
+
+  // Toggle Level back on and verify attribute is removed
+  lvlCheckbox.checked = true;
+  lvlCheckbox.dispatchEvent(new Event("change"));
+  await el.updateComplete;
+
+  expect(warWrapper.hasAttribute("data-ffscouter-hide-level")).toBe(false);
+  expect(ffconfig.war_filter_state?.hiddenColumns?.level).toBe(false);
+
+  // 5. Verify the columns checkboxes are NOT rendered when mode is 'faction'
+  el.mode = "faction";
+  await el.updateComplete;
+  expect(el.querySelector(".grp-columns")).toBeNull();
+});

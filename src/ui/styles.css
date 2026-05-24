@@ -435,3 +435,71 @@ ff-faction-filter-box {
   content: attr(data-ff-value) !important;
   display: var(--ff-display, none) !important;
 }
+
+/* ============================================================================
+   COLUMN VISIBILITY TOGGLES (Ranked War)
+   ============================================================================ */
+
+/* 1. Level Column: Collapse standard text/width but preserve space for the absolute pseudo-element */
+.faction-war[data-ffscouter-hide-level="true"] .level[class*="level__"],
+.faction-war[data-ffscouter-hide-level="true"] .level {
+  width: 0 !important;
+  margin-right: 32px !important;
+  color: transparent !important;
+  font-size: 0 !important;
+  border-left: none !important;
+  border-right: none !important;
+  background-color: transparent !important;
+  pointer-events: none !important;
+}
+
+.faction-war[data-ffscouter-hide-level="true"] .level[class*="level__"]::after,
+.faction-war[data-ffscouter-hide-level="true"] .level::after {
+  color: var(--ff-text-color, inherit) !important;
+  font-size: 11px !important;
+  background-color: var(--ff-bg-color, transparent) !important;
+  pointer-events: auto !important;
+}
+
+/* 2. Level Header: Collapse standard text/width but preserve space for the absolute pseudo-element */
+.faction-war[data-ffscouter-hide-level="true"] .white-grad
+  .level[class*="level__"],
+.faction-war[data-ffscouter-hide-level="true"] .white-grad .level {
+  width: 0 !important;
+  margin-right: 32px !important;
+  color: transparent !important;
+  font-size: 0 !important;
+  border-left: none !important;
+  border-right: none !important;
+  background-color: transparent !important;
+  pointer-events: none !important;
+}
+
+.faction-war[data-ffscouter-hide-level="true"]
+  .white-grad
+  .level[class*="level__"]::after,
+.faction-war[data-ffscouter-hide-level="true"] .white-grad .level::after {
+  color: var(--ffsv3-text-color, inherit) !important;
+  font-size: 12px !important;
+  font-weight: bold !important;
+  pointer-events: auto !important;
+}
+
+/* 3. Status Column */
+.faction-war[data-ffscouter-hide-status="true"] .status,
+.faction-war[data-ffscouter-hide-status="true"] [class*="status__"] {
+  display: none !important;
+}
+
+/* 4. Score / Points / Respect / Attacks Columns */
+.faction-war[data-ffscouter-hide-score="true"] [class*="score__"],
+.faction-war[data-ffscouter-hide-score="true"] [class*="points__"],
+.faction-war[data-ffscouter-hide-score="true"] [class*="respect__"],
+.faction-war[data-ffscouter-hide-score="true"] [class*="attacks__"] {
+  display: none !important;
+}
+
+/* Grid layout ordering for bottom-left placement on mobile */
+.grp-columns {
+  order: 7;
+}

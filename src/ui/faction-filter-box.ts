@@ -23,7 +23,18 @@ export interface FactionFilterState {
   ffMax: number | null;
   statsMin: string | null;
   statsMax: string | null;
+  hiddenColumns?: {
+    level: boolean;
+    status: boolean;
+    score: boolean;
+  };
 }
+
+const DEFAULT_HIDDEN_COLUMNS = {
+  level: false,
+  status: false,
+  score: false,
+};
 
 const DEFAULT_STATE: FactionFilterState = {
   sortBy: "none",
@@ -45,6 +56,7 @@ const DEFAULT_STATE: FactionFilterState = {
   ffMax: null,
   statsMin: null,
   statsMax: null,
+  hiddenColumns: DEFAULT_HIDDEN_COLUMNS,
 };
 
 @customElement("ff-faction-filter-box")
@@ -69,6 +81,7 @@ export class FFFactionFilterBox extends LitElement {
   @state() ffMax: number | null = null;
   @state() statsMin: string | null = null;
   @state() statsMax: string | null = null;
+  @state() hiddenColumns = { ...DEFAULT_HIDDEN_COLUMNS };
   @state() private collapsed = false;
 
   override connectedCallback() {
@@ -82,6 +95,16 @@ export class FFFactionFilterBox extends LitElement {
     super.disconnectedCallback();
   }
 
+  override updated(changedProperties: Map<string | number | symbol, unknown>) {
+    super.updated(changedProperties);
+    if (
+      changedProperties.has("hiddenColumns") ||
+      changedProperties.has("mode")
+    ) {
+      this.updateContainerAttributes();
+    }
+  }
+
   private onConfigUpdated = () => {
     this.colDisplay =
       this.mode === "war"
@@ -89,6 +112,23 @@ export class FFFactionFilterBox extends LitElement {
         : ffconfig.factions_col_display;
     this.requestUpdate();
   };
+
+  private updateContainerAttributes() {
+    const isWar = this.mode === "war";
+    if (!isWar) return;
+
+    const target = this.closest(".faction-war");
+    if (target instanceof HTMLElement) {
+      for (const [col, isHidden] of Object.entries(this.hiddenColumns)) {
+        const attrName = `data-ffscouter-hide-${col}`;
+        if (isHidden) {
+          target.setAttribute(attrName, "true");
+        } else {
+          target.removeAttribute(attrName);
+        }
+      }
+    }
+  }
 
   private loadState() {
     const isWar = this.mode === "war";
@@ -115,6 +155,11 @@ export class FFFactionFilterBox extends LitElement {
       this.ffMax = parsed.ffMax ?? null;
       this.statsMin = parsed.statsMin ?? null;
       this.statsMax = parsed.statsMax ?? null;
+      this.hiddenColumns = {
+        level: parsed.hiddenColumns?.level ?? DEFAULT_HIDDEN_COLUMNS.level,
+        status: parsed.hiddenColumns?.status ?? DEFAULT_HIDDEN_COLUMNS.status,
+        score: parsed.hiddenColumns?.score ?? DEFAULT_HIDDEN_COLUMNS.score,
+      };
     }
     // Dispatch initial state once loaded
     this.dispatchChange();
@@ -141,6 +186,7 @@ export class FFFactionFilterBox extends LitElement {
       ffMax: this.ffMax,
       statsMin: this.statsMin,
       statsMax: this.statsMax,
+      hiddenColumns: this.hiddenColumns,
     };
     if (this.mode === "war") {
       ffconfig.war_filter_state = stateObj;
@@ -167,6 +213,18 @@ export class FFFactionFilterBox extends LitElement {
         composed: true,
       }),
     );
+  }
+
+  private onColumnVisibilityChange(
+    key: keyof NonNullable<FactionFilterState["hiddenColumns"]>,
+    val: boolean,
+  ) {
+    this.hiddenColumns = {
+      ...this.hiddenColumns,
+      [key]: val,
+    };
+    this.saveState();
+    this.dispatchChange();
   }
 
   private onSortToggle() {
@@ -434,6 +492,54 @@ export class FFFactionFilterBox extends LitElement {
               />
             </div>
           </div>
+
+          ${
+            this.mode === "war"
+              ? html`
+                <div class="ff-filter-group grp-columns">
+                  <strong>Visible Columns</strong>
+                  <div class="ff-filter-options">
+                    <label>
+                      <input
+                        type="checkbox"
+                        ?checked="${!this.hiddenColumns.level}"
+                        @change="${(e: any) =>
+                          this.onColumnVisibilityChange(
+                            "level",
+                            !e.target.checked,
+                          )}"
+                      />
+                      Level
+                    </label>
+                    <label>
+                      <input
+                        type="checkbox"
+                        ?checked="${!this.hiddenColumns.status}"
+                        @change="${(e: any) =>
+                          this.onColumnVisibilityChange(
+                            "status",
+                            !e.target.checked,
+                          )}"
+                      />
+                      Status
+                    </label>
+                    <label>
+                      <input
+                        type="checkbox"
+                        ?checked="${!this.hiddenColumns.score}"
+                        @change="${(e: any) =>
+                          this.onColumnVisibilityChange(
+                            "score",
+                            !e.target.checked,
+                          )}"
+                      />
+                      Score
+                    </label>
+                  </div>
+                </div>
+              `
+              : ""
+          }
         </div>
       </details>
     `;
