@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 
+import { check_key_status } from "@utils/check_key";
 import { FactionsColDisplay, ffconfig } from "@utils/ffconfig";
 import { ffscouter } from "@utils/ffscouter";
 import type { PlayerId } from "@utils/types";
@@ -7,6 +8,7 @@ import { beforeEach, expect, test, vi } from "vitest";
 import {
   apply_ff_columns,
   apply_filters_and_sort,
+  poll_traveling_flights,
   setup_war_features,
 } from "./index";
 
@@ -14,7 +16,16 @@ vi.mock("@utils/ffscouter", () => {
   return {
     ffscouter: {
       get: vi.fn(),
+      get_flights: vi.fn(),
       complete: vi.fn(),
+    },
+  };
+});
+
+vi.mock("@utils/check_key", () => {
+  return {
+    check_key_status: {
+      is_premium: vi.fn(),
     },
   };
 });
@@ -719,4 +730,81 @@ test("setup_war_features detects enemy-faction and your-faction lists and setup 
 
   // Clean up
   factionWar.remove();
+});
+
+test("poll_traveling_flights adds data-earliest-arrival and data-latest-arrival to traveling players if user is premium", async () => {
+  vi.mocked(check_key_status.is_premium).mockResolvedValue(true);
+  vi.mocked(ffscouter.get_flights).mockResolvedValue({
+    player_id: 111,
+    current: {
+      takeoff_time: 1700000000,
+      status_description: "Traveling to Japan",
+      earliest_arrival_time: 1700005000,
+      latest_arrival_time: 1700006000,
+      travel_method: "Airline",
+      book_likely_being_used: false,
+    },
+    recent_flights: [],
+  });
+
+  const container = document.createElement("div");
+  container.className = "members-list";
+  container.innerHTML = `
+    <ul class="table-body">
+      <li class="enemy" id="enemy-1">
+        <div class="member"><a href="/profiles.php?XID=111">Enemy 111</a></div>
+        <div class="status">Traveling</div>
+      </li>
+      <li class="your" id="your-1">
+        <div class="member"><a href="/profiles.php?XID=222">Your 222</a></div>
+        <div class="status">Okay</div>
+      </li>
+    </ul>
+  `;
+  document.body.appendChild(container);
+
+  await poll_traveling_flights(container);
+
+  const enemyRow = container.querySelector("#enemy-1") as HTMLElement;
+  const yourRow = container.querySelector("#your-1") as HTMLElement;
+
+  expect(enemyRow.getAttribute("data-earliest-arrival")).toBe("1700005000");
+  expect(enemyRow.getAttribute("data-latest-arrival")).toBe("1700006000");
+
+  expect(yourRow.getAttribute("data-earliest-arrival")).toBeNull();
+  expect(yourRow.getAttribute("data-latest-arrival")).toBeNull();
+
+  // Test that if status changes, attributes are removed
+  const statusCell = enemyRow.querySelector(".status") as HTMLElement;
+  statusCell.textContent = "Okay";
+  await poll_traveling_flights(container);
+
+  expect(enemyRow.getAttribute("data-earliest-arrival")).toBeNull();
+  expect(enemyRow.getAttribute("data-latest-arrival")).toBeNull();
+
+  container.remove();
+});
+
+test("poll_traveling_flights does not add data-earliest-arrival and data-latest-arrival if user is NOT premium", async () => {
+  vi.mocked(check_key_status.is_premium).mockResolvedValue(false);
+
+  const container = document.createElement("div");
+  container.className = "members-list";
+  container.innerHTML = `
+    <ul class="table-body">
+      <li class="enemy" id="enemy-1" data-earliest-arrival="1700005000" data-latest-arrival="1700006000">
+        <div class="member"><a href="/profiles.php?XID=111">Enemy 111</a></div>
+        <div class="status">Traveling</div>
+      </li>
+    </ul>
+  `;
+  document.body.appendChild(container);
+
+  await poll_traveling_flights(container);
+
+  const enemyRow = container.querySelector("#enemy-1") as HTMLElement;
+  expect(enemyRow.getAttribute("data-earliest-arrival")).toBeNull();
+  expect(enemyRow.getAttribute("data-latest-arrival")).toBeNull();
+
+  container.remove();
 });

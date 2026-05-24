@@ -1,4 +1,10 @@
-import { apply_ff_gauge, torn_page, wait_for_element } from "@utils/dom";
+import { check_key_status } from "@utils/check_key";
+import {
+  apply_ff_gauge,
+  get_player_id_in_element,
+  torn_page,
+  wait_for_element,
+} from "@utils/dom";
 import { FactionsColDisplay, ffconfig } from "@utils/ffconfig";
 import { ffscouter } from "@utils/ffscouter";
 import logger from "@utils/logger";
@@ -261,6 +267,69 @@ function is_filter_active(filters: {
 // Fetches Fair Fight (FF) and Battle Stat (BS) estimate data from the FFScouter API,
 // populates the data attributes used by the filter engine, and handles UI column injection/cleanup.
 // ============================================================================
+export async function poll_traveling_flights(membersList: HTMLElement) {
+  const rows = Array.from(
+    membersList.querySelectorAll(".enemy, .your"),
+  ) as HTMLElement[];
+
+  const travelingPlayers = rows
+    .map((row) => {
+      const player_id = get_player_id_in_element(row);
+      if (!player_id) return null;
+
+      const statusCell = row.querySelector(".status");
+      const statusText = statusCell?.textContent?.trim() || "";
+      const isTraveling = statusText === "Traveling";
+
+      return { row, player_id, isTraveling };
+    })
+    .filter((item): item is NonNullable<typeof item> => item !== null);
+
+  // Clean up attributes for non-traveling players
+  for (const p of travelingPlayers) {
+    if (!p.isTraveling) {
+      p.row.removeAttribute("data-earliest-arrival");
+      p.row.removeAttribute("data-latest-arrival");
+    }
+  }
+
+  // Find players currently traveling
+  const traveling = travelingPlayers.filter((p) => p.isTraveling);
+  if (traveling.length === 0) return;
+
+  // Premium check
+  const isPremium = await check_key_status.is_premium();
+  if (!isPremium) {
+    // If not premium, ensure any stale attributes are removed
+    for (const p of traveling) {
+      p.row.removeAttribute("data-earliest-arrival");
+      p.row.removeAttribute("data-latest-arrival");
+    }
+    return;
+  }
+
+  // Retrieve flight details concurrently
+  await Promise.all(
+    traveling.map(async (p) => {
+      try {
+        const flights = await ffscouter.get_flights(p.player_id);
+        const current = flights?.current;
+        if (current) {
+          const earliest = current.earliest_arrival_time;
+          const latest = current.latest_arrival_time;
+          p.row.setAttribute("data-earliest-arrival", String(earliest));
+          p.row.setAttribute("data-latest-arrival", String(latest));
+        } else {
+          p.row.removeAttribute("data-earliest-arrival");
+          p.row.removeAttribute("data-latest-arrival");
+        }
+      } catch (err) {
+        logger.error(`Failed to fetch flights for player ${p.player_id}`, err);
+      }
+    }),
+  );
+}
+
 export async function apply_ff_columns(membersList: HTMLElement) {
   // 1. Locate the header column cell to position our custom FF/Est column header
   const headerLvl =
@@ -485,6 +554,9 @@ export async function apply_ff_columns(membersList: HTMLElement) {
         : null,
     });
   }
+
+  // Concurrently scan flights for traveling players
+  poll_traveling_flights(membersList);
 }
 
 // ============================================================================
@@ -568,9 +640,14 @@ function initialize_features(membersList: HTMLElement) {
     subtree: true,
   });
 
+  const flightInterval = setInterval(() => {
+    poll_traveling_flights(membersList);
+  }, 5000);
+
   const cleanupInterval = setInterval(() => {
     if (!membersList.isConnected) {
       clearInterval(cleanupInterval);
+      clearInterval(flightInterval);
       attributeObserver.disconnect();
     }
   }, 10_000);
@@ -803,9 +880,14 @@ function initialize_war_list(list: HTMLElement) {
     attributeFilter: ["class", "alt"],
   });
 
+  const flightInterval = setInterval(() => {
+    poll_traveling_flights(list);
+  }, 5000);
+
   const cleanupInterval = setInterval(() => {
     if (!list.isConnected) {
       clearInterval(cleanupInterval);
+      clearInterval(flightInterval);
       attributeObserver.disconnect();
     }
   }, 10_000);
