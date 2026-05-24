@@ -259,7 +259,7 @@ test("ff-faction-filter-box supports column visibility toggles and reactive cont
   // 2. Checkboxes exist and are checked by default
   const checkboxes = Array.from(
     grpColumns?.querySelectorAll('input[type="checkbox"]') || [],
-  ) as HTMLInputElement[];
+  ) as [HTMLInputElement, HTMLInputElement, HTMLInputElement];
   expect(checkboxes.length).toBe(3); // Level, Status, Score
 
   const [lvlCheckbox, statusCheckbox, scoreCheckbox] = checkboxes;

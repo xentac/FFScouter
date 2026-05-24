@@ -124,32 +124,10 @@ export default {
             FEATURE_NAME,
           );
         } else if (
-          window.location.href.startsWith("https://www.torn.com/messages.php")
-        ) {
-          await apply_ff_gauge_selector(
-            node.querySelectorAll(".name"),
-            FEATURE_NAME,
-          );
-        } else if (
-          window.location.href.startsWith("https://www.torn.com/index.php")
-        ) {
-          await apply_ff_gauge_selector(
-            node.querySelectorAll(".name"),
-            FEATURE_NAME,
-          );
-        } else if (
-          window.location.href.startsWith(
-            "https://www.torn.com/hospitalview.php",
-          )
-        ) {
-          await apply_ff_gauge_selector(
-            node.querySelectorAll(".name"),
-            FEATURE_NAME,
-          );
-        } else if (
-          window.location.href.startsWith(
-            "https://www.torn.com/page.php?sid=UserList",
-          )
+          torn_page("messages") ||
+          torn_page("index") ||
+          torn_page("hospitalview") ||
+          torn_page("page", { sid: "UserList" })
         ) {
           await apply_ff_gauge_selector(
             node.querySelectorAll(".name"),
@@ -159,11 +137,7 @@ export default {
           window.location.href.startsWith("https://www.torn.com/bounties.php")
         ) {
           await apply_ff_gauge_selector(
-            node.querySelectorAll(".target"),
-            FEATURE_NAME,
-          );
-          await apply_ff_gauge_selector(
-            node.querySelectorAll(".listed"),
+            node.querySelectorAll(".target, .listed"),
             FEATURE_NAME,
           );
         } else if (
@@ -179,19 +153,9 @@ export default {
           window.location.href.startsWith("https://www.torn.com/forums.php")
         ) {
           await apply_ff_gauge_selector(
-            node.querySelectorAll(".last-poster"),
-            FEATURE_NAME,
-          );
-          await apply_ff_gauge_selector(
-            node.querySelectorAll(".starter"),
-            FEATURE_NAME,
-          );
-          await apply_ff_gauge_selector(
-            node.querySelectorAll(".last-post"),
-            FEATURE_NAME,
-          );
-          await apply_ff_gauge_selector(
-            node.querySelectorAll(".poster"),
+            node.querySelectorAll(
+              ".last-poster, .starter, .last-post, .poster",
+            ),
             FEATURE_NAME,
           );
         } else if (
