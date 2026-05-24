@@ -332,6 +332,17 @@ export class FFCache {
     }
   };
 
+  delete_flight = async (player_id: PlayerId): Promise<void> => {
+    const db = await this.start_op();
+    try {
+      const tx = db.transaction(STORES.FLIGHTS, "readwrite");
+      await tx.store.delete(player_id);
+      await tx.done;
+    } finally {
+      this.end_op();
+    }
+  };
+
   add_analytics = async (
     entry: Omit<AnalyticsEntry, "id" | "timestamp">,
   ): Promise<void> => {

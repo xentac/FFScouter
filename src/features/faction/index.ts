@@ -272,6 +272,7 @@ export async function poll_traveling_flights(membersList: HTMLElement) {
     if (!p.isTraveling) {
       p.row.removeAttribute("data-earliest-arrival");
       p.row.removeAttribute("data-latest-arrival");
+      ffscouter.clear_flight_cache(p.player_id);
     }
   }
 
@@ -624,7 +625,7 @@ function initialize_features(membersList: HTMLElement) {
 
   const flightInterval = setInterval(() => {
     poll_traveling_flights(membersList);
-  }, 5000);
+  }, 30000);
 
   const cleanupInterval = setInterval(() => {
     if (!membersList.isConnected) {
@@ -864,7 +865,7 @@ function initialize_war_list(list: HTMLElement) {
 
   const flightInterval = setInterval(() => {
     poll_traveling_flights(list);
-  }, 5000);
+  }, 30000);
 
   const cleanupInterval = setInterval(() => {
     if (!list.isConnected) {

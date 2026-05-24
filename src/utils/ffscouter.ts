@@ -20,6 +20,10 @@ import type {
 
 const DB_NAME = "FFSV3-cache";
 
+const RECHECK_RETRY_DELAY = 60 * 1000; // 60 seconds (1 minute)
+const RECHECK_WINDOW_DURATION = 3 * 60 * 1000; // 3 minutes
+const FINALIZED_NO_FLIGHT_TTL = 30 * 60 * 1000; // 30 minutes
+
 type Job<T> = {
   promise: Promise<T>;
   resolve: (value: T) => void;
@@ -87,6 +91,31 @@ export class FFScouter {
     return promise;
   };
 
+  clear_flight_cache = async (player_id: PlayerId): Promise<void> => {
+    try {
+      await this.cache.delete_flight(player_id);
+    } catch (err) {
+      logger.error("Failed to delete flight from cache", err);
+    }
+  };
+
+  private calculate_flight_cache_ttl = (
+    result: PlayerFlightsResponse,
+  ): number => {
+    if (result.current) {
+      const now = Date.now();
+      const latest_arrival_time_ms = result.current.latest_arrival_time * 1000;
+      const time_remaining = latest_arrival_time_ms - now;
+      if (time_remaining > 0) {
+        const segment = Math.floor(time_remaining / 3);
+        const min_ttl = 60 * 1000; // 1 minute minimum
+        const max_ttl = 30 * 60 * 1000; // 30 minutes maximum cap
+        return Math.max(min_ttl, Math.min(segment, max_ttl));
+      }
+    }
+    return FINALIZED_NO_FLIGHT_TTL;
+  };
+
   // Get flights for a player, utilizing cache, bypassing batch queueing
   get_flights = async (player_id: PlayerId): Promise<PlayerFlightsResponse> => {
     logger.debug(`get_flights called for ${player_id}`);
@@ -103,7 +132,7 @@ export class FFScouter {
       logger.debug(`Flight cache hit for player ${player_id}`);
       if (cached.rechecking) {
         const now = Date.now();
-        // If we exceeded the 3-minute rechecking window, finalize as no-flight
+        // If we exceeded the rechecking window, finalize as no-flight
         if (cached.recheck_until && now >= cached.recheck_until) {
           logger.debug(
             `Rechecking window expired for player ${player_id}. Finalizing no data.`,
@@ -115,7 +144,10 @@ export class FFScouter {
             rechecking: false,
           };
           try {
-            await this.cache.update_flight(final_response, 10 * 60 * 1000); // 10 minutes cache TTL
+            await this.cache.update_flight(
+              final_response,
+              FINALIZED_NO_FLIGHT_TTL,
+            );
           } catch (err) {
             logger.error("Failed to finalize flight cache", err);
           }
@@ -148,9 +180,10 @@ export class FFScouter {
             logger.debug(
               `Flight successfully tracked for player ${player_id} on retry.`,
             );
-            // Update cache with standard success TTL (1 minute)
+            // Update cache with dynamic TTL
             try {
-              await this.cache.update_flight(response.result, 60 * 1000);
+              const ttl = this.calculate_flight_cache_ttl(response.result);
+              await this.cache.update_flight(response.result, ttl);
             } catch (err) {
               logger.error("Failed to update flight cache", err);
             }
@@ -160,7 +193,7 @@ export class FFScouter {
           logger.debug(
             `Player ${player_id} still has no flight. Scheduling next retry.`,
           );
-          const next_retry_at = Date.now() + 15 * 1000;
+          const next_retry_at = Date.now() + RECHECK_RETRY_DELAY;
           const updated_response: PlayerFlightsResponse = {
             player_id: cached.player_id,
             current: null,
@@ -219,9 +252,10 @@ export class FFScouter {
     }
 
     if (response.result.current) {
-      // Update cache with standard success TTL (1 minute)
+      // Update cache with dynamic TTL
       try {
-        await this.cache.update_flight(response.result, 60 * 1000);
+        const ttl = this.calculate_flight_cache_ttl(response.result);
+        await this.cache.update_flight(response.result, ttl);
       } catch (err) {
         logger.error("Failed to update flight cache", err);
       }
@@ -229,8 +263,8 @@ export class FFScouter {
       // Start the rechecking cycle
       logger.debug(`Start rechecking cycle for player ${player_id}`);
       const now = Date.now();
-      const next_retry_at = now + 15 * 1000;
-      const recheck_until = now + 3 * 60 * 1000;
+      const next_retry_at = now + RECHECK_RETRY_DELAY;
+      const recheck_until = now + RECHECK_WINDOW_DURATION;
       const rechecking_response: PlayerFlightsResponse = {
         player_id: response.result.player_id,
         current: null,
@@ -240,7 +274,10 @@ export class FFScouter {
         recheck_until,
       };
       try {
-        await this.cache.update_flight(rechecking_response, 3 * 60 * 1000);
+        await this.cache.update_flight(
+          rechecking_response,
+          RECHECK_WINDOW_DURATION,
+        );
       } catch (err) {
         logger.error("Failed to update flight cache", err);
       }

@@ -380,13 +380,17 @@ test("get_flights cache miss success", async () => {
   const c = new FFCache("test-scouter-flights-miss");
   const f = new FFScouter(config, c);
 
+  const now = 1000000000000;
+  vi.spyOn(Date, "now").mockReturnValue(now);
+  const nowUnix = now / 1000;
+
   const mockFlight = {
     player_id: 456,
     current: {
-      takeoff_time: 12345,
+      takeoff_time: nowUnix - 1800,
       status_description: "Leaving",
-      earliest_arrival_time: 23456,
-      latest_arrival_time: 34567,
+      earliest_arrival_time: nowUnix + 1800,
+      latest_arrival_time: nowUnix + 3600, // 1 hour remaining
       travel_method: "BCT" as TravelMethod,
       book_likely_being_used: false,
     },
@@ -406,7 +410,7 @@ test("get_flights cache miss success", async () => {
   expect(res).toEqual(mockFlight);
   expect(c.get_flight).toHaveBeenCalledWith(456);
   expect(query_flights).toHaveBeenCalledWith("a", 456);
-  expect(c.update_flight).toHaveBeenCalledWith(mockFlight, 60000);
+  expect(c.update_flight).toHaveBeenCalledWith(mockFlight, 1200000); // 3600 / 3 = 1200 seconds = 1,200,000 ms
   expect(c.clean_expired).toHaveBeenCalled();
 
   await c.delete_db();
@@ -449,13 +453,13 @@ test("get_flights cache miss with current === null starts rechecking", async () 
   const res = await f.get_flights(111);
 
   expect(res.rechecking).toBe(true);
-  expect(res.next_retry_at).toBe(now + 15 * 1000);
+  expect(res.next_retry_at).toBe(now + 60 * 1000);
   expect(res.recheck_until).toBe(now + 3 * 60 * 1000);
   expect(spyUpdate).toHaveBeenCalledWith(
     expect.objectContaining({
       player_id: 111,
       rechecking: true,
-      next_retry_at: now + 15 * 1000,
+      next_retry_at: now + 60 * 1000,
       recheck_until: now + 3 * 60 * 1000,
     }),
     3 * 60 * 1000,
@@ -474,7 +478,7 @@ test("get_flights cache hit rechecking before next_retry_at returns cached", asy
     current: null,
     recent_flights: [],
     rechecking: true,
-    next_retry_at: now + 15000,
+    next_retry_at: now + 60000,
     recheck_until: now + 180000,
     expiry: now + 180000,
   };
@@ -485,7 +489,7 @@ test("get_flights cache hit rechecking before next_retry_at returns cached", asy
   const res = await f.get_flights(222);
 
   expect(res.rechecking).toBe(true);
-  expect(res.next_retry_at).toBe(now + 15000);
+  expect(res.next_retry_at).toBe(now + 60000);
   expect(query_flights).not.toHaveBeenCalled();
 
   await c.delete_db();
@@ -501,7 +505,7 @@ test("get_flights cache hit rechecking after next_retry_at retries API (still nu
     current: null,
     recent_flights: [],
     rechecking: true,
-    next_retry_at: now + 15000,
+    next_retry_at: now + 60000,
     recheck_until: now + 180000,
     expiry: now + 180000,
   };
@@ -509,7 +513,7 @@ test("get_flights cache hit rechecking after next_retry_at retries API (still nu
   vi.spyOn(c, "get_flight").mockResolvedValue(cachedData);
   const spyUpdate = vi.spyOn(c, "update_flight").mockResolvedValue();
 
-  const currentTime = now + 20000; // after next_retry_at
+  const currentTime = now + 70000; // after next_retry_at
   vi.spyOn(Date, "now").mockReturnValue(currentTime);
 
   const mockBlankFlight = {
@@ -525,13 +529,13 @@ test("get_flights cache hit rechecking after next_retry_at retries API (still nu
   const res = await f.get_flights(333);
 
   expect(res.rechecking).toBe(true);
-  expect(res.next_retry_at).toBe(currentTime + 15000);
+  expect(res.next_retry_at).toBe(currentTime + 60000);
   expect(res.recheck_until).toBe(now + 180000);
   expect(query_flights).toHaveBeenCalledWith("a", 333);
   expect(spyUpdate).toHaveBeenCalledWith(
     expect.objectContaining({
       rechecking: true,
-      next_retry_at: currentTime + 15000,
+      next_retry_at: currentTime + 60000,
       recheck_until: now + 180000,
     }),
     now + 180000 - currentTime,
@@ -550,7 +554,7 @@ test("get_flights cache hit rechecking after next_retry_at retries API (tracked)
     current: null,
     recent_flights: [],
     rechecking: true,
-    next_retry_at: now + 15000,
+    next_retry_at: now + 60000,
     recheck_until: now + 180000,
     expiry: now + 180000,
   };
@@ -558,16 +562,17 @@ test("get_flights cache hit rechecking after next_retry_at retries API (tracked)
   vi.spyOn(c, "get_flight").mockResolvedValue(cachedData);
   const spyUpdate = vi.spyOn(c, "update_flight").mockResolvedValue();
 
-  const currentTime = now + 20000; // after next_retry_at
+  const currentTime = now + 70000; // after next_retry_at
   vi.spyOn(Date, "now").mockReturnValue(currentTime);
+  const currentTimeUnix = currentTime / 1000;
 
   const mockFlight = {
     player_id: 444,
     current: {
-      takeoff_time: 12345,
+      takeoff_time: currentTimeUnix - 1800,
       status_description: "Leaving",
-      earliest_arrival_time: 23456,
-      latest_arrival_time: 34567,
+      earliest_arrival_time: currentTimeUnix + 1800,
+      latest_arrival_time: currentTimeUnix + 3600, // 1 hour remaining
       travel_method: "BCT" as TravelMethod,
       book_likely_being_used: false,
     },
@@ -582,7 +587,7 @@ test("get_flights cache hit rechecking after next_retry_at retries API (tracked)
 
   expect(res.rechecking).toBeUndefined();
   expect(res.current).not.toBeNull();
-  expect(spyUpdate).toHaveBeenCalledWith(mockFlight, 60 * 1000);
+  expect(spyUpdate).toHaveBeenCalledWith(mockFlight, 1200000); // 3600 / 3 = 1200 seconds = 1,200,000 ms
 
   await c.delete_db();
 });
@@ -597,7 +602,7 @@ test("get_flights cache hit rechecking after recheck_until finalizes", async () 
     current: null,
     recent_flights: [],
     rechecking: true,
-    next_retry_at: now + 15000,
+    next_retry_at: now + 60000,
     recheck_until: now + 180000,
     expiry: now + 180000,
   };
@@ -617,7 +622,7 @@ test("get_flights cache hit rechecking after recheck_until finalizes", async () 
     expect.objectContaining({
       rechecking: false,
     }),
-    10 * 60 * 1000,
+    30 * 60 * 1000,
   );
 
   await c.delete_db();

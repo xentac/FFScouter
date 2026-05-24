@@ -87,11 +87,11 @@ export class FFFlightProfileStatus extends LitElement {
     }, 1000);
 
     this.fetch_interval = setInterval(() => {
-      // Only do normal 15s updates if not rechecking (since rechecking has its own custom retry ticker)
+      // Only do normal 30s updates if not rechecking (since rechecking has its own custom retry ticker)
       if (!this.data?.rechecking) {
         this.fetch_data();
       }
-    }, 15000);
+    }, 30000);
   }
 
   private stop_timers() {

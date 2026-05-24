@@ -17,6 +17,7 @@ vi.mock("@utils/ffscouter", () => {
     ffscouter: {
       get: vi.fn(),
       get_flights: vi.fn(),
+      clear_flight_cache: vi.fn(),
       complete: vi.fn(),
     },
   };
