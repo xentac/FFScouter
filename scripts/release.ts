@@ -50,18 +50,176 @@ function runCmd(
   return result.stdout?.trim();
 }
 
+// Helper to get recent tags for a specific edition branch
+function getRecentTagsForEdition(branch: string, count = 5): string[] {
+  try {
+    let output = execSync(`git tag --merged ${branch} --sort=-creatordate`, {
+      stdio: "pipe",
+    })
+      .toString()
+      .trim();
+
+    if (!output) {
+      output = execSync(
+        `git tag --merged origin/${branch} --sort=-creatordate`,
+        { stdio: "pipe" },
+      )
+        .toString()
+        .trim();
+    }
+
+    if (output) {
+      return output
+        .split("\n")
+        .map((t) => t.trim())
+        .filter(Boolean)
+        .slice(0, count);
+    }
+  } catch (_e) {
+    // Ignore error
+  }
+  return [];
+}
+
+// Helper to get release metadata from branch
+function getReleaseMetadata(branch: string) {
+  try {
+    const content = execSync(`git show ${branch}:release-metadata.json`, {
+      stdio: "pipe",
+    })
+      .toString()
+      .trim();
+    if (content) {
+      return JSON.parse(content);
+    }
+  } catch (_e) {
+    try {
+      const content = execSync(
+        `git show origin/${branch}:release-metadata.json`,
+        { stdio: "pipe" },
+      )
+        .toString()
+        .trim();
+      if (content) {
+        return JSON.parse(content);
+      }
+    } catch (_err) {
+      // Ignore
+    }
+  }
+  return null;
+}
+
+// Helper to show status of an edition compared to HEAD
+async function showEditionStatus(editionKey: EditionKey, sourceCommit: string) {
+  const edition = EDITIONS[editionKey];
+  console.log(`\n\x1b[1;35m=== Status for ${edition.name} ===\x1b[0m`);
+  console.log(`Branch:          \x1b[36m${edition.branch}\x1b[0m`);
+
+  // Recent Tags
+  const recentTags = getRecentTagsForEdition(edition.branch, 5);
+  console.log("Recent tags:");
+  if (recentTags.length > 0) {
+    recentTags.forEach((tag) => {
+      console.log(`  - \x1b[32m${tag}\x1b[0m`);
+    });
+  } else {
+    console.log("  \x1b[90m(No tags found)\x1b[0m");
+  }
+
+  const metadata = getReleaseMetadata(edition.branch);
+  if (!metadata) {
+    console.log(
+      `Release status:  \x1b[31mNo release metadata found (not yet released or branch missing)\x1b[0m`,
+    );
+    return;
+  }
+
+  console.log(`Current version: \x1b[32m${metadata.version}\x1b[0m`);
+  console.log(`Build Date:      \x1b[90m${metadata.buildDate}\x1b[0m`);
+  console.log(`Source Commit:   \x1b[36m${metadata.sourceCommit}\x1b[0m`);
+
+  const relSourceCommit = metadata.sourceCommit;
+  if (!relSourceCommit) {
+    console.log(
+      `\x1b[31mWarning: Release metadata does not contain sourceCommit.\x1b[0m`,
+    );
+    return;
+  }
+
+  // Check if sourceCommit exists in history
+  let commitExists = false;
+  try {
+    execSync(`git cat-file -e ${relSourceCommit}`, { stdio: "ignore" });
+    commitExists = true;
+  } catch (_e) {
+    // Ignore
+  }
+
+  if (!commitExists) {
+    console.log(
+      `\x1b[33mWarning: Release source commit ${relSourceCommit} is not in Git history. Cannot calculate diff.\x1b[0m`,
+    );
+    return;
+  }
+
+  // Commits between relSourceCommit and sourceCommit (HEAD)
+  try {
+    const countStr = execSync(
+      `git rev-list --count ${relSourceCommit}..${sourceCommit}`,
+      { stdio: "pipe" },
+    )
+      .toString()
+      .trim();
+    const count = parseInt(countStr, 10);
+
+    if (count === 0) {
+      console.log(
+        `\x1b[32mHEAD is up to date with this release (0 commits difference).\x1b[0m`,
+      );
+    } else {
+      console.log(
+        `\x1b[33mHEAD is ahead of this release by ${count} commit(s):\x1b[0m`,
+      );
+      const logs = execSync(
+        `git log ${relSourceCommit}..${sourceCommit} --format="- %s (%h)"`,
+        { stdio: "pipe" },
+      )
+        .toString()
+        .trim();
+      const logLines = logs.split("\n").filter(Boolean);
+      const limit = 15;
+      logLines.slice(0, limit).forEach((line) => {
+        console.log(`  ${line}`);
+      });
+      if (logLines.length > limit) {
+        console.log(`  ... and ${logLines.length - limit} more commits.`);
+      }
+    }
+  } catch (err) {
+    console.log(`\x1b[31mFailed to calculate commit difference: ${err}\x1b[0m`);
+  }
+}
+
 async function main() {
   const rl = readline.createInterface({ input, output });
 
   try {
-    // 1. Ensure working directory is clean
-    const status = execSync("git status --porcelain").toString().trim();
-    if (status) {
-      console.error(
-        "\x1b[31mError: Git working directory is not clean. Please commit or stash your changes first.\x1b[0m",
-      );
-      console.error(status);
-      process.exit(1);
+    const args = process.argv.slice(2);
+    const isDiff = args.some((arg) =>
+      ["--diff", "diff", "-d", "status", "--status"].includes(arg),
+    );
+
+    // 1. Ensure working directory is clean (skipped in diff/status mode)
+    if (!isDiff) {
+      const status = execSync("git status --porcelain").toString().trim();
+      if (status) {
+        console.error(
+          "\x1b[31mError: Git working directory is not clean. Please commit or stash your changes first.\x1b[0m",
+        );
+        console.error(status);
+        process.exit(1);
+      }
     }
 
     // Get current branch and commit details
@@ -70,9 +228,49 @@ async function main() {
       "DETACHED_HEAD";
     const sourceCommit = execSync("git rev-parse HEAD").toString().trim();
 
+    const cleanArgs = args.filter(
+      (arg) => !["--diff", "diff", "-d", "status", "--status"].includes(arg),
+    );
+
+    // Handle status/diff mode
+    if (isDiff) {
+      let editionKey = cleanArgs[0] as EditionKey;
+      if (!editionKey || !EDITIONS[editionKey]) {
+        console.log("Select edition to compare with HEAD:");
+        const keys = Object.keys(EDITIONS) as EditionKey[];
+        keys.forEach((k, idx) => {
+          console.log(`  [${idx + 1}] ${k} (${EDITIONS[k].name})`);
+        });
+        console.log(
+          `  [${keys.length + 1}] all (Show status for all editions)`,
+        );
+
+        const choice = await rl.question(`Choice (1-${keys.length + 1}): `);
+        const idx = parseInt(choice.trim(), 10) - 1;
+        if (Number.isNaN(idx) || idx < 0 || idx > keys.length) {
+          console.error("Invalid choice.");
+          process.exit(1);
+        }
+        if (idx === keys.length) {
+          for (const k of keys) {
+            await showEditionStatus(k, sourceCommit);
+          }
+          process.exit(0);
+        }
+        const selectedKey = keys[idx];
+        if (!selectedKey) {
+          console.error("Invalid choice.");
+          process.exit(1);
+        }
+        editionKey = selectedKey;
+      }
+
+      await showEditionStatus(editionKey, sourceCommit);
+      process.exit(0);
+    }
+
     // 2. Determine Edition
-    const args = process.argv.slice(2);
-    let editionKey = args[0] as EditionKey;
+    let editionKey = cleanArgs[0] as EditionKey;
     if (!editionKey || !EDITIONS[editionKey]) {
       console.log("Select edition to release:");
       const keys = Object.keys(EDITIONS) as EditionKey[];
@@ -96,20 +294,33 @@ async function main() {
 
     const edition = EDITIONS[editionKey];
 
+    // Show status for this edition before prompting for version
+    await showEditionStatus(editionKey, sourceCommit);
+
     // 3. Determine Version
-    let version = args[1];
+    let version = cleanArgs[1];
     if (!version) {
       // Suggest previous tag
       let suggestion = "1.0.0";
-      try {
-        const lastTag = execSync("git describe --tags --abbrev=0")
-          .toString()
-          .trim();
+      const recentTags = getRecentTagsForEdition(edition.branch, 5);
+      const lastTag = recentTags[0];
+      if (lastTag) {
         suggestion = lastTag.startsWith("v") ? lastTag.slice(1) : lastTag;
-      } catch (_e) {
-        // No tags yet
+      } else {
+        // Fallback to git describe --tags --abbrev=0 for general suggestion
+        try {
+          const lastTag = execSync("git describe --tags --abbrev=0")
+            .toString()
+            .trim();
+          if (lastTag) {
+            suggestion = lastTag.startsWith("v") ? lastTag.slice(1) : lastTag;
+          }
+        } catch (_e) {
+          // No tags yet
+        }
       }
 
+      console.log(""); // newline spacing
       version = await rl.question(
         `Enter release version (suggested: ${suggestion}): `,
       );
