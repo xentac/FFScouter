@@ -197,9 +197,18 @@ test("ff-faction-filter-box supports mode='war' styling and independent configs"
   expect(details).not.toBeNull();
   expect(details.classList.contains("no-borders")).toBe(true);
 
-  // 2. Check that display select is not rendered
-  const select = el.querySelector("#factions-col-display-filter");
-  expect(select).toBeNull();
+  // 2. Check that war display select is rendered and loads correct config
+  const select = el.querySelector(
+    "#war-col-display-filter",
+  ) as HTMLSelectElement;
+  expect(select).not.toBeNull();
+  expect(select.value).toBe("battle_stats");
+
+  // Change selection and verify it updates ffconfig.war_col_display
+  select.value = "fair_fight";
+  select.dispatchEvent(new Event("change"));
+  expect(ffconfig.war_col_display).toBe("fair_fight");
+  expect(ffconfig.factions_col_display).toBe("battle_stats");
 
   // 3. Test saving/loading collapsed state in war mode
   ffconfig.war_filter_collapsed = true;

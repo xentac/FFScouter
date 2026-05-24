@@ -560,9 +560,9 @@ test("apply_ff_columns removes elements when configured to NONE but populates da
   expect(row.dataset["estValue"]).toBe("5000000");
 });
 
-test("apply_ff_columns forces NONE column display when members-list is inside .faction-war", async () => {
-  // Configured to display FAIR_FIGHT columns by default
-  ffconfig.factions_col_display = FactionsColDisplay.FAIR_FIGHT;
+test("apply_ff_columns supports configurable display via CSS pseudo-elements when members-list is inside .faction-war", async () => {
+  // Configured to display FAIR_FIGHT war columns by default
+  ffconfig.war_col_display = FactionsColDisplay.FAIR_FIGHT;
 
   vi.mocked(ffscouter.get).mockResolvedValue({
     player_id: 111 as PlayerId,
@@ -578,14 +578,14 @@ test("apply_ff_columns forces NONE column display when members-list is inside .f
   const list = document.createElement("div");
   list.className = "members-list";
   list.innerHTML = `
-    <ul class="table-header">
-      <li class="member">Member</li>
-      <li class="lvl">Lvl</li>
-    </ul>
+    <div class="white-grad">
+      <div class="member">Member</div>
+      <div class="level">Lvl</div>
+    </div>
     <ul class="table-body">
       <li class="table-row">
         <div class="member"><a href="/profiles.php?XID=111">Player 111</a></div>
-        <div class="lvl">50</div>
+        <div class="level">50</div>
       </li>
     </ul>
   `;
@@ -594,14 +594,34 @@ test("apply_ff_columns forces NONE column display when members-list is inside .f
 
   await apply_ff_columns(list);
 
-  // Columns should NOT be injected since it is inside .faction-war (embedded mode)
+  // 1. Columns should NOT be injected as standard physical nodes in war mode
   expect(list.querySelector(".ffscouter-header")).toBeNull();
   expect(list.querySelector(".ffscouter-cell")).toBeNull();
 
-  // But data values should still be populated for filtering/sorting
+  // 2. But header level should receive the expected data-ff-value and --ff-display
+  const headerLvl = list.querySelector(".white-grad > .level") as HTMLElement;
+  expect(headerLvl.getAttribute("data-ff-value")).toBe("FF");
+  expect(headerLvl.style.getPropertyValue("--ff-display")).toBe("inline-flex");
+
+  // 3. Row level should receive data attributes and styling properties
+  const rowLvl = list.querySelector(".table-row .level") as HTMLElement;
+  expect(rowLvl.getAttribute("data-ff-value")).toBe("3.50");
+  expect(rowLvl.style.getPropertyValue("--ff-display")).toBe("inline-flex");
+  expect(rowLvl.style.getPropertyValue("--ff-bg-color")).not.toBe("");
+  expect(rowLvl.style.getPropertyValue("--ff-text-color")).not.toBe("");
+
   const row = list.querySelector(".table-row") as HTMLElement;
   // biome-ignore lint/complexity/useLiteralKeys: tsc requires index signature lookup
   expect(row.dataset["ffValue"]).toBe("3.5");
+
+  // 4. If configured to NONE, attributes and style properties should be removed
+  ffconfig.war_col_display = FactionsColDisplay.NONE;
+  await apply_ff_columns(list);
+
+  expect(headerLvl.getAttribute("data-ff-value")).toBeNull();
+  expect(headerLvl.style.getPropertyValue("--ff-display")).toBe("");
+  expect(rowLvl.getAttribute("data-ff-value")).toBeNull();
+  expect(rowLvl.style.getPropertyValue("--ff-display")).toBe("");
 });
 
 test("apply_filters_and_sort sets and removes data-ffscouter-active-filter attribute", () => {

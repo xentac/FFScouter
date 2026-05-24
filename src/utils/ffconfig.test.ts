@@ -30,6 +30,7 @@ test("FFConfig gets default values when storage is empty", () => {
   expect(config.factions_col_display).toEqual(
     CONFIG_DEFAULTS.factions_col_display,
   );
+  expect(config.war_col_display).toEqual(CONFIG_DEFAULTS.war_col_display);
   expect(config.debug_logs).toEqual(CONFIG_DEFAULTS.debug_logs);
   expect(config.analytics_enabled).toEqual(CONFIG_DEFAULTS.analytics_enabled);
   expect(config.chain_min_level).toEqual(CONFIG_DEFAULTS.chain_min_level);
@@ -53,6 +54,7 @@ test("FFConfig sets and gets custom configuration values", () => {
   config.chain_ff_target = 3.2;
   config.ff_history_enabled = false;
   config.factions_col_display = FactionsColDisplay.FAIR_FIGHT;
+  config.war_col_display = FactionsColDisplay.FAIR_FIGHT;
   config.debug_logs = true;
   config.analytics_enabled = true;
   config.chain_min_level = 10;
@@ -73,6 +75,7 @@ test("FFConfig sets and gets custom configuration values", () => {
   expect(config.chain_max_ff).toEqual(2.8);
   expect(config.ff_history_enabled).toBe(false);
   expect(config.factions_col_display).toEqual(FactionsColDisplay.FAIR_FIGHT);
+  expect(config.war_col_display).toEqual(FactionsColDisplay.FAIR_FIGHT);
   expect(config.debug_logs).toBe(true);
   expect(config.analytics_enabled).toBe(true);
   expect(config.chain_min_level).toEqual(10);
@@ -125,6 +128,10 @@ test("FFConfig.reset resets values to their default states except the api key", 
 
   // Other values should be reset to defaults
   expect(config.low_ff_range).toEqual(CONFIG_DEFAULTS.low_ff_range);
+  expect(config.factions_col_display).toEqual(
+    CONFIG_DEFAULTS.factions_col_display,
+  );
+  expect(config.war_col_display).toEqual(CONFIG_DEFAULTS.war_col_display);
   expect(config.debug_logs).toEqual(CONFIG_DEFAULTS.debug_logs);
   expect(config.analytics_enabled).toEqual(CONFIG_DEFAULTS.analytics_enabled);
   expect(config.chain_min_level).toEqual(CONFIG_DEFAULTS.chain_min_level);

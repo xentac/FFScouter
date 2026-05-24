@@ -270,18 +270,23 @@ ff-faction-filter-box {
 .grp-sort {
   order: 1;
 }
+
 .grp-level {
   order: 2;
 }
+
 .grp-activity {
   order: 3;
 }
+
 .grp-status {
   order: 4;
 }
+
 .grp-ff {
   order: 5;
 }
+
 .grp-stats {
   order: 6;
 }
@@ -290,6 +295,7 @@ ff-faction-filter-box {
   .ff-filter-grid {
     grid-template-columns: repeat(3, 1fr);
   }
+
   .ff-filter-grid > * {
     order: 0;
   }
@@ -366,4 +372,61 @@ ff-faction-filter-box {
 
 .chain-options-flex-container .input-row-inline {
   margin-bottom: 0;
+}
+
+/* CSS-based FF/Est columns inside faction war lists */
+.faction-war .level {
+  display: block !important;
+  flex: none !important;
+  width: 22px !important;
+  position: relative;
+  /* Make room for the injected column in the layout */
+  margin-right: 36px !important;
+}
+
+.faction-war .level::after {
+  content: attr(data-ff-value);
+  display: var(--ff-display, none);
+  position: absolute;
+  left: calc(100% + 4px);
+  top: 50%;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 20px;
+  background-color: var(--ff-bg-color, transparent);
+  color: var(--ff-text-color, inherit);
+  font-weight: bold;
+  font-size: 11px;
+  line-height: 20px;
+  text-align: center;
+  align-items: center;
+  justify-content: center;
+  border-radius: 3px;
+  text-shadow: none;
+  box-sizing: border-box;
+}
+
+/* Header styling in the war lists */
+.faction-war .white-grad {
+  overflow: visible !important;
+}
+
+.faction-war .white-grad .level {
+  display: block !important;
+  flex: none !important;
+  width: 22px !important;
+  position: relative;
+  margin-right: 36px !important;
+  overflow: visible !important;
+}
+
+.faction-war .white-grad .level::after {
+  background-color: transparent !important;
+  color: var(--ffsv3-text-color, inherit) !important;
+  font-size: 12px;
+  font-weight: bold;
+  height: auto;
+  line-height: normal;
+  left: calc(100% + 4px);
+  width: 32px;
 }

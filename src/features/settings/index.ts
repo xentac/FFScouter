@@ -40,6 +40,7 @@ export default {
     panel.chainFactionless = ffconfig.chain_factionless;
     panel.ffHistoryEnabled = ffconfig.ff_history_enabled;
     panel.factionsColDisplay = ffconfig.factions_col_display;
+    panel.warColDisplay = ffconfig.war_col_display;
     panel.debugLogs = ffconfig.debug_logs;
     panel.analyticsEnabled = ffconfig.analytics_enabled;
     panel.isPremium = await check_key_status.is_premium(true);
@@ -63,6 +64,7 @@ export default {
       ffconfig.chain_factionless = detail.chainFactionless;
       ffconfig.ff_history_enabled = detail.ffHistoryEnabled;
       ffconfig.factions_col_display = detail.factionsColDisplay;
+      ffconfig.war_col_display = detail.warColDisplay;
       ffconfig.debug_logs = detail.debugLogs;
       if (detail.debugLogs) {
         logger.setLevel(LogLevel.DEBUG);
@@ -97,6 +99,7 @@ export default {
       panel.chainFactionless = ffconfig.chain_factionless;
       panel.ffHistoryEnabled = ffconfig.ff_history_enabled;
       panel.factionsColDisplay = ffconfig.factions_col_display;
+      panel.warColDisplay = ffconfig.war_col_display;
       panel.debugLogs = ffconfig.debug_logs;
       panel.analyticsEnabled = ffconfig.analytics_enabled;
 

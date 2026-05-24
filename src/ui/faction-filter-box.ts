@@ -83,7 +83,10 @@ export class FFFactionFilterBox extends LitElement {
   }
 
   private onConfigUpdated = () => {
-    this.colDisplay = ffconfig.factions_col_display;
+    this.colDisplay =
+      this.mode === "war"
+        ? ffconfig.war_col_display
+        : ffconfig.factions_col_display;
     this.requestUpdate();
   };
 
@@ -92,7 +95,9 @@ export class FFFactionFilterBox extends LitElement {
     this.collapsed = isWar
       ? ffconfig.war_filter_collapsed
       : ffconfig.faction_filter_collapsed;
-    this.colDisplay = ffconfig.factions_col_display;
+    this.colDisplay = isWar
+      ? ffconfig.war_col_display
+      : ffconfig.factions_col_display;
     const parsed = isWar
       ? ffconfig.war_filter_state
       : ffconfig.faction_filter_state;
@@ -179,7 +184,11 @@ export class FFFactionFilterBox extends LitElement {
   private onDisplayChange(e: Event) {
     const val = (e.target as HTMLSelectElement).value as FactionsColDisplay;
     this.colDisplay = val;
-    ffconfig.factions_col_display = val;
+    if (this.mode === "war") {
+      ffconfig.war_col_display = val;
+    } else {
+      ffconfig.factions_col_display = val;
+    }
     window.dispatchEvent(new CustomEvent("ff-config-updated"));
   }
 
@@ -268,22 +277,16 @@ export class FFFactionFilterBox extends LitElement {
                       : `Sort: ${sortText} ▼`
                 }
               </button>
-              ${
-                this.mode === "war"
-                  ? ""
-                  : html`
-                    <select
-                      id="factions-col-display-filter"
-                      .value=${this.colDisplay}
-                      @change=${this.onDisplayChange}
-                      style="padding: 4px; border: 1px solid var(--ffsv3-border-color); border-radius: 4px; background: var(--ffsv3-alt-bg-color); color: var(--ffsv3-text-color); font-size: 11px; cursor: pointer; height: 32px;"
-                    >
-                      <option value="fair_fight">Show: FF Score</option>
-                      <option value="battle_stats">Show: BS Estimate</option>
-                      <option value="none">Show: None (Hide)</option>
-                    </select>
-                  `
-              }
+              <select
+                id="${this.mode === "war" ? "war-col-display-filter" : "factions-col-display-filter"}"
+                .value=${this.colDisplay}
+                @change=${this.onDisplayChange}
+                style="padding: 4px; border: 1px solid var(--ffsv3-border-color); border-radius: 4px; background: var(--ffsv3-alt-bg-color); color: var(--ffsv3-text-color); font-size: 11px; cursor: pointer; height: 32px;"
+              >
+                <option value="fair_fight">Show: FF Score</option>
+                <option value="battle_stats">Show: BS Estimate</option>
+                <option value="none">Show: None (Hide)</option>
+              </select>
             </div>
           </div>
 

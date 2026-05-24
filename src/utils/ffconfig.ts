@@ -42,6 +42,7 @@ export const CONFIG_DEFAULTS = {
   chain_ff_target: 2.5,
   ff_history_enabled: true,
   factions_col_display: FactionsColDisplay.BATTLE_STATS,
+  war_col_display: FactionsColDisplay.BATTLE_STATS,
   debug_logs: false,
   analytics_enabled: false,
   chain_min_level: null as number | null,
@@ -63,6 +64,7 @@ enum CONFIG {
   CHAIN_FF_TARGET = "chain_ff_target",
   FF_HISTORY_ENABLED = "ff_history_enabled",
   FACTIONS_COL_DISPLAY = "factions_col_display",
+  WAR_COL_DISPLAY = "war_col_display",
   DEBUG_LOGS = "debug_logs",
   ANALYTICS_ENABLED = "analytics_enabled",
   FACTION_FILTER_STATE = "faction_filter_state",
@@ -269,6 +271,17 @@ export class FFConfig {
     this.storage.set(CONFIG.FACTIONS_COL_DISPLAY, val);
   }
 
+  get war_col_display(): FactionsColDisplay {
+    return (
+      this.storage.get(CONFIG.WAR_COL_DISPLAY) ??
+      CONFIG_DEFAULTS.war_col_display
+    );
+  }
+
+  set war_col_display(val: FactionsColDisplay) {
+    this.storage.set(CONFIG.WAR_COL_DISPLAY, val);
+  }
+
   get debug_logs(): boolean {
     return this.storage.get(CONFIG.DEBUG_LOGS) ?? CONFIG_DEFAULTS.debug_logs;
   }
@@ -350,6 +363,7 @@ export class FFConfig {
     this.storage.remove(CONFIG.CHAIN_FF_TARGET);
     this.storage.remove(CONFIG.FF_HISTORY_ENABLED);
     this.storage.remove(CONFIG.FACTIONS_COL_DISPLAY);
+    this.storage.remove(CONFIG.WAR_COL_DISPLAY);
     this.storage.remove(CONFIG.DEBUG_LOGS);
     this.storage.remove(CONFIG.ANALYTICS_ENABLED);
     this.storage.remove(CONFIG.FACTION_FILTER_STATE);

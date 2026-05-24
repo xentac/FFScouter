@@ -41,6 +41,8 @@ export class FFSettingsPanel extends LitElement {
     CONFIG_DEFAULTS.ff_history_enabled;
   @property({ type: String }) factionsColDisplay: FactionsColDisplay =
     CONFIG_DEFAULTS.factions_col_display;
+  @property({ type: String }) warColDisplay: FactionsColDisplay =
+    CONFIG_DEFAULTS.war_col_display;
   @property({ type: Boolean }) debugLogs: boolean = CONFIG_DEFAULTS.debug_logs;
   @property({ type: Boolean }) analyticsEnabled: boolean =
     CONFIG_DEFAULTS.analytics_enabled;
@@ -72,6 +74,8 @@ export class FFSettingsPanel extends LitElement {
     CONFIG_DEFAULTS.ff_history_enabled;
   @state() private draftFactionsColDisplay: FactionsColDisplay =
     CONFIG_DEFAULTS.factions_col_display;
+  @state() private draftWarColDisplay: FactionsColDisplay =
+    CONFIG_DEFAULTS.war_col_display;
   @state() private draftDebugLogs: boolean = CONFIG_DEFAULTS.debug_logs;
   @state() private draftAnalyticsEnabled: boolean =
     CONFIG_DEFAULTS.analytics_enabled;
@@ -102,6 +106,7 @@ export class FFSettingsPanel extends LitElement {
       changedProperties.has("chainFactionless") ||
       changedProperties.has("ffHistoryEnabled") ||
       changedProperties.has("factionsColDisplay") ||
+      changedProperties.has("warColDisplay") ||
       changedProperties.has("debugLogs") ||
       changedProperties.has("analyticsEnabled")
     ) {
@@ -126,6 +131,7 @@ export class FFSettingsPanel extends LitElement {
     this.draftChainFactionless = this.chainFactionless;
     this.draftFFHistoryEnabled = this.ffHistoryEnabled;
     this.draftFactionsColDisplay = this.factionsColDisplay;
+    this.draftWarColDisplay = this.warColDisplay;
     this.draftDebugLogs = this.debugLogs;
     this.draftAnalyticsEnabled = this.analyticsEnabled;
   }
@@ -175,6 +181,7 @@ export class FFSettingsPanel extends LitElement {
           chainFactionless: this.draftChainFactionless,
           ffHistoryEnabled: this.draftFFHistoryEnabled,
           factionsColDisplay: this.draftFactionsColDisplay,
+          warColDisplay: this.draftWarColDisplay,
           debugLogs: this.draftDebugLogs,
           analyticsEnabled: this.draftAnalyticsEnabled,
         },
@@ -298,6 +305,12 @@ export class FFSettingsPanel extends LitElement {
 
   private onFactionsColDisplayChange(e: Event) {
     this.draftFactionsColDisplay = (e.target as HTMLSelectElement)
+      .value as FactionsColDisplay;
+    this.showSavedMessage = false;
+  }
+
+  private onWarColDisplayChange(e: Event) {
+    this.draftWarColDisplay = (e.target as HTMLSelectElement)
       .value as FactionsColDisplay;
     this.showSavedMessage = false;
   }
@@ -555,6 +568,20 @@ export class FFSettingsPanel extends LitElement {
               id="factions-col-display"
               .value=${this.draftFactionsColDisplay}
               @change=${this.onFactionsColDisplayChange}
+            >
+              <option value="fair_fight">FF Score</option>
+              <option value="battle_stats">BS Estimate</option>
+              <option value="none">None (Hide Column)</option>
+            </select>
+          </div>
+
+          <!-- War Column Display -->
+          <div class="input-row-inline">
+            <label for="war-col-display">War Page Shows:</label>
+            <select
+              id="war-col-display"
+              .value=${this.draftWarColDisplay}
+              @change=${this.onWarColDisplayChange}
             >
               <option value="fair_fight">FF Score</option>
               <option value="battle_stats">BS Estimate</option>
