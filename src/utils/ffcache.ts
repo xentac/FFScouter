@@ -53,6 +53,9 @@ export class FFCache {
   private db_version = 3;
 
   private cache_interval: number = 60 * 60 * 1000; // one hour cache
+  private last_clean = 0;
+  private active_operations = 0;
+  private close_timer: ReturnType<typeof setTimeout> | null = null;
 
   private migrations: Map<number, MigrationFn> = new Map([
     [
@@ -140,7 +143,33 @@ export class FFCache {
     }
   };
 
+  start_op = async (): Promise<IDBPDatabase<CacheDB>> => {
+    this.active_operations++;
+    if (this.close_timer) {
+      clearTimeout(this.close_timer);
+      this.close_timer = null;
+    }
+    return await this.open();
+  };
+
+  end_op = () => {
+    this.active_operations = Math.max(0, this.active_operations - 1);
+    if (this.active_operations === 0) {
+      if (this.close_timer) {
+        clearTimeout(this.close_timer);
+      }
+      this.close_timer = setTimeout(() => {
+        this.close();
+        this.close_timer = null;
+      }, 1000);
+    }
+  };
+
   delete_db = async () => {
+    if (this.close_timer) {
+      clearTimeout(this.close_timer);
+      this.close_timer = null;
+    }
     this.close();
 
     await deleteDB(this.db_name, {
@@ -155,169 +184,202 @@ export class FFCache {
   get = async (
     player_ids: PlayerId[],
   ): Promise<Map<PlayerId, CachedFFData | null>> => {
-    const db = await this.open();
-    const tx = db.transaction(STORES.CACHE, "readonly");
+    const db = await this.start_op();
+    try {
+      const tx = db.transaction(STORES.CACHE, "readonly");
 
-    // Issue all get requests in parallel
-    const requests = player_ids.map((id) => tx.store.get(id));
-    const entries = await Promise.all(requests);
+      // Issue all get requests in parallel
+      const requests = player_ids.map((id) => tx.store.get(id));
+      const entries = await Promise.all(requests);
 
-    await tx.done;
+      await tx.done;
 
-    // Zip player_ids and entries without indexing
-    const result = new Map<PlayerId, CachedFFData | null>();
-    player_ids.forEach((id, idx) => {
-      const value = entries[idx];
-      result.set(id, !value || value.expiry <= Date.now() ? null : value);
-    });
+      // Zip player_ids and entries without indexing
+      const result = new Map<PlayerId, CachedFFData | null>();
+      player_ids.forEach((id, idx) => {
+        const value = entries[idx];
+        result.set(id, !value || value.expiry <= Date.now() ? null : value);
+      });
 
-    this.close();
-
-    return result;
+      return result;
+    } finally {
+      this.end_op();
+    }
   };
 
   update = async (values: FFData[]): Promise<void> => {
-    const db = await this.open();
+    const db = await this.start_op();
+    try {
+      const tx = db.transaction(STORES.CACHE, "readwrite");
 
-    const tx = db.transaction(STORES.CACHE, "readwrite");
+      const values_expiry = values.map((value) => {
+        return {
+          ...value,
+          expiry: Date.now() + this.cache_interval,
+        };
+      });
 
-    const values_expiry = values.map((value) => {
-      return {
-        ...value,
-        expiry: Date.now() + this.cache_interval,
-      };
-    });
+      const requests = values_expiry.map((value) => {
+        return tx.store.put(value);
+      });
 
-    const requests = values_expiry.map((value) => {
-      return tx.store.put(value);
-    });
+      await Promise.all(requests);
 
-    await Promise.all(requests);
-
-    await tx.done;
-    this.close();
+      await tx.done;
+    } finally {
+      this.end_op();
+    }
   };
 
-  clean_expired = async () => {
-    const db = await this.open();
-
-    // Clean CACHE
-    {
-      const tx = db.transaction(STORES.CACHE, "readwrite");
-      const index = tx.store.index("expiry");
-      const range = IDBKeyRange.upperBound(Date.now());
-      const r = await index.getAllKeys(range);
-      logger.info(`Found ${r.length} expired values to delete from cache.`);
-      await Promise.all(r.map((id) => tx.store.delete(id)));
-      await tx.done;
+  clean_expired = async (force = false) => {
+    const now = Date.now();
+    if (!force && now - this.last_clean < 5 * 60 * 1000) {
+      return;
     }
+    this.last_clean = now;
 
-    // Clean FLIGHTS
-    {
-      const tx = db.transaction(STORES.FLIGHTS, "readwrite");
-      const index = tx.store.index("expiry");
-      const range = IDBKeyRange.upperBound(Date.now());
-      const r = await index.getAllKeys(range);
-      logger.info(`Found ${r.length} expired values to delete from flights.`);
-      await Promise.all(r.map((id) => tx.store.delete(id)));
-      await tx.done;
+    const db = await this.start_op();
+    try {
+      // Clean CACHE
+      {
+        const tx = db.transaction(STORES.CACHE, "readwrite");
+        const index = tx.store.index("expiry");
+        const range = IDBKeyRange.upperBound(Date.now());
+        const r = await index.getAllKeys(range);
+        logger.info(`Found ${r.length} expired values to delete from cache.`);
+        await Promise.all(r.map((id) => tx.store.delete(id)));
+        await tx.done;
+      }
+
+      // Clean FLIGHTS
+      {
+        const tx = db.transaction(STORES.FLIGHTS, "readwrite");
+        const index = tx.store.index("expiry");
+        const range = IDBKeyRange.upperBound(Date.now());
+        const r = await index.getAllKeys(range);
+        logger.info(`Found ${r.length} expired values to delete from flights.`);
+        await Promise.all(r.map((id) => tx.store.delete(id)));
+        await tx.done;
+      }
+
+      // Clean ANALYTICS
+      {
+        const tx = db.transaction(STORES.ANALYTICS, "readwrite");
+        const index = tx.store.index("timestamp");
+        const thirty_days_ago = Date.now() - 30 * 24 * 60 * 60 * 1000;
+        const range = IDBKeyRange.upperBound(thirty_days_ago);
+        const r = await index.getAllKeys(range);
+        logger.info(
+          `Found ${r.length} expired values to delete from analytics.`,
+        );
+        await Promise.all(r.map((id) => tx.store.delete(id)));
+        await tx.done;
+      }
+    } finally {
+      this.end_op();
     }
-
-    // Clean ANALYTICS
-    {
-      const tx = db.transaction(STORES.ANALYTICS, "readwrite");
-      const index = tx.store.index("timestamp");
-      const thirty_days_ago = Date.now() - 30 * 24 * 60 * 60 * 1000;
-      const range = IDBKeyRange.upperBound(thirty_days_ago);
-      const r = await index.getAllKeys(range);
-      logger.info(`Found ${r.length} expired values to delete from analytics.`);
-      await Promise.all(r.map((id) => tx.store.delete(id)));
-      await tx.done;
-    }
-
-    this.close();
   };
 
   get_flight = async (
     player_id: PlayerId,
   ): Promise<CachedFlightData | null> => {
-    const db = await this.open();
-    const tx = db.transaction(STORES.FLIGHTS, "readonly");
-    const entry = await tx.store.get(player_id);
-    await tx.done;
-    this.close();
+    const db = await this.start_op();
+    try {
+      const tx = db.transaction(STORES.FLIGHTS, "readonly");
+      const entry = await tx.store.get(player_id);
+      await tx.done;
 
-    if (!entry || entry.expiry <= Date.now()) {
-      return null;
+      if (!entry || entry.expiry <= Date.now()) {
+        return null;
+      }
+      return entry;
+    } finally {
+      this.end_op();
     }
-    return entry;
   };
 
   update_flight = async (
     value: PlayerFlightsResponse,
     cache_interval = 60 * 1000,
   ): Promise<void> => {
-    const db = await this.open();
-    const tx = db.transaction(STORES.FLIGHTS, "readwrite");
+    const db = await this.start_op();
+    try {
+      const tx = db.transaction(STORES.FLIGHTS, "readwrite");
 
-    const value_expiry = {
-      ...value,
-      expiry: Date.now() + cache_interval,
-    };
+      const value_expiry = {
+        ...value,
+        expiry: Date.now() + cache_interval,
+      };
 
-    await tx.store.put(value_expiry);
-    await tx.done;
-    this.close();
+      await tx.store.put(value_expiry);
+      await tx.done;
+    } finally {
+      this.end_op();
+    }
   };
 
   add_analytics = async (
     entry: Omit<AnalyticsEntry, "id" | "timestamp">,
   ): Promise<void> => {
-    const db = await this.open();
-    const tx = db.transaction(STORES.ANALYTICS, "readwrite");
-    const value: AnalyticsEntry = {
-      ...entry,
-      timestamp: Date.now(),
-    };
-    await tx.store.add(value);
-    await tx.done;
-    this.close();
+    const db = await this.start_op();
+    try {
+      const tx = db.transaction(STORES.ANALYTICS, "readwrite");
+      const value: AnalyticsEntry = {
+        ...entry,
+        timestamp: Date.now(),
+      };
+      await tx.store.add(value);
+      await tx.done;
+    } finally {
+      this.end_op();
+    }
   };
 
   get_analytics = async (): Promise<AnalyticsEntry[]> => {
-    const db = await this.open();
-    const tx = db.transaction(STORES.ANALYTICS, "readonly");
-    const res = await tx.store.getAll();
-    await tx.done;
-    this.close();
-    return res;
+    const db = await this.start_op();
+    try {
+      const tx = db.transaction(STORES.ANALYTICS, "readonly");
+      const res = await tx.store.getAll();
+      await tx.done;
+      return res;
+    } finally {
+      this.end_op();
+    }
   };
 
   clear_analytics = async (): Promise<void> => {
-    const db = await this.open();
-    const tx = db.transaction(STORES.ANALYTICS, "readwrite");
-    await tx.store.clear();
-    await tx.done;
-    this.close();
+    const db = await this.start_op();
+    try {
+      const tx = db.transaction(STORES.ANALYTICS, "readwrite");
+      await tx.store.clear();
+      await tx.done;
+    } finally {
+      this.end_op();
+    }
   };
 
   dump = async () => {
-    const db = await this.open();
+    const db = await this.start_op();
+    try {
+      const tx = db.transaction(STORES.CACHE, "readonly");
 
-    const tx = db.transaction(STORES.CACHE, "readonly");
-
-    const res = await tx.store.getAll();
-    await tx.done;
-    this.close();
-    return res;
+      const res = await tx.store.getAll();
+      await tx.done;
+      return res;
+    } finally {
+      this.end_op();
+    }
   };
 
   dump_flights = async () => {
-    const db = await this.open();
-    const tx = db.transaction(STORES.FLIGHTS, "readonly");
-    const res = await tx.store.getAll();
-    await tx.done;
-    this.close();
-    return res;
+    const db = await this.start_op();
+    try {
+      const tx = db.transaction(STORES.FLIGHTS, "readonly");
+      const res = await tx.store.getAll();
+      await tx.done;
+      return res;
+    } finally {
+      this.end_op();
+    }
   };
 }
