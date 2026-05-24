@@ -178,7 +178,10 @@ export class FFFlightProfileStatus extends LitElement {
         const now = Date.now();
         const seconds = Math.max(0, Math.ceil((next - now) / 1000));
         content = html`No data. Rechecking in ${seconds} seconds.`;
-      } else if (!current) {
+      } else if (
+        !current ||
+        (!current.earliest_arrival_time && !current.latest_arrival_time)
+      ) {
         content = html`Landing: unavailable for current route`;
       } else {
         const earliest = Number(current.earliest_arrival_time);
