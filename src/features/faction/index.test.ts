@@ -654,24 +654,26 @@ test("apply_filters_and_sort sets and removes data-ffscouter-active-filter attri
     ffMax: null,
   };
 
+  const tbody = container.querySelector(".table-body") as HTMLElement;
+
   // 1. With default/cleared filters, attribute should not be present
   apply_filters_and_sort(container, defaultFilters);
-  expect(container.getAttribute("data-ffscouter-active-filter")).toBeNull();
+  expect(tbody.getAttribute("data-ffscouter-active-filter")).toBeNull();
 
   // 2. Active sorting should set the attribute
   apply_filters_and_sort(container, { ...defaultFilters, sortBy: "ff-desc" });
-  expect(container.getAttribute("data-ffscouter-active-filter")).toBe("true");
+  expect(tbody.getAttribute("data-ffscouter-active-filter")).toBe("true");
 
   // 3. Reset filters: attribute should be removed
   apply_filters_and_sort(container, defaultFilters);
-  expect(container.getAttribute("data-ffscouter-active-filter")).toBeNull();
+  expect(tbody.getAttribute("data-ffscouter-active-filter")).toBeNull();
 
   // 4. Active filtering should set the attribute
   apply_filters_and_sort(container, {
     ...defaultFilters,
     activity: { online: true, idle: true, offline: false },
   });
-  expect(container.getAttribute("data-ffscouter-active-filter")).toBe("true");
+  expect(tbody.getAttribute("data-ffscouter-active-filter")).toBe("true");
 });
 
 test("setup_war_features detects enemy-faction and your-faction lists and setup filter box", async () => {

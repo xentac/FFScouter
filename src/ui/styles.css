@@ -240,11 +240,14 @@ ff-faction-filter-box {
 
 .ff-filter-box.no-borders {
   background-color: var(--default-bg-panel-color);
-  border: none;
+  border-top: 1px solid var(--ffsv3-border-color);
+  border-bottom: 1px solid var(--ffsv3-border-color);
+  border-left: none;
+  border-right: none;
   border-radius: 0;
   box-shadow: none;
-  padding: 0;
-  margin-bottom: 0;
+  padding: 12px 10px;
+  margin: 0;
 }
 
 .ff-filter-box summary {

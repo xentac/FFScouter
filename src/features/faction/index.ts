@@ -208,9 +208,9 @@ export function apply_filters_and_sort(
       }
     }
     if (is_filter_active(filters)) {
-      membersList.setAttribute("data-ffscouter-active-filter", "true");
+      tbody.setAttribute("data-ffscouter-active-filter", "true");
     } else {
-      membersList.removeAttribute("data-ffscouter-active-filter");
+      tbody.removeAttribute("data-ffscouter-active-filter");
     }
   } finally {
     isApplying = false;
