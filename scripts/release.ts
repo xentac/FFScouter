@@ -1,5 +1,11 @@
 import { execSync, spawnSync } from "node:child_process";
-import { copyFileSync, existsSync, rmSync, writeFileSync } from "node:fs";
+import {
+  copyFileSync,
+  existsSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { stdin as input, stdout as output } from "node:process";
 import readline from "node:readline/promises";
 
@@ -234,6 +240,49 @@ async function main() {
 
     // Write release metadata
     const metadataPath = `${worktreeDir}/release-metadata.json`;
+
+    // Gather commit summary since the last release
+    let commitSummary = "";
+    if (existsSync(metadataPath)) {
+      try {
+        const oldMetadata = JSON.parse(readFileSync(metadataPath, "utf-8"));
+        const lastSourceCommit = oldMetadata.sourceCommit;
+
+        if (lastSourceCommit && lastSourceCommit !== sourceCommit) {
+          // Safety Check: Verify the previous source commit still exists in local Git history
+          let commitExists = false;
+          try {
+            execSync(`git cat-file -e ${lastSourceCommit}`, {
+              stdio: "ignore",
+            });
+            commitExists = true;
+          } catch {
+            console.log(
+              `\x1b[33mWarning: Previous release source commit ${lastSourceCommit} is no longer in Git history (likely reset/garbage collected). Skipping changelog summary.\x1b[0m`,
+            );
+          }
+
+          if (commitExists) {
+            // Get beautiful one-line logs from the main repository
+            const logs = execSync(
+              `git log ${lastSourceCommit}..${sourceCommit} --format="- %s (%h)"`,
+            )
+              .toString()
+              .trim();
+
+            if (logs) {
+              commitSummary = `\n\nChanges since last release:\n${logs}`;
+            }
+          }
+        }
+      } catch (e) {
+        console.warn(
+          "Could not retrieve commit logs from last release metadata:",
+          e,
+        );
+      }
+    }
+
     const metadata = {
       edition: editionKey,
       version: version,
@@ -248,8 +297,9 @@ async function main() {
     const hasChanges = execSync(`git -C ${worktreeDir} status --porcelain`)
       .toString()
       .trim();
+    const commitMessage = `Release ${version}\n\nBuilt from commit: ${sourceCommit}\nSource branch: ${currentBranch}${commitSummary}`;
+
     if (hasChanges) {
-      const commitMessage = `Release ${version}\n\nBuilt from commit: ${sourceCommit}\nSource branch: ${currentBranch}`;
       runCmd("git", ["-C", worktreeDir, "commit", "-m", commitMessage]);
     } else {
       console.log(
@@ -265,7 +315,15 @@ async function main() {
     } catch {
       // Tag didn't exist
     }
-    runCmd("git", ["-C", worktreeDir, "tag", tagName]);
+    runCmd("git", [
+      "-C",
+      worktreeDir,
+      "tag",
+      "-a",
+      tagName,
+      "-m",
+      commitMessage,
+    ]);
 
     // 10. Clean up worktree
     console.log("Cleaning up worktree...");
