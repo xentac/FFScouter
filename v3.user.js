@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FF Scouter V3
 // @namespace    xentac-v3
-// @version      3.0-alpha10
+// @version      3.0-alpha11
 // @author       xentac [3354782], MAVRI [2402357], rDacted [2670953], Weav3r [1853324], Glasnost [1844049]
 // @description  Shows the expected Fair Fight score against targets and faction war status
 // @license      GPLv3
@@ -940,47 +940,59 @@ event.oldVersion,
           this.end_op();
         }
       };
-      this.clean_expired = async (force = false) => {
+      this.clean_expired = (force = false) => {
         const now = Date.now();
-        if (!force && now - this.last_clean < 5 * 60 * 1e3) {
-          return;
+        if (!force && now - this.last_clean < 60 * 60 * 1e3) {
+          return Promise.resolve();
         }
         this.last_clean = now;
-        const db = await this.start_op();
-        try {
-          {
-            const tx = db.transaction(STORES.CACHE, "readwrite");
-            const index = tx.store.index("expiry");
-            const range = IDBKeyRange.upperBound(Date.now());
-            const r2 = await index.getAllKeys(range);
-            logger.info(`Found ${r2.length} expired values to delete from cache.`);
-            await Promise.all(r2.map((id) => tx.store.delete(id)));
-            await tx.done;
+        const runClean = async () => {
+          const db = await this.start_op();
+          try {
+            {
+              const tx = db.transaction(STORES.CACHE, "readwrite");
+              const index2 = tx.store.index("expiry");
+              const range = IDBKeyRange.upperBound(Date.now());
+              const r2 = await index2.getAllKeys(range);
+              logger.info(`Found ${r2.length} expired values to delete from cache.`);
+              await Promise.all(r2.map((id) => tx.store.delete(id)));
+              await tx.done;
+            }
+            {
+              const tx = db.transaction(STORES.FLIGHTS, "readwrite");
+              const index2 = tx.store.index("expiry");
+              const range = IDBKeyRange.upperBound(Date.now());
+              const r2 = await index2.getAllKeys(range);
+              logger.info(
+                `Found ${r2.length} expired values to delete from flights.`
+              );
+              await Promise.all(r2.map((id) => tx.store.delete(id)));
+              await tx.done;
+            }
+            {
+              const tx = db.transaction(STORES.ANALYTICS, "readwrite");
+              const index2 = tx.store.index("timestamp");
+              const thirty_days_ago = Date.now() - 30 * 24 * 60 * 60 * 1e3;
+              const range = IDBKeyRange.upperBound(thirty_days_ago);
+              const r2 = await index2.getAllKeys(range);
+              logger.info(
+                `Found ${r2.length} expired values to delete from analytics.`
+              );
+              await Promise.all(r2.map((id) => tx.store.delete(id)));
+              await tx.done;
+            }
+          } finally {
+            this.end_op();
           }
-          {
-            const tx = db.transaction(STORES.FLIGHTS, "readwrite");
-            const index = tx.store.index("expiry");
-            const range = IDBKeyRange.upperBound(Date.now());
-            const r2 = await index.getAllKeys(range);
-            logger.info(`Found ${r2.length} expired values to delete from flights.`);
-            await Promise.all(r2.map((id) => tx.store.delete(id)));
-            await tx.done;
-          }
-          {
-            const tx = db.transaction(STORES.ANALYTICS, "readwrite");
-            const index = tx.store.index("timestamp");
-            const thirty_days_ago = Date.now() - 30 * 24 * 60 * 60 * 1e3;
-            const range = IDBKeyRange.upperBound(thirty_days_ago);
-            const r2 = await index.getAllKeys(range);
-            logger.info(
-              `Found ${r2.length} expired values to delete from analytics.`
-            );
-            await Promise.all(r2.map((id) => tx.store.delete(id)));
-            await tx.done;
-          }
-        } finally {
-          this.end_op();
+        };
+        if (typeof window !== "undefined" && "requestIdleCallback" in window) {
+          return new Promise((resolve, reject) => {
+            window.requestIdleCallback(() => {
+              runClean().then(resolve, reject);
+            });
+          });
         }
+        return runClean();
       };
       this.get_flight = async (player_id) => {
         const db = await this.start_op();
@@ -1005,6 +1017,16 @@ event.oldVersion,
             expiry: Date.now() + cache_interval
           };
           await tx.store.put(value_expiry);
+          await tx.done;
+        } finally {
+          this.end_op();
+        }
+      };
+      this.delete_flight = async (player_id) => {
+        const db = await this.start_op();
+        try {
+          const tx = db.transaction(STORES.FLIGHTS, "readwrite");
+          await tx.store.delete(player_id);
           await tx.done;
         } finally {
           this.end_op();
@@ -1477,6 +1499,9 @@ clearAll() {
   }
   const ffconfig = new FFConfig("ffsv3-config");
   const DB_NAME = "FFSV3-cache";
+  const RECHECK_RETRY_DELAY = 60 * 1e3;
+  const RECHECK_WINDOW_DURATION = 3 * 60 * 1e3;
+  const FINALIZED_NO_FLIGHT_TTL = 30 * 60 * 1e3;
   class FFScouter {
     constructor(config, cache) {
       this.cache = new FFCache(DB_NAME);
@@ -1513,6 +1538,27 @@ clearAll() {
         this.enqueue_cache(player_id);
         return promise;
       };
+      this.clear_flight_cache = async (player_id) => {
+        try {
+          await this.cache.delete_flight(player_id);
+        } catch (err) {
+          logger.error("Failed to delete flight from cache", err);
+        }
+      };
+      this.calculate_flight_cache_ttl = (result) => {
+        if (result.current) {
+          const now = Date.now();
+          const latest_arrival_time_ms = result.current.latest_arrival_time * 1e3;
+          const time_remaining = latest_arrival_time_ms - now;
+          if (time_remaining > 0) {
+            const segment = Math.floor(time_remaining / 3);
+            const min_ttl = 60 * 1e3;
+            const max_ttl = 30 * 60 * 1e3;
+            return Math.max(min_ttl, Math.min(segment, max_ttl));
+          }
+        }
+        return FINALIZED_NO_FLIGHT_TTL;
+      };
       this.get_flights = async (player_id) => {
         logger.debug(`get_flights called for ${player_id}`);
         let cached = null;
@@ -1536,7 +1582,10 @@ clearAll() {
                 rechecking: false
               };
               try {
-                await this.cache.update_flight(final_response, 10 * 60 * 1e3);
+                await this.cache.update_flight(
+                  final_response,
+                  FINALIZED_NO_FLIGHT_TTL
+                );
               } catch (err) {
                 logger.error("Failed to finalize flight cache", err);
               }
@@ -1566,7 +1615,8 @@ clearAll() {
                   `Flight successfully tracked for player ${player_id} on retry.`
                 );
                 try {
-                  await this.cache.update_flight(response2.result, 60 * 1e3);
+                  const ttl = this.calculate_flight_cache_ttl(response2.result);
+                  await this.cache.update_flight(response2.result, ttl);
                 } catch (err) {
                   logger.error("Failed to update flight cache", err);
                 }
@@ -1575,7 +1625,7 @@ clearAll() {
               logger.debug(
                 `Player ${player_id} still has no flight. Scheduling next retry.`
               );
-              const next_retry_at = Date.now() + 15 * 1e3;
+              const next_retry_at = Date.now() + RECHECK_RETRY_DELAY;
               const updated_response = {
                 player_id: cached.player_id,
                 current: null,
@@ -1626,15 +1676,16 @@ clearAll() {
         }
         if (response.result.current) {
           try {
-            await this.cache.update_flight(response.result, 60 * 1e3);
+            const ttl = this.calculate_flight_cache_ttl(response.result);
+            await this.cache.update_flight(response.result, ttl);
           } catch (err) {
             logger.error("Failed to update flight cache", err);
           }
         } else {
           logger.debug(`Start rechecking cycle for player ${player_id}`);
           const now = Date.now();
-          const next_retry_at = now + 15 * 1e3;
-          const recheck_until = now + 3 * 60 * 1e3;
+          const next_retry_at = now + RECHECK_RETRY_DELAY;
+          const recheck_until = now + RECHECK_WINDOW_DURATION;
           const rechecking_response = {
             player_id: response.result.player_id,
             current: null,
@@ -1644,7 +1695,10 @@ clearAll() {
             recheck_until
           };
           try {
-            await this.cache.update_flight(rechecking_response, 3 * 60 * 1e3);
+            await this.cache.update_flight(
+              rechecking_response,
+              RECHECK_WINDOW_DURATION
+            );
           } catch (err) {
             logger.error("Failed to update flight cache", err);
           }
@@ -2946,7 +3000,7 @@ async willUpdate(changedProperties) {
       h4.parentNode?.parentNode?.nextSibling
     );
   }
-  const Attack = {
+  const index$b = {
     name: "Attack FF display",
     description: "Shows FF on top left of any attack page",
     executionTime: StartTime.DocumentBody,
@@ -2977,6 +3031,10 @@ async willUpdate(changedProperties) {
       }
     }
   };
+  const __vite_glob_0_0 = Object.freeze( Object.defineProperty({
+    __proto__: null,
+    default: index$b
+  }, Symbol.toStringTag, { value: "Module" }));
   var __defProp$2 = Object.defineProperty;
   var __getOwnPropDesc$2 = Object.getOwnPropertyDescriptor;
   var __decorateClass$2 = (decorators, target, key, kind) => {
@@ -3570,6 +3628,7 @@ Number.parseInt(row.dataset["estValue"], 10)
       if (!p2.isTraveling) {
         p2.row.removeAttribute("data-earliest-arrival");
         p2.row.removeAttribute("data-latest-arrival");
+        ffscouter.clear_flight_cache(p2.player_id);
       }
     }
     const traveling = travelingPlayers.filter((p2) => p2.isTraveling);
@@ -3824,9 +3883,9 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
             sortBy: filterBox.sortBy ?? "none",
             activity: filterBox.activity,
             status: filterBox.status,
-            levelMin: filterBox.levelMin ?? 1,
-            levelMax: filterBox.levelMax ?? 100,
-            ffMin: filterBox.ffMin ?? 1,
+            levelMin: filterBox.levelMin ?? null,
+            levelMax: filterBox.levelMax ?? null,
+            ffMin: filterBox.ffMin ?? null,
             ffMax: filterBox.ffMax ?? null,
             statsMin: filterBox.statsMin ? parse_suffix_number(filterBox.statsMin) : null,
             statsMax: filterBox.statsMax ? parse_suffix_number(filterBox.statsMax) : null
@@ -3841,7 +3900,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     });
     const flightInterval = setInterval(() => {
       poll_traveling_flights(membersList);
-    }, 5e3);
+    }, 3e4);
     const cleanupInterval = setInterval(() => {
       if (!membersList.isConnected) {
         clearInterval(cleanupInterval);
@@ -4015,16 +4074,32 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
         }
       }
       if (shouldReapply) {
-        apply_ff_columns(list);
+        const filterBox = list.parentNode?.querySelector(
+          "ff-faction-filter-box"
+        );
+        if (filterBox?.activity) {
+          apply_filters_and_sort(list, {
+            sortBy: filterBox.sortBy ?? "none",
+            activity: filterBox.activity,
+            status: filterBox.status,
+            levelMin: filterBox.levelMin ?? null,
+            levelMax: filterBox.levelMax ?? null,
+            ffMin: filterBox.ffMin ?? null,
+            ffMax: filterBox.ffMax ?? null,
+            statsMin: filterBox.statsMin ? parse_suffix_number(filterBox.statsMin) : null,
+            statsMax: filterBox.statsMax ? parse_suffix_number(filterBox.statsMax) : null
+          });
+        }
       }
     });
     attributeObserver.observe(target, {
       attributes: true,
-      attributeFilter: ["class", "alt"]
+      attributeFilter: ["class", "alt"],
+      subtree: true
     });
     const flightInterval = setInterval(() => {
       poll_traveling_flights(list);
-    }, 5e3);
+    }, 3e4);
     const cleanupInterval = setInterval(() => {
       if (!list.isConnected) {
         clearInterval(cleanupInterval);
@@ -4082,7 +4157,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       }
     });
   };
-  const Faction = {
+  const index$a = {
     name: "Faction page FF display",
     description: "Shows FF arrows on both your faction and other faction pages.",
     executionTime: StartTime.DocumentBody,
@@ -4114,10 +4189,19 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       }
     }
   };
+  const __vite_glob_0_1 = Object.freeze( Object.defineProperty({
+    __proto__: null,
+    apply_ff_columns,
+    apply_filters_and_sort,
+    default: index$a,
+    initialize_features,
+    poll_traveling_flights,
+    setup_war_features
+  }, Symbol.toStringTag, { value: "Module" }));
   const FEATURE_NAME_HONOR_BAR = "fallback-honor-bar";
   const FEATURE_NAME_USER_NAME = "fallback-user-name";
   const FEATURE_NAME$3 = "fallback";
-  const Fallback = {
+  const index$9 = {
     name: "Fallback mutation observer",
     description: "Catch all mutations and see if we can apply FF data",
     executionTime: StartTime.DocumentBody,
@@ -4282,6 +4366,10 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       }
     }
   };
+  const __vite_glob_0_2 = Object.freeze( Object.defineProperty({
+    __proto__: null,
+    default: index$9
+  }, Symbol.toStringTag, { value: "Module" }));
   var TOAST_LEVEL = ((TOAST_LEVEL2) => {
     TOAST_LEVEL2[TOAST_LEVEL2["DEBUG"] = 0] = "DEBUG";
     TOAST_LEVEL2[TOAST_LEVEL2["INFO"] = 1] = "INFO";
@@ -4419,6 +4507,14 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     ffconfig.chain_target_index = nextVal;
     return val < maxLen ? val : 0;
   }
+  function get_random_chain_target() {
+    const cached = ffconfig.chain_targets;
+    if (!cached || !cached.targets || cached.targets.length === 0) {
+      return null;
+    }
+    const index2 = get_next_target_index(cached.targets.length);
+    return cached.targets[index2] ?? null;
+  }
   function remove_chain_button() {
     const button = document.getElementById("ff-scouter-chain-btn");
     if (button) {
@@ -4509,7 +4605,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     anchor.addEventListener("keydown", handler);
     document.body.appendChild(anchor);
   }
-  const FFButton = {
+  const index$8 = {
     name: "FF Target Finder Button",
     description: "Renders the floating green FF button to cycle through potential targets",
     executionTime: StartTime.DocumentBody,
@@ -4545,8 +4641,22 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       });
     }
   };
+  const __vite_glob_0_3 = Object.freeze( Object.defineProperty({
+    __proto__: null,
+    CACHE_LIFETIME_MS,
+    POLL_INTERVAL_MS,
+    create_chain_button,
+    default: index$8,
+    filters_changed,
+    get_active_filters,
+    get_next_target_index,
+    get_random_chain_target,
+    remove_chain_button,
+    update_anchor_attributes,
+    update_ff_targets
+  }, Symbol.toStringTag, { value: "Module" }));
   const FEATURE_NAME$2 = "item_market";
-  const ItemMarket = {
+  const index$7 = {
     name: "Item market FF display",
     description: "Shows FF on the item market page",
     executionTime: StartTime.DocumentBody,
@@ -4595,6 +4705,10 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       }
     }
   };
+  const __vite_glob_0_4 = Object.freeze( Object.defineProperty({
+    __proto__: null,
+    default: index$7
+  }, Symbol.toStringTag, { value: "Module" }));
   const FEATURE_NAME$1 = "mini-profile";
   const monitor_mini_profile_root = () => {
     const miniprofile = document.querySelector("#profile-mini-root");
@@ -4660,7 +4774,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     });
     mp_observer.observe(miniroot, { childList: true, subtree: true });
   };
-  const MiniProfile = {
+  const index$6 = {
     name: "Fill mini profile",
     description: "Add FF data to mini profile",
     executionTime: StartTime.DocumentBody,
@@ -4680,55 +4794,10 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       }
     }
   };
-  async function inject_info_line(info_line) {
-    const h4 = await wait_for_element("h4", 1e4);
-    if (!h4) {
-      return;
-    }
-    const links_top_wrap = h4.parentNode?.querySelector(".links-top-wrap");
-    if (links_top_wrap?.parentNode) {
-      links_top_wrap.parentNode.insertBefore(
-        info_line,
-        links_top_wrap.nextSibling
-      );
-    } else {
-      h4.after(info_line);
-    }
-  }
-  const Profile = {
-    name: "Profile FF display",
-    description: "Shows FF on top left of any profile page",
-    executionTime: StartTime.DocumentBody,
-    async shouldRun() {
-      return torn_page("profiles");
-    },
-    async run() {
-      const info_line = create_info_line();
-      if (!ffconfig.key) {
-        info_line.innerHTML = "[FF Scouter V2]: Limited API key needed - enter in FF Scouter Settings below";
-        inject_info_line(info_line);
-      }
-      const player_id = extract_id_from_url(window.location.href);
-      if (!player_id) {
-        return;
-      }
-      ffscouter.get(player_id).then(async (data) => {
-        const line = document.createElement("ff-header-line");
-        line.data = data;
-        info_line.appendChild(line);
-        inject_info_line(info_line);
-      });
-      ffscouter.complete();
-    },
-    httpIntercept: {
-      before(_url, _init) {
-        return void 0;
-      },
-      after(_bodyText, _response, _ctx) {
-        return void 0;
-      }
-    }
-  };
+  const __vite_glob_0_5 = Object.freeze( Object.defineProperty({
+    __proto__: null,
+    default: index$6
+  }, Symbol.toStringTag, { value: "Module" }));
   var __defProp$1 = Object.defineProperty;
   var __getOwnPropDesc$1 = Object.getOwnPropertyDescriptor;
   var __decorateClass$1 = (decorators, target, key, kind) => {
@@ -4812,7 +4881,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
         if (!this.data?.rechecking) {
           this.fetch_data();
         }
-      }, 15e3);
+      }, 3e4);
     }
     stop_timers() {
       if (this.tick_interval) {
@@ -4904,7 +4973,8 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
               latestTct
             });
             if (latestRemaining <= -5 * 60) {
-              content = b`Landing: Estimate is wrong. Landing time unknown.`;
+              content = b`Landing: Late, probably flight delayed.<br />(${latestTct}
+              TCT latest)`;
             } else if (latestRemaining <= 0) {
               content = b`Landing: just landed<br />(${latestTct} TCT latest)`;
             } else if (earliestRemaining <= 0) {
@@ -4946,7 +5016,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
   function is_flying(status) {
     return status.classList.contains("travelling");
   }
-  const ProfileFlights = {
+  const index$5 = {
     name: "Profile flight tracking",
     description: "Display flight estimates on player profiles if they're flying",
     executionTime: StartTime.DocumentBody,
@@ -4976,6 +5046,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
           }
         } else {
           element.remove();
+          ffscouter.clear_flight_cache(player_id);
         }
       };
       const status_observer = new MutationObserver(check_and_update);
@@ -4994,7 +5065,11 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       }
     }
   };
-  const ProfileHistory = {
+  const __vite_glob_0_6 = Object.freeze( Object.defineProperty({
+    __proto__: null,
+    default: index$5
+  }, Symbol.toStringTag, { value: "Module" }));
+  const index$4 = {
     name: "Profile FF history",
     description: "Add a button to all user's profiles to link to ffscouter.com",
     executionTime: StartTime.DocumentBody,
@@ -5047,8 +5122,65 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       }
     }
   };
+  const __vite_glob_0_7 = Object.freeze( Object.defineProperty({
+    __proto__: null,
+    default: index$4
+  }, Symbol.toStringTag, { value: "Module" }));
+  async function inject_info_line(info_line) {
+    const h4 = await wait_for_element("h4", 1e4);
+    if (!h4) {
+      return;
+    }
+    const links_top_wrap = h4.parentNode?.querySelector(".links-top-wrap");
+    if (links_top_wrap?.parentNode) {
+      links_top_wrap.parentNode.insertBefore(
+        info_line,
+        links_top_wrap.nextSibling
+      );
+    } else {
+      h4.after(info_line);
+    }
+  }
+  const index$3 = {
+    name: "Profile FF display",
+    description: "Shows FF on top left of any profile page",
+    executionTime: StartTime.DocumentBody,
+    async shouldRun() {
+      return torn_page("profiles");
+    },
+    async run() {
+      const info_line = create_info_line();
+      if (!ffconfig.key) {
+        info_line.innerHTML = "[FF Scouter V2]: Limited API key needed - enter in FF Scouter Settings below";
+        inject_info_line(info_line);
+      }
+      const player_id = extract_id_from_url(window.location.href);
+      if (!player_id) {
+        return;
+      }
+      ffscouter.get(player_id).then(async (data) => {
+        const line = document.createElement("ff-header-line");
+        line.data = data;
+        info_line.appendChild(line);
+        inject_info_line(info_line);
+      });
+      ffscouter.complete();
+    },
+    httpIntercept: {
+      before(_url, _init) {
+        return void 0;
+      },
+      after(_bodyText, _response, _ctx) {
+        return void 0;
+      }
+    }
+  };
+  const __vite_glob_0_8 = Object.freeze( Object.defineProperty({
+    __proto__: null,
+    default: index$3
+  }, Symbol.toStringTag, { value: "Module" }));
   const FEATURE_NAME = "rr";
-  const RR = {
+  const index$2 = {
     name: "Russian Roulette FF display",
     description: "Shows FF on the Russian Roulette page",
     executionTime: StartTime.DocumentBody,
@@ -5105,6 +5237,10 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       }
     }
   };
+  const __vite_glob_0_9 = Object.freeze( Object.defineProperty({
+    __proto__: null,
+    default: index$2
+  }, Symbol.toStringTag, { value: "Module" }));
   var __defProp = Object.defineProperty;
   var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
   var __decorateClass = (decorators, target, key, kind) => {
@@ -5769,7 +5905,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
   FFSettingsPanel = __decorateClass([
     t("ff-settings-panel")
   ], FFSettingsPanel);
-  const Settings = {
+  const index$1 = {
     name: "FF Scouter settings panel",
     description: "Give users a FF Scouter settings box injected on the profile page",
     executionTime: StartTime.DocumentBody,
@@ -5903,19 +6039,50 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       }
     }
   };
-  const Features = [
-    Settings,
-    Profile,
-    ProfileHistory,
-    ProfileFlights,
-    Attack,
-    Faction,
-    MiniProfile,
-    FFButton,
-    Fallback,
-    ItemMarket,
-    RR
-  ];
+  const __vite_glob_0_10 = Object.freeze( Object.defineProperty({
+    __proto__: null,
+    default: index$1
+  }, Symbol.toStringTag, { value: "Module" }));
+  const index = {
+    name: "Test Feature!",
+    description: "It's literally a test feature :P",
+    executionTime: StartTime.DocumentStart,
+    async shouldRun() {
+      return true;
+    },
+    async run() {
+      logger.info("hello world but from feature");
+    },
+    httpIntercept: {
+      before(_url, _init) {
+        return void 0;
+      },
+      after(_bodyText, _response, _ctx) {
+        return void 0;
+      }
+    }
+  };
+  const __vite_glob_0_11 = Object.freeze( Object.defineProperty({
+    __proto__: null,
+    default: index
+  }, Symbol.toStringTag, { value: "Module" }));
+  const modules = Object.assign({
+    "./attack/index.ts": __vite_glob_0_0,
+    "./faction/index.ts": __vite_glob_0_1,
+    "./fallback/index.ts": __vite_glob_0_2,
+    "./ff-button/index.ts": __vite_glob_0_3,
+    "./item_market/index.ts": __vite_glob_0_4,
+    "./mini-profile/index.ts": __vite_glob_0_5,
+    "./profile-flights/index.ts": __vite_glob_0_6,
+    "./profile-history/index.ts": __vite_glob_0_7,
+    "./profile/index.ts": __vite_glob_0_8,
+    "./rr/index.ts": __vite_glob_0_9,
+    "./settings/index.ts": __vite_glob_0_10,
+    "./test-feature/index.ts": __vite_glob_0_11
+  });
+  const Features = Object.values(modules).map((mod) => mod.default).filter(
+    (feat) => !!feat && "name" in feat && feat.name !== "Test Feature!"
+  );
   const pageWindow = unsafeWindow || window;
   let httpInterceptor = null;
   let httpPatched = false;
@@ -6006,7 +6173,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     }
     w[INJECTION_KEY] = true;
     logger.setLevel(ffconfig.debug_logs ? LogLevel.DEBUG : LogLevel.INFO);
-    logger.info("Initializing", "3.0-alpha10");
+    logger.info("Initializing", "3.0-alpha11");
     if (ffscouter.analytics_enabled) {
       unsafeWindow.ffscouter = ffscouter;
       window.ffscouter = ffscouter;
