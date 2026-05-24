@@ -375,35 +375,36 @@ ff-faction-filter-box {
 }
 
 /* CSS-based FF/Est columns inside faction war lists */
-.faction-war .level {
+.faction-war .level[class*="level__"] {
   display: block !important;
   flex: none !important;
   width: 22px !important;
   position: relative;
   /* Make room for the injected column in the layout */
   margin-right: 36px !important;
+  overflow: visible !important;
 }
 
-.faction-war .level::after {
+.faction-war .level[class*="level__"]::after {
   content: attr(data-ff-value);
-  display: var(--ff-display, none);
+  display: var(--ff-display, none) !important;
   position: absolute;
-  left: calc(100% + 4px);
-  top: 50%;
-  transform: translateY(-50%);
-  width: 32px;
-  height: 20px;
-  background-color: var(--ff-bg-color, transparent);
-  color: var(--ff-text-color, inherit);
-  font-weight: bold;
-  font-size: 11px;
-  line-height: 20px;
-  text-align: center;
-  align-items: center;
-  justify-content: center;
-  border-radius: 3px;
-  text-shadow: none;
-  box-sizing: border-box;
+  left: calc(100% + 4px) !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  width: 32px !important;
+  height: 20px !important;
+  background-color: var(--ff-bg-color, transparent) !important;
+  color: var(--ff-text-color, inherit) !important;
+  font-weight: bold !important;
+  font-size: 11px !important;
+  line-height: 20px !important;
+  text-align: center !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 3px !important;
+  box-sizing: border-box !important;
+  z-index: 10 !important;
 }
 
 /* Header styling in the war lists */
@@ -411,7 +412,7 @@ ff-faction-filter-box {
   overflow: visible !important;
 }
 
-.faction-war .white-grad .level {
+.faction-war .white-grad .level.level___pwbgk {
   display: block !important;
   flex: none !important;
   width: 22px !important;
@@ -420,13 +421,14 @@ ff-faction-filter-box {
   overflow: visible !important;
 }
 
-.faction-war .white-grad .level::after {
+.faction-war .white-grad .level.level___pwbgk::after {
   background-color: transparent !important;
-  color: var(--ffsv3-text-color, inherit) !important;
   font-size: 12px;
-  font-weight: bold;
-  height: auto;
-  line-height: normal;
-  left: calc(100% + 4px);
-  width: 32px;
+  font-weight: bold !important;
+  height: auto !important;
+  line-height: normal !important;
+  left: calc(100% + 4px) !important;
+  width: 32px !important;
+  content: attr(data-ff-value) !important;
+  display: var(--ff-display, none) !important;
 }
