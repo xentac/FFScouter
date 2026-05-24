@@ -241,24 +241,6 @@ function is_filter_active(filters: {
   statsMax?: number | null;
 }): boolean {
   if (filters.sortBy !== "none") return true;
-  if (
-    !filters.activity.online ||
-    !filters.activity.idle ||
-    !filters.activity.offline
-  )
-    return true;
-  if (
-    !filters.status.okay ||
-    !filters.status.traveling ||
-    !filters.status.hospital ||
-    !filters.status.jail ||
-    !filters.status.abroad
-  )
-    return true;
-  if (filters.levelMin !== null || filters.levelMax !== null) return true;
-  if (filters.ffMin !== null || filters.ffMax !== null) return true;
-  if (filters.statsMin !== undefined && filters.statsMin !== null) return true;
-  if (filters.statsMax !== undefined && filters.statsMax !== null) return true;
   return false;
 }
 
