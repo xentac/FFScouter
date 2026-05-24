@@ -8,6 +8,7 @@ import { beforeEach, expect, test, vi } from "vitest";
 import {
   apply_ff_columns,
   apply_filters_and_sort,
+  initialize_features,
   poll_traveling_flights,
   setup_war_features,
 } from "./index";
@@ -808,4 +809,125 @@ test("poll_traveling_flights does not add data-earliest-arrival and data-latest-
   expect(enemyRow.getAttribute("data-latest-arrival")).toBeNull();
 
   container.remove();
+});
+
+test("initialize_features MutationObserver reacts to status class changes and filters correctly", async () => {
+  vi.mocked(ffscouter.get).mockResolvedValue({
+    player_id: 111 as PlayerId,
+    no_data: true,
+  } as any);
+
+  const container = document.createElement("div");
+  container.className = "members-list";
+  container.innerHTML = `
+    <ul class="table-header">
+      <li class="member">Member</li>
+      <li class="lvl">Lvl</li>
+    </ul>
+    <div class="table-body">
+      <div class="table-row" id="row-1">
+        <div class="member"><a href="/profiles.php?XID=111">Player 111</a></div>
+        <div class="lvl">50</div>
+        <div class="status traveling">Traveling</div>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(container);
+
+  // Initialize features (which sets up MutationObserver)
+  initialize_features(container);
+  await new Promise((resolve) => setTimeout(resolve, 0));
+
+  // Find the injected filterBox
+  const filterBox = container.parentNode?.querySelector(
+    "ff-faction-filter-box",
+  ) as any;
+  expect(filterBox).not.toBeNull();
+
+  // Set filter state: keep Okay, filter out Traveling
+  filterBox.status = {
+    okay: true,
+    hospital: false,
+    jail: false,
+    abroad: false,
+    traveling: false,
+  };
+  filterBox.dispatchChange();
+  await new Promise((resolve) => setTimeout(resolve, 0));
+
+  const row = container.querySelector("#row-1") as HTMLElement;
+  // Row has status 'traveling', so it should be hidden
+  expect(row.style.display).toBe("none");
+
+  // Dynamically change status class to okay
+  const statusCell = row.querySelector(".status") as HTMLElement;
+  statusCell.className = "status okay";
+
+  // Wait for MutationObserver to run
+  await new Promise((resolve) => setTimeout(resolve, 10));
+
+  // Row should now be visible!
+  expect(row.style.display).toBe("");
+
+  container.remove();
+});
+
+test("setup_war_features MutationObserver in Ranked War reacts to status changes and filters correctly", async () => {
+  vi.mocked(ffscouter.get).mockResolvedValue({
+    player_id: 111 as PlayerId,
+    no_data: true,
+  } as any);
+
+  const factionWar = document.createElement("div");
+  factionWar.className = "faction-war";
+
+  const enemyList = document.createElement("ul");
+  enemyList.className = "enemy-faction";
+  enemyList.innerHTML = `
+    <li class="table-header"><div class="lvl">Lvl</div></li>
+    <li class="enemy" id="enemy-1">
+      <div class="member"><a href="/profiles.php?XID=111">Enemy 111</a></div>
+      <div class="lvl">50</div>
+      <div class="status traveling">Traveling</div>
+    </li>
+  `;
+
+  factionWar.appendChild(enemyList);
+  document.body.appendChild(factionWar);
+
+  setup_war_features(factionWar);
+  await new Promise((resolve) => setTimeout(resolve, 0));
+
+  // Find the injected filterBox
+  const filterBox = factionWar.querySelector(
+    "ff-faction-filter-box[mode='war']",
+  ) as any;
+  expect(filterBox).not.toBeNull();
+
+  // Set filter state: keep Traveling, filter out Okay
+  filterBox.status = {
+    okay: false,
+    hospital: false,
+    jail: false,
+    abroad: false,
+    traveling: true,
+  };
+  filterBox.dispatchChange();
+  await new Promise((resolve) => setTimeout(resolve, 0));
+
+  const row = enemyList.querySelector("#enemy-1") as HTMLElement;
+  // Row has status 'traveling', so it should be visible
+  expect(row.style.display).toBe("");
+
+  // Dynamically change status class to okay
+  const statusCell = row.querySelector(".status") as HTMLElement;
+  statusCell.className = "status okay";
+
+  // Wait for MutationObserver to run
+  await new Promise((resolve) => setTimeout(resolve, 10));
+
+  // Row should now be hidden!
+  expect(row.style.display).toBe("none");
+
+  factionWar.remove();
 });

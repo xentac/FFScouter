@@ -563,7 +563,7 @@ function inject_filter_box(membersList: HTMLElement) {
   }
 }
 
-function initialize_features(membersList: HTMLElement) {
+export function initialize_features(membersList: HTMLElement) {
   inject_filter_box(membersList);
   apply_ff_columns(membersList);
 
@@ -602,9 +602,9 @@ function initialize_features(membersList: HTMLElement) {
           sortBy: filterBox.sortBy ?? "none",
           activity: filterBox.activity,
           status: filterBox.status,
-          levelMin: filterBox.levelMin ?? 1,
-          levelMax: filterBox.levelMax ?? 100,
-          ffMin: filterBox.ffMin ?? 1,
+          levelMin: filterBox.levelMin ?? null,
+          levelMax: filterBox.levelMax ?? null,
+          ffMin: filterBox.ffMin ?? null,
           ffMax: filterBox.ffMax ?? null,
           statsMin: filterBox.statsMin
             ? parse_suffix_number(filterBox.statsMin)
@@ -854,13 +854,33 @@ function initialize_war_list(list: HTMLElement) {
     }
 
     if (shouldReapply) {
-      apply_ff_columns(list);
+      const filterBox = list.parentNode?.querySelector(
+        "ff-faction-filter-box",
+      ) as any;
+      if (filterBox?.activity) {
+        apply_filters_and_sort(list, {
+          sortBy: filterBox.sortBy ?? "none",
+          activity: filterBox.activity,
+          status: filterBox.status,
+          levelMin: filterBox.levelMin ?? null,
+          levelMax: filterBox.levelMax ?? null,
+          ffMin: filterBox.ffMin ?? null,
+          ffMax: filterBox.ffMax ?? null,
+          statsMin: filterBox.statsMin
+            ? parse_suffix_number(filterBox.statsMin)
+            : null,
+          statsMax: filterBox.statsMax
+            ? parse_suffix_number(filterBox.statsMax)
+            : null,
+        });
+      }
     }
   });
 
   attributeObserver.observe(target, {
     attributes: true,
     attributeFilter: ["class", "alt"],
+    subtree: true,
   });
 
   const flightInterval = setInterval(() => {
