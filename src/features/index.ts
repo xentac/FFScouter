@@ -1,29 +1,14 @@
-import Attack from "./attack";
-import Faction from "./faction";
-import Fallback from "./fallback";
 import type { Feature } from "./feature";
-import FFButton from "./ff-button";
-import ItemMarket from "./item_market";
-import MiniProfile from "./mini-profile";
-import Profile from "./profile";
-import ProfileFlights from "./profile-flights";
-import ProfileHistory from "./profile-history";
-import RR from "./rr";
-import Settings from "./settings";
 
-export const Features: Feature[] = [
-  Settings,
-  Profile,
-  ProfileHistory,
-  ProfileFlights,
-  Attack,
-  Faction,
-  MiniProfile,
-  FFButton,
-  Fallback,
-  ItemMarket,
-  RR,
-];
+// Automatically discovers all features in the subdirectories.
+// Yes, it IS possible! Dynamic imports/Vite glob to the rescue! :D
+const modules = import.meta.glob<{ default: Feature }>("./*/index.ts", {
+  eager: true,
+});
 
-// You'll need to add a new export here for each feature
-// It's a pain in the ass and I want something that's less annoying, but i doubt it's possible :p
+export const Features: Feature[] = Object.values(modules)
+  .map((mod) => mod.default)
+  .filter(
+    (feat): feat is Feature =>
+      !!feat && "name" in feat && feat.name !== "Test Feature!",
+  );
