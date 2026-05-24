@@ -190,12 +190,20 @@ export class FFFlightProfileStatus extends LitElement {
           content = html`Landing: unavailable for current route`;
         } else {
           const nowUnix = this.current_time_seconds;
-          const earliestRemaining = Math.max(0, earliest - nowUnix);
-          const latestRemaining = Math.max(0, latest - nowUnix);
+          const earliestRemaining = earliest - nowUnix;
+          const latestRemaining = latest - nowUnix;
           const earliestTct = format_tct_time(earliest);
           const latestTct = format_tct_time(latest);
 
-          if (latestRemaining <= 0) {
+          console.log({
+            earliestRemaining: earliestRemaining,
+            latestRemaining: latestRemaining,
+            earliestTct: earliestTct,
+            latestTct: latestTct,
+          });
+          if (latestRemaining <= -5 * 60) {
+            content = html`Landing: Estimate is wrong. Landing time unknown.`;
+          } else if (latestRemaining <= 0) {
             content = html`Landing: just landed<br />(${latestTct} TCT latest)`;
           } else if (earliestRemaining <= 0) {
             content = html`Landing: imminent -
