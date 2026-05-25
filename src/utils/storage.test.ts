@@ -44,7 +44,7 @@ test("Storage handles invalid JSON gracefully", () => {
   expect(store.get("badjson")).toBeNull();
   expect(localStorage.getItem("test-prefix.badjson")).toBeNull(); // Should remove bad key
   expect(warnSpy).toHaveBeenCalledWith(
-    expect.stringContaining("[FFSV3] - [WARN]: "),
+    expect.stringContaining("[FFSV3:storage] - [WARN]: "),
     expect.any(String),
     "Key 'badjson' has invalid JSON in it.",
   );
@@ -63,14 +63,14 @@ test("Storage supports expiration", () => {
   vi.advanceTimersByTime(5 * 60 * 1000 - 1000);
   expect(store.get("expiring")).toEqual("val");
 
-  const debugSpy = vi.spyOn(console, "debug").mockImplementation(() => {});
+  const debugSpy = vi.spyOn(console, "log").mockImplementation(() => {});
 
   // Advance time past 5 minutes
   vi.advanceTimersByTime(2000);
   expect(store.get("expiring")).toBeNull();
   expect(localStorage.getItem("test-prefix.expiring")).toBeNull(); // Should clean up key
   expect(debugSpy).toHaveBeenCalledWith(
-    expect.stringContaining("[FFSV3] - [DEBUG]: "),
+    expect.stringContaining("[FFSV3:storage] - [DEBUG]: "),
     expect.any(String),
     "Key expiring has expired.",
   );

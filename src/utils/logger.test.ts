@@ -16,7 +16,7 @@ test("LogLevel enum holds correct priority values", () => {
 });
 
 test("Logger forwards to console functions when severity is high enough", () => {
-  const debugSpy = vi.spyOn(console, "debug").mockImplementation(() => {});
+  const debugSpy = vi.spyOn(console, "log").mockImplementation(() => {});
   const infoSpy = vi.spyOn(console, "info").mockImplementation(() => {});
   const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
   const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
@@ -51,7 +51,7 @@ test("Logger forwards to console functions when severity is high enough", () => 
 test("Logger filters out low-severity messages based on active LogLevel", () => {
   logger.setLevel(LogLevel.WARN);
 
-  const debugSpy = vi.spyOn(console, "debug").mockImplementation(() => {});
+  const debugSpy = vi.spyOn(console, "log").mockImplementation(() => {});
   const infoSpy = vi.spyOn(console, "info").mockImplementation(() => {});
   const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
   const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
@@ -106,7 +106,7 @@ test("Logger handles groups correctly and filters them at NONE level", () => {
 test("Logger child creates a child logger with combined prefixes", () => {
   const childLogger = logger.child("sub");
 
-  const debugSpy = vi.spyOn(console, "debug").mockImplementation(() => {});
+  const debugSpy = vi.spyOn(console, "log").mockImplementation(() => {});
 
   childLogger.debug("child msg");
 

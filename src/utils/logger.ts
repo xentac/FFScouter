@@ -100,12 +100,9 @@ class Logger {
   public debug(...args: unknown[]): void {
     if (this.getLevel() <= LogLevel.DEBUG) {
       if (this.isPDA) {
-        console.debug(
-          `${this.formatPrefix("DEBUG")}`,
-          ...this.formatArgs(args),
-        );
+        console.log(`${this.formatPrefix("DEBUG")}`, ...this.formatArgs(args));
       } else {
-        console.debug(
+        console.log(
           `%c${this.formatPrefix("DEBUG")}`,
           `color: ${this.colors.debug}; font-weight: bold`,
           ...args,
