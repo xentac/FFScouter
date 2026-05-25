@@ -1,6 +1,7 @@
 import { check_key_status } from "@utils/check_key";
 import {
   apply_ff_gauge,
+  apply_ff_gauge_selector,
   get_player_id_in_element,
   torn_page,
   wait_for_element,
@@ -723,17 +724,11 @@ const apply_ff_members_list = (root: HTMLElement = document.body) => {
     setup_faction_features(membersList);
     return;
   }
-  let found_honor = false;
-  for (const bar of root.querySelectorAll(".honor-text-wrap")) {
-    apply_ff_gauge(bar, FEATURE_NAME);
-    found_honor = true;
-  }
-  if (found_honor) {
-    return;
-  }
-  for (const bar of root.querySelectorAll(".member")) {
-    apply_ff_gauge(bar, FEATURE_NAME);
-  }
+  apply_ff_gauge_selector(
+    root.querySelectorAll(".honor-text-wrap"),
+    FEATURE_NAME,
+  );
+  apply_ff_gauge_selector(root.querySelectorAll(".member"), FEATURE_NAME);
   for (const l of root.querySelectorAll(".members-list, .chain-attacks-list")) {
     if (l instanceof HTMLElement) {
       apply_ff_members_list(l);
