@@ -152,7 +152,7 @@ test("renders estimate wrong when latest arrival time is more than 5 minutes in 
   await el.updateComplete;
 
   expect(el.textContent).toContain(
-    "Landing: Estimate is wrong. Landing time unknown.",
+    "Landing: Late, probably flight delayed.",
   );
 });
 

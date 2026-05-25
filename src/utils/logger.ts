@@ -9,11 +9,6 @@ export enum LogLevel {
   NONE = 4,
 }
 
-// TODO: IIRC TornPDA doesn't pretty-print objects by default.
-// You'll have to check if the script is currently running under PDA and JSON.stringify(object, null, 2) whatever there is to print.
-
-// This is honestly kinda shit and I hate it, but it is what it is
-
 /**
  * Logger class providing various logging methods with level filtering and formatting
  */
@@ -21,8 +16,14 @@ class Logger {
   /** Prefix string to prepend to all log messages */
   private prefix: string;
 
-  /** Current log level threshold */
-  private level: LogLevel;
+  /** Default log level threshold */
+  private defaultLevel: LogLevel;
+
+  /** Shared logger level configuration state reference */
+  private state: { explicitLevel?: LogLevel };
+
+  /** Flag to track if the current environment is Torn PDA */
+  private isPDA = false;
 
   /** Color scheme for different log types */
   private colors = {
@@ -35,19 +36,60 @@ class Logger {
   /**
    * Creates a new Logger instance
    * @param prefix - Optional prefix to identify the source of log messages
-   * @param level - Minimum log level to display, defaults to INFO
+   * @param defaultLevel - Minimum log level to display, defaults to INFO
+   * @param state - Shared state object containing dynamic level settings
    */
-  constructor(prefix = "", level: LogLevel = LogLevel.DEBUG) {
+  constructor(
+    prefix = "",
+    defaultLevel: LogLevel = LogLevel.INFO,
+    state: { explicitLevel?: LogLevel } = {},
+  ) {
     this.prefix = prefix;
-    this.level = level;
+    this.defaultLevel = defaultLevel;
+    this.state = state;
+    this.detectPDA();
   }
 
   /**
-   * Changes the current logging level
+   * Detects the Torn PDA environment using the official Flutter handlers and event listeners
+   */
+  private detectPDA(): void {
+    if (typeof window !== "undefined") {
+      // Synchronous best-effort check
+      if ((window as any).flutter_inappwebview) {
+        this.isPDA = true;
+      }
+
+      // Official platform readiness event listener
+      window.addEventListener("flutterInAppWebViewPlatformReady", () => {
+        (window as any).flutter_inappwebview
+          .callHandler("isTornPDA")
+          .then((response: any) => {
+            if (response?.isTornPDA) {
+              this.isPDA = true;
+            }
+          })
+          .catch(() => {});
+      });
+    }
+  }
+
+  /**
+   * Changes the current logging level dynamically
    * @param level - New log level to set
    */
   public setLevel(level: LogLevel): void {
-    this.level = level;
+    this.state.explicitLevel = level;
+  }
+
+  /**
+   * Resolves the current active log level threshold
+   * @returns Active log level
+   */
+  public getLevel(): LogLevel {
+    return this.state.explicitLevel !== undefined
+      ? this.state.explicitLevel
+      : this.defaultLevel;
   }
 
   /**
@@ -56,12 +98,16 @@ class Logger {
    * @param args - Arguments to log
    */
   public debug(...args: unknown[]): void {
-    if (this.level <= LogLevel.DEBUG) {
-      console.debug(
-        `%c${this.formatPrefix("DEBUG")}`,
-        `color: ${this.colors.debug}; font-weight: bold`,
-        ...args,
-      );
+    if (this.getLevel() <= LogLevel.DEBUG) {
+      if (this.isPDA) {
+        console.debug(`${this.formatPrefix("DEBUG")}`, ...this.formatArgs(args));
+      } else {
+        console.debug(
+          `%c${this.formatPrefix("DEBUG")}`,
+          `color: ${this.colors.debug}; font-weight: bold`,
+          ...args,
+        );
+      }
     }
   }
 
@@ -71,12 +117,16 @@ class Logger {
    * @param args - Arguments to log
    */
   public info(...args: unknown[]): void {
-    if (this.level <= LogLevel.INFO) {
-      console.info(
-        `%c${this.formatPrefix("INFO")}`,
-        `color: ${this.colors.info}; font-weight: bold`,
-        ...args,
-      );
+    if (this.getLevel() <= LogLevel.INFO) {
+      if (this.isPDA) {
+        console.info(`${this.formatPrefix("INFO")}`, ...this.formatArgs(args));
+      } else {
+        console.info(
+          `%c${this.formatPrefix("INFO")}`,
+          `color: ${this.colors.info}; font-weight: bold`,
+          ...args,
+        );
+      }
     }
   }
 
@@ -86,12 +136,16 @@ class Logger {
    * @param args - Arguments to log
    */
   public warn(...args: unknown[]): void {
-    if (this.level <= LogLevel.WARN) {
-      console.warn(
-        `%c${this.formatPrefix("WARN")}`,
-        `color: ${this.colors.warn}; font-weight: bold`,
-        ...args,
-      );
+    if (this.getLevel() <= LogLevel.WARN) {
+      if (this.isPDA) {
+        console.warn(`${this.formatPrefix("WARN")}`, ...this.formatArgs(args));
+      } else {
+        console.warn(
+          `%c${this.formatPrefix("WARN")}`,
+          `color: ${this.colors.warn}; font-weight: bold`,
+          ...args,
+        );
+      }
     }
   }
 
@@ -101,12 +155,16 @@ class Logger {
    * @param args - Arguments to log
    */
   public error(...args: unknown[]): void {
-    if (this.level <= LogLevel.ERROR) {
-      console.error(
-        `%c${this.formatPrefix("ERROR")}`,
-        `color: ${this.colors.error}; font-weight: bold`,
-        ...args,
-      );
+    if (this.getLevel() <= LogLevel.ERROR) {
+      if (this.isPDA) {
+        console.error(`${this.formatPrefix("ERROR")}`, ...this.formatArgs(args));
+      } else {
+        console.error(
+          `%c${this.formatPrefix("ERROR")}`,
+          `color: ${this.colors.error}; font-weight: bold`,
+          ...args,
+        );
+      }
     }
   }
 
@@ -116,7 +174,7 @@ class Logger {
    * @param collapsed - Whether the group should be initially collapsed
    */
   public group(label: string, collapsed = false): void {
-    if (this.level < LogLevel.NONE) {
+    if (this.getLevel() < LogLevel.NONE) {
       if (collapsed) {
         console.groupCollapsed(this.formatPrefix(""), label);
       } else {
@@ -129,20 +187,19 @@ class Logger {
    * Ends the current log group
    */
   public groupEnd(): void {
-    if (this.level < LogLevel.NONE) {
+    if (this.getLevel() < LogLevel.NONE) {
       console.groupEnd();
     }
   }
 
   /**
-   * Creates a child logger with a sub-prefix
+   * Creates a child logger with a sub-prefix sharing the same log level reference
    * @param subPrefix - Additional prefix for the child logger
    * @returns A new logger instance with combined prefix and the same log level
    */
   public child(subPrefix: string): Logger {
     const childPrefix = this.prefix ? `${this.prefix}:${subPrefix}` : subPrefix;
-
-    return new Logger(childPrefix, this.level);
+    return new Logger(childPrefix, this.defaultLevel, this.state);
   }
 
   /**
@@ -153,9 +210,28 @@ class Logger {
    */
   private formatPrefix(level: string): string {
     const prefix = this.prefix ? `[${this.prefix}]` : "";
-
     return level ? `${prefix} - [${level}]: ` : `${prefix}: `;
+  }
+
+  /**
+   * Recursively deep stringifies object arguments if running under PDA
+   * @param args - Array of logger arguments
+   * @returns Formatted arguments
+   * @private
+   */
+  private formatArgs(args: unknown[]): unknown[] {
+    return args.map((arg) => {
+      if (typeof arg === "object" && arg !== null) {
+        try {
+          return JSON.stringify(arg, null, 2);
+        } catch {
+          return String(arg);
+        }
+      }
+      return arg;
+    });
   }
 }
 
 export default new Logger("FFSV3", LogLevel.DEBUG);
+export { Logger };

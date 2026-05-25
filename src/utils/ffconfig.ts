@@ -1,4 +1,5 @@
 import type { FFTarget } from "./api";
+import logger, { LogLevel } from "./logger";
 import { Storage as StorageUtil } from "./storage";
 import type { TornApiKey } from "./types";
 
@@ -88,6 +89,8 @@ export class FFConfig {
   constructor(name: string) {
     this.name = name;
     this.storage = new StorageUtil(this.name);
+    // Apply saved debug logs preference to logger at startup
+    logger.setLevel(this.debug_logs ? LogLevel.DEBUG : LogLevel.INFO);
   }
 
   get key(): TornApiKey {
@@ -288,6 +291,7 @@ export class FFConfig {
 
   set debug_logs(val: boolean) {
     this.storage.set(CONFIG.DEBUG_LOGS, val);
+    logger.setLevel(val ? LogLevel.DEBUG : LogLevel.INFO);
   }
 
   get analytics_enabled(): boolean {

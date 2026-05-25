@@ -16,7 +16,6 @@ async function main() {
     return;
   }
   w[INJECTION_KEY] = true;
-  logger.setLevel(ffconfig.debug_logs ? LogLevel.DEBUG : LogLevel.INFO);
 
   logger.info("Initializing", __FF_SCOUTER_V2_VERSION__);
 
