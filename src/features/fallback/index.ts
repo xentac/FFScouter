@@ -3,6 +3,8 @@ import { ffscouter } from "@utils/ffscouter";
 import logger from "@utils/logger";
 import { type Feature, StartTime } from "../feature";
 
+const log = logger.child("feature:fallback");
+
 const FEATURE_NAME_HONOR_BAR = "fallback-honor-bar";
 const FEATURE_NAME_USER_NAME = "fallback-user-name";
 const FEATURE_NAME = "fallback";
@@ -78,7 +80,7 @@ export default {
       case torn_page("page", { sid: "spinTheWheel" }):
       case torn_page("page", { sid: "education" }):
       case torn_page("page", { sid: "itemMarket" }):
-        logger.warn("NOT RUNNING FALLBACK ON THIS PAGE");
+        log.warn("NOT RUNNING FALLBACK ON THIS PAGE");
         return false;
 
       default:

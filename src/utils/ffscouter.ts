@@ -18,6 +18,8 @@ import type {
   PlayerId,
 } from "./types";
 
+const log = logger.child("api");
+
 const DB_NAME = "FFSV3-cache";
 
 const RECHECK_RETRY_DELAY = 60 * 1000; // 60 seconds (1 minute)
@@ -95,7 +97,7 @@ export class FFScouter {
     try {
       await this.cache.delete_flight(player_id);
     } catch (err) {
-      logger.error("Failed to delete flight from cache", err);
+      log.error("Failed to delete flight from cache", err);
     }
   };
 
@@ -118,23 +120,23 @@ export class FFScouter {
 
   // Get flights for a player, utilizing cache, bypassing batch queueing
   get_flights = async (player_id: PlayerId): Promise<PlayerFlightsResponse> => {
-    logger.debug(`get_flights called for ${player_id}`);
+    log.debug(`get_flights called for ${player_id}`);
 
     // Check cache
     let cached: CachedFlightData | null = null;
     try {
       cached = await this.cache.get_flight(player_id);
     } catch (err) {
-      logger.error("Failed to query flight cache", err);
+      log.error("Failed to query flight cache", err);
     }
 
     if (cached) {
-      logger.debug(`Flight cache hit for player ${player_id}`);
+      log.debug(`Flight cache hit for player ${player_id}`);
       if (cached.rechecking) {
         const now = Date.now();
         // If we exceeded the rechecking window, finalize as no-flight
         if (cached.recheck_until && now >= cached.recheck_until) {
-          logger.debug(
+          log.debug(
             `Rechecking window expired for player ${player_id}. Finalizing no data.`,
           );
           const final_response: PlayerFlightsResponse = {
@@ -149,21 +151,21 @@ export class FFScouter {
               FINALIZED_NO_FLIGHT_TTL,
             );
           } catch (err) {
-            logger.error("Failed to finalize flight cache", err);
+            log.error("Failed to finalize flight cache", err);
           }
           return final_response;
         }
 
         // If it's time to retry the API call
         if (cached.next_retry_at && now >= cached.next_retry_at) {
-          logger.debug(
+          log.debug(
             `Retrying API call for player ${player_id} during recheck window`,
           );
           let response: FFApiFlightsResponse;
           try {
             response = await query_flights(this.config.key, player_id);
           } catch (err) {
-            logger.error(
+            log.error(
               `Received error response querying ffscouter player-flights API for ${player_id}:`,
               err,
             );
@@ -177,7 +179,7 @@ export class FFScouter {
           }
 
           if (response.result.current) {
-            logger.debug(
+            log.debug(
               `Flight successfully tracked for player ${player_id} on retry.`,
             );
             // Update cache with dynamic TTL
@@ -185,12 +187,12 @@ export class FFScouter {
               const ttl = this.calculate_flight_cache_ttl(response.result);
               await this.cache.update_flight(response.result, ttl);
             } catch (err) {
-              logger.error("Failed to update flight cache", err);
+              log.error("Failed to update flight cache", err);
             }
             return response.result;
           }
 
-          logger.debug(
+          log.debug(
             `Player ${player_id} still has no flight. Scheduling next retry.`,
           );
           const next_retry_at = Date.now() + RECHECK_RETRY_DELAY;
@@ -209,7 +211,7 @@ export class FFScouter {
           try {
             await this.cache.update_flight(updated_response, remaining_ttl);
           } catch (err) {
-            logger.error("Failed to update flight cache during recheck", err);
+            log.error("Failed to update flight cache during recheck", err);
           }
           return updated_response;
         }
@@ -233,14 +235,14 @@ export class FFScouter {
       };
     }
 
-    logger.debug(`Flight cache miss for player ${player_id}. Querying API.`);
+    log.debug(`Flight cache miss for player ${player_id}. Querying API.`);
 
     // Query API
     let response: FFApiFlightsResponse;
     try {
       response = await query_flights(this.config.key, player_id);
     } catch (err) {
-      logger.error(
+      log.error(
         `Received error response querying ffscouter player-flights API for ${player_id}:`,
         err,
       );
@@ -257,11 +259,11 @@ export class FFScouter {
         const ttl = this.calculate_flight_cache_ttl(response.result);
         await this.cache.update_flight(response.result, ttl);
       } catch (err) {
-        logger.error("Failed to update flight cache", err);
+        log.error("Failed to update flight cache", err);
       }
     } else {
       // Start the rechecking cycle
-      logger.debug(`Start rechecking cycle for player ${player_id}`);
+      log.debug(`Start rechecking cycle for player ${player_id}`);
       const now = Date.now();
       const next_retry_at = now + RECHECK_RETRY_DELAY;
       const recheck_until = now + RECHECK_WINDOW_DURATION;
@@ -279,7 +281,7 @@ export class FFScouter {
           RECHECK_WINDOW_DURATION,
         );
       } catch (err) {
-        logger.error("Failed to update flight cache", err);
+        log.error("Failed to update flight cache", err);
       }
       response = { result: rechecking_response, blank: false };
     }
@@ -288,7 +290,7 @@ export class FFScouter {
     try {
       await this.cache.clean_expired();
     } catch (err) {
-      logger.error("Failed to clean expired cache entries", err);
+      log.error("Failed to clean expired cache entries", err);
     }
 
     return response.result;
@@ -301,7 +303,7 @@ export class FFScouter {
   };
 
   enqueue_cache = (player_id: PlayerId) => {
-    logger.debug(`Enqueuing cache ${player_id}`);
+    log.debug(`Enqueuing cache ${player_id}`);
     this.cache_queue.add(player_id);
 
     this.schedule_cache();
@@ -309,10 +311,10 @@ export class FFScouter {
 
   schedule_cache = () => {
     if (this.cache_timer) {
-      logger.debug(`schedule_cache called but job already scheduled`);
+      log.debug(`schedule_cache called but job already scheduled`);
       return;
     }
-    logger.debug(
+    log.debug(
       `schedule_cache called and job scheduled for ${this.cache_delay} ms`,
     );
     this.cache_timer = this.schedule(this.process_cache, this.cache_delay);
@@ -338,15 +340,15 @@ export class FFScouter {
       // Cache failure is usually non-fatal; fall through to API
       results = new Map();
     }
-    logger.debug("Received results", results);
+    log.debug("Received results", results);
 
     for (const id of ids) {
       const v = results.get(id);
       if (v) {
-        logger.debug("Id", id, "found in cache. Resolving value.");
+        log.debug("Id", id, "found in cache. Resolving value.");
         this.resolve(id, v);
       } else {
-        logger.debug("Id", id, "not found in cache. Scheduling api call.");
+        log.debug("Id", id, "not found in cache. Scheduling api call.");
         this.enqueue_api(id);
       }
     }
@@ -357,7 +359,7 @@ export class FFScouter {
   };
 
   enqueue_api = (player_id: PlayerId) => {
-    logger.debug(`Enqueuing api ${player_id}`);
+    log.debug(`Enqueuing api ${player_id}`);
     this.api_queue.add(player_id);
 
     this.schedule_api();
@@ -365,15 +367,15 @@ export class FFScouter {
 
   schedule_api = (delay = this.api_initial_delay) => {
     if (this.api_timer) {
-      logger.debug(`schedule_api called but job already scheduled`);
+      log.debug(`schedule_api called but job already scheduled`);
       return;
     }
-    logger.debug(`schedule_api called and job scheduled for ${delay} ms`);
+    log.debug(`schedule_api called and job scheduled for ${delay} ms`);
     this.api_timer = this.schedule(this.process_api, delay);
   };
 
   process_api = async () => {
-    logger.debug("process_api called");
+    log.debug("process_api called");
     if (this.api_timer) {
       this.clear(this.api_timer);
       this.api_timer = null;
@@ -386,20 +388,20 @@ export class FFScouter {
     for (const id of ids) {
       this.api_queue.delete(id);
     }
-    logger.debug(`Processing ${ids} api requests`);
+    log.debug(`Processing ${ids} api requests`);
 
     if (ids.length <= 0) {
-      logger.debug("No ids found to query");
+      log.debug("No ids found to query");
       return;
     }
 
     let next_run: number | undefined = this.api_default_delay;
     let results: FFApiQueryResponse;
     try {
-      logger.debug("Calling query_stats with", this.config.key, ",", ids);
+      log.debug("Calling query_stats with", this.config.key, ",", ids);
       results = await query_stats(this.config.key, ids);
     } catch (err) {
-      logger.error("Received error response querying ffscouter api:", err);
+      log.error("Received error response querying ffscouter api:", err);
       for (const id of ids) {
         this.reject(id, err);
       }
@@ -411,7 +413,7 @@ export class FFScouter {
         limits: ff_error.ff_api_limits,
       };
     }
-    logger.debug("Received results", results);
+    log.debug("Received results", results);
 
     // This is the case where we made too many requests close in time and Torn PDA returned nothing
     if (results.blank) {
@@ -423,10 +425,10 @@ export class FFScouter {
       for (const id of ids) {
         const v = results.result.get(id);
         if (v) {
-          logger.debug("Id", id, "found in results. Resolving value.");
+          log.debug("Id", id, "found in results. Resolving value.");
           this.resolve(id, v);
         } else {
-          logger.debug("Id", id, "not found in results. Resolving no_data.");
+          log.debug("Id", id, "not found in results. Resolving no_data.");
           this.resolve(id, { player_id: id, no_data: true });
         }
       }
@@ -516,7 +518,7 @@ export class FFScouter {
         hash,
       });
     } catch (err) {
-      logger.error("Failed to add analytics entry", err);
+      log.error("Failed to add analytics entry", err);
     }
   };
 
@@ -524,7 +526,7 @@ export class FFScouter {
     try {
       return await this.cache.get_analytics();
     } catch (err) {
-      logger.error("Failed to get analytics entries", err);
+      log.error("Failed to get analytics entries", err);
       return [];
     }
   };
@@ -579,7 +581,7 @@ export class FFScouter {
     try {
       await this.cache.clear_analytics();
     } catch (err) {
-      logger.error("Failed to clear analytics entries", err);
+      log.error("Failed to clear analytics entries", err);
     }
   };
 }

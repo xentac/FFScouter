@@ -3,6 +3,8 @@ import { Storage, Time } from "@utils/storage";
 import { check_key, type FFApiCheckResponse, type FFCheckSuccess } from "./api";
 import { type FFConfig, ffconfig } from "./ffconfig";
 
+const log = logger.child("api");
+
 const CHECK_KEY = "check-key-status";
 
 // Class for managing and caching requests to check-key
@@ -30,7 +32,7 @@ export class CheckKeyStatus {
     try {
       result = await check_key(this.config.key);
     } catch (err) {
-      logger.error(
+      log.error(
         "Received error response querying ffscouter check-key api:",
         err,
       );

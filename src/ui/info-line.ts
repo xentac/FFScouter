@@ -11,6 +11,8 @@ import type { FFData } from "@utils/types";
 import { html, LitElement } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 
+const log = logger.child("ui");
+
 const PREMIUM_UPGRADE_URL = "https://ffscouter.com/premium";
 
 @customElement("ff-header-line")
@@ -33,7 +35,7 @@ export class FFHeaderLine extends LitElement {
       try {
         this.is_premium = await check_key_status.is_premium();
       } catch (error) {
-        logger.error(error);
+        log.error(error);
       } finally {
         this.loading = false;
       }

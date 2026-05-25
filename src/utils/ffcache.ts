@@ -18,6 +18,8 @@ import type {
   PlayerId,
 } from "./types";
 
+const log = logger.child("storage");
+
 export const STORES = {
   CACHE: "cache",
   FLIGHTS: "flights",
@@ -106,21 +108,21 @@ export class FFCache {
     this.db = await openDB<CacheDB>(this.db_name, this.db_version, {
       upgrade(db, oldVersion, newVersion, transaction, _event) {
         // …
-        logger.info("Need to upgrade from", oldVersion, "to", newVersion);
+        log.info("Need to upgrade from", oldVersion, "to", newVersion);
 
         for (let i = (oldVersion ?? 0) + 1; i <= cache.db_version; i++) {
-          logger.debug(`Migration: ${i}`);
+          log.debug(`Migration: ${i}`);
           const m = cache.migrations.get(i);
           if (m) {
             m(db, transaction);
           } else {
-            logger.debug(`Migration not found: ${i}`);
+            log.debug(`Migration not found: ${i}`);
           }
-          logger.debug(`Migration complete: ${i}`);
+          log.debug(`Migration complete: ${i}`);
         }
       },
       blocking(currentVersion, blockedVersion, _event) {
-        logger.debug(
+        log.debug(
           `Can't open ${blockedVersion} because ${currentVersion} is open. Closing and reopening.`,
         );
         cache.db?.close();
@@ -174,11 +176,11 @@ export class FFCache {
 
     await deleteDB(this.db_name, {
       blocked: () => {
-        logger.debug("deleteDB blocked callback called!");
+        log.debug("deleteDB blocked callback called!");
       },
     });
 
-    logger.info(`Successfully deleted ${this.db_name} IndexedDB.`);
+    log.info(`Successfully deleted ${this.db_name} IndexedDB.`);
   };
 
   get = async (
@@ -247,7 +249,7 @@ export class FFCache {
           const index = tx.store.index("expiry");
           const range = IDBKeyRange.upperBound(Date.now());
           const r = await index.getAllKeys(range);
-          logger.info(`Found ${r.length} expired values to delete from cache.`);
+          log.info(`Found ${r.length} expired values to delete from cache.`);
           await Promise.all(r.map((id) => tx.store.delete(id)));
           await tx.done;
         }
@@ -258,9 +260,7 @@ export class FFCache {
           const index = tx.store.index("expiry");
           const range = IDBKeyRange.upperBound(Date.now());
           const r = await index.getAllKeys(range);
-          logger.info(
-            `Found ${r.length} expired values to delete from flights.`,
-          );
+          log.info(`Found ${r.length} expired values to delete from flights.`);
           await Promise.all(r.map((id) => tx.store.delete(id)));
           await tx.done;
         }
@@ -272,7 +272,7 @@ export class FFCache {
           const thirty_days_ago = Date.now() - 30 * 24 * 60 * 60 * 1000;
           const range = IDBKeyRange.upperBound(thirty_days_ago);
           const r = await index.getAllKeys(range);
-          logger.info(
+          log.info(
             `Found ${r.length} expired values to delete from analytics.`,
           );
           await Promise.all(r.map((id) => tx.store.delete(id)));

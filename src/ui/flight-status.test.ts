@@ -151,9 +151,7 @@ test("renders estimate wrong when latest arrival time is more than 5 minutes in 
   await new Promise((resolve) => setTimeout(resolve, 0));
   await el.updateComplete;
 
-  expect(el.textContent).toContain(
-    "Landing: Late, probably flight delayed.",
-  );
+  expect(el.textContent).toContain("Landing: Late, probably flight delayed.");
 });
 
 test("renders landing window range when earliest arrival is in the future", async () => {

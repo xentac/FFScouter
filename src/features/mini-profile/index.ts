@@ -9,12 +9,14 @@ import {
 import type { FFData } from "@utils/types";
 import { type Feature, StartTime } from "../feature";
 
+const log = logger.child("feature:mini-profile");
+
 const FEATURE_NAME = "mini-profile";
 
 const monitor_mini_profile_root = () => {
   const miniprofile = document.querySelector("#profile-mini-root");
   if (miniprofile) {
-    logger.debug("profile-mini-root already exists.");
+    log.debug("profile-mini-root already exists.");
     setup_mini_observer();
     return;
   }
@@ -71,9 +73,7 @@ const setup_mini_observer = () => {
         return;
       }
 
-      logger.debug(
-        `Found mini profile update for ${player_id}, adding ff data`,
-      );
+      log.debug(`Found mini profile update for ${player_id}, adding ff data`);
 
       // Render arrow
       for (const bar of miniroot.querySelectorAll(".honor-text-wrap")) {
@@ -110,7 +110,7 @@ export default {
 
   async run() {
     monitor_mini_profile_root();
-    logger.debug("mini-profile installed");
+    log.debug("mini-profile installed");
   },
 
   httpIntercept: {

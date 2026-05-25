@@ -1,5 +1,7 @@
 import logger from "./logger";
 
+const log = logger.child("network");
+
 // This was entirely vibe coded.
 
 const pageWindow = (unsafeWindow as unknown as Window) || (window as Window);
@@ -89,7 +91,7 @@ function patchFetch(): void {
               if (res.init) currentInit = res.init;
             }
           } catch (err) {
-            logger.error("HTTP before interceptor error:", err);
+            log.error("HTTP before interceptor error:", err);
           }
         }
 
@@ -106,7 +108,7 @@ function patchFetch(): void {
         try {
           bodyText = await response.clone().text();
         } catch (err) {
-          logger.error("Failed reading response body for interceptor:", err);
+          log.error("Failed reading response body for interceptor:", err);
           return response;
         }
 
@@ -123,14 +125,14 @@ function patchFetch(): void {
             });
           }
         } catch (err) {
-          logger.error("HTTP after interceptor error:", err);
+          log.error("HTTP after interceptor error:", err);
         }
         return response;
       } as typeof fetch;
     httpPatched = true;
-    logger.debug("Fetch patched for HTTP interception");
+    log.debug("Fetch patched for HTTP interception");
   } catch (err) {
-    logger.error("Failed to patch fetch:", err);
+    log.error("Failed to patch fetch:", err);
   }
 }
 
@@ -177,7 +179,7 @@ function patchWebSocket(): void {
             const maybe = wsInterceptor.beforeSend(data, socket);
             if (maybe !== undefined) data = maybe;
           } catch (err) {
-            logger.error("WS beforeSend interceptor error:", err);
+            log.error("WS beforeSend interceptor error:", err);
           }
         }
         (originalSend as (payload: unknown) => void)(data);
@@ -207,7 +209,7 @@ function patchWebSocket(): void {
             );
             if (maybe !== undefined) newData = maybe;
           } catch (err) {
-            logger.error("WS afterMessage interceptor error:", err);
+            log.error("WS afterMessage interceptor error:", err);
           }
           if (newData !== undefined && newData !== event.data) {
             try {
@@ -266,9 +268,9 @@ function patchWebSocket(): void {
 
     wsPatched = true;
 
-    logger.debug("WebSocket patched for interception");
+    log.debug("WebSocket patched for interception");
   } catch (err) {
-    logger.error("Failed to patch WebSocket:", err);
+    log.error("Failed to patch WebSocket:", err);
   }
 }
 

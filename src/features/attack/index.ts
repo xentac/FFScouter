@@ -10,6 +10,8 @@ import "@ui/info-line";
 import type { FFData } from "@utils/types";
 import { type Feature, StartTime } from "../feature";
 
+const log = logger.child("feature:attack");
+
 async function inject_info_line(info_line: Element) {
   // Figure out where to inject the info line
   const h4 = await wait_for_element("h4", 10_000);
@@ -39,7 +41,7 @@ export default {
       return;
     }
 
-    logger.debug("On the attack page, found player_id", player_id);
+    log.debug("On the attack page, found player_id", player_id);
 
     // Create container to hold info line
     const info_line = create_info_line();

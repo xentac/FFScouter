@@ -1,23 +1,24 @@
 import { StartTime } from "@features/feature";
 import { Features } from "@features/index";
 import { wait_for_body } from "@utils/dom";
-import { ffconfig } from "@utils/ffconfig";
 import { ffscouter } from "@utils/ffscouter";
-import logger, { LogLevel } from "@utils/logger";
+import logger from "@utils/logger";
 import { setHttpInterceptor } from "@utils/network";
 import { init_ui } from "./ui";
+
+const log = logger.child("boot");
 
 const INJECTION_KEY = "__FF_SCOUTER_V3_INJECTED__";
 
 async function main() {
   const w = window as unknown as Record<string, boolean>;
   if (w[INJECTION_KEY]) {
-    logger.info("Script already injected");
+    log.info("Script already injected");
     return;
   }
   w[INJECTION_KEY] = true;
 
-  logger.info("Initializing", __FF_SCOUTER_V2_VERSION__);
+  log.info("Initializing", __FF_SCOUTER_V2_VERSION__);
 
   init_ui();
 

@@ -1,6 +1,5 @@
 import { check_key_status } from "@utils/check_key";
 import {
-  apply_ff_gauge,
   apply_ff_gauge_selector,
   get_player_id_in_element,
   torn_page,
@@ -19,6 +18,8 @@ import {
 import type { PlayerId } from "@utils/types";
 import { type Feature, StartTime } from "../feature";
 import "@ui/faction-filter-box";
+
+const log = logger.child("feature:faction");
 
 const FEATURE_NAME = "faction";
 
@@ -308,7 +309,7 @@ export async function poll_traveling_flights(membersList: HTMLElement) {
           p.row.removeAttribute("data-latest-arrival");
         }
       } catch (err) {
-        logger.error(`Failed to fetch flights for player ${p.player_id}`, err);
+        log.error(`Failed to fetch flights for player ${p.player_id}`, err);
       }
     }),
   );
@@ -898,14 +899,14 @@ function initialize_war_list(list: HTMLElement) {
 const process_page = () => {
   wait_for_element(".members-list", 10_000).then((node) => {
     if (node instanceof HTMLElement) {
-      logger.debug("Found members-list!");
+      log.debug("Found members-list!");
       monitor_member_list(node);
     }
   });
 
   wait_for_element(".chain-attacks-list", 10_000).then((node) => {
     if (node instanceof HTMLElement) {
-      logger.debug("Found chain-attacks-list!");
+      log.debug("Found chain-attacks-list!");
       monitor_member_list(node, true);
     }
   });
@@ -916,7 +917,7 @@ const process_page = () => {
     if (!node) {
       return;
     }
-    logger.debug("Found faction_war_list_id");
+    log.debug("Found faction_war_list_id");
     const descriptions_observer = new MutationObserver(async (mutations) => {
       for (const mutation of mutations) {
         for (const node of mutation.addedNodes) {
@@ -924,7 +925,7 @@ const process_page = () => {
             node instanceof HTMLElement &&
             node.classList.contains("descriptions")
           ) {
-            logger.debug(
+            log.debug(
               "Observed mutation that included adding descriptions",
               node,
             );
@@ -937,7 +938,7 @@ const process_page = () => {
       }
     });
     descriptions_observer.observe(node, { childList: true });
-    logger.debug("Set up descriptions observer on", node);
+    log.debug("Set up descriptions observer on", node);
 
     const existing_descriptions = node.querySelector(".descriptions");
     if (existing_descriptions) {

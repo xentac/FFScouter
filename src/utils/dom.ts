@@ -1,8 +1,9 @@
 import { ffscouter } from "./ffscouter";
 import logger from "./logger";
-
 import { ff_to_percent, get_ff_arrow_colour } from "./strings";
 import type { FFDataComplete, PlayerId } from "./types";
+
+const log = logger.child("dom");
 
 const ID_PARAMS = ["XID", "user2ID"];
 
@@ -356,7 +357,7 @@ export function getRFC(): string {
     const match = document.cookie.match(/(?:^|;\s*)rfc_v=([^;]*)/);
     return match?.[1] ? decodeURIComponent(match[1]) : "";
   } catch (e) {
-    logger.error("Error getting RFC token:", e);
+    log.error("Error getting RFC token:", e);
     return "";
   }
 }
@@ -412,7 +413,7 @@ export async function getLocalUserId(): Promise<string | null> {
   );
 
   if (!name || !name.href) {
-    logger.debug("Failed to find the XID element.");
+    log.debug("Failed to find the XID element.");
     return null;
   }
 
@@ -420,7 +421,7 @@ export async function getLocalUserId(): Promise<string | null> {
     const params = new URL(name.href).searchParams;
     return params.get("XID");
   } catch {
-    logger.debug("User XID is malformed");
+    log.debug("User XID is malformed");
     return null;
   }
 }

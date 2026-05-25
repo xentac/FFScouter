@@ -6,6 +6,8 @@ import type { PlayerFlightsResponse } from "@utils/types";
 import { html, LitElement } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 
+const log = logger.child("ui");
+
 const PREMIUM_UPGRADE_URL = "https://ffscouter.com/premium";
 
 const premium_action = html`<a
@@ -134,7 +136,7 @@ export class FFFlightProfileStatus extends LitElement {
       this.data = result;
       this.error = null;
     } catch (err: any) {
-      logger.error("Failed to fetch flight data", err);
+      log.error("Failed to fetch flight data", err);
 
       if (err instanceof FFApiError) {
         const code = err.ff_api_error?.code;

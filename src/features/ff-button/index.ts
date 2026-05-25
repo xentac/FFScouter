@@ -4,6 +4,8 @@ import { type CachedTargets, ffconfig } from "@utils/ffconfig";
 import logger from "@utils/logger";
 import { type Feature, StartTime } from "../feature";
 
+const log = logger.child("feature:ff-button");
+
 export const CACHE_LIFETIME_MS = 7 * 24 * 60 * 60 * 1000; // Keep cache for 7 days
 export const POLL_INTERVAL_MS = 24 * 60 * 60 * 1000; // Refresh once a day
 
@@ -35,7 +37,7 @@ export function filters_changed(
 export async function update_ff_targets(force = false): Promise<void> {
   const key = ffconfig.key;
   if (!key) {
-    logger.debug("API key not set, skipping target fetch");
+    log.debug("API key not set, skipping target fetch");
     return;
   }
 
@@ -51,7 +53,7 @@ export async function update_ff_targets(force = false): Promise<void> {
       Date.now() - cached.last_updated > POLL_INTERVAL_MS);
 
   if (!force && !hasNoCacheOrExpired && !filtersChanged && !timeToRefresh) {
-    logger.debug(
+    log.debug(
       "Using cached targets, not expired, filters match, and not time to poll yet",
     );
     return;
@@ -76,12 +78,12 @@ export async function update_ff_targets(force = false): Promise<void> {
         filters: currentFilters,
       };
       ffconfig.chain_target_index = 0; // Reset index on successful new fetch
-      logger.info(
+      log.info(
         `Chain targets updated successfully: ${response.targets.length} targets found`,
       );
     }
   } catch (err) {
-    logger.error("Failed to update chain targets:", err);
+    log.error("Failed to update chain targets:", err);
   }
 }
 
@@ -258,7 +260,7 @@ export default {
       const cached = ffconfig.chain_targets;
       const currentFilters = get_active_filters();
       if (!cached || filters_changed(cached.filters, currentFilters)) {
-        logger.info("Target filters changed, refetching targets immediately");
+        log.info("Target filters changed, refetching targets immediately");
         await update_ff_targets(true);
       }
 

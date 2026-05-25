@@ -100,7 +100,10 @@ class Logger {
   public debug(...args: unknown[]): void {
     if (this.getLevel() <= LogLevel.DEBUG) {
       if (this.isPDA) {
-        console.debug(`${this.formatPrefix("DEBUG")}`, ...this.formatArgs(args));
+        console.debug(
+          `${this.formatPrefix("DEBUG")}`,
+          ...this.formatArgs(args),
+        );
       } else {
         console.debug(
           `%c${this.formatPrefix("DEBUG")}`,
@@ -157,7 +160,10 @@ class Logger {
   public error(...args: unknown[]): void {
     if (this.getLevel() <= LogLevel.ERROR) {
       if (this.isPDA) {
-        console.error(`${this.formatPrefix("ERROR")}`, ...this.formatArgs(args));
+        console.error(
+          `${this.formatPrefix("ERROR")}`,
+          ...this.formatArgs(args),
+        );
       } else {
         console.error(
           `%c${this.formatPrefix("ERROR")}`,
