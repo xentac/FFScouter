@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FF Scouter V3
 // @namespace    xentac-v3
-// @version      3.0-alpha11
+// @version      3.0-alpha12
 // @author       xentac [3354782], MAVRI [2402357], rDacted [2670953], Weav3r [1853324], Glasnost [1844049]
 // @description  Shows the expected Fair Fight score against targets and faction war status
 // @license      GPLv3
@@ -187,7 +187,8 @@
     return LogLevel2;
   })(LogLevel || {});
   class Logger {
-constructor(prefix = "", level = 0) {
+constructor(prefix = "", defaultLevel = 1, state = {}) {
+      this.isPDA = false;
       this.colors = {
         debug: "#7f8c8d",
         info: "#3498db",
@@ -195,49 +196,88 @@ constructor(prefix = "", level = 0) {
         error: "#e74c3c"
       };
       this.prefix = prefix;
-      this.level = level;
+      this.defaultLevel = defaultLevel;
+      this.state = state;
+      this.detectPDA();
+    }
+detectPDA() {
+      if (typeof window !== "undefined") {
+        if (window.flutter_inappwebview) {
+          this.isPDA = true;
+        }
+        window.addEventListener("flutterInAppWebViewPlatformReady", () => {
+          window.flutter_inappwebview.callHandler("isTornPDA").then((response) => {
+            if (response?.isTornPDA) {
+              this.isPDA = true;
+            }
+          }).catch(() => {
+          });
+        });
+      }
     }
 setLevel(level) {
-      this.level = level;
+      this.state.explicitLevel = level;
+    }
+getLevel() {
+      return this.state.explicitLevel !== void 0 ? this.state.explicitLevel : this.defaultLevel;
     }
 debug(...args) {
-      if (this.level <= 0) {
-        console.debug(
-          `%c${this.formatPrefix("DEBUG")}`,
-          `color: ${this.colors.debug}; font-weight: bold`,
-          ...args
-        );
+      if (this.getLevel() <= 0) {
+        if (this.isPDA) {
+          console.log(`${this.formatPrefix("DEBUG")}`, ...this.formatArgs(args));
+        } else {
+          console.log(
+            `%c${this.formatPrefix("DEBUG")}`,
+            `color: ${this.colors.debug}; font-weight: bold`,
+            ...args
+          );
+        }
       }
     }
 info(...args) {
-      if (this.level <= 1) {
-        console.info(
-          `%c${this.formatPrefix("INFO")}`,
-          `color: ${this.colors.info}; font-weight: bold`,
-          ...args
-        );
+      if (this.getLevel() <= 1) {
+        if (this.isPDA) {
+          console.info(`${this.formatPrefix("INFO")}`, ...this.formatArgs(args));
+        } else {
+          console.info(
+            `%c${this.formatPrefix("INFO")}`,
+            `color: ${this.colors.info}; font-weight: bold`,
+            ...args
+          );
+        }
       }
     }
 warn(...args) {
-      if (this.level <= 2) {
-        console.warn(
-          `%c${this.formatPrefix("WARN")}`,
-          `color: ${this.colors.warn}; font-weight: bold`,
-          ...args
-        );
+      if (this.getLevel() <= 2) {
+        if (this.isPDA) {
+          console.warn(`${this.formatPrefix("WARN")}`, ...this.formatArgs(args));
+        } else {
+          console.warn(
+            `%c${this.formatPrefix("WARN")}`,
+            `color: ${this.colors.warn}; font-weight: bold`,
+            ...args
+          );
+        }
       }
     }
 error(...args) {
-      if (this.level <= 3) {
-        console.error(
-          `%c${this.formatPrefix("ERROR")}`,
-          `color: ${this.colors.error}; font-weight: bold`,
-          ...args
-        );
+      if (this.getLevel() <= 3) {
+        if (this.isPDA) {
+          console.error(
+            `${this.formatPrefix("ERROR")}`,
+            ...this.formatArgs(args)
+          );
+        } else {
+          console.error(
+            `%c${this.formatPrefix("ERROR")}`,
+            `color: ${this.colors.error}; font-weight: bold`,
+            ...args
+          );
+        }
       }
     }
 group(label, collapsed = false) {
-      if (this.level < 4) {
+      if (this.getLevel() < 4) {
         if (collapsed) {
           console.groupCollapsed(this.formatPrefix(""), label);
         } else {
@@ -246,17 +286,29 @@ group(label, collapsed = false) {
       }
     }
 groupEnd() {
-      if (this.level < 4) {
+      if (this.getLevel() < 4) {
         console.groupEnd();
       }
     }
 child(subPrefix) {
       const childPrefix = this.prefix ? `${this.prefix}:${subPrefix}` : subPrefix;
-      return new Logger(childPrefix, this.level);
+      return new Logger(childPrefix, this.defaultLevel, this.state);
     }
 formatPrefix(level) {
       const prefix = this.prefix ? `[${this.prefix}]` : "";
       return level ? `${prefix} - [${level}]: ` : `${prefix}: `;
+    }
+formatArgs(args) {
+      return args.map((arg) => {
+        if (typeof arg === "object" && arg !== null) {
+          try {
+            return JSON.stringify(arg, null, 2);
+          } catch {
+            return String(arg);
+          }
+        }
+        return arg;
+      });
     }
   }
   const logger = new Logger(
@@ -788,6 +840,7 @@ event.oldVersion,
       return isIteratorProp(target, prop) || oldTraps.has(target, prop);
     }
   }));
+  const log$e = logger.child("storage");
   const STORES = {
     CACHE: "cache",
     FLIGHTS: "flights",
@@ -844,20 +897,20 @@ event.oldVersion,
         const cache = this;
         this.db = await openDB(this.db_name, this.db_version, {
           upgrade(db, oldVersion, newVersion, transaction, _event) {
-            logger.info("Need to upgrade from", oldVersion, "to", newVersion);
+            log$e.info("Need to upgrade from", oldVersion, "to", newVersion);
             for (let i2 = (oldVersion ?? 0) + 1; i2 <= cache.db_version; i2++) {
-              logger.debug(`Migration: ${i2}`);
+              log$e.debug(`Migration: ${i2}`);
               const m2 = cache.migrations.get(i2);
               if (m2) {
                 m2(db, transaction);
               } else {
-                logger.debug(`Migration not found: ${i2}`);
+                log$e.debug(`Migration not found: ${i2}`);
               }
-              logger.debug(`Migration complete: ${i2}`);
+              log$e.debug(`Migration complete: ${i2}`);
             }
           },
           blocking(currentVersion, blockedVersion, _event) {
-            logger.debug(
+            log$e.debug(
               `Can't open ${blockedVersion} because ${currentVersion} is open. Closing and reopening.`
             );
             cache.db?.close();
@@ -899,10 +952,10 @@ event.oldVersion,
         this.close();
         await deleteDB(this.db_name, {
           blocked: () => {
-            logger.debug("deleteDB blocked callback called!");
+            log$e.debug("deleteDB blocked callback called!");
           }
         });
-        logger.info(`Successfully deleted ${this.db_name} IndexedDB.`);
+        log$e.info(`Successfully deleted ${this.db_name} IndexedDB.`);
       };
       this.get = async (player_ids) => {
         const db = await this.start_op();
@@ -954,7 +1007,7 @@ event.oldVersion,
               const index2 = tx.store.index("expiry");
               const range = IDBKeyRange.upperBound(Date.now());
               const r2 = await index2.getAllKeys(range);
-              logger.info(`Found ${r2.length} expired values to delete from cache.`);
+              log$e.info(`Found ${r2.length} expired values to delete from cache.`);
               await Promise.all(r2.map((id) => tx.store.delete(id)));
               await tx.done;
             }
@@ -963,9 +1016,7 @@ event.oldVersion,
               const index2 = tx.store.index("expiry");
               const range = IDBKeyRange.upperBound(Date.now());
               const r2 = await index2.getAllKeys(range);
-              logger.info(
-                `Found ${r2.length} expired values to delete from flights.`
-              );
+              log$e.info(`Found ${r2.length} expired values to delete from flights.`);
               await Promise.all(r2.map((id) => tx.store.delete(id)));
               await tx.done;
             }
@@ -975,7 +1026,7 @@ event.oldVersion,
               const thirty_days_ago = Date.now() - 30 * 24 * 60 * 60 * 1e3;
               const range = IDBKeyRange.upperBound(thirty_days_ago);
               const r2 = await index2.getAllKeys(range);
-              logger.info(
+              log$e.info(
                 `Found ${r2.length} expired values to delete from analytics.`
               );
               await Promise.all(r2.map((id) => tx.store.delete(id)));
@@ -1092,6 +1143,7 @@ event.oldVersion,
       this.db_name = db_name;
     }
   }
+  const log$d = logger.child("storage");
   var Time = ((Time2) => {
     Time2[Time2["Seconds"] = 1e3] = "Seconds";
     Time2[Time2["Minutes"] = 6e4] = "Minutes";
@@ -1113,7 +1165,7 @@ set(key, value, expireConfig) {
         };
         localStorage.setItem(this.prefix + key, JSON.stringify(item));
       } catch (error) {
-        logger.error(`Error storing item '${key}':`, error);
+        log$d.error(`Error storing item '${key}':`, error);
       }
     }
 get(key) {
@@ -1129,18 +1181,18 @@ get(key) {
           item = null;
         }
         if (!item) {
-          logger.warn(`Key '${key}' has invalid JSON in it.`);
+          log$d.warn(`Key '${key}' has invalid JSON in it.`);
           this.remove(key);
           return null;
         }
         if (item.expiration && Date.now() > item.expiration) {
           this.remove(key);
-          logger.debug(`Key ${key} has expired.`);
+          log$d.debug(`Key ${key} has expired.`);
           return null;
         }
         return item.value;
       } catch (error) {
-        logger.error(`Error retrieving item '${key}':`, error);
+        log$d.error(`Error retrieving item '${key}':`, error);
         return null;
       }
     }
@@ -1148,7 +1200,7 @@ remove(key) {
       try {
         localStorage.removeItem(this.prefix + key);
       } catch (error) {
-        logger.error(`Error removing item [${key}]:`, error);
+        log$d.error(`Error removing item [${key}]:`, error);
       }
     }
 has(key) {
@@ -1160,7 +1212,7 @@ clearAll() {
           localStorage.removeItem(key);
         });
       } catch (error) {
-        logger.error("Error clearing storage:", error);
+        log$d.error("Error clearing storage:", error);
       }
     }
   }
@@ -1194,6 +1246,7 @@ clearAll() {
     constructor(name) {
       this.name = name;
       this.storage = new Storage(this.name);
+      logger.setLevel(this.debug_logs ? LogLevel.DEBUG : LogLevel.INFO);
     }
     get key() {
       return this.storage.get(
@@ -1359,6 +1412,7 @@ clearAll() {
     }
     set debug_logs(val) {
       this.storage.set("debug_logs", val);
+      logger.setLevel(val ? LogLevel.DEBUG : LogLevel.INFO);
     }
     get analytics_enabled() {
       return this.storage.get(
@@ -1498,6 +1552,7 @@ clearAll() {
     }
   }
   const ffconfig = new FFConfig("ffsv3-config");
+  const log$c = logger.child("api");
   const DB_NAME = "FFSV3-cache";
   const RECHECK_RETRY_DELAY = 60 * 1e3;
   const RECHECK_WINDOW_DURATION = 3 * 60 * 1e3;
@@ -1542,7 +1597,7 @@ clearAll() {
         try {
           await this.cache.delete_flight(player_id);
         } catch (err) {
-          logger.error("Failed to delete flight from cache", err);
+          log$c.error("Failed to delete flight from cache", err);
         }
       };
       this.calculate_flight_cache_ttl = (result) => {
@@ -1560,19 +1615,19 @@ clearAll() {
         return FINALIZED_NO_FLIGHT_TTL;
       };
       this.get_flights = async (player_id) => {
-        logger.debug(`get_flights called for ${player_id}`);
+        log$c.debug(`get_flights called for ${player_id}`);
         let cached = null;
         try {
           cached = await this.cache.get_flight(player_id);
         } catch (err) {
-          logger.error("Failed to query flight cache", err);
+          log$c.error("Failed to query flight cache", err);
         }
         if (cached) {
-          logger.debug(`Flight cache hit for player ${player_id}`);
+          log$c.debug(`Flight cache hit for player ${player_id}`);
           if (cached.rechecking) {
             const now = Date.now();
             if (cached.recheck_until && now >= cached.recheck_until) {
-              logger.debug(
+              log$c.debug(
                 `Rechecking window expired for player ${player_id}. Finalizing no data.`
               );
               const final_response = {
@@ -1587,19 +1642,19 @@ clearAll() {
                   FINALIZED_NO_FLIGHT_TTL
                 );
               } catch (err) {
-                logger.error("Failed to finalize flight cache", err);
+                log$c.error("Failed to finalize flight cache", err);
               }
               return final_response;
             }
             if (cached.next_retry_at && now >= cached.next_retry_at) {
-              logger.debug(
+              log$c.debug(
                 `Retrying API call for player ${player_id} during recheck window`
               );
               let response2;
               try {
                 response2 = await query_flights(this.config.key, player_id);
               } catch (err) {
-                logger.error(
+                log$c.error(
                   `Received error response querying ffscouter player-flights API for ${player_id}:`,
                   err
                 );
@@ -1611,18 +1666,18 @@ clearAll() {
                 );
               }
               if (response2.result.current) {
-                logger.debug(
+                log$c.debug(
                   `Flight successfully tracked for player ${player_id} on retry.`
                 );
                 try {
                   const ttl = this.calculate_flight_cache_ttl(response2.result);
                   await this.cache.update_flight(response2.result, ttl);
                 } catch (err) {
-                  logger.error("Failed to update flight cache", err);
+                  log$c.error("Failed to update flight cache", err);
                 }
                 return response2.result;
               }
-              logger.debug(
+              log$c.debug(
                 `Player ${player_id} still has no flight. Scheduling next retry.`
               );
               const next_retry_at = Date.now() + RECHECK_RETRY_DELAY;
@@ -1641,7 +1696,7 @@ clearAll() {
               try {
                 await this.cache.update_flight(updated_response, remaining_ttl);
               } catch (err) {
-                logger.error("Failed to update flight cache during recheck", err);
+                log$c.error("Failed to update flight cache during recheck", err);
               }
               return updated_response;
             }
@@ -1660,12 +1715,12 @@ clearAll() {
             recent_flights: cached.recent_flights
           };
         }
-        logger.debug(`Flight cache miss for player ${player_id}. Querying API.`);
+        log$c.debug(`Flight cache miss for player ${player_id}. Querying API.`);
         let response;
         try {
           response = await query_flights(this.config.key, player_id);
         } catch (err) {
-          logger.error(
+          log$c.error(
             `Received error response querying ffscouter player-flights API for ${player_id}:`,
             err
           );
@@ -1679,10 +1734,10 @@ clearAll() {
             const ttl = this.calculate_flight_cache_ttl(response.result);
             await this.cache.update_flight(response.result, ttl);
           } catch (err) {
-            logger.error("Failed to update flight cache", err);
+            log$c.error("Failed to update flight cache", err);
           }
         } else {
-          logger.debug(`Start rechecking cycle for player ${player_id}`);
+          log$c.debug(`Start rechecking cycle for player ${player_id}`);
           const now = Date.now();
           const next_retry_at = now + RECHECK_RETRY_DELAY;
           const recheck_until = now + RECHECK_WINDOW_DURATION;
@@ -1700,14 +1755,14 @@ clearAll() {
               RECHECK_WINDOW_DURATION
             );
           } catch (err) {
-            logger.error("Failed to update flight cache", err);
+            log$c.error("Failed to update flight cache", err);
           }
           response = { result: rechecking_response, blank: false };
         }
         try {
           await this.cache.clean_expired();
         } catch (err) {
-          logger.error("Failed to clean expired cache entries", err);
+          log$c.error("Failed to clean expired cache entries", err);
         }
         return response.result;
       };
@@ -1715,16 +1770,16 @@ clearAll() {
         this.process_cache();
       };
       this.enqueue_cache = (player_id) => {
-        logger.debug(`Enqueuing cache ${player_id}`);
+        log$c.debug(`Enqueuing cache ${player_id}`);
         this.cache_queue.add(player_id);
         this.schedule_cache();
       };
       this.schedule_cache = () => {
         if (this.cache_timer) {
-          logger.debug(`schedule_cache called but job already scheduled`);
+          log$c.debug(`schedule_cache called but job already scheduled`);
           return;
         }
-        logger.debug(
+        log$c.debug(
           `schedule_cache called and job scheduled for ${this.cache_delay} ms`
         );
         this.cache_timer = this.schedule(this.process_cache, this.cache_delay);
@@ -1745,14 +1800,14 @@ clearAll() {
         } catch (_2) {
           results = new Map();
         }
-        logger.debug("Received results", results);
+        log$c.debug("Received results", results);
         for (const id of ids) {
           const v2 = results.get(id);
           if (v2) {
-            logger.debug("Id", id, "found in cache. Resolving value.");
+            log$c.debug("Id", id, "found in cache. Resolving value.");
             this.resolve(id, v2);
           } else {
-            logger.debug("Id", id, "not found in cache. Scheduling api call.");
+            log$c.debug("Id", id, "not found in cache. Scheduling api call.");
             this.enqueue_api(id);
           }
         }
@@ -1761,20 +1816,20 @@ clearAll() {
         this.cache.delete_db();
       };
       this.enqueue_api = (player_id) => {
-        logger.debug(`Enqueuing api ${player_id}`);
+        log$c.debug(`Enqueuing api ${player_id}`);
         this.api_queue.add(player_id);
         this.schedule_api();
       };
       this.schedule_api = (delay = this.api_initial_delay) => {
         if (this.api_timer) {
-          logger.debug(`schedule_api called but job already scheduled`);
+          log$c.debug(`schedule_api called but job already scheduled`);
           return;
         }
-        logger.debug(`schedule_api called and job scheduled for ${delay} ms`);
+        log$c.debug(`schedule_api called and job scheduled for ${delay} ms`);
         this.api_timer = this.schedule(this.process_api, delay);
       };
       this.process_api = async () => {
-        logger.debug("process_api called");
+        log$c.debug("process_api called");
         if (this.api_timer) {
           this.clear(this.api_timer);
           this.api_timer = null;
@@ -1786,18 +1841,18 @@ clearAll() {
         for (const id of ids) {
           this.api_queue.delete(id);
         }
-        logger.debug(`Processing ${ids} api requests`);
+        log$c.debug(`Processing ${ids} api requests`);
         if (ids.length <= 0) {
-          logger.debug("No ids found to query");
+          log$c.debug("No ids found to query");
           return;
         }
         let next_run = this.api_default_delay;
         let results;
         try {
-          logger.debug("Calling query_stats with", this.config.key, ",", ids);
+          log$c.debug("Calling query_stats with", this.config.key, ",", ids);
           results = await query_stats(this.config.key, ids);
         } catch (err) {
-          logger.error("Received error response querying ffscouter api:", err);
+          log$c.error("Received error response querying ffscouter api:", err);
           for (const id of ids) {
             this.reject(id, err);
           }
@@ -1808,7 +1863,7 @@ clearAll() {
             limits: ff_error.ff_api_limits
           };
         }
-        logger.debug("Received results", results);
+        log$c.debug("Received results", results);
         if (results.blank) {
           for (const id of ids) {
             this.requeue_api(id);
@@ -1818,10 +1873,10 @@ clearAll() {
           for (const id of ids) {
             const v2 = results.result.get(id);
             if (v2) {
-              logger.debug("Id", id, "found in results. Resolving value.");
+              log$c.debug("Id", id, "found in results. Resolving value.");
               this.resolve(id, v2);
             } else {
-              logger.debug("Id", id, "not found in results. Resolving no_data.");
+              log$c.debug("Id", id, "not found in results. Resolving no_data.");
               this.resolve(id, { player_id: id, no_data: true });
             }
           }
@@ -1887,14 +1942,14 @@ clearAll() {
             hash
           });
         } catch (err) {
-          logger.error("Failed to add analytics entry", err);
+          log$c.error("Failed to add analytics entry", err);
         }
       };
       this.get_analytics_entries = async () => {
         try {
           return await this.cache.get_analytics();
         } catch (err) {
-          logger.error("Failed to get analytics entries", err);
+          log$c.error("Failed to get analytics entries", err);
           return [];
         }
       };
@@ -1940,7 +1995,7 @@ clearAll() {
         try {
           await this.cache.clear_analytics();
         } catch (err) {
-          logger.error("Failed to clear analytics entries", err);
+          log$c.error("Failed to clear analytics entries", err);
         }
       };
       this.config = config;
@@ -2083,6 +2138,7 @@ clearAll() {
     };
     return num * (multiplier[suffix] ?? 1);
   }
+  logger.child("dom");
   const ID_PARAMS = ["XID", "user2ID"];
   function extract_id_from_url(url) {
     const parsed = new URL(url);
@@ -2325,6 +2381,7 @@ clearAll() {
     info_line.style.margin = "5px 0";
     return info_line;
   }
+  const log$b = logger.child("api");
   const CHECK_KEY = "check-key-status";
   class CheckKeyStatus {
     constructor(config, storage) {
@@ -2339,7 +2396,7 @@ clearAll() {
         try {
           result = await check_key(this.config.key);
         } catch (err) {
-          logger.error(
+          log$b.error(
             "Received error response querying ffscouter check-key api:",
             err
           );
@@ -2907,6 +2964,7 @@ clearAll() {
     if (kind && result) __defProp$3(target, key, result);
     return result;
   };
+  const log$a = logger.child("ui");
   const PREMIUM_UPGRADE_URL$1 = "https://ffscouter.com/premium";
   let FFHeaderLine = class extends i {
     constructor() {
@@ -2924,7 +2982,7 @@ async willUpdate(changedProperties) {
         try {
           this.is_premium = await check_key_status.is_premium();
         } catch (error) {
-          logger.error(error);
+          log$a.error(error);
         } finally {
           this.loading = false;
         }
@@ -2990,6 +3048,7 @@ async willUpdate(changedProperties) {
   FFHeaderLine = __decorateClass$3([
     t("ff-header-line")
   ], FFHeaderLine);
+  const log$9 = logger.child("feature:attack");
   async function inject_info_line$1(info_line) {
     const h4 = await wait_for_element("h4", 1e4);
     if (!h4) {
@@ -3012,7 +3071,7 @@ async willUpdate(changedProperties) {
       if (!player_id) {
         return;
       }
-      logger.debug("On the attack page, found player_id", player_id);
+      log$9.debug("On the attack page, found player_id", player_id);
       const info_line = create_info_line();
       ffscouter.get(player_id).then(async (data) => {
         const line = document.createElement("ff-header-line");
@@ -3520,6 +3579,7 @@ async willUpdate(changedProperties) {
   FFFactionFilterBox = __decorateClass$2([
     t("ff-faction-filter-box")
   ], FFFactionFilterBox);
+  const log$8 = logger.child("feature:faction");
   const FEATURE_NAME$4 = "faction";
   let isApplying = false;
   function apply_filters_and_sort(membersList, filters) {
@@ -3656,7 +3716,7 @@ Number.parseInt(row.dataset["estValue"], 10)
             p2.row.removeAttribute("data-latest-arrival");
           }
         } catch (err) {
-          logger.error(`Failed to fetch flights for player ${p2.player_id}`, err);
+          log$8.error(`Failed to fetch flights for player ${p2.player_id}`, err);
         }
       })
     );
@@ -3973,17 +4033,11 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       setup_faction_features(membersList);
       return;
     }
-    let found_honor = false;
-    for (const bar of root.querySelectorAll(".honor-text-wrap")) {
-      apply_ff_gauge(bar, FEATURE_NAME$4);
-      found_honor = true;
-    }
-    if (found_honor) {
-      return;
-    }
-    for (const bar of root.querySelectorAll(".member")) {
-      apply_ff_gauge(bar, FEATURE_NAME$4);
-    }
+    apply_ff_gauge_selector(
+      root.querySelectorAll(".honor-text-wrap"),
+      FEATURE_NAME$4
+    );
+    apply_ff_gauge_selector(root.querySelectorAll(".member"), FEATURE_NAME$4);
     for (const l2 of root.querySelectorAll(".members-list, .chain-attacks-list")) {
       if (l2 instanceof HTMLElement) {
         apply_ff_members_list(l2);
@@ -4111,13 +4165,13 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
   const process_page = () => {
     wait_for_element(".members-list", 1e4).then((node) => {
       if (node instanceof HTMLElement) {
-        logger.debug("Found members-list!");
+        log$8.debug("Found members-list!");
         monitor_member_list(node);
       }
     });
     wait_for_element(".chain-attacks-list", 1e4).then((node) => {
       if (node instanceof HTMLElement) {
-        logger.debug("Found chain-attacks-list!");
+        log$8.debug("Found chain-attacks-list!");
         monitor_member_list(node, true);
       }
     });
@@ -4125,12 +4179,12 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       if (!node) {
         return;
       }
-      logger.debug("Found faction_war_list_id");
+      log$8.debug("Found faction_war_list_id");
       const descriptions_observer = new MutationObserver(async (mutations) => {
         for (const mutation of mutations) {
           for (const node2 of mutation.addedNodes) {
             if (node2 instanceof HTMLElement && node2.classList.contains("descriptions")) {
-              logger.debug(
+              log$8.debug(
                 "Observed mutation that included adding descriptions",
                 node2
               );
@@ -4143,7 +4197,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
         }
       });
       descriptions_observer.observe(node, { childList: true });
-      logger.debug("Set up descriptions observer on", node);
+      log$8.debug("Set up descriptions observer on", node);
       const existing_descriptions = node.querySelector(".descriptions");
       if (existing_descriptions) {
         const faction_war = await wait_for_element(
@@ -4198,6 +4252,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     poll_traveling_flights,
     setup_war_features
   }, Symbol.toStringTag, { value: "Module" }));
+  const log$7 = logger.child("feature:fallback");
   const FEATURE_NAME_HONOR_BAR = "fallback-honor-bar";
   const FEATURE_NAME_USER_NAME = "fallback-user-name";
   const FEATURE_NAME$3 = "fallback";
@@ -4269,7 +4324,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
         case torn_page("page", { sid: "spinTheWheel" }):
         case torn_page("page", { sid: "education" }):
         case torn_page("page", { sid: "itemMarket" }):
-          logger.warn("NOT RUNNING FALLBACK ON THIS PAGE");
+          log$7.warn("NOT RUNNING FALLBACK ON THIS PAGE");
           return false;
         default:
           return true;
@@ -4370,6 +4425,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     __proto__: null,
     default: index$9
   }, Symbol.toStringTag, { value: "Module" }));
+  const log$6 = logger.child("ui");
   var TOAST_LEVEL = ((TOAST_LEVEL2) => {
     TOAST_LEVEL2[TOAST_LEVEL2["DEBUG"] = 0] = "DEBUG";
     TOAST_LEVEL2[TOAST_LEVEL2["INFO"] = 1] = "INFO";
@@ -4429,7 +4485,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     } else {
       msg.textContent = `FairFight Scouter V2: ${message}`;
     }
-    logger.info("[FF Scouter V2] Toast: ", message);
+    log$6.info("[FF Scouter V2] Toast: ", message);
     toast2.appendChild(msg);
     toast2.appendChild(closeBtn);
     document.body.appendChild(toast2);
@@ -4440,6 +4496,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       }
     }, 4e3);
   }
+  const log$5 = logger.child("feature:ff-button");
   const CACHE_LIFETIME_MS = 7 * 24 * 60 * 60 * 1e3;
   const POLL_INTERVAL_MS = 24 * 60 * 60 * 1e3;
   function get_active_filters() {
@@ -4458,7 +4515,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
   async function update_ff_targets(force = false) {
     const key = ffconfig.key;
     if (!key) {
-      logger.debug("API key not set, skipping target fetch");
+      log$5.debug("API key not set, skipping target fetch");
       return;
     }
     const currentFilters = get_active_filters();
@@ -4467,7 +4524,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     const filtersChanged = cached && filters_changed(cached.filters, currentFilters);
     const timeToRefresh = cached && (!cached.last_updated || Date.now() - cached.last_updated > POLL_INTERVAL_MS);
     if (!force && !hasNoCacheOrExpired && !filtersChanged && !timeToRefresh) {
-      logger.debug(
+      log$5.debug(
         "Using cached targets, not expired, filters match, and not time to poll yet"
       );
       return;
@@ -4490,12 +4547,12 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
           filters: currentFilters
         };
         ffconfig.chain_target_index = 0;
-        logger.info(
+        log$5.info(
           `Chain targets updated successfully: ${response.targets.length} targets found`
         );
       }
     } catch (err) {
-      logger.error("Failed to update chain targets:", err);
+      log$5.error("Failed to update chain targets:", err);
     }
   }
   function get_next_target_index(maxLen) {
@@ -4634,7 +4691,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
         const cached = ffconfig.chain_targets;
         const currentFilters = get_active_filters();
         if (!cached || filters_changed(cached.filters, currentFilters)) {
-          logger.info("Target filters changed, refetching targets immediately");
+          log$5.info("Target filters changed, refetching targets immediately");
           await update_ff_targets(true);
         }
         create_chain_button();
@@ -4709,11 +4766,12 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     __proto__: null,
     default: index$7
   }, Symbol.toStringTag, { value: "Module" }));
+  const log$4 = logger.child("feature:mini-profile");
   const FEATURE_NAME$1 = "mini-profile";
   const monitor_mini_profile_root = () => {
     const miniprofile = document.querySelector("#profile-mini-root");
     if (miniprofile) {
-      logger.debug("profile-mini-root already exists.");
+      log$4.debug("profile-mini-root already exists.");
       setup_mini_observer();
       return;
     }
@@ -4753,9 +4811,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
         if (d2.no_data) {
           return;
         }
-        logger.debug(
-          `Found mini profile update for ${player_id}, adding ff data`
-        );
+        log$4.debug(`Found mini profile update for ${player_id}, adding ff data`);
         for (const bar of miniroot.querySelectorAll(".honor-text-wrap")) {
           apply_ff_gauge(bar, FEATURE_NAME$1);
         }
@@ -4783,7 +4839,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     },
     async run() {
       monitor_mini_profile_root();
-      logger.debug("mini-profile installed");
+      log$4.debug("mini-profile installed");
     },
     httpIntercept: {
       before(_url, _init) {
@@ -4808,6 +4864,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     if (kind && result) __defProp$1(target, key, result);
     return result;
   };
+  const log$3 = logger.child("ui");
   const PREMIUM_UPGRADE_URL = "https://ffscouter.com/premium";
   const premium_action = b`<a
   href="${PREMIUM_UPGRADE_URL}"
@@ -4916,7 +4973,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
         this.data = result;
         this.error = null;
       } catch (err) {
-        logger.error("Failed to fetch flight data", err);
+        log$3.error("Failed to fetch flight data", err);
         if (err instanceof FFApiError) {
           const code = err.ff_api_error?.code;
           if (code === 19) {
@@ -6043,6 +6100,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     __proto__: null,
     default: index$1
   }, Symbol.toStringTag, { value: "Module" }));
+  const log$2 = logger.child("feature:test-feature");
   const index = {
     name: "Test Feature!",
     description: "It's literally a test feature :P",
@@ -6051,7 +6109,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       return true;
     },
     async run() {
-      logger.info("hello world but from feature");
+      log$2.info("hello world but from feature");
     },
     httpIntercept: {
       before(_url, _init) {
@@ -6083,6 +6141,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
   const Features = Object.values(modules).map((mod) => mod.default).filter(
     (feat) => !!feat && "name" in feat && feat.name !== "Test Feature!"
   );
+  const log$1 = logger.child("network");
   const pageWindow = unsafeWindow || window;
   let httpInterceptor = null;
   let httpPatched = false;
@@ -6126,7 +6185,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
               if (res.init) currentInit = res.init;
             }
           } catch (err) {
-            logger.error("HTTP before interceptor error:", err);
+            log$1.error("HTTP before interceptor error:", err);
           }
         }
         const finalRequest = requestIsObj ? url === input.url && currentInit === init ? input : new Request(url, currentInit ?? {}) : url;
@@ -6136,7 +6195,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
         try {
           bodyText = await response.clone().text();
         } catch (err) {
-          logger.error("Failed reading response body for interceptor:", err);
+          log$1.error("Failed reading response body for interceptor:", err);
           return response;
         }
         try {
@@ -6152,28 +6211,28 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
             });
           }
         } catch (err) {
-          logger.error("HTTP after interceptor error:", err);
+          log$1.error("HTTP after interceptor error:", err);
         }
         return response;
       };
       httpPatched = true;
-      logger.debug("Fetch patched for HTTP interception");
+      log$1.debug("Fetch patched for HTTP interception");
     } catch (err) {
-      logger.error("Failed to patch fetch:", err);
+      log$1.error("Failed to patch fetch:", err);
     }
   }
   const stylesCss = ".ffsv3-gauge{position:relative;display:block;padding:0}.ffsv3-arrow{position:absolute;transform:translate(-50%,-30%);padding:0;top:0;left:calc(var(--ffsv3-arrow-width) / 2 + var(--band-percent) * (100% - var(--ffsv3-arrow-width)) / 100);width:var(--ffsv3-arrow-width);object-fit:cover;pointer-events:none}.ffsv3-mini-desc{padding:0 5px}body{--ffsv3-bg-color: #f0f0f0;--ffsv3-alt-bg-color: #fff;--ffsv3-border-color: #ccc;--ffsv3-input-color: #ccc;--ffsv3-text-color: #000;--ffsv3-hover-color: #ddd;--ffsv3-glow-color: #4caf50;--ffsv3-success-color: #4caf50;--ffsv3-arrow-width: 20px}body.dark-mode{--ffsv3-bg-color: #333;--ffsv3-alt-bg-color: #383838;--ffsv3-border-color: #444;--ffsv3-input-color: #504f4f;--ffsv3-text-color: #ccc;--ffsv3-hover-color: #555;--ffsv3-glow-color: #4caf50;--ffsv3-success-color: #4caf50}.ff-premium-upgrade-line{display:block;margin-top:4px;line-height:1.3;white-space:nowrap;font-size:12px;font-style:normal}@media(max-width:768px){.ff-premium-upgrade-line{margin-top:6px;line-height:1.35;white-space:normal;overflow-wrap:anywhere}}ff-settings-panel{display:block}ff-settings-panel .accordion{margin:10px 0;padding:15px;background-color:var(--ffsv3-bg-color);border:1px solid var(--ffsv3-border-color);border-radius:5px;color:var(--ffsv3-text-color)}ff-settings-panel .accordion.glow{border-color:var(--ffsv3-glow-color);box-shadow:0 0 8px #4caf5080}ff-settings-panel .input-row{display:flex;flex-direction:column;gap:5px;margin-bottom:15px}ff-settings-panel .input-row-inline{display:flex;align-items:center;gap:10px;margin-bottom:15px}ff-settings-panel .blur-mode{filter:blur(4px);transition:filter .2s ease}ff-settings-panel .blur-mode:hover,ff-settings-panel .blur-mode:focus{filter:blur(0)}ff-settings-panel .error-msg{color:#f33;font-size:13px;margin-top:5px}ff-settings-panel input[type=text],ff-settings-panel input[type=number]{text-align:left;vertical-align:top;width:178px;height:14px;margin-right:8px;padding:9px 10px;line-height:14px;display:inline-block}ff-settings-panel input[type=number].ff-number{width:52px}ff-settings-panel select{box-sizing:border-box;text-align:left;vertical-align:top;width:178px;height:34px;margin-right:8px;padding:8px 10px;line-height:14px;display:inline-block;border:var(--input-border-color);border-radius:5px;font-family:Arial,serif;color:var(--input-color);background:var(--input-background-color)}:root .dark-mode ff-settings-panel select option{background-color:#000;color:var(--input-color)}ff-settings-panel .ff-api-explanation{background-color:var(--ffsv3-alt-bg-color);border:1px solid var(--ffsv3-border-color);border-radius:8px;color:var(--ffsv3-text-color);margin-bottom:20px;padding:12px 16px;font-size:13px;line-height:1.5}ff-settings-panel a{color:var(--ffsv3-success-color);text-decoration:underline}ff-settings-panel .is_premium_enabled{display:inline-block;background:#4caf50;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;vertical-align:middle}ff-settings-panel .is_premium_disabled{display:inline-block;background:#c62828;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;vertical-align:middle}.profile-status{position:relative}ff-flight-profile-status{position:absolute;right:10px;bottom:2px;z-index:2}.ff-scouter-profile-flight-info{display:inline-block;text-align:right;font-size:11px;line-height:1.25;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.85)}.profile-status .ff-scouter-profile-flight-info a{color:#fff;text-decoration:underline}ff-faction-filter-box{display:block}.ff-filter-box,.ff-filter-box *,.ff-filter-box *:before,.ff-filter-box *:after{box-sizing:border-box!important}.ff-filter-box{background-color:var(--ffsv3-bg-color);border:1px solid var(--ffsv3-border-color);border-radius:8px;padding:12px 16px;margin-bottom:16px;color:var(--ffsv3-text-color);font-family:Arial,sans-serif;box-shadow:0 2px 5px #0000000d}.ff-filter-box.no-borders{background-color:var(--default-bg-panel-color);border-top:1px solid var(--ffsv3-border-color);border-bottom:1px solid var(--ffsv3-border-color);border-left:none;border-right:none;border-radius:0;box-shadow:none;padding:12px 10px;margin:0}.ff-filter-box summary{cursor:pointer;font-size:14px;font-weight:700;outline:none;-webkit-user-select:none;user-select:none}.ff-filter-box[open] summary{border-bottom:1px solid var(--ffsv3-border-color);padding-bottom:6px;margin-bottom:12px}.ff-filter-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.grp-sort{order:1}.grp-level{order:2}.grp-activity{order:3}.grp-status{order:4}.grp-ff{order:5}.grp-stats{order:6}@media(min-width:784px){.ff-filter-grid{grid-template-columns:repeat(3,1fr)}.ff-filter-grid>*{order:0}}.ff-filter-group{display:flex;flex-direction:column;gap:2px}.ff-filter-options{display:flex;flex-direction:column}.ff-filter-options label{display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer}.ff-filter-range-inputs{display:flex;align-items:center;gap:4px}.ff-filter-range-inputs input{flex:1;width:0;min-width:30px;max-width:80px;padding:4px;border:1px solid var(--ffsv3-border-color);border-radius:4px;background:var(--ffsv3-alt-bg-color);color:var(--ffsv3-text-color);font-size:11px;text-align:center}.ff-filter-box button{padding:6px 10px;border:1px solid var(--ffsv3-border-color);border-radius:4px;background:var(--ffsv3-alt-bg-color);color:var(--ffsv3-text-color);font-size:12px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;transition:background-color .2s}.ff-filter-box button:hover{background-color:var(--ffsv3-hover-color)}.chain-options-flex-container{display:flex;flex-wrap:wrap;gap:10px 20px;align-items:center;justify-content:flex-start;margin-left:20px;margin-top:10px;margin-bottom:15px}.chain-options-flex-container .input-row-inline{margin-bottom:0}.faction-war .level[class*=level__]{display:block!important;flex:none!important;width:22px!important;position:relative;margin-right:36px!important;overflow:visible!important}.faction-war .level[class*=level__]:after{content:attr(data-ff-value);display:var(--ff-display, none)!important;position:absolute;left:calc(100% + 4px)!important;top:50%!important;transform:translateY(-50%)!important;width:32px!important;height:20px!important;background-color:var(--ff-bg-color, transparent)!important;color:var(--ff-text-color, inherit)!important;font-weight:700!important;font-size:11px!important;line-height:20px!important;text-align:center!important;align-items:center!important;justify-content:center!important;border-radius:3px!important;box-sizing:border-box!important;z-index:10!important}.faction-war .white-grad{overflow:visible!important}.faction-war .white-grad .level.level___pwbgk{display:block!important;flex:none!important;width:22px!important;position:relative;margin-right:36px!important;overflow:visible!important}.faction-war .white-grad .level.level___pwbgk:after{background-color:transparent!important;font-size:12px;font-weight:700!important;height:auto!important;line-height:normal!important;left:calc(100% + 4px)!important;width:32px!important;content:attr(data-ff-value)!important;display:var(--ff-display, none)!important}.faction-war[data-ffscouter-hide-level=true] .level[class*=level__],.faction-war[data-ffscouter-hide-level=true] .level{width:0!important;margin-right:32px!important;color:transparent!important;font-size:0!important;border-left:none!important;border-right:none!important;background-color:transparent!important;pointer-events:none!important}.faction-war[data-ffscouter-hide-level=true] .level[class*=level__]:after,.faction-war[data-ffscouter-hide-level=true] .level:after{color:var(--ff-text-color, inherit)!important;font-size:11px!important;background-color:var(--ff-bg-color, transparent)!important;pointer-events:auto!important}.faction-war[data-ffscouter-hide-level=true] .white-grad .level[class*=level__],.faction-war[data-ffscouter-hide-level=true] .white-grad .level{width:0!important;margin-right:32px!important;color:transparent!important;font-size:0!important;border-left:none!important;border-right:none!important;background-color:transparent!important;pointer-events:none!important}.faction-war[data-ffscouter-hide-level=true] .white-grad .level[class*=level__]:after,.faction-war[data-ffscouter-hide-level=true] .white-grad .level:after{color:var(--ffsv3-text-color, inherit)!important;font-size:12px!important;font-weight:700!important;pointer-events:auto!important}.faction-war[data-ffscouter-hide-status=true] .status,.faction-war[data-ffscouter-hide-status=true] [class*=status__],.faction-war[data-ffscouter-hide-score=true] [class*=score__],.faction-war[data-ffscouter-hide-score=true] [class*=points__],.faction-war[data-ffscouter-hide-score=true] [class*=respect__],.faction-war[data-ffscouter-hide-score=true] [class*=attacks__]{display:none!important}.grp-columns{order:7}";
   importCSS(stylesCss);
+  const log = logger.child("boot");
   const INJECTION_KEY = "__FF_SCOUTER_V3_INJECTED__";
   async function main() {
     const w = window;
     if (w[INJECTION_KEY]) {
-      logger.info("Script already injected");
+      log.info("Script already injected");
       return;
     }
     w[INJECTION_KEY] = true;
-    logger.setLevel(ffconfig.debug_logs ? LogLevel.DEBUG : LogLevel.INFO);
-    logger.info("Initializing", "3.0-alpha11");
+    log.info("Initializing", "3.0-alpha12");
     if (ffscouter.analytics_enabled) {
       unsafeWindow.ffscouter = ffscouter;
       window.ffscouter = ffscouter;
