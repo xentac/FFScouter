@@ -50,30 +50,44 @@ function runCmd(
   return result.stdout?.trim();
 }
 
-// Helper to get recent tags for a specific edition branch
-function getRecentTagsForEdition(branch: string, count = 5): string[] {
+// Helper to get recent tags for a specific edition
+function getRecentTagsForEdition(editionKey: EditionKey, count = 5): string[] {
   try {
-    let output = execSync(`git tag --merged ${branch} --sort=-creatordate`, {
+    const output = execSync("git tag --sort=-creatordate", {
       stdio: "pipe",
     })
       .toString()
       .trim();
 
-    if (!output) {
-      output = execSync(
-        `git tag --merged origin/${branch} --sort=-creatordate`,
-        { stdio: "pipe" },
-      )
-        .toString()
-        .trim();
-    }
-
     if (output) {
-      return output
+      const allTags = output
         .split("\n")
         .map((t) => t.trim())
-        .filter(Boolean)
-        .slice(0, count);
+        .filter(Boolean);
+
+      if (editionKey === "xentac") {
+        return allTags.filter((t) => t.toLowerCase().includes("xentac")).slice(0, count);
+      } else if (editionKey === "v3") {
+        return allTags
+          .filter(
+            (t) =>
+              t.toLowerCase().includes("v3") ||
+              t.startsWith("v3") ||
+              t.startsWith("3."),
+          )
+          .slice(0, count);
+      } else {
+        // Standard tags do not contain xentac or v3 or 3.
+        return allTags
+          .filter(
+            (t) =>
+              !t.toLowerCase().includes("xentac") &&
+              !t.toLowerCase().includes("v3") &&
+              !t.startsWith("v3") &&
+              !t.startsWith("3."),
+          )
+          .slice(0, count);
+      }
     }
   } catch (_e) {
     // Ignore error
@@ -117,7 +131,7 @@ async function showEditionStatus(editionKey: EditionKey, sourceCommit: string) {
   console.log(`Branch:          \x1b[36m${edition.branch}\x1b[0m`);
 
   // Recent Tags
-  const recentTags = getRecentTagsForEdition(edition.branch, 5);
+  const recentTags = getRecentTagsForEdition(editionKey, 5);
   console.log("Recent tags:");
   if (recentTags.length > 0) {
     recentTags.forEach((tag) => {
@@ -302,7 +316,7 @@ async function main() {
     if (!version) {
       // Suggest previous tag
       let suggestion = "1.0.0";
-      const recentTags = getRecentTagsForEdition(edition.branch, 5);
+      const recentTags = getRecentTagsForEdition(editionKey, 5);
       const lastTag = recentTags[0];
       if (lastTag) {
         suggestion = lastTag.startsWith("v") ? lastTag.slice(1) : lastTag;
@@ -518,23 +532,15 @@ async function main() {
       );
     }
 
-    // 9. Tag the Commit
-    console.log(`Tagging release as ${tagName}...`);
+    // 9. Tag the Source Commit
+    console.log(`Tagging source commit as ${tagName}...`);
     // Delete tag if it already exists locally to allow re-tagging (common in fix-ups)
     try {
       execSync(`git tag -d ${tagName}`, { stdio: "ignore" });
     } catch {
       // Tag didn't exist
     }
-    runCmd("git", [
-      "-C",
-      worktreeDir,
-      "tag",
-      "-a",
-      tagName,
-      "-m",
-      commitMessage,
-    ]);
+    runCmd("git", ["tag", "-a", tagName, sourceCommit, "-m", commitMessage]);
 
     // 10. Clean up worktree
     console.log("Cleaning up worktree...");
