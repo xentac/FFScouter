@@ -1,5 +1,6 @@
 import { extract_id_from_url, torn_page, wait_for_element } from "@utils/dom";
 import "@ui/info-line";
+import { ffconfig } from "@utils/ffconfig";
 import { type Feature, StartTime } from "../feature";
 
 export default {
@@ -19,7 +20,7 @@ export default {
       return;
     }
 
-    //if (ffSettingsGet("ff-history-enabled") === "false") return;
+    if (!ffconfig.ff_history_enabled) return;
     if (document.querySelector(".ff-scouter-history-btn")) return;
 
     const buttonsList = await wait_for_element(
@@ -32,7 +33,7 @@ export default {
     btn.href = `https://ffscouter.com/player-view?player_id=${player_id}`;
     btn.target = "_blank";
     btn.rel = "noopener noreferrer";
-    btn.className = "profile-button";
+    btn.className = "profile-button ff-scouter-history-btn";
     btn.title = "View Stats History on FFScouter";
 
     // Semi-transparent background clock/history icon

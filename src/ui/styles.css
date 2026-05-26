@@ -543,7 +543,7 @@ div.white-grad {
   align-items: center !important;
 }
 
-.members-list li.enemy>div.clear,
-.members-list li.your>div.clear {
+.members-list li.enemy > div.clear,
+.members-list li.your > div.clear {
   display: none !important;
 }
