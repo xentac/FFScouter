@@ -537,7 +537,7 @@ ff-faction-filter-box {
 /* Prevent wrapping inside members list rows and headers */
 .members-list li.enemy,
 .members-list li.your,
-div.white-grad {
+div.c-pointer {
   display: flex !important;
   flex-flow: row nowrap !important;
   align-items: center !important;
