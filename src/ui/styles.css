@@ -378,7 +378,7 @@ ff-faction-filter-box {
 }
 
 /* CSS-based FF/Est columns inside faction war lists */
-.faction-war .level[class*="level__"] {
+.faction-war:not([data-ffscouter-col-display="none"]) .level[class*="level__"] {
   display: block !important;
   flex: none !important;
   width: 22px !important;
@@ -388,7 +388,8 @@ ff-faction-filter-box {
   overflow: visible !important;
 }
 
-.faction-war .level[class*="level__"]::after {
+.faction-war:not([data-ffscouter-col-display="none"])
+  .level[class*="level__"]::after {
   content: attr(data-ff-value);
   display: var(--ff-display, none) !important;
   position: absolute;
@@ -414,7 +415,9 @@ ff-faction-filter-box {
   overflow: visible !important;
 }
 
-.faction-war .white-grad .level.level___pwbgk {
+.faction-war:not([data-ffscouter-col-display="none"])
+  .white-grad
+  .level.level___pwbgk {
   display: block !important;
   flex: none !important;
   width: 22px !important;
@@ -423,7 +426,9 @@ ff-faction-filter-box {
   overflow: visible !important;
 }
 
-.faction-war .white-grad .level.level___pwbgk::after {
+.faction-war:not([data-ffscouter-col-display="none"])
+  .white-grad
+  .level.level___pwbgk::after {
   background-color: transparent !important;
   font-size: 12px;
   font-weight: bold !important;
@@ -440,8 +445,14 @@ ff-faction-filter-box {
    ============================================================================ */
 
 /* 1. Level Column: Collapse standard text/width but preserve space for the absolute pseudo-element */
-.faction-war[data-ffscouter-hide-level="true"] .level[class*="level__"],
-.faction-war[data-ffscouter-hide-level="true"] .level {
+.faction-war[data-ffscouter-hide-level="true"]:not(
+  [data-ffscouter-col-display="none"]
+)
+.level[class*="level__"],
+.faction-war[data-ffscouter-hide-level="true"]:not(
+    [data-ffscouter-col-display="none"]
+  )
+  .level {
   width: 0 !important;
   margin-right: 32px !important;
   color: transparent !important;
@@ -452,8 +463,15 @@ ff-faction-filter-box {
   pointer-events: none !important;
 }
 
-.faction-war[data-ffscouter-hide-level="true"] .level[class*="level__"]::after,
-.faction-war[data-ffscouter-hide-level="true"] .level::after {
+.faction-war[data-ffscouter-hide-level="true"]:not(
+    [data-ffscouter-col-display="none"]
+  )
+  .level[class*="level__"]::after,
+.faction-war[data-ffscouter-hide-level="true"]:not(
+    [data-ffscouter-col-display="none"]
+  )
+  .level::after {
+  left: 0 !important;
   color: var(--ff-text-color, inherit) !important;
   font-size: 11px !important;
   background-color: var(--ff-bg-color, transparent) !important;
@@ -461,9 +479,15 @@ ff-faction-filter-box {
 }
 
 /* 2. Level Header: Collapse standard text/width but preserve space for the absolute pseudo-element */
-.faction-war[data-ffscouter-hide-level="true"] .white-grad
+.faction-war[data-ffscouter-hide-level="true"]:not(
+    [data-ffscouter-col-display="none"]
+  ) .white-grad
   .level[class*="level__"],
-.faction-war[data-ffscouter-hide-level="true"] .white-grad .level {
+.faction-war[data-ffscouter-hide-level="true"]:not(
+    [data-ffscouter-col-display="none"]
+  )
+  .white-grad
+  .level {
   width: 0 !important;
   margin-right: 32px !important;
   color: transparent !important;
@@ -474,10 +498,17 @@ ff-faction-filter-box {
   pointer-events: none !important;
 }
 
-.faction-war[data-ffscouter-hide-level="true"]
+.faction-war[data-ffscouter-hide-level="true"]:not(
+    [data-ffscouter-col-display="none"]
+  )
   .white-grad
   .level[class*="level__"]::after,
-.faction-war[data-ffscouter-hide-level="true"] .white-grad .level::after {
+.faction-war[data-ffscouter-hide-level="true"]:not(
+    [data-ffscouter-col-display="none"]
+  )
+  .white-grad
+  .level::after {
+  left: 0 !important;
   color: var(--ffsv3-text-color, inherit) !important;
   font-size: 12px !important;
   font-weight: bold !important;
@@ -501,4 +532,18 @@ ff-faction-filter-box {
 /* Grid layout ordering for bottom-left placement on mobile */
 .grp-columns {
   order: 7;
+}
+
+/* Prevent wrapping inside members list rows and headers */
+.members-list li.enemy,
+.members-list li.your,
+div.white-grad {
+  display: flex !important;
+  flex-flow: row nowrap !important;
+  align-items: center !important;
+}
+
+.members-list li.enemy>div.clear,
+.members-list li.your>div.clear {
+  display: none !important;
 }

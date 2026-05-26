@@ -627,13 +627,14 @@ test("apply_ff_columns supports configurable display via CSS pseudo-elements whe
   // biome-ignore lint/complexity/useLiteralKeys: tsc requires index signature lookup
   expect(row.dataset["ffValue"]).toBe("3.5");
 
-  // 4. If configured to NONE, attributes and style properties should be removed
+  // 4. If configured to NONE, --ff-display should be removed, but dataset and data-ff-value should remain populated
   ffconfig.war_col_display = FactionsColDisplay.NONE;
   await apply_ff_columns(list);
 
-  expect(headerLvl.getAttribute("data-ff-value")).toBeNull();
+  expect(list.getAttribute("data-ffscouter-col-display")).toBe("none");
+  expect(headerLvl.getAttribute("data-ff-value")).toBe("FF");
   expect(headerLvl.style.getPropertyValue("--ff-display")).toBe("");
-  expect(rowLvl.getAttribute("data-ff-value")).toBeNull();
+  expect(rowLvl.getAttribute("data-ff-value")).toBe("3.50");
   expect(rowLvl.style.getPropertyValue("--ff-display")).toBe("");
 });
 

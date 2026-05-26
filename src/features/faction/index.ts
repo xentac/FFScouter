@@ -331,6 +331,16 @@ export async function apply_ff_columns(membersList: HTMLElement) {
   const isNone = colDisplay === FactionsColDisplay.NONE;
   const expectedText = isEst ? "Est" : "FF";
 
+  if (isWar) {
+    const factionWar = membersList.closest(
+      ".faction-war",
+    ) as HTMLElement | null;
+    if (factionWar) {
+      factionWar.setAttribute("data-ffscouter-col-display", colDisplay);
+    }
+  }
+  membersList.setAttribute("data-ffscouter-col-display", colDisplay);
+
   let headerLi = membersList.querySelector(
     ".ffscouter-header",
   ) as HTMLElement | null;
@@ -343,11 +353,10 @@ export async function apply_ff_columns(membersList: HTMLElement) {
       ".white-grad > .level",
     ) as HTMLElement | null;
     if (headerLvlEl) {
+      headerLvlEl.setAttribute("data-ff-value", expectedText);
       if (!isNone) {
-        headerLvlEl.setAttribute("data-ff-value", expectedText);
         headerLvlEl.style.setProperty("--ff-display", "inline-flex");
       } else {
-        headerLvlEl.removeAttribute("data-ff-value");
         headerLvlEl.style.removeProperty("--ff-display");
       }
     }
@@ -420,7 +429,7 @@ export async function apply_ff_columns(membersList: HTMLElement) {
       }
 
       const data = dataMap.get(rp.player_id);
-      if (data && !data.no_data && !isNone) {
+      if (data && !data.no_data) {
         // biome-ignore lint/complexity/useLiteralKeys: tsc requires index signature lookup
         rp.row.dataset["ffValue"] = String(data.fair_fight);
         // biome-ignore lint/complexity/useLiteralKeys: tsc requires index signature lookup
@@ -434,7 +443,12 @@ export async function apply_ff_columns(membersList: HTMLElement) {
           levelEl.setAttribute("data-ff-value", text);
           levelEl.style.setProperty("--ff-bg-color", bg_color);
           levelEl.style.setProperty("--ff-text-color", text_color);
-          levelEl.style.setProperty("--ff-display", "inline-flex");
+
+          if (!isNone) {
+            levelEl.style.setProperty("--ff-display", "inline-flex");
+          } else {
+            levelEl.style.removeProperty("--ff-display");
+          }
 
           if (isEst && data.distribution) {
             const ageStr = format_relative_time(data.distribution.last_updated);

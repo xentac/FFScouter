@@ -66,7 +66,9 @@ function getRecentTagsForEdition(editionKey: EditionKey, count = 5): string[] {
         .filter(Boolean);
 
       if (editionKey === "xentac") {
-        return allTags.filter((t) => t.toLowerCase().includes("xentac")).slice(0, count);
+        return allTags
+          .filter((t) => t.toLowerCase().includes("xentac"))
+          .slice(0, count);
       } else if (editionKey === "v3") {
         return allTags
           .filter(
