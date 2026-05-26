@@ -32,7 +32,15 @@ function getFallbackVersion(): string {
 }
 
 export default defineConfig(({ mode }) => {
-  const isDev = mode === "dev";
+  const isDev =
+    mode === "dev" ||
+    (() => {
+      const modeIdx = process.argv.indexOf("--mode");
+      return (
+        (modeIdx !== -1 && process.argv[modeIdx + 1] === "dev") ||
+        process.argv.includes("--mode=dev")
+      );
+    })();
   // biome-ignore lint/complexity/useLiteralKeys: tsc requires index signature lookup
   const editionKey = (process.env["BUILD_EDITION"] ||
     "standard") as keyof typeof EDITIONS;

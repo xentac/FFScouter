@@ -7,3 +7,4 @@
 
 - Make exposed summary function which, given a timeframe, returns the number of page/hash and which feature found or was ignored for the arrow
   - That way we can use the table to monitor migration progress
+- There are reports that sending and changing balances don't work with FF Scouter V3 enabled. It says "player not found" in the box.
