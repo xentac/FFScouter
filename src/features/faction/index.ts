@@ -2,6 +2,7 @@ import { check_key_status } from "@utils/check_key";
 import {
   apply_ff_gauge_selector,
   get_player_id_in_element,
+  on_navigation,
   torn_page,
   wait_for_element,
 } from "@utils/dom";
@@ -982,7 +983,7 @@ export default {
   },
 
   async run() {
-    window.navigation.addEventListener("navigate", () => {
+    on_navigation(() => {
       process_page();
     });
 

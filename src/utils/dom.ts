@@ -31,6 +31,10 @@ export function torn_page(page: string, params: TornPageParams = {}) {
   const url_match = window.location.href.startsWith(
     `https://www.torn.com/${page}.php`,
   );
+  if (!url_match) {
+    return false;
+  }
+
   const search = new URLSearchParams(window.location.search);
   let sid_match = true;
   let step_match = true;
@@ -43,7 +47,7 @@ export function torn_page(page: string, params: TornPageParams = {}) {
     step_match = page_step !== null && params.step === page_step;
   }
 
-  return url_match && sid_match && step_match;
+  return sid_match && step_match;
 }
 
 function make_arrow(d: FFDataComplete): SVGElement {
@@ -433,4 +437,35 @@ export function create_info_line() {
   info_line.style.margin = "5px 0";
 
   return info_line;
+}
+
+/**
+ * Registers a callback for page navigation events (SPA hash/anchor changes and history pops).
+ * Automatically delays callback execution using setTimeout to ensure window.location is fully updated.
+ * Returns a cleanup function to remove all registered listeners.
+ */
+export function on_navigation(callback: () => void): () => void {
+  // Modern Navigation API (Chromium)
+  // @ts-expect-error - navigation is a modern browser feature not yet in TypeScript DOM types
+  if (window.navigation) {
+    // @ts-expect-error
+    window.navigation.addEventListener("currententrychange", callback);
+    return () => {
+      // @ts-expect-error
+      window.navigation.removeEventListener("currententrychange", callback);
+    };
+  }
+
+  const delayedCallback = () => {
+    setTimeout(callback, 0);
+  };
+
+  // Fallbacks for Firefox, Safari, and other environments
+  window.addEventListener("popstate", delayedCallback);
+  window.addEventListener("hashchange", delayedCallback);
+
+  return () => {
+    window.removeEventListener("popstate", delayedCallback);
+    window.removeEventListener("hashchange", delayedCallback);
+  };
 }
