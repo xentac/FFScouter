@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FF Scouter V3
 // @namespace    xentac-v3
-// @version      3.0-alpha15
+// @version      3.0-alpha16
 // @author       xentac [3354782], MAVRI [2402357], rDacted [2670953], Weav3r [1853324], Glasnost [1844049]
 // @description  Shows the expected Fair Fight score against targets and faction war status
 // @license      GPLv3
@@ -2155,6 +2155,9 @@ clearAll() {
     const url_match = window.location.href.startsWith(
       `https://www.torn.com/${page}.php`
     );
+    if (!url_match) {
+      return false;
+    }
     const search = new URLSearchParams(window.location.search);
     let sid_match = true;
     let step_match = true;
@@ -2166,7 +2169,7 @@ clearAll() {
       const page_step = search.get("step");
       step_match = page_step !== null && params.step === page_step;
     }
-    return url_match && sid_match && step_match;
+    return sid_match && step_match;
   }
   function make_arrow(d2) {
     const fill = get_ff_arrow_colour(d2);
@@ -2380,6 +2383,23 @@ clearAll() {
     info_line.style.clear = "both";
     info_line.style.margin = "5px 0";
     return info_line;
+  }
+  function on_navigation(callback) {
+    if (window.navigation) {
+      window.navigation.addEventListener("currententrychange", callback);
+      return () => {
+        window.navigation.removeEventListener("currententrychange", callback);
+      };
+    }
+    const delayedCallback = () => {
+      setTimeout(callback, 0);
+    };
+    window.addEventListener("popstate", delayedCallback);
+    window.addEventListener("hashchange", delayedCallback);
+    return () => {
+      window.removeEventListener("popstate", delayedCallback);
+      window.removeEventListener("hashchange", delayedCallback);
+    };
   }
   const log$b = logger.child("api");
   const CHECK_KEY = "check-key-status";
@@ -4231,7 +4251,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       return torn_page("factions", { step: "profile" }) || torn_page("factions", { step: "your" });
     },
     async run() {
-      window.navigation.addEventListener("navigate", () => {
+      on_navigation(() => {
         process_page();
       });
       window.addEventListener("ff-config-updated", () => {
@@ -4268,81 +4288,84 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
   const FEATURE_NAME_HONOR_BAR = "fallback-honor-bar";
   const FEATURE_NAME_USER_NAME = "fallback-user-name";
   const FEATURE_NAME$3 = "fallback";
+  function is_excluded_page() {
+    switch (true) {
+      case torn_page("gym"):
+      case torn_page("item"):
+      case torn_page("city"):
+      case torn_page("casino"):
+      case torn_page("calendar"):
+      case torn_page("preferences"):
+      case torn_page("estateagents"):
+      case torn_page("profiles"):
+      case torn_page("pc"):
+      case torn_page("citystats"):
+      case torn_page("usersonline"):
+      case torn_page("displaycase"):
+      case torn_page("bank"):
+      case torn_page("loan"):
+      case torn_page("donator"):
+      case torn_page("token_shop"):
+      case torn_page("freebies"):
+      case torn_page("bigalgunshop"):
+      case torn_page("shops"):
+      case torn_page("joblist"):
+      case torn_page("joblisting"):
+      case torn_page("messageinc"):
+      case torn_page("comics"):
+      case torn_page("archives"):
+      case torn_page("rules"):
+      case torn_page("credits"):
+      case torn_page("committee"):
+      case torn_page("church"):
+      case torn_page("christmas_town"):
+      case torn_page("index", {}):
+      case torn_page("index", {}):
+      case torn_page("page", { sid: "slotsLastRolls" }):
+      case torn_page("page", { sid: "rouletteLastSpins" }):
+      case torn_page("page", { sid: "highlowLastGames" }):
+      case torn_page("page", { sid: "kenoLastGames" }):
+      case torn_page("page", { sid: "crapsLastRolls" }):
+      case torn_page("page", { sid: "blackjackLastGames" }):
+      case torn_page("page", { sid: "spinTheWheelLastSpins" }):
+      case torn_page("page", { sid: "bunker" }):
+      case torn_page("page", { sid: "points" }):
+      case torn_page("page", { sid: "itemsMods" }):
+      case torn_page("page", { sid: "keepsakes" }):
+      case torn_page("page", { sid: "ammo" }):
+      case torn_page("page", { sid: "awards" }):
+      case torn_page("page", { sid: "log" }):
+      case torn_page("page", { sid: "events" }):
+      case torn_page("page", { sid: "crimes" }):
+      case torn_page("page", { sid: "crimesRecord" }):
+      case torn_page("page", { sid: "factionWarfare" }):
+      case torn_page("page", { sid: "travel" }):
+      case torn_page("page", { sid: "missions" }):
+      case torn_page("page", { sid: "stocks" }):
+      case torn_page("page", { sid: "slots" }):
+      case torn_page("page", { sid: "roulette" }):
+      case torn_page("page", { sid: "highlow" }):
+      case torn_page("page", { sid: "keno" }):
+      case torn_page("page", { sid: "craps" }):
+      case torn_page("page", { sid: "bookie" }):
+      case torn_page("page", { sid: "blackjack" }):
+      case torn_page("page", { sid: "spinTheWheel" }):
+      case torn_page("page", { sid: "education" }):
+      case torn_page("page", { sid: "itemMarket" }):
+        return true;
+      default:
+        return false;
+    }
+  }
   const index$9 = {
     name: "Fallback mutation observer",
     description: "Catch all mutations and see if we can apply FF data",
     executionTime: StartTime.DocumentBody,
     async shouldRun() {
-      switch (true) {
-        case torn_page("gym"):
-        case torn_page("item"):
-        case torn_page("city"):
-        case torn_page("casino"):
-        case torn_page("calendar"):
-        case torn_page("preferences"):
-        case torn_page("estateagents"):
-        case torn_page("profiles"):
-        case torn_page("pc"):
-        case torn_page("citystats"):
-        case torn_page("usersonline"):
-        case torn_page("displaycase"):
-        case torn_page("bank"):
-        case torn_page("loan"):
-        case torn_page("donator"):
-        case torn_page("token_shop"):
-        case torn_page("freebies"):
-        case torn_page("bigalgunshop"):
-        case torn_page("shops"):
-        case torn_page("joblist"):
-        case torn_page("joblisting"):
-        case torn_page("messageinc"):
-        case torn_page("comics"):
-        case torn_page("archives"):
-        case torn_page("rules"):
-        case torn_page("credits"):
-        case torn_page("committee"):
-        case torn_page("church"):
-        case torn_page("christmas_town"):
-        case torn_page("index", {}):
-        case torn_page("index", {}):
-        case torn_page("page", { sid: "slotsLastRolls" }):
-        case torn_page("page", { sid: "rouletteLastSpins" }):
-        case torn_page("page", { sid: "highlowLastGames" }):
-        case torn_page("page", { sid: "kenoLastGames" }):
-        case torn_page("page", { sid: "crapsLastRolls" }):
-        case torn_page("page", { sid: "blackjackLastGames" }):
-        case torn_page("page", { sid: "spinTheWheelLastSpins" }):
-        case torn_page("page", { sid: "bunker" }):
-        case torn_page("page", { sid: "points" }):
-        case torn_page("page", { sid: "itemsMods" }):
-        case torn_page("page", { sid: "keepsakes" }):
-        case torn_page("page", { sid: "ammo" }):
-        case torn_page("page", { sid: "awards" }):
-        case torn_page("page", { sid: "log" }):
-        case torn_page("page", { sid: "events" }):
-        case torn_page("page", { sid: "crimes" }):
-        case torn_page("page", { sid: "crimesRecord" }):
-        case torn_page("page", { sid: "factionWarfare" }):
-        case torn_page("page", { sid: "travel" }):
-        case torn_page("page", { sid: "missions" }):
-        case torn_page("page", { sid: "stocks" }):
-        case torn_page("page", { sid: "slots" }):
-        case torn_page("page", { sid: "roulette" }):
-        case torn_page("page", { sid: "highlow" }):
-        case torn_page("page", { sid: "keno" }):
-        case torn_page("page", { sid: "craps" }):
-        case torn_page("page", { sid: "bookie" }):
-        case torn_page("page", { sid: "blackjack" }):
-        case torn_page("page", { sid: "spinTheWheel" }):
-        case torn_page("page", { sid: "education" }):
-        case torn_page("page", { sid: "itemMarket" }):
-          log$7.warn("NOT RUNNING FALLBACK ON THIS PAGE");
-          return false;
-        default:
-          return true;
-      }
+      return true;
     },
     async run() {
+      let is_observing = false;
       const check_mutation = async (node) => {
         if (!node.querySelectorAll) {
           return;
@@ -4417,12 +4440,35 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
           }
         }
       });
-      ff_gauge_observer.observe(document, {
-        attributes: false,
-        childList: true,
-        characterData: false,
-        subtree: true
+      const update_observer_state = () => {
+        const excluded = is_excluded_page();
+        if (excluded) {
+          if (is_observing) {
+            ff_gauge_observer.disconnect();
+            is_observing = false;
+            log$7.debug("Disconnected fallback MutationObserver (excluded page)");
+          }
+        } else {
+          if (!is_observing) {
+            ff_gauge_observer.observe(document, {
+              attributes: false,
+              childList: true,
+              characterData: false,
+              subtree: true
+            });
+            is_observing = true;
+            log$7.debug("Connected fallback MutationObserver (included page)");
+            if (document.body) {
+              check_mutation(document.body);
+            }
+          }
+        }
+      };
+      on_navigation(() => {
+        log$7.debug("Navigation detected, re-evaluating fallback observer state");
+        update_observer_state();
       });
+      update_observer_state();
     },
     httpIntercept: {
       before(_url, _init) {
@@ -6245,7 +6291,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       return;
     }
     w[INJECTION_KEY] = true;
-    log.info("Initializing", "3.0-alpha15");
+    log.info("Initializing", "3.0-alpha16");
     if (ffscouter.analytics_enabled) {
       unsafeWindow.ffscouter = ffscouter;
       window.ffscouter = ffscouter;
