@@ -102,7 +102,7 @@ function getNextLogicalVersion(version: string): string {
   const prereleaseMatch = version.match(/^(\d+(?:\.\d+)*)-([a-zA-Z]+)(\d+)$/i);
   if (prereleaseMatch) {
     const [_, base, type, numStr] = prereleaseMatch;
-    const nextNum = parseInt(numStr, 10) + 1;
+    const nextNum = parseInt(numStr || "", 10) + 1;
     return `${base}-${type}${nextNum}`;
   }
 
@@ -112,7 +112,7 @@ function getNextLogicalVersion(version: string): string {
   );
   if (dottedPrereleaseMatch) {
     const [_, base, type, numStr] = dottedPrereleaseMatch;
-    const nextNum = parseInt(numStr, 10) + 1;
+    const nextNum = parseInt(numStr || "", 10) + 1;
     return `${base}-${type}.${nextNum}`;
   }
 
@@ -120,7 +120,7 @@ function getNextLogicalVersion(version: string): string {
   const dottedMatch = version.match(/^(\d+)\.(\d+)\.(\d+)$/);
   if (dottedMatch) {
     const [_, major, minor, patch] = dottedMatch;
-    const nextPatch = parseInt(patch, 10) + 1;
+    const nextPatch = parseInt(patch || "", 10) + 1;
     return `${major}.${minor}.${nextPatch}`;
   }
 
@@ -128,7 +128,7 @@ function getNextLogicalVersion(version: string): string {
   const minorDottedMatch = version.match(/^(\d+)\.(\d+)$/);
   if (minorDottedMatch) {
     const [_, major, minor] = minorDottedMatch;
-    const nextMinor = parseInt(minor, 10) + 1;
+    const nextMinor = parseInt(minor || "", 10) + 1;
     return `${major}.${nextMinor}`;
   }
 
