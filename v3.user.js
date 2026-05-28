@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FF Scouter V3
 // @namespace    xentac-v3
-// @version      3.0-alpha17
+// @version      3.0-alpha18
 // @author       xentac [3354782], MAVRI [2402357], rDacted [2670953], Weav3r [1853324], Glasnost [1844049]
 // @description  Shows the expected Fair Fight score against targets and faction war status
 // @license      GPLv3
@@ -599,551 +599,7 @@ formatArgs(args) {
     }
     return parsed;
   };
-  const instanceOfAny = (object, constructors) => constructors.some((c2) => object instanceof c2);
-  let idbProxyableTypes;
-  let cursorAdvanceMethods;
-  function getIdbProxyableTypes() {
-    return idbProxyableTypes || (idbProxyableTypes = [
-      IDBDatabase,
-      IDBObjectStore,
-      IDBIndex,
-      IDBCursor,
-      IDBTransaction
-    ]);
-  }
-  function getCursorAdvanceMethods() {
-    return cursorAdvanceMethods || (cursorAdvanceMethods = [
-      IDBCursor.prototype.advance,
-      IDBCursor.prototype.continue,
-      IDBCursor.prototype.continuePrimaryKey
-    ]);
-  }
-  const transactionDoneMap = new WeakMap();
-  const transformCache = new WeakMap();
-  const reverseTransformCache = new WeakMap();
-  function promisifyRequest(request) {
-    const promise = new Promise((resolve, reject) => {
-      const unlisten = () => {
-        request.removeEventListener("success", success);
-        request.removeEventListener("error", error);
-      };
-      const success = () => {
-        resolve(wrap(request.result));
-        unlisten();
-      };
-      const error = () => {
-        reject(request.error);
-        unlisten();
-      };
-      request.addEventListener("success", success);
-      request.addEventListener("error", error);
-    });
-    reverseTransformCache.set(promise, request);
-    return promise;
-  }
-  function cacheDonePromiseForTransaction(tx) {
-    if (transactionDoneMap.has(tx))
-      return;
-    const done = new Promise((resolve, reject) => {
-      const unlisten = () => {
-        tx.removeEventListener("complete", complete);
-        tx.removeEventListener("error", error);
-        tx.removeEventListener("abort", error);
-      };
-      const complete = () => {
-        resolve();
-        unlisten();
-      };
-      const error = () => {
-        reject(tx.error || new DOMException("AbortError", "AbortError"));
-        unlisten();
-      };
-      tx.addEventListener("complete", complete);
-      tx.addEventListener("error", error);
-      tx.addEventListener("abort", error);
-    });
-    transactionDoneMap.set(tx, done);
-  }
-  let idbProxyTraps = {
-    get(target, prop, receiver) {
-      if (target instanceof IDBTransaction) {
-        if (prop === "done")
-          return transactionDoneMap.get(target);
-        if (prop === "store") {
-          return receiver.objectStoreNames[1] ? void 0 : receiver.objectStore(receiver.objectStoreNames[0]);
-        }
-      }
-      return wrap(target[prop]);
-    },
-    set(target, prop, value) {
-      target[prop] = value;
-      return true;
-    },
-    has(target, prop) {
-      if (target instanceof IDBTransaction && (prop === "done" || prop === "store")) {
-        return true;
-      }
-      return prop in target;
-    }
-  };
-  function replaceTraps(callback) {
-    idbProxyTraps = callback(idbProxyTraps);
-  }
-  function wrapFunction(func) {
-    if (getCursorAdvanceMethods().includes(func)) {
-      return function(...args) {
-        func.apply(unwrap(this), args);
-        return wrap(this.request);
-      };
-    }
-    return function(...args) {
-      return wrap(func.apply(unwrap(this), args));
-    };
-  }
-  function transformCachableValue(value) {
-    if (typeof value === "function")
-      return wrapFunction(value);
-    if (value instanceof IDBTransaction)
-      cacheDonePromiseForTransaction(value);
-    if (instanceOfAny(value, getIdbProxyableTypes()))
-      return new Proxy(value, idbProxyTraps);
-    return value;
-  }
-  function wrap(value) {
-    if (value instanceof IDBRequest)
-      return promisifyRequest(value);
-    if (transformCache.has(value))
-      return transformCache.get(value);
-    const newValue = transformCachableValue(value);
-    if (newValue !== value) {
-      transformCache.set(value, newValue);
-      reverseTransformCache.set(newValue, value);
-    }
-    return newValue;
-  }
-  const unwrap = (value) => reverseTransformCache.get(value);
-  function openDB(name, version, { blocked, upgrade, blocking, terminated } = {}) {
-    const request = indexedDB.open(name, version);
-    const openPromise = wrap(request);
-    if (upgrade) {
-      request.addEventListener("upgradeneeded", (event) => {
-        upgrade(wrap(request.result), event.oldVersion, event.newVersion, wrap(request.transaction), event);
-      });
-    }
-    if (blocked) {
-      request.addEventListener("blocked", (event) => blocked(
-event.oldVersion,
-        event.newVersion,
-        event
-      ));
-    }
-    openPromise.then((db) => {
-      if (terminated)
-        db.addEventListener("close", () => terminated());
-      if (blocking) {
-        db.addEventListener("versionchange", (event) => blocking(event.oldVersion, event.newVersion, event));
-      }
-    }).catch(() => {
-    });
-    return openPromise;
-  }
-  function deleteDB(name, { blocked } = {}) {
-    const request = indexedDB.deleteDatabase(name);
-    if (blocked) {
-      request.addEventListener("blocked", (event) => blocked(
-event.oldVersion,
-        event
-      ));
-    }
-    return wrap(request).then(() => void 0);
-  }
-  const readMethods = ["get", "getKey", "getAll", "getAllKeys", "count"];
-  const writeMethods = ["put", "add", "delete", "clear"];
-  const cachedMethods = new Map();
-  function getMethod(target, prop) {
-    if (!(target instanceof IDBDatabase && !(prop in target) && typeof prop === "string")) {
-      return;
-    }
-    if (cachedMethods.get(prop))
-      return cachedMethods.get(prop);
-    const targetFuncName = prop.replace(/FromIndex$/, "");
-    const useIndex = prop !== targetFuncName;
-    const isWrite = writeMethods.includes(targetFuncName);
-    if (
-!(targetFuncName in (useIndex ? IDBIndex : IDBObjectStore).prototype) || !(isWrite || readMethods.includes(targetFuncName))
-    ) {
-      return;
-    }
-    const method = async function(storeName, ...args) {
-      const tx = this.transaction(storeName, isWrite ? "readwrite" : "readonly");
-      let target2 = tx.store;
-      if (useIndex)
-        target2 = target2.index(args.shift());
-      return (await Promise.all([
-        target2[targetFuncName](...args),
-        isWrite && tx.done
-      ]))[0];
-    };
-    cachedMethods.set(prop, method);
-    return method;
-  }
-  replaceTraps((oldTraps) => ({
-    ...oldTraps,
-    get: (target, prop, receiver) => getMethod(target, prop) || oldTraps.get(target, prop, receiver),
-    has: (target, prop) => !!getMethod(target, prop) || oldTraps.has(target, prop)
-  }));
-  const advanceMethodProps = ["continue", "continuePrimaryKey", "advance"];
-  const methodMap = {};
-  const advanceResults = new WeakMap();
-  const ittrProxiedCursorToOriginalProxy = new WeakMap();
-  const cursorIteratorTraps = {
-    get(target, prop) {
-      if (!advanceMethodProps.includes(prop))
-        return target[prop];
-      let cachedFunc = methodMap[prop];
-      if (!cachedFunc) {
-        cachedFunc = methodMap[prop] = function(...args) {
-          advanceResults.set(this, ittrProxiedCursorToOriginalProxy.get(this)[prop](...args));
-        };
-      }
-      return cachedFunc;
-    }
-  };
-  async function* iterate(...args) {
-    let cursor = this;
-    if (!(cursor instanceof IDBCursor)) {
-      cursor = await cursor.openCursor(...args);
-    }
-    if (!cursor)
-      return;
-    cursor = cursor;
-    const proxiedCursor = new Proxy(cursor, cursorIteratorTraps);
-    ittrProxiedCursorToOriginalProxy.set(proxiedCursor, cursor);
-    reverseTransformCache.set(proxiedCursor, unwrap(cursor));
-    while (cursor) {
-      yield proxiedCursor;
-      cursor = await (advanceResults.get(proxiedCursor) || cursor.continue());
-      advanceResults.delete(proxiedCursor);
-    }
-  }
-  function isIteratorProp(target, prop) {
-    return prop === Symbol.asyncIterator && instanceOfAny(target, [IDBIndex, IDBObjectStore, IDBCursor]) || prop === "iterate" && instanceOfAny(target, [IDBIndex, IDBObjectStore]);
-  }
-  replaceTraps((oldTraps) => ({
-    ...oldTraps,
-    get(target, prop, receiver) {
-      if (isIteratorProp(target, prop))
-        return iterate;
-      return oldTraps.get(target, prop, receiver);
-    },
-    has(target, prop) {
-      return isIteratorProp(target, prop) || oldTraps.has(target, prop);
-    }
-  }));
   const log$e = logger.child("storage");
-  const STORES = {
-    CACHE: "cache",
-    FLIGHTS: "flights",
-    ANALYTICS: "analytics"
-  };
-  class FFCache {
-    constructor(db_name) {
-      this.db = null;
-      this.db_version = 3;
-      this.cache_interval = 60 * 60 * 1e3;
-      this.last_clean = 0;
-      this.active_operations = 0;
-      this.close_timer = null;
-      this.migrations = new Map([
-        [
-          1,
-          (db, _2) => {
-            const store = db.createObjectStore(STORES.CACHE, {
-              keyPath: "player_id"
-            });
-            store.createIndex("expiry", "expiry", {
-              unique: false
-            });
-          }
-        ],
-        [
-          2,
-          (db, _2) => {
-            const store = db.createObjectStore(STORES.FLIGHTS, {
-              keyPath: "player_id"
-            });
-            store.createIndex("expiry", "expiry", {
-              unique: false
-            });
-          }
-        ],
-        [
-          3,
-          (db, _2) => {
-            const store = db.createObjectStore(STORES.ANALYTICS, {
-              keyPath: "id",
-              autoIncrement: true
-            });
-            store.createIndex("timestamp", "timestamp", {
-              unique: false
-            });
-          }
-        ]
-      ]);
-      this.open = async () => {
-        if (this.db) {
-          return this.db;
-        }
-        const cache = this;
-        this.db = await openDB(this.db_name, this.db_version, {
-          upgrade(db, oldVersion, newVersion, transaction, _event) {
-            log$e.info("Need to upgrade from", oldVersion, "to", newVersion);
-            for (let i2 = (oldVersion ?? 0) + 1; i2 <= cache.db_version; i2++) {
-              log$e.debug(`Migration: ${i2}`);
-              const m2 = cache.migrations.get(i2);
-              if (m2) {
-                m2(db, transaction);
-              } else {
-                log$e.debug(`Migration not found: ${i2}`);
-              }
-              log$e.debug(`Migration complete: ${i2}`);
-            }
-          },
-          blocking(currentVersion, blockedVersion, _event) {
-            log$e.debug(
-              `Can't open ${blockedVersion} because ${currentVersion} is open. Closing and reopening.`
-            );
-            cache.db?.close();
-          }
-});
-        return this.db;
-      };
-      this.close = () => {
-        if (this.db) {
-          this.db.close();
-          this.db = null;
-        }
-      };
-      this.start_op = async () => {
-        this.active_operations++;
-        if (this.close_timer) {
-          clearTimeout(this.close_timer);
-          this.close_timer = null;
-        }
-        return await this.open();
-      };
-      this.end_op = () => {
-        this.active_operations = Math.max(0, this.active_operations - 1);
-        if (this.active_operations === 0) {
-          if (this.close_timer) {
-            clearTimeout(this.close_timer);
-          }
-          this.close_timer = setTimeout(() => {
-            this.close();
-            this.close_timer = null;
-          }, 1e3);
-        }
-      };
-      this.delete_db = async () => {
-        if (this.close_timer) {
-          clearTimeout(this.close_timer);
-          this.close_timer = null;
-        }
-        this.close();
-        await deleteDB(this.db_name, {
-          blocked: () => {
-            log$e.debug("deleteDB blocked callback called!");
-          }
-        });
-        log$e.info(`Successfully deleted ${this.db_name} IndexedDB.`);
-      };
-      this.get = async (player_ids) => {
-        const db = await this.start_op();
-        try {
-          const tx = db.transaction(STORES.CACHE, "readonly");
-          const requests = player_ids.map((id) => tx.store.get(id));
-          const entries = await Promise.all(requests);
-          await tx.done;
-          const result = new Map();
-          player_ids.forEach((id, idx) => {
-            const value = entries[idx];
-            result.set(id, !value || value.expiry <= Date.now() ? null : value);
-          });
-          return result;
-        } finally {
-          this.end_op();
-        }
-      };
-      this.update = async (values) => {
-        const db = await this.start_op();
-        try {
-          const tx = db.transaction(STORES.CACHE, "readwrite");
-          const values_expiry = values.map((value) => {
-            return {
-              ...value,
-              expiry: Date.now() + this.cache_interval
-            };
-          });
-          const requests = values_expiry.map((value) => {
-            return tx.store.put(value);
-          });
-          await Promise.all(requests);
-          await tx.done;
-        } finally {
-          this.end_op();
-        }
-      };
-      this.clean_expired = (force = false) => {
-        const now = Date.now();
-        if (!force && now - this.last_clean < 60 * 60 * 1e3) {
-          return Promise.resolve();
-        }
-        this.last_clean = now;
-        const runClean = async () => {
-          const db = await this.start_op();
-          try {
-            {
-              const tx = db.transaction(STORES.CACHE, "readwrite");
-              const index2 = tx.store.index("expiry");
-              const range = IDBKeyRange.upperBound(Date.now());
-              const r2 = await index2.getAllKeys(range);
-              log$e.info(`Found ${r2.length} expired values to delete from cache.`);
-              await Promise.all(r2.map((id) => tx.store.delete(id)));
-              await tx.done;
-            }
-            {
-              const tx = db.transaction(STORES.FLIGHTS, "readwrite");
-              const index2 = tx.store.index("expiry");
-              const range = IDBKeyRange.upperBound(Date.now());
-              const r2 = await index2.getAllKeys(range);
-              log$e.info(`Found ${r2.length} expired values to delete from flights.`);
-              await Promise.all(r2.map((id) => tx.store.delete(id)));
-              await tx.done;
-            }
-            {
-              const tx = db.transaction(STORES.ANALYTICS, "readwrite");
-              const index2 = tx.store.index("timestamp");
-              const thirty_days_ago = Date.now() - 30 * 24 * 60 * 60 * 1e3;
-              const range = IDBKeyRange.upperBound(thirty_days_ago);
-              const r2 = await index2.getAllKeys(range);
-              log$e.info(
-                `Found ${r2.length} expired values to delete from analytics.`
-              );
-              await Promise.all(r2.map((id) => tx.store.delete(id)));
-              await tx.done;
-            }
-          } finally {
-            this.end_op();
-          }
-        };
-        if (typeof window !== "undefined" && "requestIdleCallback" in window) {
-          return new Promise((resolve, reject) => {
-            window.requestIdleCallback(() => {
-              runClean().then(resolve, reject);
-            });
-          });
-        }
-        return runClean();
-      };
-      this.get_flight = async (player_id) => {
-        const db = await this.start_op();
-        try {
-          const tx = db.transaction(STORES.FLIGHTS, "readonly");
-          const entry = await tx.store.get(player_id);
-          await tx.done;
-          if (!entry || entry.expiry <= Date.now()) {
-            return null;
-          }
-          return entry;
-        } finally {
-          this.end_op();
-        }
-      };
-      this.update_flight = async (value, cache_interval = 60 * 1e3) => {
-        const db = await this.start_op();
-        try {
-          const tx = db.transaction(STORES.FLIGHTS, "readwrite");
-          const value_expiry = {
-            ...value,
-            expiry: Date.now() + cache_interval
-          };
-          await tx.store.put(value_expiry);
-          await tx.done;
-        } finally {
-          this.end_op();
-        }
-      };
-      this.delete_flight = async (player_id) => {
-        const db = await this.start_op();
-        try {
-          const tx = db.transaction(STORES.FLIGHTS, "readwrite");
-          await tx.store.delete(player_id);
-          await tx.done;
-        } finally {
-          this.end_op();
-        }
-      };
-      this.add_analytics = async (entry) => {
-        const db = await this.start_op();
-        try {
-          const tx = db.transaction(STORES.ANALYTICS, "readwrite");
-          const value = {
-            ...entry,
-            timestamp: Date.now()
-          };
-          await tx.store.add(value);
-          await tx.done;
-        } finally {
-          this.end_op();
-        }
-      };
-      this.get_analytics = async () => {
-        const db = await this.start_op();
-        try {
-          const tx = db.transaction(STORES.ANALYTICS, "readonly");
-          const res = await tx.store.getAll();
-          await tx.done;
-          return res;
-        } finally {
-          this.end_op();
-        }
-      };
-      this.clear_analytics = async () => {
-        const db = await this.start_op();
-        try {
-          const tx = db.transaction(STORES.ANALYTICS, "readwrite");
-          await tx.store.clear();
-          await tx.done;
-        } finally {
-          this.end_op();
-        }
-      };
-      this.dump = async () => {
-        const db = await this.start_op();
-        try {
-          const tx = db.transaction(STORES.CACHE, "readonly");
-          const res = await tx.store.getAll();
-          await tx.done;
-          return res;
-        } finally {
-          this.end_op();
-        }
-      };
-      this.dump_flights = async () => {
-        const db = await this.start_op();
-        try {
-          const tx = db.transaction(STORES.FLIGHTS, "readonly");
-          const res = await tx.store.getAll();
-          await tx.done;
-          return res;
-        } finally {
-          this.end_op();
-        }
-      };
-      this.db_name = db_name;
-    }
-  }
-  const log$d = logger.child("storage");
   var Time = ((Time2) => {
     Time2[Time2["Seconds"] = 1e3] = "Seconds";
     Time2[Time2["Minutes"] = 6e4] = "Minutes";
@@ -1165,7 +621,7 @@ set(key, value, expireConfig) {
         };
         localStorage.setItem(this.prefix + key, JSON.stringify(item));
       } catch (error) {
-        log$d.error(`Error storing item '${key}':`, error);
+        log$e.error(`Error storing item '${key}':`, error);
       }
     }
 get(key) {
@@ -1181,18 +637,18 @@ get(key) {
           item = null;
         }
         if (!item) {
-          log$d.warn(`Key '${key}' has invalid JSON in it.`);
+          log$e.warn(`Key '${key}' has invalid JSON in it.`);
           this.remove(key);
           return null;
         }
         if (item.expiration && Date.now() > item.expiration) {
           this.remove(key);
-          log$d.debug(`Key ${key} has expired.`);
+          log$e.debug(`Key ${key} has expired.`);
           return null;
         }
         return item.value;
       } catch (error) {
-        log$d.error(`Error retrieving item '${key}':`, error);
+        log$e.error(`Error retrieving item '${key}':`, error);
         return null;
       }
     }
@@ -1200,7 +656,7 @@ remove(key) {
       try {
         localStorage.removeItem(this.prefix + key);
       } catch (error) {
-        log$d.error(`Error removing item [${key}]:`, error);
+        log$e.error(`Error removing item [${key}]:`, error);
       }
     }
 has(key) {
@@ -1212,7 +668,7 @@ clearAll() {
           localStorage.removeItem(key);
         });
       } catch (error) {
-        log$d.error("Error clearing storage:", error);
+        log$e.error("Error clearing storage:", error);
       }
     }
   }
@@ -1552,15 +1008,613 @@ clearAll() {
     }
   }
   const ffconfig = new FFConfig("ffsv3-config");
-  const log$c = logger.child("api");
+  const log$d = logger.child("api");
+  const CHECK_KEY = "check-key-status";
+  class CheckKeyStatus {
+    constructor(config, storage) {
+      this.check_key_status = async (force = false) => {
+        if (!force) {
+          const cached = this.storage.get(CHECK_KEY);
+          if (cached) {
+            return cached;
+          }
+        }
+        let result;
+        try {
+          result = await check_key(this.config.key);
+        } catch (err) {
+          log$d.error(
+            "Received error response querying ffscouter check-key api:",
+            err
+          );
+          result = { blank: true };
+        }
+        if (result.blank) {
+          return null;
+        }
+        this.storage.set(CHECK_KEY, result.result, {
+          amount: 5,
+          unit: Time.Minutes
+        });
+        return result.result;
+      };
+      this.is_premium = async (force = false) => {
+        const status = await this.check_key_status(force);
+        if (!status) {
+          return false;
+        }
+        return status.is_premium;
+      };
+      this.clear = () => {
+        this.storage.remove(CHECK_KEY);
+      };
+      this.config = config;
+      this.storage = storage;
+    }
+  }
+  const check_key_status = new CheckKeyStatus(
+    ffconfig,
+    new Storage("ffsv3-check")
+  );
+  const instanceOfAny = (object, constructors) => constructors.some((c2) => object instanceof c2);
+  let idbProxyableTypes;
+  let cursorAdvanceMethods;
+  function getIdbProxyableTypes() {
+    return idbProxyableTypes || (idbProxyableTypes = [
+      IDBDatabase,
+      IDBObjectStore,
+      IDBIndex,
+      IDBCursor,
+      IDBTransaction
+    ]);
+  }
+  function getCursorAdvanceMethods() {
+    return cursorAdvanceMethods || (cursorAdvanceMethods = [
+      IDBCursor.prototype.advance,
+      IDBCursor.prototype.continue,
+      IDBCursor.prototype.continuePrimaryKey
+    ]);
+  }
+  const transactionDoneMap = new WeakMap();
+  const transformCache = new WeakMap();
+  const reverseTransformCache = new WeakMap();
+  function promisifyRequest(request) {
+    const promise = new Promise((resolve, reject) => {
+      const unlisten = () => {
+        request.removeEventListener("success", success);
+        request.removeEventListener("error", error);
+      };
+      const success = () => {
+        resolve(wrap(request.result));
+        unlisten();
+      };
+      const error = () => {
+        reject(request.error);
+        unlisten();
+      };
+      request.addEventListener("success", success);
+      request.addEventListener("error", error);
+    });
+    reverseTransformCache.set(promise, request);
+    return promise;
+  }
+  function cacheDonePromiseForTransaction(tx) {
+    if (transactionDoneMap.has(tx))
+      return;
+    const done = new Promise((resolve, reject) => {
+      const unlisten = () => {
+        tx.removeEventListener("complete", complete);
+        tx.removeEventListener("error", error);
+        tx.removeEventListener("abort", error);
+      };
+      const complete = () => {
+        resolve();
+        unlisten();
+      };
+      const error = () => {
+        reject(tx.error || new DOMException("AbortError", "AbortError"));
+        unlisten();
+      };
+      tx.addEventListener("complete", complete);
+      tx.addEventListener("error", error);
+      tx.addEventListener("abort", error);
+    });
+    transactionDoneMap.set(tx, done);
+  }
+  let idbProxyTraps = {
+    get(target, prop, receiver) {
+      if (target instanceof IDBTransaction) {
+        if (prop === "done")
+          return transactionDoneMap.get(target);
+        if (prop === "store") {
+          return receiver.objectStoreNames[1] ? void 0 : receiver.objectStore(receiver.objectStoreNames[0]);
+        }
+      }
+      return wrap(target[prop]);
+    },
+    set(target, prop, value) {
+      target[prop] = value;
+      return true;
+    },
+    has(target, prop) {
+      if (target instanceof IDBTransaction && (prop === "done" || prop === "store")) {
+        return true;
+      }
+      return prop in target;
+    }
+  };
+  function replaceTraps(callback) {
+    idbProxyTraps = callback(idbProxyTraps);
+  }
+  function wrapFunction(func) {
+    if (getCursorAdvanceMethods().includes(func)) {
+      return function(...args) {
+        func.apply(unwrap(this), args);
+        return wrap(this.request);
+      };
+    }
+    return function(...args) {
+      return wrap(func.apply(unwrap(this), args));
+    };
+  }
+  function transformCachableValue(value) {
+    if (typeof value === "function")
+      return wrapFunction(value);
+    if (value instanceof IDBTransaction)
+      cacheDonePromiseForTransaction(value);
+    if (instanceOfAny(value, getIdbProxyableTypes()))
+      return new Proxy(value, idbProxyTraps);
+    return value;
+  }
+  function wrap(value) {
+    if (value instanceof IDBRequest)
+      return promisifyRequest(value);
+    if (transformCache.has(value))
+      return transformCache.get(value);
+    const newValue = transformCachableValue(value);
+    if (newValue !== value) {
+      transformCache.set(value, newValue);
+      reverseTransformCache.set(newValue, value);
+    }
+    return newValue;
+  }
+  const unwrap = (value) => reverseTransformCache.get(value);
+  function openDB(name, version, { blocked, upgrade, blocking, terminated } = {}) {
+    const request = indexedDB.open(name, version);
+    const openPromise = wrap(request);
+    if (upgrade) {
+      request.addEventListener("upgradeneeded", (event) => {
+        upgrade(wrap(request.result), event.oldVersion, event.newVersion, wrap(request.transaction), event);
+      });
+    }
+    if (blocked) {
+      request.addEventListener("blocked", (event) => blocked(
+event.oldVersion,
+        event.newVersion,
+        event
+      ));
+    }
+    openPromise.then((db) => {
+      if (terminated)
+        db.addEventListener("close", () => terminated());
+      if (blocking) {
+        db.addEventListener("versionchange", (event) => blocking(event.oldVersion, event.newVersion, event));
+      }
+    }).catch(() => {
+    });
+    return openPromise;
+  }
+  function deleteDB(name, { blocked } = {}) {
+    const request = indexedDB.deleteDatabase(name);
+    if (blocked) {
+      request.addEventListener("blocked", (event) => blocked(
+event.oldVersion,
+        event
+      ));
+    }
+    return wrap(request).then(() => void 0);
+  }
+  const readMethods = ["get", "getKey", "getAll", "getAllKeys", "count"];
+  const writeMethods = ["put", "add", "delete", "clear"];
+  const cachedMethods = new Map();
+  function getMethod(target, prop) {
+    if (!(target instanceof IDBDatabase && !(prop in target) && typeof prop === "string")) {
+      return;
+    }
+    if (cachedMethods.get(prop))
+      return cachedMethods.get(prop);
+    const targetFuncName = prop.replace(/FromIndex$/, "");
+    const useIndex = prop !== targetFuncName;
+    const isWrite = writeMethods.includes(targetFuncName);
+    if (
+!(targetFuncName in (useIndex ? IDBIndex : IDBObjectStore).prototype) || !(isWrite || readMethods.includes(targetFuncName))
+    ) {
+      return;
+    }
+    const method = async function(storeName, ...args) {
+      const tx = this.transaction(storeName, isWrite ? "readwrite" : "readonly");
+      let target2 = tx.store;
+      if (useIndex)
+        target2 = target2.index(args.shift());
+      return (await Promise.all([
+        target2[targetFuncName](...args),
+        isWrite && tx.done
+      ]))[0];
+    };
+    cachedMethods.set(prop, method);
+    return method;
+  }
+  replaceTraps((oldTraps) => ({
+    ...oldTraps,
+    get: (target, prop, receiver) => getMethod(target, prop) || oldTraps.get(target, prop, receiver),
+    has: (target, prop) => !!getMethod(target, prop) || oldTraps.has(target, prop)
+  }));
+  const advanceMethodProps = ["continue", "continuePrimaryKey", "advance"];
+  const methodMap = {};
+  const advanceResults = new WeakMap();
+  const ittrProxiedCursorToOriginalProxy = new WeakMap();
+  const cursorIteratorTraps = {
+    get(target, prop) {
+      if (!advanceMethodProps.includes(prop))
+        return target[prop];
+      let cachedFunc = methodMap[prop];
+      if (!cachedFunc) {
+        cachedFunc = methodMap[prop] = function(...args) {
+          advanceResults.set(this, ittrProxiedCursorToOriginalProxy.get(this)[prop](...args));
+        };
+      }
+      return cachedFunc;
+    }
+  };
+  async function* iterate(...args) {
+    let cursor = this;
+    if (!(cursor instanceof IDBCursor)) {
+      cursor = await cursor.openCursor(...args);
+    }
+    if (!cursor)
+      return;
+    cursor = cursor;
+    const proxiedCursor = new Proxy(cursor, cursorIteratorTraps);
+    ittrProxiedCursorToOriginalProxy.set(proxiedCursor, cursor);
+    reverseTransformCache.set(proxiedCursor, unwrap(cursor));
+    while (cursor) {
+      yield proxiedCursor;
+      cursor = await (advanceResults.get(proxiedCursor) || cursor.continue());
+      advanceResults.delete(proxiedCursor);
+    }
+  }
+  function isIteratorProp(target, prop) {
+    return prop === Symbol.asyncIterator && instanceOfAny(target, [IDBIndex, IDBObjectStore, IDBCursor]) || prop === "iterate" && instanceOfAny(target, [IDBIndex, IDBObjectStore]);
+  }
+  replaceTraps((oldTraps) => ({
+    ...oldTraps,
+    get(target, prop, receiver) {
+      if (isIteratorProp(target, prop))
+        return iterate;
+      return oldTraps.get(target, prop, receiver);
+    },
+    has(target, prop) {
+      return isIteratorProp(target, prop) || oldTraps.has(target, prop);
+    }
+  }));
+  const log$c = logger.child("storage");
+  const STORES = {
+    CACHE: "cache",
+    FLIGHTS: "flights",
+    ANALYTICS: "analytics"
+  };
+  class FFCache {
+    constructor(db_name) {
+      this.db = null;
+      this.db_version = 3;
+      this.cache_interval = 60 * 60 * 1e3;
+      this.last_clean = 0;
+      this.active_operations = 0;
+      this.close_timer = null;
+      this.migrations = new Map([
+        [
+          1,
+          (db, _2) => {
+            const store = db.createObjectStore(STORES.CACHE, {
+              keyPath: "player_id"
+            });
+            store.createIndex("expiry", "expiry", {
+              unique: false
+            });
+          }
+        ],
+        [
+          2,
+          (db, _2) => {
+            const store = db.createObjectStore(STORES.FLIGHTS, {
+              keyPath: "player_id"
+            });
+            store.createIndex("expiry", "expiry", {
+              unique: false
+            });
+          }
+        ],
+        [
+          3,
+          (db, _2) => {
+            const store = db.createObjectStore(STORES.ANALYTICS, {
+              keyPath: "id",
+              autoIncrement: true
+            });
+            store.createIndex("timestamp", "timestamp", {
+              unique: false
+            });
+          }
+        ]
+      ]);
+      this.open = async () => {
+        if (this.db) {
+          return this.db;
+        }
+        const cache = this;
+        this.db = await openDB(this.db_name, this.db_version, {
+          upgrade(db, oldVersion, newVersion, transaction, _event) {
+            log$c.info("Need to upgrade from", oldVersion, "to", newVersion);
+            for (let i2 = (oldVersion ?? 0) + 1; i2 <= cache.db_version; i2++) {
+              log$c.debug(`Migration: ${i2}`);
+              const m2 = cache.migrations.get(i2);
+              if (m2) {
+                m2(db, transaction);
+              } else {
+                log$c.debug(`Migration not found: ${i2}`);
+              }
+              log$c.debug(`Migration complete: ${i2}`);
+            }
+          },
+          blocking(currentVersion, blockedVersion, _event) {
+            log$c.debug(
+              `Can't open ${blockedVersion} because ${currentVersion} is open. Closing and reopening.`
+            );
+            cache.db?.close();
+          }
+});
+        return this.db;
+      };
+      this.close = () => {
+        if (this.db) {
+          this.db.close();
+          this.db = null;
+        }
+      };
+      this.start_op = async () => {
+        this.active_operations++;
+        if (this.close_timer) {
+          clearTimeout(this.close_timer);
+          this.close_timer = null;
+        }
+        return await this.open();
+      };
+      this.end_op = () => {
+        this.active_operations = Math.max(0, this.active_operations - 1);
+        if (this.active_operations === 0) {
+          if (this.close_timer) {
+            clearTimeout(this.close_timer);
+          }
+          this.close_timer = setTimeout(() => {
+            this.close();
+            this.close_timer = null;
+          }, 1e3);
+        }
+      };
+      this.delete_db = async () => {
+        if (this.close_timer) {
+          clearTimeout(this.close_timer);
+          this.close_timer = null;
+        }
+        this.close();
+        await deleteDB(this.db_name, {
+          blocked: () => {
+            log$c.debug("deleteDB blocked callback called!");
+          }
+        });
+        log$c.info(`Successfully deleted ${this.db_name} IndexedDB.`);
+      };
+      this.get = async (player_ids) => {
+        const db = await this.start_op();
+        try {
+          const tx = db.transaction(STORES.CACHE, "readonly");
+          const requests = player_ids.map((id) => tx.store.get(id));
+          const entries = await Promise.all(requests);
+          await tx.done;
+          const result = new Map();
+          player_ids.forEach((id, idx) => {
+            const value = entries[idx];
+            result.set(id, !value || value.expiry <= Date.now() ? null : value);
+          });
+          return result;
+        } finally {
+          this.end_op();
+        }
+      };
+      this.update = async (values) => {
+        const db = await this.start_op();
+        try {
+          const tx = db.transaction(STORES.CACHE, "readwrite");
+          const values_expiry = values.map((value) => {
+            return {
+              ...value,
+              expiry: Date.now() + this.cache_interval
+            };
+          });
+          const requests = values_expiry.map((value) => {
+            return tx.store.put(value);
+          });
+          await Promise.all(requests);
+          await tx.done;
+        } finally {
+          this.end_op();
+        }
+      };
+      this.clean_expired = (force = false) => {
+        const now = Date.now();
+        if (!force && now - this.last_clean < 60 * 60 * 1e3) {
+          return Promise.resolve();
+        }
+        this.last_clean = now;
+        const runClean = async () => {
+          const db = await this.start_op();
+          try {
+            {
+              const tx = db.transaction(STORES.CACHE, "readwrite");
+              const index2 = tx.store.index("expiry");
+              const range = IDBKeyRange.upperBound(Date.now());
+              const r2 = await index2.getAllKeys(range);
+              log$c.info(`Found ${r2.length} expired values to delete from cache.`);
+              await Promise.all(r2.map((id) => tx.store.delete(id)));
+              await tx.done;
+            }
+            {
+              const tx = db.transaction(STORES.FLIGHTS, "readwrite");
+              const index2 = tx.store.index("expiry");
+              const range = IDBKeyRange.upperBound(Date.now());
+              const r2 = await index2.getAllKeys(range);
+              log$c.info(`Found ${r2.length} expired values to delete from flights.`);
+              await Promise.all(r2.map((id) => tx.store.delete(id)));
+              await tx.done;
+            }
+            {
+              const tx = db.transaction(STORES.ANALYTICS, "readwrite");
+              const index2 = tx.store.index("timestamp");
+              const thirty_days_ago = Date.now() - 30 * 24 * 60 * 60 * 1e3;
+              const range = IDBKeyRange.upperBound(thirty_days_ago);
+              const r2 = await index2.getAllKeys(range);
+              log$c.info(
+                `Found ${r2.length} expired values to delete from analytics.`
+              );
+              await Promise.all(r2.map((id) => tx.store.delete(id)));
+              await tx.done;
+            }
+          } finally {
+            this.end_op();
+          }
+        };
+        if (typeof window !== "undefined" && "requestIdleCallback" in window) {
+          return new Promise((resolve, reject) => {
+            window.requestIdleCallback(() => {
+              runClean().then(resolve, reject);
+            });
+          });
+        }
+        return runClean();
+      };
+      this.get_flight = async (player_id) => {
+        const db = await this.start_op();
+        try {
+          const tx = db.transaction(STORES.FLIGHTS, "readonly");
+          const entry = await tx.store.get(player_id);
+          await tx.done;
+          if (!entry || entry.expiry <= Date.now()) {
+            return null;
+          }
+          return entry;
+        } finally {
+          this.end_op();
+        }
+      };
+      this.update_flight = async (value, cache_interval = 60 * 1e3) => {
+        const db = await this.start_op();
+        try {
+          const tx = db.transaction(STORES.FLIGHTS, "readwrite");
+          const value_expiry = {
+            ...value,
+            expiry: Date.now() + cache_interval
+          };
+          await tx.store.put(value_expiry);
+          await tx.done;
+        } finally {
+          this.end_op();
+        }
+      };
+      this.delete_flight = async (player_id) => {
+        const db = await this.start_op();
+        try {
+          const tx = db.transaction(STORES.FLIGHTS, "readwrite");
+          await tx.store.delete(player_id);
+          await tx.done;
+        } finally {
+          this.end_op();
+        }
+      };
+      this.add_analytics = async (entry) => {
+        const db = await this.start_op();
+        try {
+          const tx = db.transaction(STORES.ANALYTICS, "readwrite");
+          const value = {
+            ...entry,
+            timestamp: Date.now()
+          };
+          await tx.store.add(value);
+          await tx.done;
+        } finally {
+          this.end_op();
+        }
+      };
+      this.get_analytics = async () => {
+        const db = await this.start_op();
+        try {
+          const tx = db.transaction(STORES.ANALYTICS, "readonly");
+          const res = await tx.store.getAll();
+          await tx.done;
+          return res;
+        } finally {
+          this.end_op();
+        }
+      };
+      this.clear_analytics = async () => {
+        const db = await this.start_op();
+        try {
+          const tx = db.transaction(STORES.ANALYTICS, "readwrite");
+          await tx.store.clear();
+          await tx.done;
+        } finally {
+          this.end_op();
+        }
+      };
+      this.dump = async () => {
+        const db = await this.start_op();
+        try {
+          const tx = db.transaction(STORES.CACHE, "readonly");
+          const res = await tx.store.getAll();
+          await tx.done;
+          return res;
+        } finally {
+          this.end_op();
+        }
+      };
+      this.dump_flights = async () => {
+        const db = await this.start_op();
+        try {
+          const tx = db.transaction(STORES.FLIGHTS, "readonly");
+          const res = await tx.store.getAll();
+          await tx.done;
+          return res;
+        } finally {
+          this.end_op();
+        }
+      };
+      this.db_name = db_name;
+    }
+  }
+  const log$b = logger.child("api");
   const DB_NAME = "FFSV3-cache";
   const RECHECK_RETRY_DELAY = 60 * 1e3;
   const RECHECK_WINDOW_DURATION = 3 * 60 * 1e3;
   const FINALIZED_NO_FLIGHT_TTL = 30 * 60 * 1e3;
+  const FLIGHT_PACING_DELAY = 1e3;
+  const GLOBAL_BUDGET_RESERVE = 50;
   class FFScouter {
     constructor(config, cache) {
       this.cache = new FFCache(DB_NAME);
       this.pending = new Map();
+      this.flight_queue = [];
+      this.flight_timer = null;
+      this.flight_recheck_until = new Map();
+      this.pending_flights = new Map();
       this.cache_queue = new Set();
       this.cache_delay = 10;
       this.cache_timer = null;
@@ -1597,7 +1651,7 @@ clearAll() {
         try {
           await this.cache.delete_flight(player_id);
         } catch (err) {
-          log$c.error("Failed to delete flight from cache", err);
+          log$b.error("Failed to delete flight from cache", err);
         }
       };
       this.calculate_flight_cache_ttl = (result) => {
@@ -1606,28 +1660,132 @@ clearAll() {
           const latest_arrival_time_ms = result.current.latest_arrival_time * 1e3;
           const time_remaining = latest_arrival_time_ms - now;
           if (time_remaining > 0) {
-            const segment = Math.floor(time_remaining / 3);
+            const segment = Math.floor(time_remaining / 2);
             const min_ttl = 60 * 1e3;
-            const max_ttl = 30 * 60 * 1e3;
-            return Math.max(min_ttl, Math.min(segment, max_ttl));
+            return Math.max(min_ttl, segment);
           }
         }
         return FINALIZED_NO_FLIGHT_TTL;
       };
+      this.enqueue_flight_api = (player_id, recheck_until) => {
+        let resolve;
+        let reject;
+        const promise = new Promise((res, rej) => {
+          resolve = res;
+          reject = rej;
+        });
+        if (recheck_until !== void 0) {
+          this.flight_recheck_until.set(player_id, recheck_until);
+        }
+        const pending = this.pending_flights.get(player_id);
+        if (pending) {
+          pending.push({ resolve, reject });
+          return promise;
+        }
+        this.pending_flights.set(player_id, [{ resolve, reject }]);
+        this.flight_queue.push(player_id);
+        this.schedule_flight_processor();
+        return promise;
+      };
+      this.schedule_flight_processor = (delay = 0) => {
+        if (this.flight_timer) {
+          return;
+        }
+        this.flight_timer = this.schedule(this.process_flight_queue, delay);
+      };
+      this.process_flight_queue = async () => {
+        this.flight_timer = null;
+        if (this.flight_queue.length === 0) {
+          return;
+        }
+        if (this.last_limits && this.last_limits.remaining <= GLOBAL_BUDGET_RESERVE) {
+          log$b.warn(
+            `Total API quota <= ${GLOBAL_BUDGET_RESERVE}. Deferring flight status checks to prioritize stats.`
+          );
+          this.schedule_flight_processor(5e3);
+          return;
+        }
+        const player_id = this.flight_queue.shift();
+        if (player_id === void 0) {
+          return;
+        }
+        const pending = this.pending_flights.get(player_id);
+        if (!pending) {
+          this.schedule_flight_processor(0);
+          return;
+        }
+        log$b.debug(`Querying paced flight API for player ${player_id}`);
+        try {
+          const response = await query_flights(this.config.key, player_id);
+          if (response.blank) {
+            throw new Error(
+              `Empty flight response returned for player ${player_id}`
+            );
+          }
+          if (response.limits) {
+            this.last_limits = response.limits;
+          }
+          let finalResult = response.result;
+          if (response.result.current) {
+            const ttl = this.calculate_flight_cache_ttl(response.result);
+            await this.cache.update_flight(response.result, ttl);
+          } else {
+            log$b.debug(`Start rechecking cycle for player ${player_id}`);
+            const now = Date.now();
+            const next_retry_at = now + RECHECK_RETRY_DELAY;
+            const existing_recheck_until = this.flight_recheck_until.get(player_id);
+            const recheck_until = existing_recheck_until ?? now + RECHECK_WINDOW_DURATION;
+            const rechecking_response = {
+              player_id: response.result.player_id,
+              current: null,
+              recent_flights: response.result.recent_flights,
+              rechecking: true,
+              next_retry_at,
+              recheck_until
+            };
+            const remaining_ttl = Math.max(0, recheck_until - now);
+            await this.cache.update_flight(rechecking_response, remaining_ttl);
+            finalResult = rechecking_response;
+          }
+          for (const job of pending) {
+            job.resolve(finalResult);
+          }
+        } catch (err) {
+          log$b.error(`Paced flight API query failed for ${player_id}:`, err);
+          const apiErr = err;
+          if (apiErr?.ff_api_limits) {
+            this.last_limits = apiErr.ff_api_limits;
+          }
+          for (const job of pending) {
+            job.reject(err);
+          }
+        } finally {
+          this.pending_flights.delete(player_id);
+          this.flight_recheck_until.delete(player_id);
+          try {
+            await this.cache.clean_expired();
+          } catch (err) {
+            log$b.error("Failed to clean expired cache entries", err);
+          }
+          if (this.flight_queue.length > 0) {
+            this.schedule_flight_processor(FLIGHT_PACING_DELAY);
+          }
+        }
+      };
       this.get_flights = async (player_id) => {
-        log$c.debug(`get_flights called for ${player_id}`);
+        log$b.debug(`get_flights called for ${player_id}`);
         let cached = null;
         try {
           cached = await this.cache.get_flight(player_id);
         } catch (err) {
-          log$c.error("Failed to query flight cache", err);
+          log$b.error("Failed to query flight cache", err);
         }
         if (cached) {
-          log$c.debug(`Flight cache hit for player ${player_id}`);
+          log$b.debug(`Flight cache hit for player ${player_id}`);
           if (cached.rechecking) {
             const now = Date.now();
             if (cached.recheck_until && now >= cached.recheck_until) {
-              log$c.debug(
+              log$b.debug(
                 `Rechecking window expired for player ${player_id}. Finalizing no data.`
               );
               const final_response = {
@@ -1642,63 +1800,19 @@ clearAll() {
                   FINALIZED_NO_FLIGHT_TTL
                 );
               } catch (err) {
-                log$c.error("Failed to finalize flight cache", err);
+                log$b.error("Failed to finalize flight cache", err);
               }
               return final_response;
             }
             if (cached.next_retry_at && now >= cached.next_retry_at) {
-              log$c.debug(
+              log$b.debug(
                 `Retrying API call for player ${player_id} during recheck window`
               );
-              let response2;
-              try {
-                response2 = await query_flights(this.config.key, player_id);
-              } catch (err) {
-                log$c.error(
-                  `Received error response querying ffscouter player-flights API for ${player_id}:`,
-                  err
-                );
-                throw err;
-              }
-              if (response2.blank) {
-                throw new Error(
-                  `Empty flight response returned for player ${player_id}`
-                );
-              }
-              if (response2.result.current) {
-                log$c.debug(
-                  `Flight successfully tracked for player ${player_id} on retry.`
-                );
-                try {
-                  const ttl = this.calculate_flight_cache_ttl(response2.result);
-                  await this.cache.update_flight(response2.result, ttl);
-                } catch (err) {
-                  log$c.error("Failed to update flight cache", err);
-                }
-                return response2.result;
-              }
-              log$c.debug(
-                `Player ${player_id} still has no flight. Scheduling next retry.`
+              const result2 = await this.enqueue_flight_api(
+                player_id,
+                cached.recheck_until
               );
-              const next_retry_at = Date.now() + RECHECK_RETRY_DELAY;
-              const updated_response = {
-                player_id: cached.player_id,
-                current: null,
-                recent_flights: response2.result.recent_flights,
-                rechecking: true,
-                next_retry_at,
-                recheck_until: cached.recheck_until
-              };
-              const remaining_ttl = Math.max(
-                0,
-                (cached.recheck_until ?? now) - Date.now()
-              );
-              try {
-                await this.cache.update_flight(updated_response, remaining_ttl);
-              } catch (err) {
-                log$c.error("Failed to update flight cache during recheck", err);
-              }
-              return updated_response;
+              return result2;
             }
             return {
               player_id: cached.player_id,
@@ -1715,71 +1829,24 @@ clearAll() {
             recent_flights: cached.recent_flights
           };
         }
-        log$c.debug(`Flight cache miss for player ${player_id}. Querying API.`);
-        let response;
-        try {
-          response = await query_flights(this.config.key, player_id);
-        } catch (err) {
-          log$c.error(
-            `Received error response querying ffscouter player-flights API for ${player_id}:`,
-            err
-          );
-          throw err;
-        }
-        if (response.blank) {
-          throw new Error(`Empty flight response returned for player ${player_id}`);
-        }
-        if (response.result.current) {
-          try {
-            const ttl = this.calculate_flight_cache_ttl(response.result);
-            await this.cache.update_flight(response.result, ttl);
-          } catch (err) {
-            log$c.error("Failed to update flight cache", err);
-          }
-        } else {
-          log$c.debug(`Start rechecking cycle for player ${player_id}`);
-          const now = Date.now();
-          const next_retry_at = now + RECHECK_RETRY_DELAY;
-          const recheck_until = now + RECHECK_WINDOW_DURATION;
-          const rechecking_response = {
-            player_id: response.result.player_id,
-            current: null,
-            recent_flights: response.result.recent_flights,
-            rechecking: true,
-            next_retry_at,
-            recheck_until
-          };
-          try {
-            await this.cache.update_flight(
-              rechecking_response,
-              RECHECK_WINDOW_DURATION
-            );
-          } catch (err) {
-            log$c.error("Failed to update flight cache", err);
-          }
-          response = { result: rechecking_response, blank: false };
-        }
-        try {
-          await this.cache.clean_expired();
-        } catch (err) {
-          log$c.error("Failed to clean expired cache entries", err);
-        }
-        return response.result;
+        log$b.debug(`Flight cache miss for player ${player_id}. Querying API paced.`);
+        const result = await this.enqueue_flight_api(player_id);
+        return result;
       };
       this.complete = () => {
         this.process_cache();
       };
       this.enqueue_cache = (player_id) => {
-        log$c.debug(`Enqueuing cache ${player_id}`);
+        log$b.debug(`Enqueuing cache ${player_id}`);
         this.cache_queue.add(player_id);
         this.schedule_cache();
       };
       this.schedule_cache = () => {
         if (this.cache_timer) {
-          log$c.debug(`schedule_cache called but job already scheduled`);
+          log$b.debug(`schedule_cache called but job already scheduled`);
           return;
         }
-        log$c.debug(
+        log$b.debug(
           `schedule_cache called and job scheduled for ${this.cache_delay} ms`
         );
         this.cache_timer = this.schedule(this.process_cache, this.cache_delay);
@@ -1800,36 +1867,37 @@ clearAll() {
         } catch (_2) {
           results = new Map();
         }
-        log$c.debug("Received results", results);
+        log$b.debug("Received results", results);
         for (const id of ids) {
           const v2 = results.get(id);
           if (v2) {
-            log$c.debug("Id", id, "found in cache. Resolving value.");
+            log$b.debug("Id", id, "found in cache. Resolving value.");
             this.resolve(id, v2);
           } else {
-            log$c.debug("Id", id, "not found in cache. Scheduling api call.");
+            log$b.debug("Id", id, "not found in cache. Scheduling api call.");
             this.enqueue_api(id);
           }
         }
       };
       this.clear_cache = () => {
         this.cache.delete_db();
+        check_key_status.clear();
       };
       this.enqueue_api = (player_id) => {
-        log$c.debug(`Enqueuing api ${player_id}`);
+        log$b.debug(`Enqueuing api ${player_id}`);
         this.api_queue.add(player_id);
         this.schedule_api();
       };
       this.schedule_api = (delay = this.api_initial_delay) => {
         if (this.api_timer) {
-          log$c.debug(`schedule_api called but job already scheduled`);
+          log$b.debug(`schedule_api called but job already scheduled`);
           return;
         }
-        log$c.debug(`schedule_api called and job scheduled for ${delay} ms`);
+        log$b.debug(`schedule_api called and job scheduled for ${delay} ms`);
         this.api_timer = this.schedule(this.process_api, delay);
       };
       this.process_api = async () => {
-        log$c.debug("process_api called");
+        log$b.debug("process_api called");
         if (this.api_timer) {
           this.clear(this.api_timer);
           this.api_timer = null;
@@ -1841,18 +1909,18 @@ clearAll() {
         for (const id of ids) {
           this.api_queue.delete(id);
         }
-        log$c.debug(`Processing ${ids} api requests`);
+        log$b.debug(`Processing ${ids} api requests`);
         if (ids.length <= 0) {
-          log$c.debug("No ids found to query");
+          log$b.debug("No ids found to query");
           return;
         }
         let next_run = this.api_default_delay;
         let results;
         try {
-          log$c.debug("Calling query_stats with", this.config.key, ",", ids);
+          log$b.debug("Calling query_stats with", this.config.key, ",", ids);
           results = await query_stats(this.config.key, ids);
         } catch (err) {
-          log$c.error("Received error response querying ffscouter api:", err);
+          log$b.error("Received error response querying ffscouter api:", err);
           for (const id of ids) {
             this.reject(id, err);
           }
@@ -1863,7 +1931,7 @@ clearAll() {
             limits: ff_error.ff_api_limits
           };
         }
-        log$c.debug("Received results", results);
+        log$b.debug("Received results", results);
         if (results.blank) {
           for (const id of ids) {
             this.requeue_api(id);
@@ -1873,15 +1941,16 @@ clearAll() {
           for (const id of ids) {
             const v2 = results.result.get(id);
             if (v2) {
-              log$c.debug("Id", id, "found in results. Resolving value.");
+              log$b.debug("Id", id, "found in results. Resolving value.");
               this.resolve(id, v2);
             } else {
-              log$c.debug("Id", id, "not found in results. Resolving no_data.");
+              log$b.debug("Id", id, "not found in results. Resolving no_data.");
               this.resolve(id, { player_id: id, no_data: true });
             }
           }
         }
         if (results.limits) {
+          this.last_limits = results.limits;
           next_run = this.calculate_next_api_run(results.limits);
         }
         this.schedule_api(next_run);
@@ -1942,14 +2011,14 @@ clearAll() {
             hash
           });
         } catch (err) {
-          log$c.error("Failed to add analytics entry", err);
+          log$b.error("Failed to add analytics entry", err);
         }
       };
       this.get_analytics_entries = async () => {
         try {
           return await this.cache.get_analytics();
         } catch (err) {
-          log$c.error("Failed to get analytics entries", err);
+          log$b.error("Failed to get analytics entries", err);
           return [];
         }
       };
@@ -1995,7 +2064,7 @@ clearAll() {
         try {
           await this.cache.clear_analytics();
         } catch (err) {
-          log$c.error("Failed to clear analytics entries", err);
+          log$b.error("Failed to clear analytics entries", err);
         }
       };
       this.config = config;
@@ -2151,7 +2220,7 @@ clearAll() {
     }
     return null;
   }
-  function torn_page(page, params = {}) {
+  function torn_page(page, params = {}, match_hash = []) {
     const url_match = window.location.href.startsWith(
       `https://www.torn.com/${page}.php`
     );
@@ -2169,7 +2238,22 @@ clearAll() {
       const page_step = search.get("step");
       step_match = page_step !== null && params.step === page_step;
     }
-    return sid_match && step_match;
+    if (!sid_match || !step_match) {
+      return false;
+    }
+    let hash_match = false;
+    if (match_hash.length === 0) {
+      hash_match = true;
+    } else {
+      const hash = window.location.hash;
+      for (const h2 of match_hash) {
+        if (hash === h2) {
+          hash_match = true;
+          break;
+        }
+      }
+    }
+    return sid_match && step_match && hash_match;
   }
   function make_arrow(d2) {
     const fill = get_ff_arrow_colour(d2);
@@ -2385,10 +2469,11 @@ clearAll() {
     return info_line;
   }
   function on_navigation(callback) {
-    if (window.navigation) {
-      window.navigation.addEventListener("currententrychange", callback);
+    const nav = window.navigation;
+    if (nav) {
+      nav.addEventListener("currententrychange", callback);
       return () => {
-        window.navigation.removeEventListener("currententrychange", callback);
+        nav.removeEventListener("currententrychange", callback);
       };
     }
     const delayedCallback = () => {
@@ -2401,51 +2486,6 @@ clearAll() {
       window.removeEventListener("hashchange", delayedCallback);
     };
   }
-  const log$b = logger.child("api");
-  const CHECK_KEY = "check-key-status";
-  class CheckKeyStatus {
-    constructor(config, storage) {
-      this.check_key_status = async (force = false) => {
-        if (!force) {
-          const cached = this.storage.get(CHECK_KEY);
-          if (cached) {
-            return cached;
-          }
-        }
-        let result;
-        try {
-          result = await check_key(this.config.key);
-        } catch (err) {
-          log$b.error(
-            "Received error response querying ffscouter check-key api:",
-            err
-          );
-          result = { blank: true };
-        }
-        if (result.blank) {
-          return null;
-        }
-        this.storage.set(CHECK_KEY, result.result, {
-          amount: 5,
-          unit: Time.Minutes
-        });
-        return result.result;
-      };
-      this.is_premium = async (force = false) => {
-        const status = await this.check_key_status(force);
-        if (!status) {
-          return false;
-        }
-        return status.is_premium;
-      };
-      this.config = config;
-      this.storage = storage;
-    }
-  }
-  const check_key_status = new CheckKeyStatus(
-    ffconfig,
-    new Storage("ffsv3-check")
-  );
   const t$2 = globalThis, e$2 = t$2.ShadowRoot && (void 0 === t$2.ShadyCSS || t$2.ShadyCSS.nativeShadow) && "adoptedStyleSheets" in Document.prototype && "replace" in CSSStyleSheet.prototype, s$2 = Symbol(), o$4 = new WeakMap();
   let n$3 = class n {
     constructor(t2, e2, o2) {
@@ -4243,28 +4283,45 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       }
     });
   };
+  function should_run_faction() {
+    if (torn_page("factions", { step: "profile" })) {
+      return true;
+    }
+    if (torn_page("factions", { step: "your" })) {
+      if (window.location.hash === "#/" || window.location.hash.startsWith("#/war/") || window.location.hash === "#/tab=info") {
+        return true;
+      }
+    }
+    return false;
+  }
   const index$a = {
     name: "Faction page FF display",
     description: "Shows FF arrows on both your faction and other faction pages.",
     executionTime: StartTime.DocumentBody,
     async shouldRun() {
-      return torn_page("factions", { step: "profile" }) || torn_page("factions", { step: "your" });
+      return torn_page("factions");
     },
     async run() {
       on_navigation(() => {
-        process_page();
+        if (should_run_faction()) {
+          process_page();
+        }
       });
       window.addEventListener("ff-config-updated", () => {
-        const lists = document.querySelectorAll(
-          ".members-list, .chain-attacks-list, .enemy-faction, .your-faction"
-        );
-        for (const list of lists) {
-          if (list instanceof HTMLElement) {
-            apply_ff_columns(list);
+        if (should_run_faction()) {
+          const lists = document.querySelectorAll(
+            ".members-list, .chain-attacks-list, .enemy-faction, .your-faction"
+          );
+          for (const list of lists) {
+            if (list instanceof HTMLElement) {
+              apply_ff_columns(list);
+            }
           }
         }
       });
-      process_page();
+      if (should_run_faction()) {
+        process_page();
+      }
     },
     httpIntercept: {
       before(_url, _init) {
@@ -4282,7 +4339,8 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     default: index$a,
     initialize_features,
     poll_traveling_flights,
-    setup_war_features
+    setup_war_features,
+    should_run_faction
   }, Symbol.toStringTag, { value: "Module" }));
   const log$7 = logger.child("feature:fallback");
   const FEATURE_NAME_HONOR_BAR = "fallback-honor-bar";
@@ -4420,7 +4478,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
               ),
               FEATURE_NAME$3
             );
-          } else if (window.location.href.includes("page.php?sid=hof") || torn_page("factions", { step: "profile" }) || torn_page("factions", { step: "your" })) {
+          } else if (window.location.href.includes("page.php?sid=hof") || torn_page("factions", { step: "profile" }) || torn_page("factions", { step: "your" }, ["", "#", "#/", "#/tab=info"])) {
             await apply_ff_gauge_selector(
               node.querySelectorAll('[class*="userInfoBox__"]'),
               FEATURE_NAME$3
@@ -5020,9 +5078,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     async fetch_data() {
       if (!this.playerId) return;
       try {
-        if (this.is_premium === null) {
-          this.is_premium = await check_key_status.is_premium();
-        }
+        this.is_premium = await check_key_status.is_premium();
         if (!this.is_premium) {
           this.loading = false;
           return;
@@ -6134,6 +6190,9 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
         if (result.result.is_registered) {
           message = `FF Scouter successfully configured. Don't forget to save! API key (${result.result.key}) was registered on ${format_timestamp(result.result.registered_at)} and last used ${format_timestamp(result.result.last_used)}.`;
           level = TOAST_LEVEL.INFO;
+          if (detail.apiKey === ffconfig.key) {
+            await check_key_status.is_premium(true);
+          }
         }
         toast(message, level);
       });
@@ -6291,7 +6350,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       return;
     }
     w[INJECTION_KEY] = true;
-    log.info("Initializing", "3.0-alpha17");
+    log.info("Initializing", "3.0-alpha18");
     if (ffscouter.analytics_enabled) {
       unsafeWindow.ffscouter = ffscouter;
       window.ffscouter = ffscouter;
