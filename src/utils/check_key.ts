@@ -59,6 +59,10 @@ export class CheckKeyStatus {
 
     return status.is_premium;
   };
+
+  clear = (): void => {
+    this.storage.remove(CHECK_KEY);
+  };
 }
 
 export const check_key_status = new CheckKeyStatus(

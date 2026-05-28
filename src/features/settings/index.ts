@@ -140,6 +140,10 @@ export default {
       if (result.result.is_registered) {
         message = `FF Scouter successfully configured. Don't forget to save! API key (${result.result.key}) was registered on ${format_timestamp(result.result.registered_at)} and last used ${format_timestamp(result.result.last_used)}.`;
         level = TOAST_LEVEL.INFO;
+
+        if (detail.apiKey === ffconfig.key) {
+          await check_key_status.is_premium(true);
+        }
       }
       toast(message, level);
     });

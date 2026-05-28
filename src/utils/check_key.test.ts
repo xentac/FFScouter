@@ -132,3 +132,24 @@ test("is_premium returns correct premium state", async () => {
   vi.mocked(check_key).mockResolvedValue({ blank: true });
   expect(await checkKeyStatusHelper.is_premium(true)).toBe(false);
 });
+
+test("clear removes cached status", async () => {
+  vi.mocked(check_key).mockResolvedValue({
+    result: mockCheckSuccess,
+    blank: false,
+  });
+
+  await checkKeyStatusHelper.check_key_status();
+  expect(check_key).toHaveBeenCalledTimes(1);
+
+  // Subsequent call should hit cache
+  await checkKeyStatusHelper.check_key_status();
+  expect(check_key).toHaveBeenCalledTimes(1);
+
+  // Clear cache
+  checkKeyStatusHelper.clear();
+
+  // Next call should query API again
+  await checkKeyStatusHelper.check_key_status();
+  expect(check_key).toHaveBeenCalledTimes(2);
+});

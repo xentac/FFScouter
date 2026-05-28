@@ -123,9 +123,7 @@ export class FFFlightProfileStatus extends LitElement {
     if (!this.playerId) return;
 
     try {
-      if (this.is_premium === null) {
-        this.is_premium = await check_key_status.is_premium();
-      }
+      this.is_premium = await check_key_status.is_premium();
 
       if (!this.is_premium) {
         this.loading = false;

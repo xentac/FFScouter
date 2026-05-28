@@ -446,13 +446,11 @@ export function create_info_line() {
  */
 export function on_navigation(callback: () => void): () => void {
   // Modern Navigation API (Chromium)
-  // @ts-expect-error - navigation is a modern browser feature not yet in TypeScript DOM types
-  if (window.navigation) {
-    // @ts-expect-error
-    window.navigation.addEventListener("currententrychange", callback);
+  const nav = (window as any).navigation;
+  if (nav) {
+    nav.addEventListener("currententrychange", callback);
     return () => {
-      // @ts-expect-error
-      window.navigation.removeEventListener("currententrychange", callback);
+      nav.removeEventListener("currententrychange", callback);
     };
   }
 

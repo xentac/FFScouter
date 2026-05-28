@@ -6,6 +6,7 @@ import {
   query_flights,
   query_stats,
 } from "./api";
+import { check_key_status } from "./check_key";
 import { FFCache } from "./ffcache";
 import { type FFConfig, ffconfig } from "./ffconfig";
 import logger from "./logger";
@@ -356,6 +357,7 @@ export class FFScouter {
 
   clear_cache = () => {
     this.cache.delete_db();
+    check_key_status.clear();
   };
 
   enqueue_api = (player_id: PlayerId) => {
