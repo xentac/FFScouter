@@ -1,17 +1,37 @@
 // @vitest-environment jsdom
 
 import { check_key_status } from "@utils/check_key";
+import { on_navigation, torn_page } from "@utils/dom";
 import { FactionsColDisplay, ffconfig } from "@utils/ffconfig";
 import { ffscouter } from "@utils/ffscouter";
 import type { PlayerId } from "@utils/types";
-import { beforeEach, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 import {
   apply_ff_columns,
   apply_filters_and_sort,
+  default as factionFeature,
   initialize_features,
   poll_traveling_flights,
   setup_war_features,
+  should_run_faction,
 } from "./index";
+
+const navigationListeners: (() => void)[] = [];
+
+vi.mock("@utils/dom", async (importOriginal) => {
+  const original = await importOriginal<typeof import("@utils/dom")>();
+  return {
+    ...original,
+    torn_page: vi.fn(),
+    on_navigation: vi.fn((callback) => {
+      navigationListeners.push(callback);
+      return () => {
+        const index = navigationListeners.indexOf(callback);
+        if (index > -1) navigationListeners.splice(index, 1);
+      };
+    }),
+  };
+});
 
 vi.mock("@utils/ffscouter", () => {
   return {
@@ -36,6 +56,8 @@ beforeEach(() => {
   document.body.innerHTML = "";
   vi.restoreAllMocks();
   localStorage.clear();
+  navigationListeners.length = 0;
+  window.location.hash = "";
 });
 
 test("apply_ff_columns injects FF column header and cells when configured to FAIR_FIGHT", async () => {
@@ -931,4 +953,148 @@ test("setup_war_features MutationObserver in Ranked War reacts to status changes
   expect(row.style.display).toBe("none");
 
   factionWar.remove();
+});
+
+describe("should_run_faction URL and hash matching", () => {
+  test("returns true for step=profile with any ID", () => {
+    vi.mocked(torn_page).mockImplementation((page, params: any) => {
+      return page === "factions" && params?.step === "profile";
+    });
+    expect(should_run_faction()).toBe(true);
+  });
+
+  test("returns true for step=your with empty hash", () => {
+    vi.mocked(torn_page).mockImplementation((page, params: any) => {
+      return page === "factions" && params?.step === "your";
+    });
+    window.location.hash = "";
+    expect(should_run_faction()).toBe(true);
+  });
+
+  test("returns true for step=your with #/tab=info hash", () => {
+    vi.mocked(torn_page).mockImplementation((page, params: any) => {
+      return page === "factions" && params?.step === "your";
+    });
+    window.location.hash = "#/tab=info";
+    expect(should_run_faction()).toBe(true);
+  });
+
+  test("returns true for step=your with #/ hash", () => {
+    vi.mocked(torn_page).mockImplementation((page, params: any) => {
+      return page === "factions" && params?.step === "your";
+    });
+    window.location.hash = "#/";
+    expect(should_run_faction()).toBe(true);
+  });
+
+  test("returns true for step=your with # hash", () => {
+    vi.mocked(torn_page).mockImplementation((page, params: any) => {
+      return page === "factions" && params?.step === "your";
+    });
+    window.location.hash = "#";
+    expect(should_run_faction()).toBe(true);
+  });
+
+  test("returns false for step=your with other hashes (like tab=crimes or tab=controls)", () => {
+    vi.mocked(torn_page).mockImplementation((page, params: any) => {
+      return page === "factions" && params?.step === "your";
+    });
+    window.location.hash = "#/tab=crimes";
+    expect(should_run_faction()).toBe(false);
+
+    window.location.hash = "#/tab=controls";
+    expect(should_run_faction()).toBe(false);
+  });
+
+  test("returns false for other steps", () => {
+    vi.mocked(torn_page).mockImplementation((page, params: any) => {
+      return page === "factions" && params?.step === "crimes";
+    });
+    expect(should_run_faction()).toBe(false);
+  });
+});
+
+describe("Faction feature shouldRun lifecycle", () => {
+  test("shouldRun returns true when on any factions page", async () => {
+    vi.mocked(torn_page).mockImplementation((page) => page === "factions");
+    const result = await factionFeature.shouldRun();
+    expect(result).toBe(true);
+    expect(torn_page).toHaveBeenCalledWith("factions");
+  });
+
+  test("shouldRun returns false when not on a factions page", async () => {
+    vi.mocked(torn_page).mockImplementation((page) => page !== "factions");
+    const result = await factionFeature.shouldRun();
+    expect(result).toBe(false);
+  });
+});
+
+describe("Faction feature run and dynamic navigation integration", () => {
+  test("does not run process_page initially or on navigation if not a matched faction page", async () => {
+    // 1. Initial load on factions crimes (should NOT run process_page)
+    vi.mocked(torn_page).mockImplementation((page, params: any) => {
+      if (page === "factions") {
+        if (!params) return true;
+        return params.step === "crimes";
+      }
+      return false;
+    });
+
+    const waitForSpy = vi.spyOn(await import("@utils/dom"), "wait_for_element");
+
+    await factionFeature.run();
+
+    expect(on_navigation).toHaveBeenCalled();
+    expect(waitForSpy).not.toHaveBeenCalled();
+
+    // 2. Simulate navigation to /tab=crimes (still should NOT run process_page)
+    window.location.hash = "#/tab=crimes";
+    vi.mocked(torn_page).mockImplementation((page, params: any) => {
+      if (page === "factions") {
+        if (!params) return true;
+        return params.step === "your";
+      }
+      return false;
+    });
+
+    for (const listener of navigationListeners) {
+      listener();
+    }
+
+    expect(waitForSpy).not.toHaveBeenCalled();
+  });
+
+  test("runs process_page initially or on navigation if it matches a valid faction page", async () => {
+    const waitForSpy = vi.spyOn(await import("@utils/dom"), "wait_for_element");
+
+    // 1. Start on factions step your (should run process_page)
+    vi.mocked(torn_page).mockImplementation((page, params: any) => {
+      if (page === "factions") {
+        if (!params) return true;
+        return params.step === "your";
+      }
+      return false;
+    });
+    window.location.hash = "";
+
+    await factionFeature.run();
+
+    expect(waitForSpy).toHaveBeenCalled();
+    waitForSpy.mockClear();
+
+    // 2. Simulate navigation to another valid step profile
+    vi.mocked(torn_page).mockImplementation((page, params: any) => {
+      if (page === "factions") {
+        if (!params) return true;
+        return params.step === "profile";
+      }
+      return false;
+    });
+
+    for (const listener of navigationListeners) {
+      listener();
+    }
+
+    expect(waitForSpy).toHaveBeenCalled();
+  });
 });

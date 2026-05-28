@@ -969,6 +969,19 @@ const process_page = () => {
   });
 };
 
+export function should_run_faction(): boolean {
+  if (torn_page("factions", { step: "profile" })) {
+    return true;
+  }
+  if (torn_page("factions", { step: "your" })) {
+    const hash = window.location.hash;
+    return (
+      hash === "" || hash === "#" || hash === "#/" || hash === "#/tab=info"
+    );
+  }
+  return false;
+}
+
 export default {
   name: "Faction page FF display",
   description: "Shows FF arrows on both your faction and other faction pages.",
@@ -976,29 +989,32 @@ export default {
 
   async shouldRun() {
     // Run on the faction pages
-    return (
-      torn_page("factions", { step: "profile" }) ||
-      torn_page("factions", { step: "your" })
-    );
+    return torn_page("factions");
   },
 
   async run() {
     on_navigation(() => {
-      process_page();
+      if (should_run_faction()) {
+        process_page();
+      }
     });
 
     window.addEventListener("ff-config-updated", () => {
-      const lists = document.querySelectorAll(
-        ".members-list, .chain-attacks-list, .enemy-faction, .your-faction",
-      );
-      for (const list of lists) {
-        if (list instanceof HTMLElement) {
-          apply_ff_columns(list);
+      if (should_run_faction()) {
+        const lists = document.querySelectorAll(
+          ".members-list, .chain-attacks-list, .enemy-faction, .your-faction",
+        );
+        for (const list of lists) {
+          if (list instanceof HTMLElement) {
+            apply_ff_columns(list);
+          }
         }
       }
     });
 
-    process_page();
+    if (should_run_faction()) {
+      process_page();
+    }
   },
 
   httpIntercept: {
