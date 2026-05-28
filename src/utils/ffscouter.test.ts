@@ -406,11 +406,15 @@ test("get_flights cache miss success", async () => {
     blank: false,
   });
 
-  const res = await f.get_flights(456);
+  const promise = f.get_flights(456);
+  await Promise.resolve();
+  await vi.runAllTimersAsync();
+  const res = await promise;
+
   expect(res).toEqual(mockFlight);
   expect(c.get_flight).toHaveBeenCalledWith(456);
   expect(query_flights).toHaveBeenCalledWith("a", 456);
-  expect(c.update_flight).toHaveBeenCalledWith(mockFlight, 1200000); // 3600 / 3 = 1200 seconds = 1,200,000 ms
+  expect(c.update_flight).toHaveBeenCalledWith(mockFlight, 1800000); // 3600 / 2 = 1800 seconds = 1,800,000 ms
   expect(c.clean_expired).toHaveBeenCalled();
 
   await c.delete_db();
@@ -421,9 +425,13 @@ test("get_flights API error throws", async () => {
   const f = new FFScouter(config, c);
 
   vi.spyOn(c, "get_flight").mockResolvedValue(null);
+  vi.spyOn(c, "clean_expired").mockResolvedValue();
   vi.mocked(query_flights).mockRejectedValue(new Error("API offline"));
 
-  await expect(f.get_flights(789)).rejects.toThrow("API offline");
+  const promise = expect(f.get_flights(789)).rejects.toThrow("API offline");
+  await Promise.resolve();
+  await vi.runAllTimersAsync();
+  await promise;
 
   await c.delete_db();
 });
@@ -450,7 +458,10 @@ test("get_flights cache miss with current === null starts rechecking", async () 
   const now = 1000000000000;
   vi.spyOn(Date, "now").mockReturnValue(now);
 
-  const res = await f.get_flights(111);
+  const promise = f.get_flights(111);
+  await Promise.resolve();
+  await vi.runAllTimersAsync();
+  const res = await promise;
 
   expect(res.rechecking).toBe(true);
   expect(res.next_retry_at).toBe(now + 60 * 1000);
@@ -512,6 +523,7 @@ test("get_flights cache hit rechecking after next_retry_at retries API (still nu
 
   vi.spyOn(c, "get_flight").mockResolvedValue(cachedData);
   const spyUpdate = vi.spyOn(c, "update_flight").mockResolvedValue();
+  vi.spyOn(c, "clean_expired").mockResolvedValue();
 
   const currentTime = now + 70000; // after next_retry_at
   vi.spyOn(Date, "now").mockReturnValue(currentTime);
@@ -526,7 +538,10 @@ test("get_flights cache hit rechecking after next_retry_at retries API (still nu
     blank: false,
   });
 
-  const res = await f.get_flights(333);
+  const promise = f.get_flights(333);
+  await Promise.resolve();
+  await vi.runAllTimersAsync();
+  const res = await promise;
 
   expect(res.rechecking).toBe(true);
   expect(res.next_retry_at).toBe(currentTime + 60000);
@@ -561,6 +576,7 @@ test("get_flights cache hit rechecking after next_retry_at retries API (tracked)
 
   vi.spyOn(c, "get_flight").mockResolvedValue(cachedData);
   const spyUpdate = vi.spyOn(c, "update_flight").mockResolvedValue();
+  vi.spyOn(c, "clean_expired").mockResolvedValue();
 
   const currentTime = now + 70000; // after next_retry_at
   vi.spyOn(Date, "now").mockReturnValue(currentTime);
@@ -583,11 +599,14 @@ test("get_flights cache hit rechecking after next_retry_at retries API (tracked)
     blank: false,
   });
 
-  const res = await f.get_flights(444);
+  const promise = f.get_flights(444);
+  await Promise.resolve();
+  await vi.runAllTimersAsync();
+  const res = await promise;
 
   expect(res.rechecking).toBeUndefined();
   expect(res.current).not.toBeNull();
-  expect(spyUpdate).toHaveBeenCalledWith(mockFlight, 1200000); // 3600 / 3 = 1200 seconds = 1,200,000 ms
+  expect(spyUpdate).toHaveBeenCalledWith(mockFlight, 1800000); // 3600 / 2 = 1800 seconds = 1,800,000 ms
 
   await c.delete_db();
 });
@@ -625,6 +644,79 @@ test("get_flights cache hit rechecking after recheck_until finalizes", async () 
     30 * 60 * 1000,
   );
 
+  await c.delete_db();
+});
+
+test("get_flights sequentially paces API requests", async () => {
+  const c = new FFCache("test-scouter-flights-pacing");
+  const f = new FFScouter(config, c);
+
+  vi.spyOn(c, "get_flight").mockResolvedValue(null);
+  vi.spyOn(c, "update_flight").mockResolvedValue();
+  vi.spyOn(c, "clean_expired").mockResolvedValue();
+
+  const mockFlight1 = { player_id: 801, current: null, recent_flights: [] };
+  const mockFlight2 = { player_id: 802, current: null, recent_flights: [] };
+
+  vi.mocked(query_flights).mockImplementation(async (_, target) => {
+    if (target === 801) return { result: mockFlight1, blank: false };
+    return { result: mockFlight2, blank: false };
+  });
+
+  const p1 = f.get_flights(801);
+  const p2 = f.get_flights(802);
+
+  // Advance by 0 to let the first request run
+  await vi.advanceTimersByTimeAsync(0);
+  expect(query_flights).toHaveBeenCalledTimes(1);
+  expect(query_flights).toHaveBeenLastCalledWith("a", 801);
+
+  // The second request should be paced and wait for 1000ms
+  expect(query_flights).not.toHaveBeenCalledWith("a", 802);
+
+  // Advance by 1000ms to trigger the paced second request
+  await vi.advanceTimersByTimeAsync(1000);
+  expect(query_flights).toHaveBeenCalledTimes(2);
+  expect(query_flights).toHaveBeenLastCalledWith("a", 802);
+
+  await Promise.all([p1, p2]);
+  await c.delete_db();
+});
+
+test("get_flights pauses queries when global quota remaining is <= 50", async () => {
+  const c = new FFCache("test-scouter-flights-quota");
+  const f = new FFScouter(config, c);
+
+  // Set limits.remaining to 50
+  f.last_limits = {
+    reset_time: new Date(Date.now() + 60000),
+    remaining: 50,
+    rate_limit: 100,
+    this_minute: 50,
+  };
+
+  vi.spyOn(c, "get_flight").mockResolvedValue(null);
+  vi.spyOn(c, "update_flight").mockResolvedValue();
+  vi.spyOn(c, "clean_expired").mockResolvedValue();
+
+  const mockFlight = { player_id: 901, current: null, recent_flights: [] };
+  vi.mocked(query_flights).mockResolvedValue({
+    result: mockFlight,
+    blank: false,
+  });
+
+  const promise = f.get_flights(901);
+
+  // Advance timers by 0 - it should see the quota <= 50 and defer (not call query_flights)
+  await vi.advanceTimersByTimeAsync(0);
+  expect(query_flights).not.toHaveBeenCalled();
+
+  // Boost remaining quota above 50 and advance timers to let it run
+  f.last_limits.remaining = 60;
+  await vi.advanceTimersByTimeAsync(5000); // Wait the 5 second retry delay
+  expect(query_flights).toHaveBeenCalledTimes(1);
+
+  await promise;
   await c.delete_db();
 });
 
