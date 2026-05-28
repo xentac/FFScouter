@@ -973,11 +973,8 @@ export function should_run_faction(): boolean {
   if (torn_page("factions", { step: "profile" })) {
     return true;
   }
-  if (torn_page("factions", { step: "your" })) {
-    const hash = window.location.hash;
-    return (
-      hash === "" || hash === "#" || hash === "#/" || hash === "#/tab=info"
-    );
+  if (torn_page("factions", { step: "your" }, ["", "#", "#/", "#/tab=info"])) {
+    return true;
   }
   return false;
 }

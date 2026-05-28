@@ -57,6 +57,42 @@ test("torn_page matches the current URL, step, and sid parameters", () => {
   expect(torn_page("profiles")).toBe(false);
 });
 
+test("torn_page with match_hash parameter matches specified hash fragments", () => {
+  // Case 1: matches empty hash when target has empty hash
+  vi.stubGlobal("location", {
+    href: "https://www.torn.com/factions.php?step=your",
+    search: "?step=your",
+    hash: "",
+  });
+  expect(
+    torn_page("factions", { step: "your" }, ["", "#", "#/", "#/tab=info"]),
+  ).toBe(true);
+
+  // Case 2: matches #/tab=info hash when target has that hash
+  vi.stubGlobal("location", {
+    href: "https://www.torn.com/factions.php?step=your#/tab=info",
+    search: "?step=your",
+    hash: "#/tab=info",
+  });
+  expect(
+    torn_page("factions", { step: "your" }, ["", "#", "#/", "#/tab=info"]),
+  ).toBe(true);
+
+  // Case 3: does not match other hashes (e.g. #/tab=crimes)
+  vi.stubGlobal("location", {
+    href: "https://www.torn.com/factions.php?step=your#/tab=crimes",
+    search: "?step=your",
+    hash: "#/tab=crimes",
+  });
+  expect(
+    torn_page("factions", { step: "your" }, ["", "#", "#/", "#/tab=info"]),
+  ).toBe(false);
+
+  // Case 4: if match_hash is empty array, it matches any hash
+  expect(torn_page("factions", { step: "your" })).toBe(true);
+  expect(torn_page("factions", { step: "your" }, [])).toBe(true);
+});
+
 test("get_player_id_in_element extracts player IDs from child or parent anchors", () => {
   const container = document.createElement("div");
 

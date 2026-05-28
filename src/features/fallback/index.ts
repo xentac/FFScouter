@@ -168,7 +168,7 @@ export default {
         } else if (
           window.location.href.includes("page.php?sid=hof") ||
           torn_page("factions", { step: "profile" }) ||
-          torn_page("factions", { step: "your" })
+          torn_page("factions", { step: "your" }, ["", "#", "#/", "#/tab=info"])
         ) {
           await apply_ff_gauge_selector(
             node.querySelectorAll('[class*="userInfoBox__"]'),

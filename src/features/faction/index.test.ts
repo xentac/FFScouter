@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { check_key_status } from "@utils/check_key";
-import { on_navigation, torn_page } from "@utils/dom";
+import { on_navigation } from "@utils/dom";
 import { FactionsColDisplay, ffconfig } from "@utils/ffconfig";
 import { ffscouter } from "@utils/ffscouter";
 import type { PlayerId } from "@utils/types";
@@ -22,7 +22,9 @@ vi.mock("@utils/dom", async (importOriginal) => {
   const original = await importOriginal<typeof import("@utils/dom")>();
   return {
     ...original,
-    torn_page: vi.fn(),
+    torn_page: vi.fn((page, params, match_hash) => {
+      return original.torn_page(page, params, match_hash);
+    }),
     on_navigation: vi.fn((callback) => {
       navigationListeners.push(callback);
       return () => {
@@ -957,58 +959,71 @@ test("setup_war_features MutationObserver in Ranked War reacts to status changes
 
 describe("should_run_faction URL and hash matching", () => {
   test("returns true for step=profile with any ID", () => {
-    vi.mocked(torn_page).mockImplementation((page, params: any) => {
-      return page === "factions" && params?.step === "profile";
+    vi.stubGlobal("location", {
+      href: "https://www.torn.com/factions.php?step=profile&ID=22492",
+      search: "?step=profile&ID=22492",
+      hash: "",
     });
     expect(should_run_faction()).toBe(true);
   });
 
   test("returns true for step=your with empty hash", () => {
-    vi.mocked(torn_page).mockImplementation((page, params: any) => {
-      return page === "factions" && params?.step === "your";
+    vi.stubGlobal("location", {
+      href: "https://www.torn.com/factions.php?step=your",
+      search: "?step=your",
+      hash: "",
     });
-    window.location.hash = "";
     expect(should_run_faction()).toBe(true);
   });
 
   test("returns true for step=your with #/tab=info hash", () => {
-    vi.mocked(torn_page).mockImplementation((page, params: any) => {
-      return page === "factions" && params?.step === "your";
+    vi.stubGlobal("location", {
+      href: "https://www.torn.com/factions.php?step=your&type=1#/tab=info",
+      search: "?step=your&type=1",
+      hash: "#/tab=info",
     });
-    window.location.hash = "#/tab=info";
     expect(should_run_faction()).toBe(true);
   });
 
   test("returns true for step=your with #/ hash", () => {
-    vi.mocked(torn_page).mockImplementation((page, params: any) => {
-      return page === "factions" && params?.step === "your";
+    vi.stubGlobal("location", {
+      href: "https://www.torn.com/factions.php?step=your&type=1#/",
+      search: "?step=your&type=1",
+      hash: "#/",
     });
-    window.location.hash = "#/";
     expect(should_run_faction()).toBe(true);
   });
 
   test("returns true for step=your with # hash", () => {
-    vi.mocked(torn_page).mockImplementation((page, params: any) => {
-      return page === "factions" && params?.step === "your";
+    vi.stubGlobal("location", {
+      href: "https://www.torn.com/factions.php?step=your&type=1#",
+      search: "?step=your&type=1",
+      hash: "#",
     });
-    window.location.hash = "#";
     expect(should_run_faction()).toBe(true);
   });
 
   test("returns false for step=your with other hashes (like tab=crimes or tab=controls)", () => {
-    vi.mocked(torn_page).mockImplementation((page, params: any) => {
-      return page === "factions" && params?.step === "your";
+    vi.stubGlobal("location", {
+      href: "https://www.torn.com/factions.php?step=your#/tab=crimes",
+      search: "?step=your",
+      hash: "#/tab=crimes",
     });
-    window.location.hash = "#/tab=crimes";
     expect(should_run_faction()).toBe(false);
 
-    window.location.hash = "#/tab=controls";
+    vi.stubGlobal("location", {
+      href: "https://www.torn.com/factions.php?step=your#/tab=controls",
+      search: "?step=your",
+      hash: "#/tab=controls",
+    });
     expect(should_run_faction()).toBe(false);
   });
 
   test("returns false for other steps", () => {
-    vi.mocked(torn_page).mockImplementation((page, params: any) => {
-      return page === "factions" && params?.step === "crimes";
+    vi.stubGlobal("location", {
+      href: "https://www.torn.com/factions.php?step=crimes",
+      search: "?step=crimes",
+      hash: "",
     });
     expect(should_run_faction()).toBe(false);
   });
@@ -1016,14 +1031,21 @@ describe("should_run_faction URL and hash matching", () => {
 
 describe("Faction feature shouldRun lifecycle", () => {
   test("shouldRun returns true when on any factions page", async () => {
-    vi.mocked(torn_page).mockImplementation((page) => page === "factions");
+    vi.stubGlobal("location", {
+      href: "https://www.torn.com/factions.php",
+      search: "",
+      hash: "",
+    });
     const result = await factionFeature.shouldRun();
     expect(result).toBe(true);
-    expect(torn_page).toHaveBeenCalledWith("factions");
   });
 
   test("shouldRun returns false when not on a factions page", async () => {
-    vi.mocked(torn_page).mockImplementation((page) => page !== "factions");
+    vi.stubGlobal("location", {
+      href: "https://www.torn.com/gym.php",
+      search: "",
+      hash: "",
+    });
     const result = await factionFeature.shouldRun();
     expect(result).toBe(false);
   });
@@ -1032,12 +1054,10 @@ describe("Faction feature shouldRun lifecycle", () => {
 describe("Faction feature run and dynamic navigation integration", () => {
   test("does not run process_page initially or on navigation if not a matched faction page", async () => {
     // 1. Initial load on factions crimes (should NOT run process_page)
-    vi.mocked(torn_page).mockImplementation((page, params: any) => {
-      if (page === "factions") {
-        if (!params) return true;
-        return params.step === "crimes";
-      }
-      return false;
+    vi.stubGlobal("location", {
+      href: "https://www.torn.com/factions.php?step=crimes",
+      search: "?step=crimes",
+      hash: "",
     });
 
     const waitForSpy = vi.spyOn(await import("@utils/dom"), "wait_for_element");
@@ -1048,13 +1068,10 @@ describe("Faction feature run and dynamic navigation integration", () => {
     expect(waitForSpy).not.toHaveBeenCalled();
 
     // 2. Simulate navigation to /tab=crimes (still should NOT run process_page)
-    window.location.hash = "#/tab=crimes";
-    vi.mocked(torn_page).mockImplementation((page, params: any) => {
-      if (page === "factions") {
-        if (!params) return true;
-        return params.step === "your";
-      }
-      return false;
+    vi.stubGlobal("location", {
+      href: "https://www.torn.com/factions.php?step=your#/tab=crimes",
+      search: "?step=your",
+      hash: "#/tab=crimes",
     });
 
     for (const listener of navigationListeners) {
@@ -1068,14 +1085,11 @@ describe("Faction feature run and dynamic navigation integration", () => {
     const waitForSpy = vi.spyOn(await import("@utils/dom"), "wait_for_element");
 
     // 1. Start on factions step your (should run process_page)
-    vi.mocked(torn_page).mockImplementation((page, params: any) => {
-      if (page === "factions") {
-        if (!params) return true;
-        return params.step === "your";
-      }
-      return false;
+    vi.stubGlobal("location", {
+      href: "https://www.torn.com/factions.php?step=your",
+      search: "?step=your",
+      hash: "",
     });
-    window.location.hash = "";
 
     await factionFeature.run();
 
@@ -1083,12 +1097,10 @@ describe("Faction feature run and dynamic navigation integration", () => {
     waitForSpy.mockClear();
 
     // 2. Simulate navigation to another valid step profile
-    vi.mocked(torn_page).mockImplementation((page, params: any) => {
-      if (page === "factions") {
-        if (!params) return true;
-        return params.step === "profile";
-      }
-      return false;
+    vi.stubGlobal("location", {
+      href: "https://www.torn.com/factions.php?step=profile&ID=22492",
+      search: "?step=profile&ID=22492",
+      hash: "",
     });
 
     for (const listener of navigationListeners) {

@@ -27,7 +27,11 @@ type TornPageParams = {
   page?: string;
 };
 
-export function torn_page(page: string, params: TornPageParams = {}) {
+export function torn_page(
+  page: string,
+  params: TornPageParams = {},
+  match_hash: string[] = [],
+) {
   const url_match = window.location.href.startsWith(
     `https://www.torn.com/${page}.php`,
   );
@@ -47,7 +51,24 @@ export function torn_page(page: string, params: TornPageParams = {}) {
     step_match = page_step !== null && params.step === page_step;
   }
 
-  return sid_match && step_match;
+  if (!sid_match || !step_match) {
+    return false;
+  }
+
+  let hash_match = false;
+  if (match_hash.length === 0) {
+    hash_match = true;
+  } else {
+    const hash = window.location.hash;
+    for (const h of match_hash) {
+      if (hash === h) {
+        hash_match = true;
+        break;
+      }
+    }
+  }
+
+  return sid_match && step_match && hash_match;
 }
 
 function make_arrow(d: FFDataComplete): SVGElement {
