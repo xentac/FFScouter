@@ -77,6 +77,12 @@ function is_excluded_page(): boolean {
       return true;
 
     default:
+      if (torn_page("factions", { step: "your" })) {
+        const hash = window.location.hash;
+        if (!(hash.startsWith("#/war/") || hash === "#/tab=info")) {
+          return true;
+        }
+      }
       return false;
   }
 }
