@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FF Scouter V3
 // @namespace    xentac-v3
-// @version      3.0-alpha18
+// @version      3.0-alpha19
 // @author       xentac [3354782], MAVRI [2402357], rDacted [2670953], Weav3r [1853324], Glasnost [1844049]
 // @description  Shows the expected Fair Fight score against targets and faction war status
 // @license      GPLv3
@@ -1644,6 +1644,10 @@ event.oldVersion,
           reject = rej;
         });
         this.pending.set(player_id, { promise, resolve, reject, api_attempts: 0 });
+        if (!this.config.key) {
+          this.resolve(player_id, { player_id, no_data: true });
+          return promise;
+        }
         this.enqueue_cache(player_id);
         return promise;
       };
@@ -1698,7 +1702,7 @@ event.oldVersion,
         if (this.flight_queue.length === 0) {
           return;
         }
-        if (this.last_limits && this.last_limits.remaining <= GLOBAL_BUDGET_RESERVE) {
+        if (this.last_limits && this.last_limits.reset_time > new Date() && this.last_limits.remaining <= GLOBAL_BUDGET_RESERVE) {
           log$b.warn(
             `Total API quota <= ${GLOBAL_BUDGET_RESERVE}. Deferring flight status checks to prioritize stats.`
           );
@@ -1727,8 +1731,12 @@ event.oldVersion,
           }
           let finalResult = response.result;
           if (response.result.current) {
-            const ttl = this.calculate_flight_cache_ttl(response.result);
-            await this.cache.update_flight(response.result, ttl);
+            try {
+              const ttl = this.calculate_flight_cache_ttl(response.result);
+              await this.cache.update_flight(response.result, ttl);
+            } catch (err) {
+              log$b.error("Failed to update flight cache", err);
+            }
           } else {
             log$b.debug(`Start rechecking cycle for player ${player_id}`);
             const now = Date.now();
@@ -1743,8 +1751,12 @@ event.oldVersion,
               next_retry_at,
               recheck_until
             };
-            const remaining_ttl = Math.max(0, recheck_until - now);
-            await this.cache.update_flight(rechecking_response, remaining_ttl);
+            try {
+              const remaining_ttl = Math.max(0, recheck_until - now);
+              await this.cache.update_flight(rechecking_response, remaining_ttl);
+            } catch (err) {
+              log$b.error("Failed to update flight cache during recheck", err);
+            }
             finalResult = rechecking_response;
           }
           for (const job of pending) {
@@ -1774,6 +1786,13 @@ event.oldVersion,
       };
       this.get_flights = async (player_id) => {
         log$b.debug(`get_flights called for ${player_id}`);
+        if (!this.config.key) {
+          return {
+            player_id,
+            current: null,
+            recent_flights: []
+          };
+        }
         let cached = null;
         try {
           cached = await this.cache.get_flight(player_id);
@@ -1937,7 +1956,11 @@ event.oldVersion,
             this.requeue_api(id);
           }
         } else {
-          await this.cache.update(Array.from(results.result.values()));
+          try {
+            await this.cache.update(Array.from(results.result.values()));
+          } catch (err) {
+            log$b.error("Failed to update cache", err);
+          }
           for (const id of ids) {
             const v2 = results.result.get(id);
             if (v2) {
@@ -4288,7 +4311,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       return true;
     }
     if (torn_page("factions", { step: "your" })) {
-      if (window.location.hash === "#/" || window.location.hash.startsWith("#/war/") || window.location.hash === "#/tab=info") {
+      if (window.location.hash === "" || window.location.hash === "#" || window.location.hash === "#/" || window.location.hash.startsWith("#/war/") || window.location.hash === "#/tab=info") {
         return true;
       }
     }
@@ -4412,6 +4435,12 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       case torn_page("page", { sid: "itemMarket" }):
         return true;
       default:
+        if (torn_page("factions", { step: "your" })) {
+          const hash = window.location.hash;
+          if (!(hash.startsWith("#/war/") || hash === "#/tab=info")) {
+            return true;
+          }
+        }
         return false;
     }
   }
@@ -6350,7 +6379,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       return;
     }
     w[INJECTION_KEY] = true;
-    log.info("Initializing", "3.0-alpha18");
+    log.info("Initializing", "3.0-alpha19");
     if (ffscouter.analytics_enabled) {
       unsafeWindow.ffscouter = ffscouter;
       window.ffscouter = ffscouter;
