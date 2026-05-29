@@ -842,3 +842,123 @@ test("clear_analytics on FFScouter calls c.clear_analytics", async () => {
 
   await c.delete_db();
 });
+
+test("get immediately resolves with no_data when key is empty", async () => {
+  const emptyConfig = new FFConfig("test-empty-key");
+  vi.spyOn(emptyConfig, "key", "get").mockReturnValue("");
+  const f = new FFScouter(emptyConfig);
+
+  const res = await f.get(123);
+  expect(res).toEqual({ player_id: 123, no_data: true });
+});
+
+test("get_flights immediately returns blank flight status when key is empty", async () => {
+  const emptyConfig = new FFConfig("test-empty-key");
+  vi.spyOn(emptyConfig, "key", "get").mockReturnValue("");
+  const f = new FFScouter(emptyConfig);
+
+  const res = await f.get_flights(123);
+  expect(res).toEqual({
+    player_id: 123,
+    current: null,
+    recent_flights: [],
+  });
+});
+
+test("get_flights does not pause queries if global quota is expired/stale", async () => {
+  const c = new FFCache("test-scouter-flights-quota-stale");
+  const f = new FFScouter(config, c);
+
+  // Set limits.remaining <= 50, but reset_time is in the past
+  f.last_limits = {
+    reset_time: new Date(Date.now() - 5000), // 5 seconds in the past
+    remaining: 50,
+    rate_limit: 100,
+    this_minute: 50,
+  };
+
+  vi.spyOn(c, "get_flight").mockResolvedValue(null);
+  vi.spyOn(c, "update_flight").mockResolvedValue();
+  vi.spyOn(c, "clean_expired").mockResolvedValue();
+
+  const mockFlight = { player_id: 902, current: null, recent_flights: [] };
+  vi.mocked(query_flights).mockResolvedValue({
+    result: mockFlight,
+    blank: false,
+  });
+
+  const promise = f.get_flights(902);
+  await vi.advanceTimersByTimeAsync(0);
+
+  // Should NOT be deferred, query_flights should be called immediately
+  expect(query_flights).toHaveBeenCalledTimes(1);
+  const res = await promise;
+  expect(res).toEqual({
+    player_id: 902,
+    current: null,
+    recent_flights: [],
+    rechecking: true,
+    next_retry_at: expect.any(Number),
+    recheck_until: expect.any(Number),
+  });
+
+  await c.delete_db();
+});
+
+test("process_api resolves promises even when FFCache update throws", async () => {
+  const c = new FFCache("test-scouter-cache-throw");
+  const f = new FFScouter(config, c);
+
+  vi.spyOn(c, "get").mockResolvedValue(new Map());
+  // Mock cache update to throw an error
+  vi.spyOn(c, "update").mockRejectedValue(new Error("IndexedDB blocked"));
+  vi.spyOn(c, "clean_expired").mockResolvedValue();
+
+  const testData = generate_test_ff_data(10);
+  vi.mocked(query_stats).mockResolvedValue({
+    result: new Map([[10, testData]]),
+    blank: false,
+  });
+
+  const promise = f.get(10);
+  await f.process_cache();
+  await f.process_api();
+
+  // The promise should successfully resolve with API results even though cache update failed
+  const res = await promise;
+  expect(res).toEqual(testData);
+
+  await c.delete_db();
+});
+
+test("process_flight_queue resolves promises even when FFCache update_flight throws", async () => {
+  const c = new FFCache("test-scouter-flights-throw");
+  const f = new FFScouter(config, c);
+
+  vi.spyOn(c, "get_flight").mockResolvedValue(null);
+  // Mock cache update_flight to throw an error
+  vi.spyOn(c, "update_flight").mockRejectedValue(
+    new Error("QuotaExceededError"),
+  );
+  vi.spyOn(c, "clean_expired").mockResolvedValue();
+
+  const mockFlight = { player_id: 903, current: null, recent_flights: [] };
+  vi.mocked(query_flights).mockResolvedValue({
+    result: mockFlight,
+    blank: false,
+  });
+
+  const promise = f.get_flights(903);
+  await vi.advanceTimersByTimeAsync(0);
+
+  // The promise should successfully resolve with API results even though cache update failed
+  const res = await promise;
+  expect(res).toEqual({
+    ...mockFlight,
+    rechecking: true,
+    next_retry_at: expect.any(Number),
+    recheck_until: expect.any(Number),
+  });
+
+  await c.delete_db();
+});

@@ -975,6 +975,8 @@ export function should_run_faction(): boolean {
   }
   if (torn_page("factions", { step: "your" })) {
     if (
+      window.location.hash === "" ||
+      window.location.hash === "#" ||
       window.location.hash === "#/" ||
       window.location.hash.startsWith("#/war/") ||
       window.location.hash === "#/tab=info"

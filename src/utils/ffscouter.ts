@@ -102,6 +102,11 @@ export class FFScouter {
 
     this.pending.set(player_id, { promise, resolve, reject, api_attempts: 0 });
 
+    if (!this.config.key) {
+      this.resolve(player_id, { player_id, no_data: true });
+      return promise;
+    }
+
     // Schedule cache lookup
     this.enqueue_cache(player_id);
 
@@ -176,6 +181,7 @@ export class FFScouter {
 
     if (
       this.last_limits &&
+      this.last_limits.reset_time > new Date() &&
       this.last_limits.remaining <= GLOBAL_BUDGET_RESERVE
     ) {
       log.warn(
@@ -213,8 +219,12 @@ export class FFScouter {
       let finalResult = response.result;
 
       if (response.result.current) {
-        const ttl = this.calculate_flight_cache_ttl(response.result);
-        await this.cache.update_flight(response.result, ttl);
+        try {
+          const ttl = this.calculate_flight_cache_ttl(response.result);
+          await this.cache.update_flight(response.result, ttl);
+        } catch (err) {
+          log.error("Failed to update flight cache", err);
+        }
       } else {
         log.debug(`Start rechecking cycle for player ${player_id}`);
         const now = Date.now();
@@ -230,8 +240,12 @@ export class FFScouter {
           next_retry_at,
           recheck_until,
         };
-        const remaining_ttl = Math.max(0, recheck_until - now);
-        await this.cache.update_flight(rechecking_response, remaining_ttl);
+        try {
+          const remaining_ttl = Math.max(0, recheck_until - now);
+          await this.cache.update_flight(rechecking_response, remaining_ttl);
+        } catch (err) {
+          log.error("Failed to update flight cache during recheck", err);
+        }
         finalResult = rechecking_response;
       }
 
@@ -265,6 +279,14 @@ export class FFScouter {
   // Get flights for a player, utilizing cache, bypassing batch queueing
   get_flights = async (player_id: PlayerId): Promise<PlayerFlightsResponse> => {
     log.debug(`get_flights called for ${player_id}`);
+
+    if (!this.config.key) {
+      return {
+        player_id,
+        current: null,
+        recent_flights: [],
+      };
+    }
 
     // Check cache
     let cached: CachedFlightData | null = null;
@@ -464,7 +486,11 @@ export class FFScouter {
         this.requeue_api(id);
       }
     } else {
-      await this.cache.update(Array.from(results.result.values()));
+      try {
+        await this.cache.update(Array.from(results.result.values()));
+      } catch (err) {
+        log.error("Failed to update cache", err);
+      }
       for (const id of ids) {
         const v = results.result.get(id);
         if (v) {
