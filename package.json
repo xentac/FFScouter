@@ -6,7 +6,7 @@
   "scripts": {
     "build": "vite build",
     "build:safe": "tsc && vite build",
-    "build:dev:watch": "vite build --watch --mode dev",
+    "build:dev:watch": "DEV_BUILD=true vite build --watch --mode dev",
     "serve:dist": "serve dist -l 5174 --cors",
     "dev:tm": "concurrently -k -r \"bun:build:dev:watch\" \"bun:serve:dist\"",
     "biome": "biome check --write",

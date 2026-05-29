@@ -34,6 +34,8 @@ function getFallbackVersion(): string {
 export default defineConfig(({ mode }) => {
   const isDev =
     mode === "dev" ||
+    // biome-ignore lint/complexity/useLiteralKeys: tsc requires index signature lookup
+    process.env["DEV_BUILD"] === "true" ||
     (() => {
       const modeIdx = process.argv.indexOf("--mode");
       return (
