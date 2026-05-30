@@ -118,6 +118,17 @@ export default {
       }
     });
 
+    // Listen for the custom save key event (autosave)
+    panel.addEventListener("ff-save-key", async (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      ffconfig.key = detail.apiKey;
+      panel.apiKey = detail.apiKey;
+      panel.isPremium = await check_key_status.is_premium(true);
+
+      toast("API key saved successfully!");
+      window.dispatchEvent(new CustomEvent("ff-config-updated"));
+    });
+
     panel.addEventListener("ff-verify", async (e: Event) => {
       const detail = (e as CustomEvent).detail;
       let result: FFApiCheckResponse | null = null;
@@ -138,7 +149,7 @@ export default {
       let message = `FF Scouter not configured. API key (${result.result.key}) not registered.`;
       let level = TOAST_LEVEL.ERROR;
       if (result.result.is_registered) {
-        message = `FF Scouter successfully configured. Don't forget to save! API key (${result.result.key}) was registered on ${format_timestamp(result.result.registered_at)} and last used ${format_timestamp(result.result.last_used)}.`;
+        message = `FF Scouter successfully configured. API key (${result.result.key}) was registered on ${format_timestamp(result.result.registered_at)} and last used ${format_timestamp(result.result.last_used)}.`;
         level = TOAST_LEVEL.INFO;
 
         if (detail.apiKey === ffconfig.key) {

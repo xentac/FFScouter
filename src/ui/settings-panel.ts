@@ -230,6 +230,18 @@ export class FFSettingsPanel extends LitElement {
     this.showSavedMessage = false;
   }
 
+  private onKeyChange(e: Event) {
+    const val = (e.target as HTMLInputElement).value.trim();
+    this.draftApiKey = val;
+    this.dispatchEvent(
+      new CustomEvent("ff-save-key", {
+        detail: { apiKey: val },
+        bubbles: true,
+        composed: true,
+      }),
+    );
+  }
+
   private onLowRangeInput(e: Event) {
     this.draftLowRange = Number((e.target as HTMLInputElement).value);
     this.showSavedMessage = false;
@@ -358,6 +370,7 @@ export class FFSettingsPanel extends LitElement {
               placeholder="Paste your key here..."
               .value=${this.draftApiKey}
               @input=${this.onKeyInput}
+              @change=${this.onKeyChange}
             />
           </div>
           <div class="input-row-inline">
