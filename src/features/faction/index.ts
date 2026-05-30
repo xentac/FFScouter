@@ -83,6 +83,11 @@ export function apply_filters_and_sort(
         (activity === "idle" && filters.activity.idle) ||
         (activity === "offline" && filters.activity.offline);
 
+      if (!matchesActivity) {
+        hide_row(row);
+        continue;
+      }
+
       // Status: Inspect the class list or inner structure to determine character state
       let status = "okay";
       const statusCell = row.querySelector(".status");
@@ -125,6 +130,11 @@ export function apply_filters_and_sort(
         (status === "jail" && filters.status.jail) ||
         (status === "abroad" && filters.status.abroad);
 
+      if (!matchesStatus) {
+        hide_row(row);
+        continue;
+      }
+
       // Level
       const levelCell = row.querySelector(".lvl:not(.ffscouter-cell), .level");
       const level = levelCell
@@ -133,6 +143,11 @@ export function apply_filters_and_sort(
       const matchesLevel =
         (filters.levelMin === null || level >= filters.levelMin) &&
         (filters.levelMax === null || level <= filters.levelMax);
+
+      if (!matchesLevel) {
+        hide_row(row);
+        continue;
+      }
 
       // FF Range
       // biome-ignore lint/complexity/useLiteralKeys: tsc requires index signature lookup
@@ -144,6 +159,11 @@ export function apply_filters_and_sort(
         ffVal === null ||
         ((filters.ffMin === null || ffVal >= filters.ffMin) &&
           (filters.ffMax === null || ffVal <= filters.ffMax));
+
+      if (!matchesFF) {
+        hide_row(row);
+        continue;
+      }
 
       // Stats Range
       // biome-ignore lint/complexity/useLiteralKeys: tsc requires index signature lookup
@@ -160,6 +180,11 @@ export function apply_filters_and_sort(
             filters.statsMax === null ||
             estVal <= filters.statsMax));
 
+      if (!matchesStats) {
+        hide_row(row);
+        continue;
+      }
+
       if (
         matchesActivity &&
         matchesStatus &&
@@ -167,9 +192,9 @@ export function apply_filters_and_sort(
         matchesFF &&
         matchesStats
       ) {
-        row.style.display = "";
+        show_row(row);
       } else {
-        row.style.display = "none";
+        hide_row(row);
       }
     }
 
@@ -224,6 +249,14 @@ export function apply_filters_and_sort(
   } finally {
     isApplying = false;
   }
+}
+
+function hide_row(row: HTMLElement) {
+  row.style.setProperty("display", "none", "important");
+}
+
+function show_row(row: HTMLElement) {
+  row.style.display = "";
 }
 
 function is_filter_active(filters: {
@@ -534,9 +567,9 @@ export async function apply_ff_columns(membersList: HTMLElement) {
   }
 
   // Trigger filtering and sorting if filter box is connected
-  const filterBox = membersList.parentNode?.querySelector(
-    "ff-faction-filter-box",
-  ) as any;
+  const filterBox = (
+    membersList.closest(".faction-war") || membersList.parentNode
+  )?.querySelector("ff-faction-filter-box") as any;
   if (filterBox?.activity) {
     apply_filters_and_sort(membersList, {
       sortBy: filterBox.sortBy ?? "none",
@@ -611,9 +644,9 @@ export function initialize_features(membersList: HTMLElement) {
     }
 
     if (shouldReapply) {
-      const filterBox = membersList.parentNode?.querySelector(
-        "ff-faction-filter-box",
-      ) as any;
+      const filterBox = (
+        membersList.closest(".faction-war") || membersList.parentNode
+      )?.querySelector("ff-faction-filter-box") as any;
       if (filterBox?.activity) {
         apply_filters_and_sort(membersList, {
           sortBy: filterBox.sortBy ?? "none",
@@ -797,13 +830,22 @@ function initialize_war_features(
   if (!filterBox) {
     filterBox = document.createElement("ff-faction-filter-box");
     filterBox.setAttribute("mode", "war");
-    filterBox.addEventListener("filter-change", (e: any) => {
-      for (const list of lists) {
-        apply_filters_and_sort(list, e.detail);
-      }
-    });
     factionWar.insertBefore(filterBox, factionWar.firstChild);
   }
+
+  // Update or attach the filter-change event listener with fresh closure context
+  if (filterBox._onFilterChange) {
+    filterBox.removeEventListener("filter-change", filterBox._onFilterChange);
+  }
+  filterBox._onFilterChange = (e: any) => {
+    const currentLists = Array.from(
+      factionWar.querySelectorAll(".enemy-faction, .your-faction"),
+    ) as HTMLElement[];
+    for (const list of currentLists) {
+      apply_filters_and_sort(list, e.detail);
+    }
+  };
+  filterBox.addEventListener("filter-change", filterBox._onFilterChange);
 
   for (const list of lists) {
     setup_war_list(list);
@@ -865,9 +907,9 @@ function initialize_war_list(list: HTMLElement) {
     }
 
     if (shouldReapply) {
-      const filterBox = list.parentNode?.querySelector(
-        "ff-faction-filter-box",
-      ) as any;
+      const filterBox = list
+        .closest(".faction-war")
+        ?.querySelector("ff-faction-filter-box") as any;
       if (filterBox?.activity) {
         apply_filters_and_sort(list, {
           sortBy: filterBox.sortBy ?? "none",
