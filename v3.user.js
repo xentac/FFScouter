@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FF Scouter V3
 // @namespace    xentac-v3
-// @version      3.0-alpha20
+// @version      3.0-alpha21
 // @author       xentac [3354782], MAVRI [2402357], rDacted [2670953], Weav3r [1853324], Glasnost [1844049]
 // @description  Shows the expected Fair Fight score against targets and faction war status
 // @license      GPLv3
@@ -3695,6 +3695,10 @@ async willUpdate(changedProperties) {
         const activity = (activityImg?.getAttribute("alt") || "offline").toLowerCase();
         const allActivityUnchecked = !filters.activity.online && !filters.activity.idle && !filters.activity.offline;
         const matchesActivity = allActivityUnchecked || activity === "online" && filters.activity.online || activity === "idle" && filters.activity.idle || activity === "offline" && filters.activity.offline;
+        if (!matchesActivity) {
+          hide_row(row);
+          continue;
+        }
         let status = "okay";
         const statusCell = row.querySelector(".status");
         if (statusCell) {
@@ -3712,21 +3716,37 @@ async willUpdate(changedProperties) {
         }
         const allStatusUnchecked = !filters.status.okay && !filters.status.traveling && !filters.status.hospital && !filters.status.jail && !filters.status.abroad;
         const matchesStatus = allStatusUnchecked || status === "okay" && filters.status.okay || status === "traveling" && filters.status.traveling || status === "hospital" && filters.status.hospital || status === "jail" && filters.status.jail || status === "abroad" && filters.status.abroad;
+        if (!matchesStatus) {
+          hide_row(row);
+          continue;
+        }
         const levelCell = row.querySelector(".lvl:not(.ffscouter-cell), .level");
         const level = levelCell ? Number.parseInt(levelCell.textContent || "0", 10) : 0;
         const matchesLevel = (filters.levelMin === null || level >= filters.levelMin) && (filters.levelMax === null || level <= filters.levelMax);
+        if (!matchesLevel) {
+          hide_row(row);
+          continue;
+        }
         const ffVal = row.dataset["ffValue"] ? (
 Number.parseFloat(row.dataset["ffValue"])
         ) : null;
         const matchesFF = ffVal === null || (filters.ffMin === null || ffVal >= filters.ffMin) && (filters.ffMax === null || ffVal <= filters.ffMax);
+        if (!matchesFF) {
+          hide_row(row);
+          continue;
+        }
         const estVal = row.dataset["estValue"] ? (
 Number.parseInt(row.dataset["estValue"], 10)
         ) : null;
         const matchesStats = estVal === null || (filters.statsMin === void 0 || filters.statsMin === null || estVal >= filters.statsMin) && (filters.statsMax === void 0 || filters.statsMax === null || estVal <= filters.statsMax);
+        if (!matchesStats) {
+          hide_row(row);
+          continue;
+        }
         if (matchesActivity && matchesStatus && matchesLevel && matchesFF && matchesStats) {
-          row.style.display = "";
+          show_row(row);
         } else {
-          row.style.display = "none";
+          hide_row(row);
         }
       }
       if (filters.sortBy !== "none") {
@@ -3767,6 +3787,12 @@ Number.parseInt(row.dataset["estValue"], 10)
     } finally {
       isApplying = false;
     }
+  }
+  function hide_row(row) {
+    row.style.setProperty("display", "none", "important");
+  }
+  function show_row(row) {
+    row.style.display = "";
   }
   function is_filter_active(filters) {
     if (filters.sortBy !== "none") return true;
@@ -3995,9 +4021,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
         }
       }
     }
-    const filterBox = membersList.parentNode?.querySelector(
-      "ff-faction-filter-box"
-    );
+    const filterBox = (membersList.closest(".faction-war") || membersList.parentNode)?.querySelector("ff-faction-filter-box");
     if (filterBox?.activity) {
       apply_filters_and_sort(membersList, {
         sortBy: filterBox.sortBy ?? "none",
@@ -4047,9 +4071,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
         }
       }
       if (shouldReapply) {
-        const filterBox = membersList.parentNode?.querySelector(
-          "ff-faction-filter-box"
-        );
+        const filterBox = (membersList.closest(".faction-war") || membersList.parentNode)?.querySelector("ff-faction-filter-box");
         if (filterBox?.activity) {
           apply_filters_and_sort(membersList, {
             sortBy: filterBox.sortBy ?? "none",
@@ -4188,13 +4210,20 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     if (!filterBox) {
       filterBox = document.createElement("ff-faction-filter-box");
       filterBox.setAttribute("mode", "war");
-      filterBox.addEventListener("filter-change", (e2) => {
-        for (const list of lists) {
-          apply_filters_and_sort(list, e2.detail);
-        }
-      });
       factionWar.insertBefore(filterBox, factionWar.firstChild);
     }
+    if (filterBox._onFilterChange) {
+      filterBox.removeEventListener("filter-change", filterBox._onFilterChange);
+    }
+    filterBox._onFilterChange = (e2) => {
+      const currentLists = Array.from(
+        factionWar.querySelectorAll(".enemy-faction, .your-faction")
+      );
+      for (const list of currentLists) {
+        apply_filters_and_sort(list, e2.detail);
+      }
+    };
+    filterBox.addEventListener("filter-change", filterBox._onFilterChange);
     for (const list of lists) {
       setup_war_list(list);
     }
@@ -4240,9 +4269,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
         }
       }
       if (shouldReapply) {
-        const filterBox = list.parentNode?.querySelector(
-          "ff-faction-filter-box"
-        );
+        const filterBox = list.closest(".faction-war")?.querySelector("ff-faction-filter-box");
         if (filterBox?.activity) {
           apply_filters_and_sort(list, {
             sortBy: filterBox.sortBy ?? "none",
@@ -6400,7 +6427,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       return;
     }
     w[INJECTION_KEY] = true;
-    log.info("Initializing", "3.0-alpha20");
+    log.info("Initializing", "3.0-alpha21");
     if (ffscouter.analytics_enabled) {
       unsafeWindow.ffscouter = ffscouter;
       window.ffscouter = ffscouter;
