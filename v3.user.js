@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FF Scouter V3
 // @namespace    xentac-v3
-// @version      3.0-alpha19
+// @version      3.0-alpha20
 // @author       xentac [3354782], MAVRI [2402357], rDacted [2670953], Weav3r [1853324], Glasnost [1844049]
 // @description  Shows the expected Fair Fight score against targets and faction war status
 // @license      GPLv3
@@ -2358,6 +2358,23 @@ event.oldVersion,
       }
       const userid = extract_target_id(
         element.href,
+        /.*userId=(?<target_id>\d+)/
+      );
+      if (userid) {
+        return userid;
+      }
+    }
+    const parent_anchor = element.closest("a");
+    if (parent_anchor) {
+      const xid = extract_target_id(
+        parent_anchor.href,
+        /.*XID=(?<target_id>\d+)/
+      );
+      if (xid) {
+        return xid;
+      }
+      const userid = extract_target_id(
+        parent_anchor.href,
         /.*userId=(?<target_id>\d+)/
       );
       if (userid) {
@@ -4884,6 +4901,10 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
           FEATURE_NAME$2
         );
         apply_ff_gauge_selector(
+          root.querySelectorAll(".bazaar-card .bazaar-card-name"),
+          FEATURE_NAME$2
+        );
+        apply_ff_gauge_selector(
           root.querySelectorAll(".honor-text-wrap"),
           FEATURE_NAME$2
         );
@@ -6379,7 +6400,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       return;
     }
     w[INJECTION_KEY] = true;
-    log.info("Initializing", "3.0-alpha19");
+    log.info("Initializing", "3.0-alpha20");
     if (ffscouter.analytics_enabled) {
       unsafeWindow.ffscouter = ffscouter;
       window.ffscouter = ffscouter;
