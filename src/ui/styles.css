@@ -549,3 +549,30 @@ ff-faction-filter-box {
 .members-list li.your > div.clear {
   display: none !important;
 }
+
+/* Ensure space is reserved when TornTools adds estimate rows */
+.members-list li.enemy:has(> .tt-stats-estimate),
+.members-list li.your:has(> .tt-stats-estimate),
+.members-list li.enemy:has(> div.clear ~ *),
+.members-list li.your:has(> div.clear ~ *) {
+  padding-bottom: 22px !important;
+  position: relative !important;
+}
+
+/* Absolute position TornTools estimate rows so they don't break flex layout flow */
+.members-list li.enemy > .tt-stats-estimate,
+.members-list li.your > .tt-stats-estimate,
+.members-list li.enemy > div.clear ~ *,
+.members-list li.your > div.clear ~ * {
+  position: absolute !important;
+  bottom: 2px !important;
+  left: 10px !important;
+  height: 18px !important;
+  line-height: 18px !important;
+  font-size: 11px !important;
+  width: calc(100% - 20px) !important;
+  display: block !important;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
