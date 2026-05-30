@@ -186,6 +186,26 @@ export function get_player_id_in_element(element: Element): PlayerId | null {
     }
   }
 
+  // This might be too risky
+  const parent_anchor = element.closest("a");
+
+  if (parent_anchor) {
+    const xid = extract_target_id(
+      parent_anchor.href,
+      /.*XID=(?<target_id>\d+)/,
+    );
+    if (xid) {
+      return xid;
+    }
+    const userid = extract_target_id(
+      parent_anchor.href,
+      /.*userId=(?<target_id>\d+)/,
+    );
+    if (userid) {
+      return userid;
+    }
+  }
+
   return null;
 }
 

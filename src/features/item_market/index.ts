@@ -40,6 +40,12 @@ export default {
         FEATURE_NAME,
       );
 
+      // Support Bazaar + TE Info PDA Version (https://greasyfork.org/en/scripts/554658-bazaar-te-info-pda-version)
+      apply_ff_gauge_selector(
+        root.querySelectorAll(".bazaar-card .bazaar-card-name"),
+        FEATURE_NAME,
+      );
+
       apply_ff_gauge_selector(
         root.querySelectorAll(".honor-text-wrap"),
         FEATURE_NAME,
