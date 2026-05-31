@@ -1,4 +1,10 @@
-import { apply_ff_gauge_selector, on_navigation, torn_page } from "@utils/dom";
+import {
+  apply_ff_gauge_selector,
+  on_navigation,
+  torn_page,
+  wait_for_body,
+  wait_for_element,
+} from "@utils/dom";
 import { ffscouter } from "@utils/ffscouter";
 import logger from "@utils/logger";
 import { type Feature, StartTime } from "../feature";
@@ -31,7 +37,6 @@ function is_excluded_page(): boolean {
     case torn_page("freebies"):
     case torn_page("bigalgunshop"):
     case torn_page("shops"):
-    case torn_page("joblist"):
     case torn_page("joblisting"):
     case torn_page("messageinc"):
     case torn_page("comics"):
@@ -85,6 +90,15 @@ function is_excluded_page(): boolean {
       }
       return false;
   }
+}
+
+async function find_mutation_target() {
+  const content_wrapper = await wait_for_element(".content-wrapper", 10_000);
+  if (content_wrapper) {
+    return content_wrapper;
+  }
+  await wait_for_body(10_000);
+  return document.body;
 }
 
 export default {
@@ -204,7 +218,7 @@ export default {
       }
     });
 
-    const update_observer_state = () => {
+    const update_observer_state = async () => {
       const excluded = is_excluded_page();
       if (excluded) {
         if (is_observing) {
@@ -214,7 +228,8 @@ export default {
         }
       } else {
         if (!is_observing) {
-          ff_gauge_observer.observe(document, {
+          const target = await find_mutation_target();
+          ff_gauge_observer.observe(target, {
             attributes: false,
             childList: true,
             characterData: false,
@@ -223,8 +238,8 @@ export default {
           is_observing = true;
           log.debug("Connected fallback MutationObserver (included page)");
 
-          if (document.body) {
-            check_mutation(document.body);
+          if (target) {
+            check_mutation(target);
           }
         }
       }
