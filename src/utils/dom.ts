@@ -61,6 +61,13 @@ export function torn_page(
   } else {
     const hash = window.location.hash;
     for (const h of match_hash) {
+      if (h.endsWith("*")) {
+        const stripped = h.substring(0, h.length - 1);
+        if (hash.startsWith(stripped)) {
+          hash_match = true;
+          break;
+        }
+      }
       if (hash === h) {
         hash_match = true;
         break;
