@@ -150,6 +150,10 @@ export default {
             node.querySelectorAll(".employee"),
             FEATURE_NAME,
           );
+          await apply_ff_gauge_selector(
+            node.querySelectorAll(".director"),
+            FEATURE_NAME,
+          );
         } else if (
           torn_page("messages") ||
           torn_page("index") ||
