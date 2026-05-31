@@ -47,6 +47,7 @@ export function torn_page(
   const search = new URLSearchParams(window.location.search);
   let sid_match = true;
   let step_match = true;
+  let page_match = true;
   if (params.sid) {
     const page_sid = search.get("sid");
     sid_match = page_sid !== null && params.sid === page_sid;
@@ -55,8 +56,12 @@ export function torn_page(
     const page_step = search.get("step");
     step_match = page_step !== null && params.step === page_step;
   }
+  if (params.page) {
+    const page_page = search.get("page");
+    page_match = page_page !== null && params.page === page_page;
+  }
 
-  if (!sid_match || !step_match) {
+  if (!sid_match || !step_match || !page_match) {
     return false;
   }
 
@@ -80,7 +85,7 @@ export function torn_page(
     }
   }
 
-  return sid_match && step_match && hash_match;
+  return sid_match && step_match && page_match && hash_match;
 }
 
 function make_arrow(d: FFDataComplete): SVGElement {
