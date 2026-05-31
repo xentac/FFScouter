@@ -33,6 +33,12 @@ export enum FactionsColDisplay {
   NONE = "none",
 }
 
+export enum GaugeMarkerType {
+  ARROW = "arrow",
+  BUBBLE_FF = "bubble_ff",
+  BUBBLE_ESTIMATE = "bubble_estimate",
+}
+
 export const CONFIG_DEFAULTS = {
   low_ff_range: 2,
   high_ff_range: 4,
@@ -52,6 +58,7 @@ export const CONFIG_DEFAULTS = {
   chain_min_ff: null as number | null,
   chain_max_ff: 2.5,
   chain_factionless: false,
+  gauge_marker_type: GaugeMarkerType.ARROW,
 } as const;
 
 enum CONFIG {
@@ -80,6 +87,7 @@ enum CONFIG {
   CHAIN_FACTIONLESS = "chain_factionless",
   CHAIN_TARGETS = "chain_targets",
   CHAIN_TARGET_INDEX = "chain_target_index",
+  GAUGE_MARKER_TYPE = "gauge_marker_type",
 }
 
 export class FFConfig {
@@ -305,6 +313,17 @@ export class FFConfig {
     this.storage.set(CONFIG.ANALYTICS_ENABLED, val);
   }
 
+  get gauge_marker_type(): GaugeMarkerType {
+    return (
+      this.storage.get(CONFIG.GAUGE_MARKER_TYPE) ??
+      CONFIG_DEFAULTS.gauge_marker_type
+    );
+  }
+
+  set gauge_marker_type(val: GaugeMarkerType) {
+    this.storage.set(CONFIG.GAUGE_MARKER_TYPE, val);
+  }
+
   get faction_filter_state(): any | null {
     return this.storage.get(CONFIG.FACTION_FILTER_STATE) ?? null;
   }
@@ -382,6 +401,7 @@ export class FFConfig {
     this.storage.remove(CONFIG.CHAIN_FACTIONLESS);
     this.storage.remove(CONFIG.CHAIN_TARGETS);
     this.storage.remove(CONFIG.CHAIN_TARGET_INDEX);
+    this.storage.remove(CONFIG.GAUGE_MARKER_TYPE);
   }
 }
 

@@ -43,6 +43,7 @@ export default {
     panel.warColDisplay = ffconfig.war_col_display;
     panel.debugLogs = ffconfig.debug_logs;
     panel.analyticsEnabled = ffconfig.analytics_enabled;
+    panel.gaugeMarkerType = ffconfig.gauge_marker_type;
     panel.isPremium = await check_key_status.is_premium(true);
 
     // Listen for the custom save event
@@ -72,6 +73,7 @@ export default {
         logger.setLevel(LogLevel.INFO);
       }
       ffconfig.analytics_enabled = detail.analyticsEnabled;
+      ffconfig.gauge_marker_type = detail.gaugeMarkerType;
       panel.isPremium = await check_key_status.is_premium(true);
 
       toast("Settings saved successfully!");
@@ -102,6 +104,7 @@ export default {
       panel.warColDisplay = ffconfig.war_col_display;
       panel.debugLogs = ffconfig.debug_logs;
       panel.analyticsEnabled = ffconfig.analytics_enabled;
+      panel.gaugeMarkerType = ffconfig.gauge_marker_type;
 
       toast("Settings reset to defaults!");
       window.dispatchEvent(new CustomEvent("ff-config-updated"));

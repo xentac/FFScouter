@@ -3,6 +3,7 @@ import {
   type ChainTabType,
   CONFIG_DEFAULTS,
   type FactionsColDisplay,
+  type GaugeMarkerType,
 } from "@utils/ffconfig";
 import { html, LitElement } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
@@ -46,6 +47,8 @@ export class FFSettingsPanel extends LitElement {
   @property({ type: Boolean }) debugLogs: boolean = CONFIG_DEFAULTS.debug_logs;
   @property({ type: Boolean }) analyticsEnabled: boolean =
     CONFIG_DEFAULTS.analytics_enabled;
+  @property({ type: String }) gaugeMarkerType: GaugeMarkerType =
+    CONFIG_DEFAULTS.gauge_marker_type;
   @property({ type: Boolean }) isPremium: boolean = false;
 
   // Draft States
@@ -79,6 +82,8 @@ export class FFSettingsPanel extends LitElement {
   @state() private draftDebugLogs: boolean = CONFIG_DEFAULTS.debug_logs;
   @state() private draftAnalyticsEnabled: boolean =
     CONFIG_DEFAULTS.analytics_enabled;
+  @state() private draftGaugeMarkerType: GaugeMarkerType =
+    CONFIG_DEFAULTS.gauge_marker_type;
 
   @state() private rangeError = "";
   @state() private showSavedMessage = false;
@@ -108,7 +113,8 @@ export class FFSettingsPanel extends LitElement {
       changedProperties.has("factionsColDisplay") ||
       changedProperties.has("warColDisplay") ||
       changedProperties.has("debugLogs") ||
-      changedProperties.has("analyticsEnabled")
+      changedProperties.has("analyticsEnabled") ||
+      changedProperties.has("gaugeMarkerType")
     ) {
       this.resetDrafts();
     }
@@ -134,6 +140,7 @@ export class FFSettingsPanel extends LitElement {
     this.draftWarColDisplay = this.warColDisplay;
     this.draftDebugLogs = this.debugLogs;
     this.draftAnalyticsEnabled = this.analyticsEnabled;
+    this.draftGaugeMarkerType = this.gaugeMarkerType;
   }
 
   private handleSave() {
@@ -184,6 +191,7 @@ export class FFSettingsPanel extends LitElement {
           warColDisplay: this.draftWarColDisplay,
           debugLogs: this.draftDebugLogs,
           analyticsEnabled: this.draftAnalyticsEnabled,
+          gaugeMarkerType: this.draftGaugeMarkerType,
         },
         bubbles: true,
         composed: true,
@@ -334,6 +342,12 @@ export class FFSettingsPanel extends LitElement {
 
   private onAnalyticsEnabledChange(e: Event) {
     this.draftAnalyticsEnabled = (e.target as HTMLInputElement).checked;
+    this.showSavedMessage = false;
+  }
+
+  private onGaugeMarkerTypeChange(e: Event) {
+    this.draftGaugeMarkerType = (e.target as HTMLSelectElement)
+      .value as GaugeMarkerType;
     this.showSavedMessage = false;
   }
 
@@ -572,6 +586,20 @@ export class FFSettingsPanel extends LitElement {
           <div class="input-row-inline">
             <label>War Monitor is no longer supported. Use <a target="_blank" href="https://greasyfork.org/en/scripts/529238-torn-war-stuff-enhanced">Torn War Stuff Enhanced</a> instead.</a></label
             >
+          </div>
+
+          <!-- Gauge Marker Display Style -->
+          <div class="input-row-inline">
+            <label for="gauge-marker-type">Gauge Marker Style:</label>
+            <select
+              id="gauge-marker-type"
+              .value=${this.draftGaugeMarkerType}
+              @change=${this.onGaugeMarkerTypeChange}
+            >
+              <option value="arrow">Arrow (Default)</option>
+              <option value="bubble_ff">Bubble (FF Score)</option>
+              <option value="bubble_estimate">Bubble (BS Estimate)</option>
+            </select>
           </div>
 
           <!-- Factions Column Display -->

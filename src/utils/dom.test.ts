@@ -15,6 +15,7 @@ import {
   wait_for_element,
   waitForDocumentReady,
 } from "./dom";
+import { ffconfig, GaugeMarkerType } from "./ffconfig";
 import { ffscouter } from "./ffscouter";
 
 vi.mock("./ffscouter", () => {
@@ -28,6 +29,7 @@ vi.mock("./ffscouter", () => {
 
 beforeEach(() => {
   document.body.innerHTML = "";
+  ffconfig.reset();
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
 });
@@ -151,6 +153,59 @@ test("add_ff_arrow fetches data and inserts gauge arrow SVG to elements", async 
   const svg = anchor.querySelector(".ffsv3-arrow");
   expect(svg).not.toBeNull();
   expect(svg?.tagName.toLowerCase()).toEqual("svg");
+});
+
+test("add_ff_arrow renders bubble with FF number when configured", async () => {
+  ffconfig.gauge_marker_type = GaugeMarkerType.BUBBLE_FF;
+  vi.mocked(ffscouter.get).mockResolvedValue({
+    player_id: 123,
+    no_data: false,
+    fair_fight: 3.52,
+    last_updated: Date.now() / 1000,
+    bs_estimate: 1000,
+    bs_estimate_human: "1k",
+    bss_public: 10,
+    source: "bss",
+    premium_insights_available: false,
+  });
+
+  const anchor = document.createElement("a");
+  anchor.href = "https://www.torn.com/profiles.php?XID=123";
+  document.body.appendChild(anchor);
+
+  add_ff_arrow(anchor);
+  await new Promise((resolve) => setTimeout(resolve, 10));
+
+  const bubble = anchor.querySelector(".ffsv3-bubble");
+  expect(bubble).not.toBeNull();
+  expect(bubble?.textContent).toEqual("3.52");
+  expect(bubble?.classList.contains("ffsv3-bubble")).toBe(true);
+});
+
+test("add_ff_arrow renders bubble with stat estimate when configured", async () => {
+  ffconfig.gauge_marker_type = GaugeMarkerType.BUBBLE_ESTIMATE;
+  vi.mocked(ffscouter.get).mockResolvedValue({
+    player_id: 123,
+    no_data: false,
+    fair_fight: 3.52,
+    last_updated: Date.now() / 1000,
+    bs_estimate: 1000,
+    bs_estimate_human: "1.2b",
+    bss_public: 10,
+    source: "bss",
+    premium_insights_available: false,
+  });
+
+  const anchor = document.createElement("a");
+  anchor.href = "https://www.torn.com/profiles.php?XID=123";
+  document.body.appendChild(anchor);
+
+  add_ff_arrow(anchor);
+  await new Promise((resolve) => setTimeout(resolve, 10));
+
+  const bubble = anchor.querySelector(".ffsv3-bubble");
+  expect(bubble).not.toBeNull();
+  expect(bubble?.textContent).toEqual("1.2b");
 });
 
 test("apply_ff_gauge invokes add_ff_arrow if element is valid", async () => {

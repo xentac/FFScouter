@@ -1,6 +1,11 @@
+import { ffconfig, GaugeMarkerType } from "./ffconfig";
 import { ffscouter } from "./ffscouter";
 import logger from "./logger";
-import { ff_to_percent, get_ff_arrow_colour } from "./strings";
+import {
+  ff_to_percent,
+  get_contrast_color,
+  get_ff_arrow_colour,
+} from "./strings";
 import type { FFDataComplete, PlayerId } from "./types";
 
 const log = logger.child("dom");
@@ -95,6 +100,31 @@ function make_arrow(d: FFDataComplete): SVGElement {
   return svg;
 }
 
+function make_marker(d: FFDataComplete): HTMLElement | SVGElement {
+  const markerType = ffconfig.gauge_marker_type;
+  if (
+    markerType === GaugeMarkerType.BUBBLE_FF ||
+    markerType === GaugeMarkerType.BUBBLE_ESTIMATE
+  ) {
+    const fill = get_ff_arrow_colour(d);
+    const contrastColor = get_contrast_color(fill);
+    const bubble = document.createElement("div");
+    bubble.classList.add("ffsv3-bubble");
+    bubble.style.backgroundColor = fill;
+    bubble.style.color = contrastColor;
+
+    if (markerType === GaugeMarkerType.BUBBLE_FF) {
+      bubble.textContent = d.fair_fight.toFixed(2);
+    } else {
+      bubble.textContent = d.bs_estimate_human || "N/A";
+    }
+
+    return bubble;
+  }
+
+  return make_arrow(d);
+}
+
 export function add_ff_arrow(element: HTMLElement, featureName = "Unknown") {
   const player_id = get_player_id_in_element(element);
   if (!player_id) {
@@ -126,12 +156,12 @@ export function add_ff_arrow(element: HTMLElement, featureName = "Unknown") {
     element.classList.add("ffsv3-gauge");
     element.style.setProperty("--band-percent", `${percent}`);
 
-    const a = element.querySelector(".ffsv3-arrow");
+    const a = element.querySelector(".ffsv3-arrow, .ffsv3-bubble");
     if (a) {
       a.remove();
     }
 
-    element.appendChild(make_arrow(d));
+    element.appendChild(make_marker(d));
     ffscouter.add_analytics_entry(featureName, player_id, "applied");
   });
 }
