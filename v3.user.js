@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FF Scouter V3
 // @namespace    xentac-v3
-// @version      3.0-alpha21
+// @version      3.0-alpha22
 // @author       xentac [3354782], MAVRI [2402357], rDacted [2670953], Weav3r [1853324], Glasnost [1844049]
 // @description  Shows the expected Fair Fight score against targets and faction war status
 // @license      GPLv3
@@ -24,6 +24,570 @@
     StartTime2[StartTime2["DocumentEnd"] = 2] = "DocumentEnd";
     return StartTime2;
   })(StartTime || {});
+  var LogLevel = ((LogLevel2) => {
+    LogLevel2[LogLevel2["DEBUG"] = 0] = "DEBUG";
+    LogLevel2[LogLevel2["INFO"] = 1] = "INFO";
+    LogLevel2[LogLevel2["WARN"] = 2] = "WARN";
+    LogLevel2[LogLevel2["ERROR"] = 3] = "ERROR";
+    LogLevel2[LogLevel2["NONE"] = 4] = "NONE";
+    return LogLevel2;
+  })(LogLevel || {});
+  class Logger {
+constructor(prefix = "", defaultLevel = 1, state = {}) {
+      this.isPDA = false;
+      this.colors = {
+        debug: "#7f8c8d",
+        info: "#3498db",
+        warn: "#f39c12",
+        error: "#e74c3c"
+      };
+      this.prefix = prefix;
+      this.defaultLevel = defaultLevel;
+      this.state = state;
+      this.detectPDA();
+    }
+detectPDA() {
+      if (typeof window !== "undefined") {
+        if (window.flutter_inappwebview) {
+          this.isPDA = true;
+        }
+        window.addEventListener("flutterInAppWebViewPlatformReady", () => {
+          window.flutter_inappwebview.callHandler("isTornPDA").then((response) => {
+            if (response?.isTornPDA) {
+              this.isPDA = true;
+            }
+          }).catch(() => {
+          });
+        });
+      }
+    }
+setLevel(level) {
+      this.state.explicitLevel = level;
+    }
+getLevel() {
+      return this.state.explicitLevel !== void 0 ? this.state.explicitLevel : this.defaultLevel;
+    }
+debug(...args) {
+      if (this.getLevel() <= 0) {
+        if (this.isPDA) {
+          console.log(`${this.formatPrefix("DEBUG")}`, ...this.formatArgs(args));
+        } else {
+          console.log(
+            `%c${this.formatPrefix("DEBUG")}`,
+            `color: ${this.colors.debug}; font-weight: bold`,
+            ...args
+          );
+        }
+      }
+    }
+info(...args) {
+      if (this.getLevel() <= 1) {
+        if (this.isPDA) {
+          console.info(`${this.formatPrefix("INFO")}`, ...this.formatArgs(args));
+        } else {
+          console.info(
+            `%c${this.formatPrefix("INFO")}`,
+            `color: ${this.colors.info}; font-weight: bold`,
+            ...args
+          );
+        }
+      }
+    }
+warn(...args) {
+      if (this.getLevel() <= 2) {
+        if (this.isPDA) {
+          console.warn(`${this.formatPrefix("WARN")}`, ...this.formatArgs(args));
+        } else {
+          console.warn(
+            `%c${this.formatPrefix("WARN")}`,
+            `color: ${this.colors.warn}; font-weight: bold`,
+            ...args
+          );
+        }
+      }
+    }
+error(...args) {
+      if (this.getLevel() <= 3) {
+        if (this.isPDA) {
+          console.error(
+            `${this.formatPrefix("ERROR")}`,
+            ...this.formatArgs(args)
+          );
+        } else {
+          console.error(
+            `%c${this.formatPrefix("ERROR")}`,
+            `color: ${this.colors.error}; font-weight: bold`,
+            ...args
+          );
+        }
+      }
+    }
+group(label, collapsed = false) {
+      if (this.getLevel() < 4) {
+        if (collapsed) {
+          console.groupCollapsed(this.formatPrefix(""), label);
+        } else {
+          console.group(this.formatPrefix(""), label);
+        }
+      }
+    }
+groupEnd() {
+      if (this.getLevel() < 4) {
+        console.groupEnd();
+      }
+    }
+child(subPrefix) {
+      const childPrefix = this.prefix ? `${this.prefix}:${subPrefix}` : subPrefix;
+      return new Logger(childPrefix, this.defaultLevel, this.state);
+    }
+formatPrefix(level) {
+      const prefix = this.prefix ? `[${this.prefix}]` : "";
+      return level ? `${prefix} - [${level}]: ` : `${prefix}: `;
+    }
+formatArgs(args) {
+      return args.map((arg) => {
+        if (typeof arg === "object" && arg !== null) {
+          try {
+            return JSON.stringify(arg, null, 2);
+          } catch {
+            return String(arg);
+          }
+        }
+        return arg;
+      });
+    }
+  }
+  const logger = new Logger(
+    "FFSV3",
+    0
+);
+  const log$e = logger.child("storage");
+  var Time = ((Time2) => {
+    Time2[Time2["Seconds"] = 1e3] = "Seconds";
+    Time2[Time2["Minutes"] = 6e4] = "Minutes";
+    Time2[Time2["Hours"] = 36e5] = "Hours";
+    Time2[Time2["Days"] = 864e5] = "Days";
+    Time2[Time2["Weeks"] = 6048e5] = "Weeks";
+    Time2[Time2["Years"] = 31536e6] = "Years";
+    return Time2;
+  })(Time || {});
+  class Storage {
+constructor(prefix) {
+      this.prefix = prefix;
+    }
+set(key, value, expireConfig) {
+      try {
+        const item = {
+          value,
+          expiration: expireConfig ? Date.now() + expireConfig.amount * (expireConfig.unit || 6e4) : null
+        };
+        localStorage.setItem(this.prefix + key, JSON.stringify(item));
+      } catch (error) {
+        log$e.error(`Error storing item '${key}':`, error);
+      }
+    }
+get(key) {
+      try {
+        const itemStr = localStorage.getItem(this.prefix + key);
+        if (!itemStr) {
+          return null;
+        }
+        let item = null;
+        try {
+          item = JSON.parse(itemStr);
+        } catch {
+          item = null;
+        }
+        if (!item) {
+          log$e.warn(`Key '${key}' has invalid JSON in it.`);
+          this.remove(key);
+          return null;
+        }
+        if (item.expiration && Date.now() > item.expiration) {
+          this.remove(key);
+          log$e.debug(`Key ${key} has expired.`);
+          return null;
+        }
+        return item.value;
+      } catch (error) {
+        log$e.error(`Error retrieving item '${key}':`, error);
+        return null;
+      }
+    }
+remove(key) {
+      try {
+        localStorage.removeItem(this.prefix + key);
+      } catch (error) {
+        log$e.error(`Error removing item [${key}]:`, error);
+      }
+    }
+has(key) {
+      return this.get(key) !== null;
+    }
+clearAll() {
+      try {
+        Object.keys(localStorage).filter((key) => key.startsWith(this.prefix)).forEach((key) => {
+          localStorage.removeItem(key);
+        });
+      } catch (error) {
+        log$e.error("Error clearing storage:", error);
+      }
+    }
+  }
+  var FactionsColDisplay = ((FactionsColDisplay2) => {
+    FactionsColDisplay2["FAIR_FIGHT"] = "fair_fight";
+    FactionsColDisplay2["BATTLE_STATS"] = "battle_stats";
+    FactionsColDisplay2["NONE"] = "none";
+    return FactionsColDisplay2;
+  })(FactionsColDisplay || {});
+  var GaugeMarkerType = ((GaugeMarkerType2) => {
+    GaugeMarkerType2["ARROW"] = "arrow";
+    GaugeMarkerType2["BUBBLE_FF"] = "bubble_ff";
+    GaugeMarkerType2["BUBBLE_ESTIMATE"] = "bubble_estimate";
+    return GaugeMarkerType2;
+  })(GaugeMarkerType || {});
+  const CONFIG_DEFAULTS = {
+    low_ff_range: 2,
+    high_ff_range: 4,
+    max_ff_range: 8,
+    chain_button_enabled: true,
+    chain_link_type: "attack",
+    chain_tab_type: "newtab",
+    chain_ff_target: 2.5,
+    ff_history_enabled: true,
+    factions_col_display: "battle_stats",
+    war_col_display: "battle_stats",
+    debug_logs: false,
+    analytics_enabled: false,
+    chain_min_level: null,
+    chain_max_level: null,
+    chain_inactive: true,
+    chain_min_ff: null,
+    chain_max_ff: 2.5,
+    chain_factionless: false,
+    gauge_marker_type: "arrow"
+};
+  class FFConfig {
+    constructor(name) {
+      this.name = name;
+      this.storage = new Storage(this.name);
+      logger.setLevel(this.debug_logs ? LogLevel.DEBUG : LogLevel.INFO);
+    }
+    get key() {
+      return this.storage.get(
+        "key"
+) ?? "";
+    }
+    set key(key) {
+      this.storage.set("key", key);
+    }
+    get low_ff_range() {
+      return this.storage.get(
+        "low_ff_range"
+) ?? CONFIG_DEFAULTS.low_ff_range;
+    }
+    set low_ff_range(val) {
+      this.storage.set("low_ff_range", val);
+    }
+    get high_ff_range() {
+      return this.storage.get(
+        "high_ff_range"
+) ?? CONFIG_DEFAULTS.high_ff_range;
+    }
+    set high_ff_range(val) {
+      this.storage.set("high_ff_range", val);
+    }
+    get max_ff_range() {
+      return this.storage.get(
+        "max_ff_range"
+) ?? CONFIG_DEFAULTS.max_ff_range;
+    }
+    set max_ff_range(val) {
+      this.storage.set("max_ff_range", val);
+    }
+    get chain_button_enabled() {
+      return this.storage.get(
+        "chain_button_enabled"
+) ?? CONFIG_DEFAULTS.chain_button_enabled;
+    }
+    set chain_button_enabled(val) {
+      this.storage.set("chain_button_enabled", val);
+    }
+    get chain_link_type() {
+      return this.storage.get(
+        "chain_link_type"
+) ?? CONFIG_DEFAULTS.chain_link_type;
+    }
+    set chain_link_type(val) {
+      this.storage.set("chain_link_type", val);
+    }
+    get chain_tab_type() {
+      return this.storage.get(
+        "chain_tab_type"
+) ?? CONFIG_DEFAULTS.chain_tab_type;
+    }
+    set chain_tab_type(val) {
+      this.storage.set("chain_tab_type", val);
+    }
+    get chain_ff_target() {
+      return this.storage.get(
+        "chain_ff_target"
+) ?? CONFIG_DEFAULTS.chain_ff_target;
+    }
+    set chain_ff_target(val) {
+      this.storage.set("chain_ff_target", val);
+    }
+    get chain_min_level() {
+      return this.storage.get(
+        "chain_min_level"
+) ?? CONFIG_DEFAULTS.chain_min_level;
+    }
+    set chain_min_level(val) {
+      if (val === null) {
+        this.storage.remove(
+          "chain_min_level"
+);
+      } else {
+        this.storage.set("chain_min_level", val);
+      }
+    }
+    get chain_max_level() {
+      return this.storage.get(
+        "chain_max_level"
+) ?? CONFIG_DEFAULTS.chain_max_level;
+    }
+    set chain_max_level(val) {
+      if (val === null) {
+        this.storage.remove(
+          "chain_max_level"
+);
+      } else {
+        this.storage.set("chain_max_level", val);
+      }
+    }
+    get chain_inactive() {
+      return this.storage.get(
+        "chain_inactive"
+) ?? CONFIG_DEFAULTS.chain_inactive;
+    }
+    set chain_inactive(val) {
+      this.storage.set("chain_inactive", val);
+    }
+    get chain_min_ff() {
+      return this.storage.get(
+        "chain_min_ff"
+) ?? CONFIG_DEFAULTS.chain_min_ff;
+    }
+    set chain_min_ff(val) {
+      if (val === null) {
+        this.storage.remove(
+          "chain_min_ff"
+);
+      } else {
+        this.storage.set("chain_min_ff", val);
+      }
+    }
+    get chain_max_ff() {
+      return this.storage.get(
+        "chain_max_ff"
+) ?? this.storage.get(
+        "chain_ff_target"
+) ?? CONFIG_DEFAULTS.chain_max_ff;
+    }
+    set chain_max_ff(val) {
+      this.storage.set("chain_max_ff", val);
+      this.storage.set("chain_ff_target", val);
+    }
+    get chain_factionless() {
+      return this.storage.get(
+        "chain_factionless"
+) ?? CONFIG_DEFAULTS.chain_factionless;
+    }
+    set chain_factionless(val) {
+      this.storage.set("chain_factionless", val);
+    }
+    get ff_history_enabled() {
+      return this.storage.get(
+        "ff_history_enabled"
+) ?? CONFIG_DEFAULTS.ff_history_enabled;
+    }
+    set ff_history_enabled(val) {
+      this.storage.set("ff_history_enabled", val);
+    }
+    get factions_col_display() {
+      return this.storage.get(
+        "factions_col_display"
+) ?? CONFIG_DEFAULTS.factions_col_display;
+    }
+    set factions_col_display(val) {
+      this.storage.set("factions_col_display", val);
+    }
+    get war_col_display() {
+      return this.storage.get(
+        "war_col_display"
+) ?? CONFIG_DEFAULTS.war_col_display;
+    }
+    set war_col_display(val) {
+      this.storage.set("war_col_display", val);
+    }
+    get debug_logs() {
+      return this.storage.get(
+        "debug_logs"
+) ?? CONFIG_DEFAULTS.debug_logs;
+    }
+    set debug_logs(val) {
+      this.storage.set("debug_logs", val);
+      logger.setLevel(val ? LogLevel.DEBUG : LogLevel.INFO);
+    }
+    get analytics_enabled() {
+      return this.storage.get(
+        "analytics_enabled"
+) ?? CONFIG_DEFAULTS.analytics_enabled;
+    }
+    set analytics_enabled(val) {
+      this.storage.set("analytics_enabled", val);
+    }
+    get gauge_marker_type() {
+      return this.storage.get(
+        "gauge_marker_type"
+) ?? CONFIG_DEFAULTS.gauge_marker_type;
+    }
+    set gauge_marker_type(val) {
+      this.storage.set("gauge_marker_type", val);
+    }
+    get faction_filter_state() {
+      return this.storage.get(
+        "faction_filter_state"
+) ?? null;
+    }
+    set faction_filter_state(val) {
+      this.storage.set("faction_filter_state", val);
+    }
+    get faction_filter_collapsed() {
+      return this.storage.get(
+        "faction_filter_collapsed"
+) ?? false;
+    }
+    set faction_filter_collapsed(val) {
+      this.storage.set("faction_filter_collapsed", val);
+    }
+    get war_filter_state() {
+      return this.storage.get(
+        "war_filter_state"
+) ?? null;
+    }
+    set war_filter_state(val) {
+      this.storage.set("war_filter_state", val);
+    }
+    get war_filter_collapsed() {
+      return this.storage.get(
+        "war_filter_collapsed"
+) ?? false;
+    }
+    set war_filter_collapsed(val) {
+      this.storage.set("war_filter_collapsed", val);
+    }
+    get chain_targets() {
+      return this.storage.get(
+        "chain_targets"
+);
+    }
+    set chain_targets(val) {
+      if (val === null) {
+        this.storage.remove(
+          "chain_targets"
+);
+      } else {
+        this.storage.set("chain_targets", val);
+      }
+    }
+    get chain_target_index() {
+      return this.storage.get(
+        "chain_target_index"
+) ?? 0;
+    }
+    set chain_target_index(val) {
+      this.storage.set("chain_target_index", val);
+    }
+    reset() {
+      this.storage.remove(
+        "low_ff_range"
+);
+      this.storage.remove(
+        "high_ff_range"
+);
+      this.storage.remove(
+        "max_ff_range"
+);
+      this.storage.remove(
+        "chain_button_enabled"
+);
+      this.storage.remove(
+        "chain_link_type"
+);
+      this.storage.remove(
+        "chain_tab_type"
+);
+      this.storage.remove(
+        "chain_ff_target"
+);
+      this.storage.remove(
+        "ff_history_enabled"
+);
+      this.storage.remove(
+        "factions_col_display"
+);
+      this.storage.remove(
+        "war_col_display"
+);
+      this.storage.remove(
+        "debug_logs"
+);
+      this.storage.remove(
+        "analytics_enabled"
+);
+      this.storage.remove(
+        "faction_filter_state"
+);
+      this.storage.remove(
+        "faction_filter_collapsed"
+);
+      this.storage.remove(
+        "war_filter_state"
+);
+      this.storage.remove(
+        "war_filter_collapsed"
+);
+      this.storage.remove(
+        "chain_min_level"
+);
+      this.storage.remove(
+        "chain_max_level"
+);
+      this.storage.remove(
+        "chain_inactive"
+);
+      this.storage.remove(
+        "chain_min_ff"
+);
+      this.storage.remove(
+        "chain_max_ff"
+);
+      this.storage.remove(
+        "chain_factionless"
+);
+      this.storage.remove(
+        "chain_targets"
+);
+      this.storage.remove(
+        "chain_target_index"
+);
+      this.storage.remove(
+        "gauge_marker_type"
+);
+    }
+  }
+  const ffconfig = new FFConfig("ffsv3-config");
   var TornApiError;
   (function(TornApiError2) {
     TornApiError2[TornApiError2["UNKNOWN_ERROR"] = 0] = "UNKNOWN_ERROR";
@@ -178,143 +742,6 @@
       return `${url}?${query}`;
     }
   }
-  var LogLevel = ((LogLevel2) => {
-    LogLevel2[LogLevel2["DEBUG"] = 0] = "DEBUG";
-    LogLevel2[LogLevel2["INFO"] = 1] = "INFO";
-    LogLevel2[LogLevel2["WARN"] = 2] = "WARN";
-    LogLevel2[LogLevel2["ERROR"] = 3] = "ERROR";
-    LogLevel2[LogLevel2["NONE"] = 4] = "NONE";
-    return LogLevel2;
-  })(LogLevel || {});
-  class Logger {
-constructor(prefix = "", defaultLevel = 1, state = {}) {
-      this.isPDA = false;
-      this.colors = {
-        debug: "#7f8c8d",
-        info: "#3498db",
-        warn: "#f39c12",
-        error: "#e74c3c"
-      };
-      this.prefix = prefix;
-      this.defaultLevel = defaultLevel;
-      this.state = state;
-      this.detectPDA();
-    }
-detectPDA() {
-      if (typeof window !== "undefined") {
-        if (window.flutter_inappwebview) {
-          this.isPDA = true;
-        }
-        window.addEventListener("flutterInAppWebViewPlatformReady", () => {
-          window.flutter_inappwebview.callHandler("isTornPDA").then((response) => {
-            if (response?.isTornPDA) {
-              this.isPDA = true;
-            }
-          }).catch(() => {
-          });
-        });
-      }
-    }
-setLevel(level) {
-      this.state.explicitLevel = level;
-    }
-getLevel() {
-      return this.state.explicitLevel !== void 0 ? this.state.explicitLevel : this.defaultLevel;
-    }
-debug(...args) {
-      if (this.getLevel() <= 0) {
-        if (this.isPDA) {
-          console.log(`${this.formatPrefix("DEBUG")}`, ...this.formatArgs(args));
-        } else {
-          console.log(
-            `%c${this.formatPrefix("DEBUG")}`,
-            `color: ${this.colors.debug}; font-weight: bold`,
-            ...args
-          );
-        }
-      }
-    }
-info(...args) {
-      if (this.getLevel() <= 1) {
-        if (this.isPDA) {
-          console.info(`${this.formatPrefix("INFO")}`, ...this.formatArgs(args));
-        } else {
-          console.info(
-            `%c${this.formatPrefix("INFO")}`,
-            `color: ${this.colors.info}; font-weight: bold`,
-            ...args
-          );
-        }
-      }
-    }
-warn(...args) {
-      if (this.getLevel() <= 2) {
-        if (this.isPDA) {
-          console.warn(`${this.formatPrefix("WARN")}`, ...this.formatArgs(args));
-        } else {
-          console.warn(
-            `%c${this.formatPrefix("WARN")}`,
-            `color: ${this.colors.warn}; font-weight: bold`,
-            ...args
-          );
-        }
-      }
-    }
-error(...args) {
-      if (this.getLevel() <= 3) {
-        if (this.isPDA) {
-          console.error(
-            `${this.formatPrefix("ERROR")}`,
-            ...this.formatArgs(args)
-          );
-        } else {
-          console.error(
-            `%c${this.formatPrefix("ERROR")}`,
-            `color: ${this.colors.error}; font-weight: bold`,
-            ...args
-          );
-        }
-      }
-    }
-group(label, collapsed = false) {
-      if (this.getLevel() < 4) {
-        if (collapsed) {
-          console.groupCollapsed(this.formatPrefix(""), label);
-        } else {
-          console.group(this.formatPrefix(""), label);
-        }
-      }
-    }
-groupEnd() {
-      if (this.getLevel() < 4) {
-        console.groupEnd();
-      }
-    }
-child(subPrefix) {
-      const childPrefix = this.prefix ? `${this.prefix}:${subPrefix}` : subPrefix;
-      return new Logger(childPrefix, this.defaultLevel, this.state);
-    }
-formatPrefix(level) {
-      const prefix = this.prefix ? `[${this.prefix}]` : "";
-      return level ? `${prefix} - [${level}]: ` : `${prefix}: `;
-    }
-formatArgs(args) {
-      return args.map((arg) => {
-        if (typeof arg === "object" && arg !== null) {
-          try {
-            return JSON.stringify(arg, null, 2);
-          } catch {
-            return String(arg);
-          }
-        }
-        return arg;
-      });
-    }
-  }
-  const logger = new Logger(
-    "FFSV3",
-    0
-);
   const FF_SCOUTER_BASE_URL = "https://ffscouter.com/api/v1";
   new TornApiClient({
     defaultComment: "FFScouterV3",
@@ -599,415 +1026,6 @@ formatArgs(args) {
     }
     return parsed;
   };
-  const log$e = logger.child("storage");
-  var Time = ((Time2) => {
-    Time2[Time2["Seconds"] = 1e3] = "Seconds";
-    Time2[Time2["Minutes"] = 6e4] = "Minutes";
-    Time2[Time2["Hours"] = 36e5] = "Hours";
-    Time2[Time2["Days"] = 864e5] = "Days";
-    Time2[Time2["Weeks"] = 6048e5] = "Weeks";
-    Time2[Time2["Years"] = 31536e6] = "Years";
-    return Time2;
-  })(Time || {});
-  class Storage {
-constructor(prefix) {
-      this.prefix = prefix;
-    }
-set(key, value, expireConfig) {
-      try {
-        const item = {
-          value,
-          expiration: expireConfig ? Date.now() + expireConfig.amount * (expireConfig.unit || 6e4) : null
-        };
-        localStorage.setItem(this.prefix + key, JSON.stringify(item));
-      } catch (error) {
-        log$e.error(`Error storing item '${key}':`, error);
-      }
-    }
-get(key) {
-      try {
-        const itemStr = localStorage.getItem(this.prefix + key);
-        if (!itemStr) {
-          return null;
-        }
-        let item = null;
-        try {
-          item = JSON.parse(itemStr);
-        } catch {
-          item = null;
-        }
-        if (!item) {
-          log$e.warn(`Key '${key}' has invalid JSON in it.`);
-          this.remove(key);
-          return null;
-        }
-        if (item.expiration && Date.now() > item.expiration) {
-          this.remove(key);
-          log$e.debug(`Key ${key} has expired.`);
-          return null;
-        }
-        return item.value;
-      } catch (error) {
-        log$e.error(`Error retrieving item '${key}':`, error);
-        return null;
-      }
-    }
-remove(key) {
-      try {
-        localStorage.removeItem(this.prefix + key);
-      } catch (error) {
-        log$e.error(`Error removing item [${key}]:`, error);
-      }
-    }
-has(key) {
-      return this.get(key) !== null;
-    }
-clearAll() {
-      try {
-        Object.keys(localStorage).filter((key) => key.startsWith(this.prefix)).forEach((key) => {
-          localStorage.removeItem(key);
-        });
-      } catch (error) {
-        log$e.error("Error clearing storage:", error);
-      }
-    }
-  }
-  var FactionsColDisplay = ((FactionsColDisplay2) => {
-    FactionsColDisplay2["FAIR_FIGHT"] = "fair_fight";
-    FactionsColDisplay2["BATTLE_STATS"] = "battle_stats";
-    FactionsColDisplay2["NONE"] = "none";
-    return FactionsColDisplay2;
-  })(FactionsColDisplay || {});
-  const CONFIG_DEFAULTS = {
-    low_ff_range: 2,
-    high_ff_range: 4,
-    max_ff_range: 8,
-    chain_button_enabled: true,
-    chain_link_type: "attack",
-    chain_tab_type: "newtab",
-    chain_ff_target: 2.5,
-    ff_history_enabled: true,
-    factions_col_display: "battle_stats",
-    war_col_display: "battle_stats",
-    debug_logs: false,
-    analytics_enabled: false,
-    chain_min_level: null,
-    chain_max_level: null,
-    chain_inactive: true,
-    chain_min_ff: null,
-    chain_max_ff: 2.5,
-    chain_factionless: false
-  };
-  class FFConfig {
-    constructor(name) {
-      this.name = name;
-      this.storage = new Storage(this.name);
-      logger.setLevel(this.debug_logs ? LogLevel.DEBUG : LogLevel.INFO);
-    }
-    get key() {
-      return this.storage.get(
-        "key"
-) ?? "";
-    }
-    set key(key) {
-      this.storage.set("key", key);
-    }
-    get low_ff_range() {
-      return this.storage.get(
-        "low_ff_range"
-) ?? CONFIG_DEFAULTS.low_ff_range;
-    }
-    set low_ff_range(val) {
-      this.storage.set("low_ff_range", val);
-    }
-    get high_ff_range() {
-      return this.storage.get(
-        "high_ff_range"
-) ?? CONFIG_DEFAULTS.high_ff_range;
-    }
-    set high_ff_range(val) {
-      this.storage.set("high_ff_range", val);
-    }
-    get max_ff_range() {
-      return this.storage.get(
-        "max_ff_range"
-) ?? CONFIG_DEFAULTS.max_ff_range;
-    }
-    set max_ff_range(val) {
-      this.storage.set("max_ff_range", val);
-    }
-    get chain_button_enabled() {
-      return this.storage.get(
-        "chain_button_enabled"
-) ?? CONFIG_DEFAULTS.chain_button_enabled;
-    }
-    set chain_button_enabled(val) {
-      this.storage.set("chain_button_enabled", val);
-    }
-    get chain_link_type() {
-      return this.storage.get(
-        "chain_link_type"
-) ?? CONFIG_DEFAULTS.chain_link_type;
-    }
-    set chain_link_type(val) {
-      this.storage.set("chain_link_type", val);
-    }
-    get chain_tab_type() {
-      return this.storage.get(
-        "chain_tab_type"
-) ?? CONFIG_DEFAULTS.chain_tab_type;
-    }
-    set chain_tab_type(val) {
-      this.storage.set("chain_tab_type", val);
-    }
-    get chain_ff_target() {
-      return this.storage.get(
-        "chain_ff_target"
-) ?? CONFIG_DEFAULTS.chain_ff_target;
-    }
-    set chain_ff_target(val) {
-      this.storage.set("chain_ff_target", val);
-    }
-    get chain_min_level() {
-      return this.storage.get(
-        "chain_min_level"
-) ?? CONFIG_DEFAULTS.chain_min_level;
-    }
-    set chain_min_level(val) {
-      if (val === null) {
-        this.storage.remove(
-          "chain_min_level"
-);
-      } else {
-        this.storage.set("chain_min_level", val);
-      }
-    }
-    get chain_max_level() {
-      return this.storage.get(
-        "chain_max_level"
-) ?? CONFIG_DEFAULTS.chain_max_level;
-    }
-    set chain_max_level(val) {
-      if (val === null) {
-        this.storage.remove(
-          "chain_max_level"
-);
-      } else {
-        this.storage.set("chain_max_level", val);
-      }
-    }
-    get chain_inactive() {
-      return this.storage.get(
-        "chain_inactive"
-) ?? CONFIG_DEFAULTS.chain_inactive;
-    }
-    set chain_inactive(val) {
-      this.storage.set("chain_inactive", val);
-    }
-    get chain_min_ff() {
-      return this.storage.get(
-        "chain_min_ff"
-) ?? CONFIG_DEFAULTS.chain_min_ff;
-    }
-    set chain_min_ff(val) {
-      if (val === null) {
-        this.storage.remove(
-          "chain_min_ff"
-);
-      } else {
-        this.storage.set("chain_min_ff", val);
-      }
-    }
-    get chain_max_ff() {
-      return this.storage.get(
-        "chain_max_ff"
-) ?? this.storage.get(
-        "chain_ff_target"
-) ?? CONFIG_DEFAULTS.chain_max_ff;
-    }
-    set chain_max_ff(val) {
-      this.storage.set("chain_max_ff", val);
-      this.storage.set("chain_ff_target", val);
-    }
-    get chain_factionless() {
-      return this.storage.get(
-        "chain_factionless"
-) ?? CONFIG_DEFAULTS.chain_factionless;
-    }
-    set chain_factionless(val) {
-      this.storage.set("chain_factionless", val);
-    }
-    get ff_history_enabled() {
-      return this.storage.get(
-        "ff_history_enabled"
-) ?? CONFIG_DEFAULTS.ff_history_enabled;
-    }
-    set ff_history_enabled(val) {
-      this.storage.set("ff_history_enabled", val);
-    }
-    get factions_col_display() {
-      return this.storage.get(
-        "factions_col_display"
-) ?? CONFIG_DEFAULTS.factions_col_display;
-    }
-    set factions_col_display(val) {
-      this.storage.set("factions_col_display", val);
-    }
-    get war_col_display() {
-      return this.storage.get(
-        "war_col_display"
-) ?? CONFIG_DEFAULTS.war_col_display;
-    }
-    set war_col_display(val) {
-      this.storage.set("war_col_display", val);
-    }
-    get debug_logs() {
-      return this.storage.get(
-        "debug_logs"
-) ?? CONFIG_DEFAULTS.debug_logs;
-    }
-    set debug_logs(val) {
-      this.storage.set("debug_logs", val);
-      logger.setLevel(val ? LogLevel.DEBUG : LogLevel.INFO);
-    }
-    get analytics_enabled() {
-      return this.storage.get(
-        "analytics_enabled"
-) ?? CONFIG_DEFAULTS.analytics_enabled;
-    }
-    set analytics_enabled(val) {
-      this.storage.set("analytics_enabled", val);
-    }
-    get faction_filter_state() {
-      return this.storage.get(
-        "faction_filter_state"
-) ?? null;
-    }
-    set faction_filter_state(val) {
-      this.storage.set("faction_filter_state", val);
-    }
-    get faction_filter_collapsed() {
-      return this.storage.get(
-        "faction_filter_collapsed"
-) ?? false;
-    }
-    set faction_filter_collapsed(val) {
-      this.storage.set("faction_filter_collapsed", val);
-    }
-    get war_filter_state() {
-      return this.storage.get(
-        "war_filter_state"
-) ?? null;
-    }
-    set war_filter_state(val) {
-      this.storage.set("war_filter_state", val);
-    }
-    get war_filter_collapsed() {
-      return this.storage.get(
-        "war_filter_collapsed"
-) ?? false;
-    }
-    set war_filter_collapsed(val) {
-      this.storage.set("war_filter_collapsed", val);
-    }
-    get chain_targets() {
-      return this.storage.get(
-        "chain_targets"
-);
-    }
-    set chain_targets(val) {
-      if (val === null) {
-        this.storage.remove(
-          "chain_targets"
-);
-      } else {
-        this.storage.set("chain_targets", val);
-      }
-    }
-    get chain_target_index() {
-      return this.storage.get(
-        "chain_target_index"
-) ?? 0;
-    }
-    set chain_target_index(val) {
-      this.storage.set("chain_target_index", val);
-    }
-    reset() {
-      this.storage.remove(
-        "low_ff_range"
-);
-      this.storage.remove(
-        "high_ff_range"
-);
-      this.storage.remove(
-        "max_ff_range"
-);
-      this.storage.remove(
-        "chain_button_enabled"
-);
-      this.storage.remove(
-        "chain_link_type"
-);
-      this.storage.remove(
-        "chain_tab_type"
-);
-      this.storage.remove(
-        "chain_ff_target"
-);
-      this.storage.remove(
-        "ff_history_enabled"
-);
-      this.storage.remove(
-        "factions_col_display"
-);
-      this.storage.remove(
-        "war_col_display"
-);
-      this.storage.remove(
-        "debug_logs"
-);
-      this.storage.remove(
-        "analytics_enabled"
-);
-      this.storage.remove(
-        "faction_filter_state"
-);
-      this.storage.remove(
-        "faction_filter_collapsed"
-);
-      this.storage.remove(
-        "war_filter_state"
-);
-      this.storage.remove(
-        "war_filter_collapsed"
-);
-      this.storage.remove(
-        "chain_min_level"
-);
-      this.storage.remove(
-        "chain_max_level"
-);
-      this.storage.remove(
-        "chain_inactive"
-);
-      this.storage.remove(
-        "chain_min_ff"
-);
-      this.storage.remove(
-        "chain_max_ff"
-);
-      this.storage.remove(
-        "chain_factionless"
-);
-      this.storage.remove(
-        "chain_targets"
-);
-      this.storage.remove(
-        "chain_target_index"
-);
-    }
-  }
-  const ffconfig = new FFConfig("ffsv3-config");
   const log$d = logger.child("api");
   const CHECK_KEY = "check-key-status";
   class CheckKeyStatus {
@@ -2253,6 +2271,7 @@ event.oldVersion,
     const search = new URLSearchParams(window.location.search);
     let sid_match = true;
     let step_match = true;
+    let page_match = true;
     if (params.sid) {
       const page_sid = search.get("sid");
       sid_match = page_sid !== null && params.sid === page_sid;
@@ -2261,7 +2280,11 @@ event.oldVersion,
       const page_step = search.get("step");
       step_match = page_step !== null && params.step === page_step;
     }
-    if (!sid_match || !step_match) {
+    if (params.page) {
+      const page_page = search.get("page");
+      page_match = page_page !== null && params.page === page_page;
+    }
+    if (!sid_match || !step_match || !page_match) {
       return false;
     }
     let hash_match = false;
@@ -2270,13 +2293,20 @@ event.oldVersion,
     } else {
       const hash = window.location.hash;
       for (const h2 of match_hash) {
+        if (h2.endsWith("*")) {
+          const stripped = h2.substring(0, h2.length - 1);
+          if (hash.startsWith(stripped)) {
+            hash_match = true;
+            break;
+          }
+        }
         if (hash === h2) {
           hash_match = true;
           break;
         }
       }
     }
-    return sid_match && step_match && hash_match;
+    return sid_match && step_match && page_match && hash_match;
   }
   function make_arrow(d2) {
     const fill = get_ff_arrow_colour(d2);
@@ -2292,6 +2322,24 @@ event.oldVersion,
     const svg = div.firstChild;
     svg.classList.add("ffsv3-arrow");
     return svg;
+  }
+  function make_marker(d2) {
+    const markerType = ffconfig.gauge_marker_type;
+    if (markerType === GaugeMarkerType.BUBBLE_FF || markerType === GaugeMarkerType.BUBBLE_ESTIMATE) {
+      const fill = get_ff_arrow_colour(d2);
+      const contrastColor = get_contrast_color(fill);
+      const bubble = document.createElement("div");
+      bubble.classList.add("ffsv3-bubble");
+      bubble.style.backgroundColor = fill;
+      bubble.style.color = contrastColor;
+      if (markerType === GaugeMarkerType.BUBBLE_FF) {
+        bubble.textContent = d2.fair_fight.toFixed(2);
+      } else {
+        bubble.textContent = d2.bs_estimate_human || "N/A";
+      }
+      return bubble;
+    }
+    return make_arrow(d2);
   }
   function add_ff_arrow(element, featureName = "Unknown") {
     const player_id = get_player_id_in_element(element);
@@ -2313,11 +2361,11 @@ event.oldVersion,
       const percent = ff_to_percent(d2);
       element.classList.add("ffsv3-gauge");
       element.style.setProperty("--band-percent", `${percent}`);
-      const a2 = element.querySelector(".ffsv3-arrow");
+      const a2 = element.querySelector(".ffsv3-arrow, .ffsv3-bubble");
       if (a2) {
         a2.remove();
       }
-      element.appendChild(make_arrow(d2));
+      element.appendChild(make_marker(d2));
       ffscouter.add_analytics_entry(featureName, player_id, "applied");
     });
   }
@@ -4434,7 +4482,6 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       case torn_page("freebies"):
       case torn_page("bigalgunshop"):
       case torn_page("shops"):
-      case torn_page("joblist"):
       case torn_page("joblisting"):
       case torn_page("messageinc"):
       case torn_page("comics"):
@@ -4444,8 +4491,8 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       case torn_page("committee"):
       case torn_page("church"):
       case torn_page("christmas_town"):
-      case torn_page("index", {}):
-      case torn_page("index", {}):
+      case torn_page("index", { page: "hunting" }):
+      case torn_page("index", { page: "bank" }):
       case torn_page("page", { sid: "slotsLastRolls" }):
       case torn_page("page", { sid: "rouletteLastSpins" }):
       case torn_page("page", { sid: "highlowLastGames" }):
@@ -4488,6 +4535,14 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
         return false;
     }
   }
+  async function find_mutation_target() {
+    const content_wrapper = await wait_for_element(".content-wrapper", 1e4);
+    if (content_wrapper) {
+      return content_wrapper;
+    }
+    await wait_for_body(1e4);
+    return document.body;
+  }
   const index$9 = {
     name: "Fallback mutation observer",
     description: "Catch all mutations and see if we can apply FF data",
@@ -4527,6 +4582,10 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
               node.querySelectorAll(".employee"),
               FEATURE_NAME$3
             );
+            await apply_ff_gauge_selector(
+              node.querySelectorAll(".director"),
+              FEATURE_NAME$3
+            );
           } else if (torn_page("messages") || torn_page("index") || torn_page("hospitalview") || torn_page("page", { sid: "UserList" })) {
             await apply_ff_gauge_selector(
               node.querySelectorAll(".name"),
@@ -4551,7 +4610,13 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
               ),
               FEATURE_NAME$3
             );
-          } else if (window.location.href.includes("page.php?sid=hof") || torn_page("factions", { step: "profile" }) || torn_page("factions", { step: "your" }, ["", "#", "#/", "#/tab=info"])) {
+          } else if (window.location.href.includes("page.php?sid=hof") || torn_page("factions", { step: "profile" }) || torn_page("factions", { step: "your" }, [
+            "",
+            "#",
+            "#/",
+            "#/tab=info",
+            "#/war/*"
+          ])) {
             await apply_ff_gauge_selector(
               node.querySelectorAll('[class*="userInfoBox__"]'),
               FEATURE_NAME$3
@@ -4571,7 +4636,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
           }
         }
       });
-      const update_observer_state = () => {
+      const update_observer_state = async () => {
         const excluded = is_excluded_page();
         if (excluded) {
           if (is_observing) {
@@ -4581,7 +4646,8 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
           }
         } else {
           if (!is_observing) {
-            ff_gauge_observer.observe(document, {
+            const target = await find_mutation_target();
+            ff_gauge_observer.observe(target, {
               attributes: false,
               childList: true,
               characterData: false,
@@ -4589,8 +4655,8 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
             });
             is_observing = true;
             log$7.debug("Connected fallback MutationObserver (included page)");
-            if (document.body) {
-              check_mutation(document.body);
+            if (target) {
+              check_mutation(target);
             }
           }
         }
@@ -5522,6 +5588,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       this.warColDisplay = CONFIG_DEFAULTS.war_col_display;
       this.debugLogs = CONFIG_DEFAULTS.debug_logs;
       this.analyticsEnabled = CONFIG_DEFAULTS.analytics_enabled;
+      this.gaugeMarkerType = CONFIG_DEFAULTS.gauge_marker_type;
       this.isPremium = false;
       this.draftApiKey = "";
       this.draftLowRange = CONFIG_DEFAULTS.low_ff_range;
@@ -5542,6 +5609,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       this.draftWarColDisplay = CONFIG_DEFAULTS.war_col_display;
       this.draftDebugLogs = CONFIG_DEFAULTS.debug_logs;
       this.draftAnalyticsEnabled = CONFIG_DEFAULTS.analytics_enabled;
+      this.draftGaugeMarkerType = CONFIG_DEFAULTS.gauge_marker_type;
       this.rangeError = "";
       this.showSavedMessage = false;
     }
@@ -5553,7 +5621,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       this.resetDrafts();
     }
     willUpdate(changedProperties) {
-      if (changedProperties.has("apiKey") || changedProperties.has("lowRange") || changedProperties.has("highRange") || changedProperties.has("maxRange") || changedProperties.has("chainButtonEnabled") || changedProperties.has("chainLinkType") || changedProperties.has("chainTabType") || changedProperties.has("chainFFTarget") || changedProperties.has("chainMinLevel") || changedProperties.has("chainMaxLevel") || changedProperties.has("chainInactive") || changedProperties.has("chainMinFF") || changedProperties.has("chainMaxFF") || changedProperties.has("chainFactionless") || changedProperties.has("ffHistoryEnabled") || changedProperties.has("factionsColDisplay") || changedProperties.has("warColDisplay") || changedProperties.has("debugLogs") || changedProperties.has("analyticsEnabled")) {
+      if (changedProperties.has("apiKey") || changedProperties.has("lowRange") || changedProperties.has("highRange") || changedProperties.has("maxRange") || changedProperties.has("chainButtonEnabled") || changedProperties.has("chainLinkType") || changedProperties.has("chainTabType") || changedProperties.has("chainFFTarget") || changedProperties.has("chainMinLevel") || changedProperties.has("chainMaxLevel") || changedProperties.has("chainInactive") || changedProperties.has("chainMinFF") || changedProperties.has("chainMaxFF") || changedProperties.has("chainFactionless") || changedProperties.has("ffHistoryEnabled") || changedProperties.has("factionsColDisplay") || changedProperties.has("warColDisplay") || changedProperties.has("debugLogs") || changedProperties.has("analyticsEnabled") || changedProperties.has("gaugeMarkerType")) {
         this.resetDrafts();
       }
     }
@@ -5577,6 +5645,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       this.draftWarColDisplay = this.warColDisplay;
       this.draftDebugLogs = this.debugLogs;
       this.draftAnalyticsEnabled = this.analyticsEnabled;
+      this.draftGaugeMarkerType = this.gaugeMarkerType;
     }
     handleSave() {
       const low = this.draftLowRange;
@@ -5620,7 +5689,8 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
             factionsColDisplay: this.draftFactionsColDisplay,
             warColDisplay: this.draftWarColDisplay,
             debugLogs: this.draftDebugLogs,
-            analyticsEnabled: this.draftAnalyticsEnabled
+            analyticsEnabled: this.draftAnalyticsEnabled,
+            gaugeMarkerType: this.draftGaugeMarkerType
           },
           bubbles: true,
           composed: true
@@ -5661,6 +5731,17 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     onKeyInput(e2) {
       this.draftApiKey = e2.target.value;
       this.showSavedMessage = false;
+    }
+    onKeyChange(e2) {
+      const val = e2.target.value.trim();
+      this.draftApiKey = val;
+      this.dispatchEvent(
+        new CustomEvent("ff-save-key", {
+          detail: { apiKey: val },
+          bubbles: true,
+          composed: true
+        })
+      );
     }
     onLowRangeInput(e2) {
       this.draftLowRange = Number(e2.target.value);
@@ -5736,6 +5817,10 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       this.draftAnalyticsEnabled = e2.target.checked;
       this.showSavedMessage = false;
     }
+    onGaugeMarkerTypeChange(e2) {
+      this.draftGaugeMarkerType = e2.target.value;
+      this.showSavedMessage = false;
+    }
     render() {
       return b`
       <details
@@ -5769,6 +5854,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
               placeholder="Paste your key here..."
               .value=${this.draftApiKey}
               @input=${this.onKeyInput}
+              @change=${this.onKeyChange}
             />
           </div>
           <div class="input-row-inline">
@@ -5952,6 +6038,20 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
             >
           </div>
 
+          <!-- Gauge Marker Display Style -->
+          <div class="input-row-inline">
+            <label for="gauge-marker-type">Gauge Marker Style:</label>
+            <select
+              id="gauge-marker-type"
+              .value=${this.draftGaugeMarkerType}
+              @change=${this.onGaugeMarkerTypeChange}
+            >
+              <option value="arrow">Arrow (Default)</option>
+              <option value="bubble_ff">Bubble (FF Score)</option>
+              <option value="bubble_estimate">Bubble (BS Estimate)</option>
+            </select>
+          </div>
+
           <!-- Factions Column Display -->
           <div class="input-row-inline">
             <label for="factions-col-display">Faction Page Shows:</label>
@@ -6086,6 +6186,9 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     n2({ type: Boolean })
   ], FFSettingsPanel.prototype, "analyticsEnabled", 2);
   __decorateClass([
+    n2({ type: String })
+  ], FFSettingsPanel.prototype, "gaugeMarkerType", 2);
+  __decorateClass([
     n2({ type: Boolean })
   ], FFSettingsPanel.prototype, "isPremium", 2);
   __decorateClass([
@@ -6147,6 +6250,9 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
   ], FFSettingsPanel.prototype, "draftAnalyticsEnabled", 2);
   __decorateClass([
     r()
+  ], FFSettingsPanel.prototype, "draftGaugeMarkerType", 2);
+  __decorateClass([
+    r()
   ], FFSettingsPanel.prototype, "rangeError", 2);
   __decorateClass([
     r()
@@ -6182,6 +6288,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       panel.warColDisplay = ffconfig.war_col_display;
       panel.debugLogs = ffconfig.debug_logs;
       panel.analyticsEnabled = ffconfig.analytics_enabled;
+      panel.gaugeMarkerType = ffconfig.gauge_marker_type;
       panel.isPremium = await check_key_status.is_premium(true);
       panel.addEventListener("ff-save", async (e2) => {
         const detail = e2.detail;
@@ -6209,6 +6316,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
           logger.setLevel(LogLevel.INFO);
         }
         ffconfig.analytics_enabled = detail.analyticsEnabled;
+        ffconfig.gauge_marker_type = detail.gaugeMarkerType;
         panel.isPremium = await check_key_status.is_premium(true);
         toast("Settings saved successfully!");
         window.dispatchEvent(new CustomEvent("ff-config-updated"));
@@ -6234,6 +6342,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
         panel.warColDisplay = ffconfig.war_col_display;
         panel.debugLogs = ffconfig.debug_logs;
         panel.analyticsEnabled = ffconfig.analytics_enabled;
+        panel.gaugeMarkerType = ffconfig.gauge_marker_type;
         toast("Settings reset to defaults!");
         window.dispatchEvent(new CustomEvent("ff-config-updated"));
       });
@@ -6245,6 +6354,14 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
           console.error("Failed to delete IndexedDB cache", err);
           toast("Failed to clear cache database", TOAST_LEVEL.ERROR);
         }
+      });
+      panel.addEventListener("ff-save-key", async (e2) => {
+        const detail = e2.detail;
+        ffconfig.key = detail.apiKey;
+        panel.apiKey = detail.apiKey;
+        panel.isPremium = await check_key_status.is_premium(true);
+        toast("API key saved successfully!");
+        window.dispatchEvent(new CustomEvent("ff-config-updated"));
       });
       panel.addEventListener("ff-verify", async (e2) => {
         const detail = e2.detail;
@@ -6265,7 +6382,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
         let message = `FF Scouter not configured. API key (${result.result.key}) not registered.`;
         let level = TOAST_LEVEL.ERROR;
         if (result.result.is_registered) {
-          message = `FF Scouter successfully configured. Don't forget to save! API key (${result.result.key}) was registered on ${format_timestamp(result.result.registered_at)} and last used ${format_timestamp(result.result.last_used)}.`;
+          message = `FF Scouter successfully configured. API key (${result.result.key}) was registered on ${format_timestamp(result.result.registered_at)} and last used ${format_timestamp(result.result.last_used)}.`;
           level = TOAST_LEVEL.INFO;
           if (detail.apiKey === ffconfig.key) {
             await check_key_status.is_premium(true);
@@ -6416,7 +6533,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       log$1.error("Failed to patch fetch:", err);
     }
   }
-  const stylesCss = ".ffsv3-gauge{position:relative;display:block;padding:0}.ffsv3-arrow{position:absolute;transform:translate(-50%,-30%);padding:0;top:0;left:calc(var(--ffsv3-arrow-width) / 2 + var(--band-percent) * (100% - var(--ffsv3-arrow-width)) / 100);width:var(--ffsv3-arrow-width);object-fit:cover;pointer-events:none}.ffsv3-mini-desc{padding:0 5px}body{--ffsv3-bg-color: #f0f0f0;--ffsv3-alt-bg-color: #fff;--ffsv3-border-color: #ccc;--ffsv3-input-color: #ccc;--ffsv3-text-color: #000;--ffsv3-hover-color: #ddd;--ffsv3-glow-color: #4caf50;--ffsv3-success-color: #4caf50;--ffsv3-arrow-width: 20px}body.dark-mode{--ffsv3-bg-color: #333;--ffsv3-alt-bg-color: #383838;--ffsv3-border-color: #444;--ffsv3-input-color: #504f4f;--ffsv3-text-color: #ccc;--ffsv3-hover-color: #555;--ffsv3-glow-color: #4caf50;--ffsv3-success-color: #4caf50}.ff-premium-upgrade-line{display:block;margin-top:4px;line-height:1.3;white-space:nowrap;font-size:12px;font-style:normal}@media(max-width:768px){.ff-premium-upgrade-line{margin-top:6px;line-height:1.35;white-space:normal;overflow-wrap:anywhere}}ff-settings-panel{display:block}ff-settings-panel .accordion{margin:10px 0;padding:15px;background-color:var(--ffsv3-bg-color);border:1px solid var(--ffsv3-border-color);border-radius:5px;color:var(--ffsv3-text-color)}ff-settings-panel .accordion.glow{border-color:var(--ffsv3-glow-color);box-shadow:0 0 8px #4caf5080}ff-settings-panel .input-row{display:flex;flex-direction:column;gap:5px;margin-bottom:15px}ff-settings-panel .input-row-inline{display:flex;align-items:center;gap:10px;margin-bottom:15px}ff-settings-panel .blur-mode{filter:blur(4px);transition:filter .2s ease}ff-settings-panel .blur-mode:hover,ff-settings-panel .blur-mode:focus{filter:blur(0)}ff-settings-panel .error-msg{color:#f33;font-size:13px;margin-top:5px}ff-settings-panel input[type=text],ff-settings-panel input[type=number]{text-align:left;vertical-align:top;width:178px;height:14px;margin-right:8px;padding:9px 10px;line-height:14px;display:inline-block}ff-settings-panel input[type=number].ff-number{width:52px}ff-settings-panel select{box-sizing:border-box;text-align:left;vertical-align:top;width:178px;height:34px;margin-right:8px;padding:8px 10px;line-height:14px;display:inline-block;border:var(--input-border-color);border-radius:5px;font-family:Arial,serif;color:var(--input-color);background:var(--input-background-color)}:root .dark-mode ff-settings-panel select option{background-color:#000;color:var(--input-color)}ff-settings-panel .ff-api-explanation{background-color:var(--ffsv3-alt-bg-color);border:1px solid var(--ffsv3-border-color);border-radius:8px;color:var(--ffsv3-text-color);margin-bottom:20px;padding:12px 16px;font-size:13px;line-height:1.5}ff-settings-panel a{color:var(--ffsv3-success-color);text-decoration:underline}ff-settings-panel .is_premium_enabled{display:inline-block;background:#4caf50;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;vertical-align:middle}ff-settings-panel .is_premium_disabled{display:inline-block;background:#c62828;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;vertical-align:middle}.profile-status{position:relative}ff-flight-profile-status{position:absolute;right:10px;bottom:2px;z-index:2}.ff-scouter-profile-flight-info{display:inline-block;text-align:right;font-size:11px;line-height:1.25;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.85)}.profile-status .ff-scouter-profile-flight-info a{color:#fff;text-decoration:underline}ff-faction-filter-box{display:block}.ff-filter-box,.ff-filter-box *,.ff-filter-box *:before,.ff-filter-box *:after{box-sizing:border-box!important}.ff-filter-box{background-color:var(--ffsv3-bg-color);border:1px solid var(--ffsv3-border-color);border-radius:8px;padding:12px 16px;margin-bottom:16px;color:var(--ffsv3-text-color);font-family:Arial,sans-serif;box-shadow:0 2px 5px #0000000d}.ff-filter-box.no-borders{background-color:var(--default-bg-panel-color);border-top:1px solid var(--ffsv3-border-color);border-bottom:1px solid var(--ffsv3-border-color);border-left:none;border-right:none;border-radius:0;box-shadow:none;padding:12px 10px;margin:0}.ff-filter-box summary{cursor:pointer;font-size:14px;font-weight:700;outline:none;-webkit-user-select:none;user-select:none}.ff-filter-box[open] summary{border-bottom:1px solid var(--ffsv3-border-color);padding-bottom:6px;margin-bottom:12px}.ff-filter-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.grp-sort{order:1}.grp-level{order:2}.grp-activity{order:3}.grp-status{order:4}.grp-ff{order:5}.grp-stats{order:6}@media(min-width:784px){.ff-filter-grid{grid-template-columns:repeat(3,1fr)}.ff-filter-grid>*{order:0}}.ff-filter-group{display:flex;flex-direction:column;gap:2px}.ff-filter-options{display:flex;flex-direction:column}.ff-filter-options label{display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer}.ff-filter-range-inputs{display:flex;align-items:center;gap:4px}.ff-filter-range-inputs input{flex:1;width:0;min-width:30px;max-width:80px;padding:4px;border:1px solid var(--ffsv3-border-color);border-radius:4px;background:var(--ffsv3-alt-bg-color);color:var(--ffsv3-text-color);font-size:11px;text-align:center}.ff-filter-box button{padding:6px 10px;border:1px solid var(--ffsv3-border-color);border-radius:4px;background:var(--ffsv3-alt-bg-color);color:var(--ffsv3-text-color);font-size:12px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;transition:background-color .2s}.ff-filter-box button:hover{background-color:var(--ffsv3-hover-color)}.chain-options-flex-container{display:flex;flex-wrap:wrap;gap:10px 20px;align-items:center;justify-content:flex-start;margin-left:20px;margin-top:10px;margin-bottom:15px}.chain-options-flex-container .input-row-inline{margin-bottom:0}.faction-war:not([data-ffscouter-col-display=none]) .level[class*=level__]{display:block!important;flex:none!important;width:22px!important;position:relative;margin-right:36px!important;overflow:visible!important}.faction-war:not([data-ffscouter-col-display=none]) .level[class*=level__]:after{content:attr(data-ff-value);display:var(--ff-display, none)!important;position:absolute;left:calc(100% + 4px)!important;top:50%!important;transform:translateY(-50%)!important;width:32px!important;height:20px!important;background-color:var(--ff-bg-color, transparent)!important;color:var(--ff-text-color, inherit)!important;font-size:11px!important;line-height:20px!important;text-align:center!important;align-items:center!important;justify-content:center!important;border-radius:3px!important;box-sizing:border-box!important;z-index:10!important}.faction-war .white-grad{overflow:visible!important}.faction-war:not([data-ffscouter-col-display=none]) .white-grad .level.level___pwbgk{display:block!important;flex:none!important;width:22px!important;position:relative;margin-right:36px!important;overflow:visible!important}.faction-war:not([data-ffscouter-col-display=none]) .white-grad .level.level___pwbgk:after{background-color:transparent!important;font-size:12px;font-weight:700!important;height:auto!important;line-height:normal!important;left:calc(100% + 4px)!important;width:32px!important;content:attr(data-ff-value)!important;display:var(--ff-display, none)!important}.faction-war[data-ffscouter-hide-level=true]:not([data-ffscouter-col-display=none]) .level[class*=level__],.faction-war[data-ffscouter-hide-level=true]:not([data-ffscouter-col-display=none]) .level{width:0!important;margin-right:32px!important;color:transparent!important;font-size:0!important;border-left:none!important;border-right:none!important;background-color:transparent!important;pointer-events:none!important}.faction-war[data-ffscouter-hide-level=true]:not([data-ffscouter-col-display=none]) .level[class*=level__]:after,.faction-war[data-ffscouter-hide-level=true]:not([data-ffscouter-col-display=none]) .level:after{left:0!important;color:var(--ff-text-color, inherit)!important;font-size:11px!important;background-color:var(--ff-bg-color, transparent)!important;pointer-events:auto!important}.faction-war[data-ffscouter-hide-level=true]:not([data-ffscouter-col-display=none]) .white-grad .level[class*=level__],.faction-war[data-ffscouter-hide-level=true]:not([data-ffscouter-col-display=none]) .white-grad .level{width:0!important;margin-right:32px!important;color:transparent!important;font-size:0!important;border-left:none!important;border-right:none!important;background-color:transparent!important;pointer-events:none!important}.faction-war[data-ffscouter-hide-level=true]:not([data-ffscouter-col-display=none]) .white-grad .level[class*=level__]:after,.faction-war[data-ffscouter-hide-level=true]:not([data-ffscouter-col-display=none]) .white-grad .level:after{left:0!important;color:var(--ffsv3-text-color, inherit)!important;font-size:12px!important;font-weight:700!important;pointer-events:auto!important}.faction-war[data-ffscouter-hide-status=true] .status,.faction-war[data-ffscouter-hide-status=true] [class*=status__],.faction-war[data-ffscouter-hide-score=true] [class*=score__],.faction-war[data-ffscouter-hide-score=true] [class*=points__],.faction-war[data-ffscouter-hide-score=true] [class*=respect__],.faction-war[data-ffscouter-hide-score=true] [class*=attacks__]{display:none!important}.grp-columns{order:7}.members-list li.enemy,.members-list li.your,.members-list div.c-pointer,.faction-war div.c-pointer,.chain-attacks-list div.c-pointer{display:flex!important;flex-flow:row nowrap!important;align-items:center!important}.members-list li.enemy>div.clear,.members-list li.your>div.clear{display:none!important}";
+  const stylesCss = ".ffsv3-gauge{position:relative;display:block;padding:0}.ffsv3-arrow{position:absolute;transform:translate(-50%,-30%);padding:0;top:0;left:calc(var(--ffsv3-arrow-width) / 2 + var(--band-percent) * (100% - var(--ffsv3-arrow-width)) / 100);width:var(--ffsv3-arrow-width);object-fit:cover;pointer-events:none}.ffsv3-bubble{position:absolute;transform:translate(-50%,-30%);top:0;left:calc(var(--ffsv3-arrow-width) / 2 + var(--band-percent) * (100% - var(--ffsv3-arrow-width)) / 100);min-width:22px;height:14px;line-height:12px;border:1px solid rgba(0,0,0,.4);border-radius:8px;font-size:8.5px;font-weight:700;font-family:Geneva,Arial,sans-serif;text-align:center;padding:0 4px;box-sizing:border-box;pointer-events:none;white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;text-shadow:0 1px 1px rgba(0,0,0,.5);box-shadow:0 1px 2px #0000004d;z-index:10}.ffsv3-mini-desc{padding:0 5px}body{--ffsv3-bg-color: #f0f0f0;--ffsv3-alt-bg-color: #fff;--ffsv3-border-color: #ccc;--ffsv3-input-color: #ccc;--ffsv3-text-color: #000;--ffsv3-hover-color: #ddd;--ffsv3-glow-color: #4caf50;--ffsv3-success-color: #4caf50;--ffsv3-arrow-width: 20px}body.dark-mode{--ffsv3-bg-color: #333;--ffsv3-alt-bg-color: #383838;--ffsv3-border-color: #444;--ffsv3-input-color: #504f4f;--ffsv3-text-color: #ccc;--ffsv3-hover-color: #555;--ffsv3-glow-color: #4caf50;--ffsv3-success-color: #4caf50}.ff-premium-upgrade-line{display:block;margin-top:4px;line-height:1.3;white-space:nowrap;font-size:12px;font-style:normal}@media(max-width:768px){.ff-premium-upgrade-line{margin-top:6px;line-height:1.35;white-space:normal;overflow-wrap:anywhere}}ff-settings-panel{display:block}ff-settings-panel .accordion{margin:10px 0;padding:15px;background-color:var(--ffsv3-bg-color);border:1px solid var(--ffsv3-border-color);border-radius:5px;color:var(--ffsv3-text-color)}ff-settings-panel .accordion.glow{border-color:var(--ffsv3-glow-color);box-shadow:0 0 8px #4caf5080}ff-settings-panel .input-row{display:flex;flex-direction:column;gap:5px;margin-bottom:15px}ff-settings-panel .input-row-inline{display:flex;align-items:center;gap:10px;margin-bottom:15px}ff-settings-panel .blur-mode{filter:blur(4px);transition:filter .2s ease}ff-settings-panel .blur-mode:hover,ff-settings-panel .blur-mode:focus{filter:blur(0)}ff-settings-panel .error-msg{color:#f33;font-size:13px;margin-top:5px}ff-settings-panel input[type=text],ff-settings-panel input[type=number]{text-align:left;vertical-align:top;width:178px;height:14px;margin-right:8px;padding:9px 10px;line-height:14px;display:inline-block}ff-settings-panel input[type=number].ff-number{width:52px}ff-settings-panel select{box-sizing:border-box;text-align:left;vertical-align:top;width:178px;height:34px;margin-right:8px;padding:8px 10px;line-height:14px;display:inline-block;border:var(--input-border-color);border-radius:5px;font-family:Arial,serif;color:var(--input-color);background:var(--input-background-color)}:root .dark-mode ff-settings-panel select option{background-color:#000;color:var(--input-color)}ff-settings-panel .ff-api-explanation{background-color:var(--ffsv3-alt-bg-color);border:1px solid var(--ffsv3-border-color);border-radius:8px;color:var(--ffsv3-text-color);margin-bottom:20px;padding:12px 16px;font-size:13px;line-height:1.5}ff-settings-panel a{color:var(--ffsv3-success-color);text-decoration:underline}ff-settings-panel .is_premium_enabled{display:inline-block;background:#4caf50;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;vertical-align:middle}ff-settings-panel .is_premium_disabled{display:inline-block;background:#c62828;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;vertical-align:middle}.profile-status{position:relative}ff-flight-profile-status{position:absolute;right:10px;bottom:2px;z-index:2}.ff-scouter-profile-flight-info{display:inline-block;text-align:right;font-size:11px;line-height:1.25;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.85)}.profile-status .ff-scouter-profile-flight-info a{color:#fff;text-decoration:underline}ff-faction-filter-box{display:block}.ff-filter-box,.ff-filter-box *,.ff-filter-box *:before,.ff-filter-box *:after{box-sizing:border-box!important}.ff-filter-box{background-color:var(--ffsv3-bg-color);border:1px solid var(--ffsv3-border-color);border-radius:8px;padding:12px 16px;margin-bottom:16px;color:var(--ffsv3-text-color);font-family:Arial,sans-serif;box-shadow:0 2px 5px #0000000d}.ff-filter-box.no-borders{background-color:var(--default-bg-panel-color);border-top:1px solid var(--ffsv3-border-color);border-bottom:1px solid var(--ffsv3-border-color);border-left:none;border-right:none;border-radius:0;box-shadow:none;padding:12px 10px;margin:0}.ff-filter-box summary{cursor:pointer;font-size:14px;font-weight:700;outline:none;-webkit-user-select:none;user-select:none}.ff-filter-box[open] summary{border-bottom:1px solid var(--ffsv3-border-color);padding-bottom:6px;margin-bottom:12px}.ff-filter-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.grp-sort{order:1}.grp-level{order:2}.grp-activity{order:3}.grp-status{order:4}.grp-ff{order:5}.grp-stats{order:6}@media(min-width:784px){.ff-filter-grid{grid-template-columns:repeat(3,1fr)}.ff-filter-grid>*{order:0}}.ff-filter-group{display:flex;flex-direction:column;gap:2px}.ff-filter-options{display:flex;flex-direction:column}.ff-filter-options label{display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer}.ff-filter-range-inputs{display:flex;align-items:center;gap:4px}.ff-filter-range-inputs input{flex:1;width:0;min-width:30px;max-width:80px;padding:4px;border:1px solid var(--ffsv3-border-color);border-radius:4px;background:var(--ffsv3-alt-bg-color);color:var(--ffsv3-text-color);font-size:11px;text-align:center}.ff-filter-box button{padding:6px 10px;border:1px solid var(--ffsv3-border-color);border-radius:4px;background:var(--ffsv3-alt-bg-color);color:var(--ffsv3-text-color);font-size:12px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;transition:background-color .2s}.ff-filter-box button:hover{background-color:var(--ffsv3-hover-color)}.chain-options-flex-container{display:flex;flex-wrap:wrap;gap:10px 20px;align-items:center;justify-content:flex-start;margin-left:20px;margin-top:10px;margin-bottom:15px}.chain-options-flex-container .input-row-inline{margin-bottom:0}.faction-war:not([data-ffscouter-col-display=none]) .level[class*=level__]{display:block!important;flex:none!important;width:22px!important;position:relative;margin-right:36px!important;overflow:visible!important}.faction-war:not([data-ffscouter-col-display=none]) .level[class*=level__]:after{content:attr(data-ff-value);display:var(--ff-display, none)!important;position:absolute;left:calc(100% + 4px)!important;top:50%!important;transform:translateY(-50%)!important;width:32px!important;height:20px!important;background-color:var(--ff-bg-color, transparent)!important;color:var(--ff-text-color, inherit)!important;font-size:11px!important;line-height:20px!important;text-align:center!important;align-items:center!important;justify-content:center!important;border-radius:3px!important;box-sizing:border-box!important;z-index:10!important}.faction-war .white-grad{overflow:visible!important}.faction-war:not([data-ffscouter-col-display=none]) .white-grad .level.level___pwbgk{display:block!important;flex:none!important;width:22px!important;position:relative;margin-right:36px!important;overflow:visible!important}.faction-war:not([data-ffscouter-col-display=none]) .white-grad .level.level___pwbgk:after{background-color:transparent!important;font-size:12px;font-weight:700!important;height:auto!important;line-height:normal!important;left:calc(100% + 4px)!important;width:32px!important;content:attr(data-ff-value)!important;display:var(--ff-display, none)!important}.faction-war[data-ffscouter-hide-level=true]:not([data-ffscouter-col-display=none]) .level[class*=level__],.faction-war[data-ffscouter-hide-level=true]:not([data-ffscouter-col-display=none]) .level{width:0!important;margin-right:32px!important;color:transparent!important;font-size:0!important;border-left:none!important;border-right:none!important;background-color:transparent!important;pointer-events:none!important}.faction-war[data-ffscouter-hide-level=true]:not([data-ffscouter-col-display=none]) .level[class*=level__]:after,.faction-war[data-ffscouter-hide-level=true]:not([data-ffscouter-col-display=none]) .level:after{left:0!important;color:var(--ff-text-color, inherit)!important;font-size:11px!important;background-color:var(--ff-bg-color, transparent)!important;pointer-events:auto!important}.faction-war[data-ffscouter-hide-level=true]:not([data-ffscouter-col-display=none]) .white-grad .level[class*=level__],.faction-war[data-ffscouter-hide-level=true]:not([data-ffscouter-col-display=none]) .white-grad .level{width:0!important;margin-right:32px!important;color:transparent!important;font-size:0!important;border-left:none!important;border-right:none!important;background-color:transparent!important;pointer-events:none!important}.faction-war[data-ffscouter-hide-level=true]:not([data-ffscouter-col-display=none]) .white-grad .level[class*=level__]:after,.faction-war[data-ffscouter-hide-level=true]:not([data-ffscouter-col-display=none]) .white-grad .level:after{left:0!important;color:var(--ffsv3-text-color, inherit)!important;font-size:12px!important;font-weight:700!important;pointer-events:auto!important}.faction-war[data-ffscouter-hide-status=true] .status,.faction-war[data-ffscouter-hide-status=true] [class*=status__],.faction-war[data-ffscouter-hide-score=true] [class*=score__],.faction-war[data-ffscouter-hide-score=true] [class*=points__],.faction-war[data-ffscouter-hide-score=true] [class*=respect__],.faction-war[data-ffscouter-hide-score=true] [class*=attacks__]{display:none!important}.grp-columns{order:7}.members-list li.enemy,.members-list li.your,.members-list div.c-pointer,.faction-war div.c-pointer,.chain-attacks-list div.c-pointer{display:flex!important;flex-flow:row nowrap!important;align-items:center!important}.members-list li.enemy>div.clear,.members-list li.your>div.clear{display:none!important}.members-list li.enemy:has(>.tt-stats-estimate),.members-list li.your:has(>.tt-stats-estimate),.members-list li.enemy:has(>div.clear~*),.members-list li.your:has(>div.clear~*){padding-bottom:22px!important;position:relative!important}.members-list li.enemy>.tt-stats-estimate,.members-list li.your>.tt-stats-estimate,.members-list li.enemy>div.clear~*,.members-list li.your>div.clear~*{position:absolute!important;bottom:2px!important;left:10px!important;height:18px!important;line-height:18px!important;font-size:11px!important;width:calc(100% - 20px)!important;display:block!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}";
   importCSS(stylesCss);
   const log = logger.child("boot");
   const INJECTION_KEY = "__FF_SCOUTER_V3_INJECTED__";
@@ -6427,7 +6544,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       return;
     }
     w[INJECTION_KEY] = true;
-    log.info("Initializing", "3.0-alpha21");
+    log.info("Initializing", "3.0-alpha22");
     if (ffscouter.analytics_enabled) {
       unsafeWindow.ffscouter = ffscouter;
       window.ffscouter = ffscouter;
