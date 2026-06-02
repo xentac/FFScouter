@@ -40,7 +40,7 @@ describe("Fallback Dynamic MutationObserver Feature", () => {
   });
 
   beforeEach(() => {
-    document.body.innerHTML = "";
+    document.body.innerHTML = '<div class="content-wrapper"></div>';
     vi.clearAllMocks();
     navigationListeners.length = 0;
   });
@@ -59,15 +59,18 @@ describe("Fallback Dynamic MutationObserver Feature", () => {
     vi.mocked(torn_page).mockImplementation((page) => page === "hospitalview");
 
     await fallback.run();
+    await new Promise((resolve) => setTimeout(resolve, 0));
 
     expect(on_navigation).toHaveBeenCalled();
     expect(observeSpy).toHaveBeenCalledTimes(1);
-    expect(observeSpy).toHaveBeenCalledWith(document, {
-      attributes: false,
-      childList: true,
-      characterData: false,
-      subtree: true,
-    });
+    const contentWrapper = document.querySelector(".content-wrapper");
+    expect(observeSpy).toHaveBeenCalledWith(
+      contentWrapper,
+      expect.objectContaining({
+        childList: true,
+        subtree: true,
+      }),
+    );
     expect(disconnectSpy).not.toHaveBeenCalled();
   });
 
@@ -76,6 +79,7 @@ describe("Fallback Dynamic MutationObserver Feature", () => {
     vi.mocked(torn_page).mockImplementation((page) => page === "gym");
 
     await fallback.run();
+    await new Promise((resolve) => setTimeout(resolve, 0));
 
     expect(on_navigation).toHaveBeenCalled();
     expect(observeSpy).not.toHaveBeenCalled();
@@ -86,6 +90,7 @@ describe("Fallback Dynamic MutationObserver Feature", () => {
     // 1. Start on included page
     vi.mocked(torn_page).mockImplementation((page) => page === "hospitalview");
     await fallback.run();
+    await new Promise((resolve) => setTimeout(resolve, 0));
 
     expect(observeSpy).toHaveBeenCalledTimes(1);
     expect(disconnectSpy).not.toHaveBeenCalled();
@@ -97,6 +102,7 @@ describe("Fallback Dynamic MutationObserver Feature", () => {
     for (const listener of navigationListeners) {
       listener();
     }
+    await new Promise((resolve) => setTimeout(resolve, 0));
 
     expect(disconnectSpy).toHaveBeenCalledTimes(1);
   });
@@ -105,6 +111,7 @@ describe("Fallback Dynamic MutationObserver Feature", () => {
     // 1. Start on excluded page (gym)
     vi.mocked(torn_page).mockImplementation((page) => page === "gym");
     await fallback.run();
+    await new Promise((resolve) => setTimeout(resolve, 0));
 
     expect(observeSpy).not.toHaveBeenCalled();
 
@@ -115,6 +122,7 @@ describe("Fallback Dynamic MutationObserver Feature", () => {
     for (const listener of navigationListeners) {
       listener();
     }
+    await new Promise((resolve) => setTimeout(resolve, 0));
 
     expect(observeSpy).toHaveBeenCalledTimes(1);
     expect(disconnectSpy).not.toHaveBeenCalled();
@@ -124,6 +132,7 @@ describe("Fallback Dynamic MutationObserver Feature", () => {
     // Start on excluded page
     vi.mocked(torn_page).mockImplementation((page) => page === "gym");
     await fallback.run();
+    await new Promise((resolve) => setTimeout(resolve, 0));
 
     expect(observeSpy).not.toHaveBeenCalled();
     expect(disconnectSpy).not.toHaveBeenCalled();
@@ -140,6 +149,7 @@ describe("Fallback Dynamic MutationObserver Feature", () => {
     for (const listener of navigationListeners) {
       listener();
     }
+    await new Promise((resolve) => setTimeout(resolve, 0));
 
     expect(observeSpy).not.toHaveBeenCalled();
     expect(disconnectSpy).not.toHaveBeenCalled();
@@ -149,6 +159,7 @@ describe("Fallback Dynamic MutationObserver Feature", () => {
     // Start on included page
     vi.mocked(torn_page).mockImplementation((page) => page === "hospitalview");
     await fallback.run();
+    await new Promise((resolve) => setTimeout(resolve, 0));
 
     expect(observeSpy).toHaveBeenCalledTimes(1);
 
@@ -159,6 +170,7 @@ describe("Fallback Dynamic MutationObserver Feature", () => {
     for (const listener of navigationListeners) {
       listener();
     }
+    await new Promise((resolve) => setTimeout(resolve, 0));
 
     // Should still only have called observe once
     expect(observeSpy).toHaveBeenCalledTimes(1);
