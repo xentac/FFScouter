@@ -25,7 +25,7 @@ function get_current_time_seconds(): number {
   return Date.now() / 1000;
 }
 
-function format_duration_human(totalSeconds: number): string {
+function format_duration_human(totalSeconds: number, compact: boolean): string {
   const clampedSeconds = Math.max(0, Math.floor(totalSeconds));
   const hours = Math.floor(clampedSeconds / 3600);
   const minutes = Math.floor((clampedSeconds % 3600) / 60);
@@ -38,6 +38,9 @@ function format_duration_human(totalSeconds: number): string {
     parts.push(`${minutes}m`);
   }
   parts.push(`${seconds}s`);
+  if (compact) {
+    return parts.join("");
+  }
   return parts.join(" ");
 }
 
@@ -57,6 +60,7 @@ export class FFFlightProfileStatus extends LitElement {
 
   @property({ type: Number }) playerId: number | null = null;
   @property({ type: Object }) data: PlayerFlightsResponse | null = null;
+  @property({ type: Boolean }) compact = false;
 
   @state() private is_premium: boolean | null = null;
   @state() private loading = false;
@@ -170,24 +174,32 @@ export class FFFlightProfileStatus extends LitElement {
     if (this.error) {
       content = html`<span style="color: #ff6b6b;">Error: ${this.error}</span>`;
     } else if (this.loading && !this.data) {
-      content = html`Landing: estimating...`;
+      content = this.compact
+        ? html`Estimating...`
+        : html`Landing: estimating...`;
     } else {
       const current = this.data?.current;
       if (this.data?.rechecking) {
         const next = this.data.next_retry_at ?? 0;
         const now = Date.now();
         const seconds = Math.max(0, Math.ceil((next - now) / 1000));
-        content = html`No data. Rechecking in ${seconds} seconds.`;
+        content = this.compact
+          ? html`No data.<br />Rechecking...`
+          : html`No data. Rechecking in ${seconds} seconds.`;
       } else if (
         !current ||
         (!current.earliest_arrival_time && !current.latest_arrival_time)
       ) {
-        content = html`Landing: unavailable for current route`;
+        content = this.compact
+          ? html`Unavailable`
+          : html`Landing: unavailable for current route`;
       } else {
         const earliest = Number(current.earliest_arrival_time);
         const latest = Number(current.latest_arrival_time);
         if (!Number.isFinite(earliest) || !Number.isFinite(latest)) {
-          content = html`Landing: unavailable for current route`;
+          content = this.compact
+            ? html`Unavailable`
+            : html`Landing: unavailable for current route`;
         } else {
           const nowUnix = this.current_time_seconds;
           const earliestRemaining = earliest - nowUnix;
@@ -202,18 +214,33 @@ export class FFFlightProfileStatus extends LitElement {
             latestTct: latestTct,
           });
           if (latestRemaining <= -5 * 60) {
-            content = html`Landing: Late, probably flight delayed.<br />(${latestTct}
-              TCT latest)`;
+            content = this.compact
+              ? html`Late`
+              : html`Landing: Late, probably flight delayed.<br />(${latestTct}
+                  TCT latest)`;
           } else if (latestRemaining <= 0) {
-            content = html`Landing: just landed<br />(${latestTct} TCT latest)`;
+            content = this.compact
+              ? html`Just landed<br />(Latest: ${latestTct} TCT)`
+              : html`Landing: just landed<br />(${latestTct} TCT latest)`;
           } else if (earliestRemaining <= 0) {
-            content = html`Landing: imminent -
-              ${format_duration_human(latestRemaining)}<br />(Latest:
-              ${latestTct} TCT)`;
+            content = this.compact
+              ? html`Imminent<br />${format_duration_human(
+                  latestRemaining,
+                  this.compact,
+                )}<br />`
+              : html`Landing: imminent -
+                  ${format_duration_human(latestRemaining, this.compact)}<br />(Latest:
+                  ${latestTct} TCT)`;
           } else {
-            content = html`Landing: ${format_duration_human(earliestRemaining)}
-              - ${format_duration_human(latestRemaining)}<br />(${earliestTct} -
-              ${latestTct} TCT)`;
+            content = this.compact
+              ? html`${format_duration_human(
+                  earliestRemaining,
+                  this.compact,
+                )}<br />${format_duration_human(latestRemaining, this.compact)}`
+              : html`Landing:
+                  ${format_duration_human(earliestRemaining, this.compact)} -
+                  ${format_duration_human(latestRemaining, this.compact)}<br />(${earliestTct}
+                  - ${latestTct} TCT)`;
           }
         }
       }

@@ -184,6 +184,37 @@ test("renders landing window range when earliest arrival is in the future", asyn
   expect(el.textContent).toContain("40m 0s");
 });
 
+test("renders compact landing window range when compact property is true", async () => {
+  vi.mocked(check_key_status.is_premium).mockResolvedValue(true);
+
+  const nowUnix = mockNowTime / 1000;
+  vi.mocked(ffscouter.get_flights).mockResolvedValue({
+    player_id: 123,
+    current: {
+      takeoff_time: nowUnix - 600,
+      status_description: "flying",
+      earliest_arrival_time: nowUnix + 1200, // 20 min from now
+      latest_arrival_time: nowUnix + 2400, // 40 min from now
+      travel_method: "Airline",
+      book_likely_being_used: false,
+    },
+    recent_flights: [],
+  });
+
+  const el = document.createElement("ff-flight-profile-status");
+  el.playerId = 123;
+  el.compact = true;
+  document.body.appendChild(el);
+
+  await el.updateComplete;
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  await el.updateComplete;
+
+  expect(el.textContent).not.toContain("Landing:");
+  expect(el.textContent).toContain("20m0s");
+  expect(el.textContent).toContain("40m0s");
+});
+
 test("renders specific error messages when API fails", async () => {
   vi.mocked(check_key_status.is_premium).mockResolvedValue(true);
 
