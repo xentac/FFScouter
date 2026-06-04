@@ -645,30 +645,25 @@ test("apply_ff_columns supports configurable display via real DOM elements when 
   expect(header.textContent).toBe("FF");
   expect(header.tagName).toBe("DIV");
 
-  const cell = list.querySelector(".ffscouter-cell") as HTMLAnchorElement;
+  const cell = list.querySelector(".ffscouter-cell") as HTMLElement;
   expect(cell).not.toBeNull();
   expect(cell.textContent).toBe("3.50");
   expect(cell.style.backgroundColor).not.toBe("");
   expect(cell.style.color).not.toBe("");
-  expect(cell.tagName).toBe("A");
-  expect(cell.href).toBe(
-    "https://www.torn.com/page.php?sid=attack&user2ID=111",
-  );
-  expect(cell.target).toBe("_blank");
+  expect(cell.tagName).toBe("DIV");
+  expect(cell.onclick).toBeTypeOf("function");
 
   // Check the status icon clickability
   const icons = list.querySelector(".icons") as HTMLElement;
   expect(icons.style.cursor).toBe("pointer");
   expect(icons.onclick).toBeTypeOf("function");
 
-  // Check same tab preference for cell and icons
+  // Check same tab preference
   ffconfig.war_quick_attack_action = WarQuickAttackAction.CURRENT;
   await apply_ff_columns(list);
 
-  const cellSameTab = list.querySelector(
-    ".ffscouter-cell",
-  ) as HTMLAnchorElement;
-  expect(cellSameTab.target).toBe("_self");
+  const cellSameTab = list.querySelector(".ffscouter-cell") as HTMLElement;
+  expect(cellSameTab.onclick).toBeTypeOf("function");
 
   // Reset to default new_tab
   ffconfig.war_quick_attack_action = WarQuickAttackAction.NEW_TAB;

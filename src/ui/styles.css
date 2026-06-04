@@ -426,8 +426,7 @@ ff-faction-filter-box {
   flex: none !important;
 }
 
-a.ffscouter-cell {
-  text-decoration: none !important;
+.ffscouter-cell {
   cursor: pointer !important;
 }
 
