@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FF Scouter V3
 // @namespace    xentac-v3
-// @version      3.0-alpha23
+// @version      3.0-alpha24
 // @author       xentac [3354782], MAVRI [2402357], rDacted [2670953], Weav3r [1853324], Glasnost [1844049]
 // @description  Shows the expected Fair Fight score against targets and faction war status
 // @license      GPLv3
@@ -265,7 +265,8 @@ clearAll() {
     chain_min_ff: null,
     chain_max_ff: 2.5,
     chain_factionless: false,
-    gauge_marker_type: "arrow"
+    gauge_marker_type: "arrow",
+    war_quick_attack_action: "new_tab"
 };
   class FFConfig {
     constructor(name) {
@@ -328,6 +329,14 @@ clearAll() {
     }
     set chain_tab_type(val) {
       this.storage.set("chain_tab_type", val);
+    }
+    get war_quick_attack_action() {
+      return this.storage.get(
+        "war_quick_attack_action"
+) ?? CONFIG_DEFAULTS.war_quick_attack_action;
+    }
+    set war_quick_attack_action(val) {
+      this.storage.set("war_quick_attack_action", val);
     }
     get chain_ff_target() {
       return this.storage.get(
@@ -3471,6 +3480,67 @@ async willUpdate(changedProperties) {
       this.saveState();
       this.dispatchChange();
     }
+    onCompareActivity() {
+      const container = this.closest(".faction-war");
+      const links = container ? Array.from(
+        container.querySelectorAll('a[href*="step=profile"]')
+      ) : [];
+      const seen = new Set();
+      const ids = [];
+      const tryExtract = (link) => {
+        try {
+          const url = new URL(link.href, window.location.origin);
+          const id = url.searchParams.get("ID");
+          if (id && !seen.has(id)) {
+            seen.add(id);
+            ids.push(id);
+          }
+        } catch {
+          const match = (link.getAttribute("href") || "").match(/[?&]ID=(\d+)/i);
+          if (match?.[1]) {
+            const id = match[1];
+            if (!seen.has(id)) {
+              seen.add(id);
+              ids.push(id);
+            }
+          }
+        }
+      };
+      for (const link of links) {
+        tryExtract(link);
+      }
+      if (ids.length < 2) {
+        const docLinks = Array.from(
+          document.querySelectorAll('a[href*="step=profile"]')
+        );
+        for (const link of docLinks) {
+          tryExtract(link);
+        }
+      }
+      if (ids.length < 2) {
+        console.warn("Could not find faction IDs to compare activity.");
+        return;
+      }
+      const factionId1 = ids[0];
+      const factionId2 = ids[1];
+      const now = new Date();
+      const start = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1e3);
+      const formatUTC = (d2) => {
+        const y3 = d2.getUTCFullYear();
+        const m2 = String(d2.getUTCMonth() + 1).padStart(2, "0");
+        const day = String(d2.getUTCDate()).padStart(2, "0");
+        const h2 = String(d2.getUTCHours()).padStart(2, "0");
+        const min = String(d2.getUTCMinutes()).padStart(2, "0");
+        return `${y3}-${m2}-${day}T${h2}:${min}`;
+      };
+      const startAt = formatUTC(start);
+      const endAt = formatUTC(now);
+      const bucketMinutes = 5;
+      const scouterUrl = `https://ffscouter.com/faction-activity-comparison?faction_id_1=${factionId1}&faction_id_2=${factionId2}&start_at=${encodeURIComponent(
+      startAt
+    )}&end_at=${encodeURIComponent(endAt)}&bucket_minutes=${bucketMinutes}`;
+      window.open(scouterUrl, "_blank");
+    }
     render() {
       const isEst = this.colDisplay === FactionsColDisplay.BATTLE_STATS;
       const sortText = isEst ? "Stats" : "FF";
@@ -3502,6 +3572,15 @@ async willUpdate(changedProperties) {
                 <option value="battle_stats">Show: BS Estimate</option>
                 <option value="none">Show: None (Hide)</option>
               </select>
+              ${this.mode === "war" ? b`
+                    <button
+                      id="compare-faction-activity-btn"
+                      @click="${this.onCompareActivity}"
+                      style="width: 100%; height: 32px;"
+                    >
+                      Compare Activity
+                    </button>
+                  ` : ""}
             </div>
           </div>
 
@@ -3903,40 +3982,29 @@ Number.parseInt(row.dataset["estValue"], 10)
     const isEst = colDisplay === FactionsColDisplay.BATTLE_STATS;
     const isNone = colDisplay === FactionsColDisplay.NONE;
     const expectedText = isEst ? "Est" : "FF";
-    if (isWar) {
-      const factionWar = membersList.closest(
-        ".faction-war"
-      );
-      if (factionWar) {
-        factionWar.setAttribute("data-ffscouter-col-display", colDisplay);
-      }
-    }
-    membersList.setAttribute("data-ffscouter-col-display", colDisplay);
     let headerLi = membersList.querySelector(
       ".ffscouter-header"
     );
-    if (isWar) {
+    if (isNone) {
       if (headerLi) {
         headerLi.remove();
       }
-      const headerLvlEl = membersList.querySelector(
-        ".white-grad > .level"
-      );
-      if (headerLvlEl) {
-        headerLvlEl.setAttribute("data-ff-value", expectedText);
-        if (!isNone) {
-          headerLvlEl.style.setProperty("--ff-display", "inline-flex");
-        } else {
-          headerLvlEl.style.removeProperty("--ff-display");
-        }
-      }
     } else {
-      if (isNone) {
-        if (headerLi) {
-          headerLi.remove();
-        }
-      } else {
-        if (!headerLi) {
+      if (headerLi && (isWar && headerLi.tagName !== "DIV" || !isWar && headerLi.tagName !== "LI")) {
+        headerLi.remove();
+        headerLi = null;
+      }
+      if (!headerLi) {
+        if (isWar) {
+          const headerLvlEl = membersList.querySelector(
+            ".white-grad > .level"
+          );
+          if (headerLvlEl) {
+            headerLi = document.createElement("div");
+            headerLi.classList.add("level", "ffscouter-header");
+            headerLvlEl.after(headerLi);
+          }
+        } else {
           headerLi = document.createElement("li");
           headerLi.tabIndex = 0;
           headerLi.classList.add(
@@ -3948,9 +4016,9 @@ Number.parseInt(row.dataset["estValue"], 10)
           );
           headerLvl.after(headerLi);
         }
-        if (headerLi.textContent !== expectedText) {
-          headerLi.textContent = expectedText;
-        }
+      }
+      if (headerLi && headerLi.textContent !== expectedText) {
+        headerLi.textContent = expectedText;
       }
     }
     const rows = Array.from(
@@ -3979,54 +4047,22 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     const dataMap = new Map(dataList.map((d2) => [d2.player_id, d2]));
     for (const rp of rowPlayers) {
       let cell = rp.row.querySelector(".ffscouter-cell");
-      const levelEl = rp.row.querySelector(".level");
-      if (isWar) {
+      if (isNone) {
         if (cell) {
           cell.remove();
         }
-        const data = dataMap.get(rp.player_id);
-        if (data && !data.no_data) {
-          rp.row.dataset["ffValue"] = String(data.fair_fight);
-          rp.row.dataset["estValue"] = String(data.bs_estimate);
-          if (levelEl) {
-            const text = isEst ? data.bs_estimate_human : format_ff_score(data);
-            const bg_color = get_ff_colour(data);
-            const text_color = get_contrast_color(bg_color);
-            levelEl.setAttribute("data-ff-value", text);
-            levelEl.style.setProperty("--ff-bg-color", bg_color);
-            levelEl.style.setProperty("--ff-text-color", text_color);
-            if (!isNone) {
-              levelEl.style.setProperty("--ff-display", "inline-flex");
-            } else {
-              levelEl.style.removeProperty("--ff-display");
-            }
-            if (isEst && data.distribution) {
-              const ageStr = format_relative_time(data.distribution.last_updated);
-              const agePart = ageStr ? ` ${ageStr}` : "";
-              levelEl.title = `Top Stats: ${data.distribution.distribution_human}${agePart}`;
-            } else {
-              levelEl.title = "";
-            }
-          }
-        } else {
-          rp.row.dataset["ffValue"] = "";
-          rp.row.dataset["estValue"] = "";
-          if (levelEl) {
-            levelEl.removeAttribute("data-ff-value");
-            levelEl.style.removeProperty("--ff-bg-color");
-            levelEl.style.removeProperty("--ff-text-color");
-            levelEl.style.removeProperty("--ff-display");
-            levelEl.title = "";
-          }
-        }
       } else {
-        if (isNone) {
-          if (cell) {
-            cell.remove();
-          }
-        } else {
-          if (!cell) {
-            cell = document.createElement("div");
+        if (!cell) {
+          cell = document.createElement("div");
+          if (isWar) {
+            cell.classList.add("level", "ffscouter-cell");
+            const levelEl = rp.row.querySelector(".level, [class*='level__']");
+            if (levelEl) {
+              levelEl.after(cell);
+            } else {
+              rp.memberDiv.after(cell);
+            }
+          } else {
             cell.classList.add("table-cell", "lvl", "ffscouter-cell");
             const rowLvl = rp.row.querySelector(".lvl");
             if (rowLvl) {
@@ -4036,37 +4072,62 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
             }
           }
         }
-        const data = dataMap.get(rp.player_id);
-        if (data && !data.no_data) {
-          rp.row.dataset["ffValue"] = String(data.fair_fight);
-          rp.row.dataset["estValue"] = String(data.bs_estimate);
-          if (cell) {
-            const text = isEst ? data.bs_estimate_human : format_ff_score(data);
-            const bg_color = get_ff_colour(data);
-            const text_color = get_contrast_color(bg_color);
-            cell.style.backgroundColor = bg_color;
-            cell.style.color = text_color;
-            cell.style.fontWeight = "bold";
-            cell.textContent = text;
-            if (isEst && data.distribution) {
-              const ageStr = format_relative_time(data.distribution.last_updated);
-              const agePart = ageStr ? ` ${ageStr}` : "";
-              cell.title = `Top Stats: ${data.distribution.distribution_human}${agePart}`;
-            } else {
-              cell.title = "";
-            }
+        cell.style.cursor = "pointer";
+        cell.onclick = (e2) => {
+          e2.preventDefault();
+          e2.stopPropagation();
+          const url = `https://www.torn.com/page.php?sid=attack&user2ID=${rp.player_id}`;
+          if (ffconfig.war_quick_attack_action === "new_tab") {
+            window.open(url, "_blank");
+          } else {
+            window.location.href = url;
           }
-        } else {
-          rp.row.dataset["ffValue"] = "";
-          rp.row.dataset["estValue"] = "";
-          if (cell) {
-            cell.textContent = "-";
-            cell.style.backgroundColor = "";
-            cell.style.color = "";
-            cell.style.fontWeight = "";
+        };
+      }
+      const data = dataMap.get(rp.player_id);
+      if (data && !data.no_data) {
+        rp.row.dataset["ffValue"] = String(data.fair_fight);
+        rp.row.dataset["estValue"] = String(data.bs_estimate);
+        if (cell) {
+          const text = isEst ? data.bs_estimate_human : format_ff_score(data);
+          const bg_color = get_ff_colour(data);
+          const text_color = get_contrast_color(bg_color);
+          cell.style.backgroundColor = bg_color;
+          cell.style.color = text_color;
+          cell.style.fontWeight = "bold";
+          cell.textContent = text;
+          if (isEst && data.distribution) {
+            const ageStr = format_relative_time(data.distribution.last_updated);
+            const agePart = ageStr ? ` ${ageStr}` : "";
+            cell.title = `Top Stats: ${data.distribution.distribution_human}${agePart}`;
+          } else {
             cell.title = "";
           }
         }
+      } else {
+        rp.row.dataset["ffValue"] = "";
+        rp.row.dataset["estValue"] = "";
+        if (cell) {
+          cell.textContent = "-";
+          cell.style.backgroundColor = "";
+          cell.style.color = "";
+          cell.style.fontWeight = "";
+          cell.title = "";
+        }
+      }
+      const icons = rp.row.querySelector(".icons");
+      if (icons) {
+        icons.style.cursor = "pointer";
+        icons.onclick = (e2) => {
+          e2.preventDefault();
+          e2.stopPropagation();
+          const url = `https://www.torn.com/page.php?sid=attack&user2ID=${rp.player_id}`;
+          if (ffconfig.war_quick_attack_action === "new_tab") {
+            window.open(url, "_blank");
+          } else {
+            window.location.href = url;
+          }
+        };
       }
     }
     const filterBox = (membersList.closest(".faction-war") || membersList.parentNode)?.querySelector("ff-faction-filter-box");
@@ -5700,6 +5761,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       this.debugLogs = CONFIG_DEFAULTS.debug_logs;
       this.analyticsEnabled = CONFIG_DEFAULTS.analytics_enabled;
       this.gaugeMarkerType = CONFIG_DEFAULTS.gauge_marker_type;
+      this.warQuickAttackAction = CONFIG_DEFAULTS.war_quick_attack_action;
       this.isPremium = false;
       this.draftApiKey = "";
       this.draftLowRange = CONFIG_DEFAULTS.low_ff_range;
@@ -5721,6 +5783,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       this.draftDebugLogs = CONFIG_DEFAULTS.debug_logs;
       this.draftAnalyticsEnabled = CONFIG_DEFAULTS.analytics_enabled;
       this.draftGaugeMarkerType = CONFIG_DEFAULTS.gauge_marker_type;
+      this.draftWarQuickAttackAction = CONFIG_DEFAULTS.war_quick_attack_action;
       this.rangeError = "";
       this.showSavedMessage = false;
     }
@@ -5732,7 +5795,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       this.resetDrafts();
     }
     willUpdate(changedProperties) {
-      if (changedProperties.has("apiKey") || changedProperties.has("lowRange") || changedProperties.has("highRange") || changedProperties.has("maxRange") || changedProperties.has("chainButtonEnabled") || changedProperties.has("chainLinkType") || changedProperties.has("chainTabType") || changedProperties.has("chainFFTarget") || changedProperties.has("chainMinLevel") || changedProperties.has("chainMaxLevel") || changedProperties.has("chainInactive") || changedProperties.has("chainMinFF") || changedProperties.has("chainMaxFF") || changedProperties.has("chainFactionless") || changedProperties.has("ffHistoryEnabled") || changedProperties.has("factionsColDisplay") || changedProperties.has("warColDisplay") || changedProperties.has("debugLogs") || changedProperties.has("analyticsEnabled") || changedProperties.has("gaugeMarkerType")) {
+      if (changedProperties.has("apiKey") || changedProperties.has("lowRange") || changedProperties.has("highRange") || changedProperties.has("maxRange") || changedProperties.has("chainButtonEnabled") || changedProperties.has("chainLinkType") || changedProperties.has("chainTabType") || changedProperties.has("chainFFTarget") || changedProperties.has("chainMinLevel") || changedProperties.has("chainMaxLevel") || changedProperties.has("chainInactive") || changedProperties.has("chainMinFF") || changedProperties.has("chainMaxFF") || changedProperties.has("chainFactionless") || changedProperties.has("ffHistoryEnabled") || changedProperties.has("factionsColDisplay") || changedProperties.has("warColDisplay") || changedProperties.has("debugLogs") || changedProperties.has("analyticsEnabled") || changedProperties.has("gaugeMarkerType") || changedProperties.has("warQuickAttackAction")) {
         this.resetDrafts();
       }
     }
@@ -5757,6 +5820,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       this.draftDebugLogs = this.debugLogs;
       this.draftAnalyticsEnabled = this.analyticsEnabled;
       this.draftGaugeMarkerType = this.gaugeMarkerType;
+      this.draftWarQuickAttackAction = this.warQuickAttackAction;
     }
     handleSave() {
       const low = this.draftLowRange;
@@ -5801,7 +5865,8 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
             warColDisplay: this.draftWarColDisplay,
             debugLogs: this.draftDebugLogs,
             analyticsEnabled: this.draftAnalyticsEnabled,
-            gaugeMarkerType: this.draftGaugeMarkerType
+            gaugeMarkerType: this.draftGaugeMarkerType,
+            warQuickAttackAction: this.draftWarQuickAttackAction
           },
           bubbles: true,
           composed: true
@@ -5918,6 +5983,10 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     }
     onWarColDisplayChange(e2) {
       this.draftWarColDisplay = e2.target.value;
+      this.showSavedMessage = false;
+    }
+    onWarQuickAttackActionChange(e2) {
+      this.draftWarQuickAttackAction = e2.target.value;
       this.showSavedMessage = false;
     }
     onDebugLogsChange(e2) {
@@ -6191,6 +6260,19 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
             </select>
           </div>
 
+          <!-- War Quick Attack Action -->
+          <div class="input-row-inline">
+            <label for="war-quick-attack-action">War Page Quick Attack Action:</label>
+            <select
+              id="war-quick-attack-action"
+              .value=${this.draftWarQuickAttackAction}
+              @change=${this.onWarQuickAttackActionChange}
+            >
+              <option value="new_tab">New Tab</option>
+              <option value="current">Same Tab</option>
+            </select>
+          </div>
+
           <!-- Debug Settings -->
           <h3>Debug Settings:</h3>
           <div class="input-row-inline">
@@ -6300,6 +6382,9 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     n2({ type: String })
   ], FFSettingsPanel.prototype, "gaugeMarkerType", 2);
   __decorateClass([
+    n2({ type: String })
+  ], FFSettingsPanel.prototype, "warQuickAttackAction", 2);
+  __decorateClass([
     n2({ type: Boolean })
   ], FFSettingsPanel.prototype, "isPremium", 2);
   __decorateClass([
@@ -6364,6 +6449,9 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
   ], FFSettingsPanel.prototype, "draftGaugeMarkerType", 2);
   __decorateClass([
     r()
+  ], FFSettingsPanel.prototype, "draftWarQuickAttackAction", 2);
+  __decorateClass([
+    r()
   ], FFSettingsPanel.prototype, "rangeError", 2);
   __decorateClass([
     r()
@@ -6400,6 +6488,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       panel.debugLogs = ffconfig.debug_logs;
       panel.analyticsEnabled = ffconfig.analytics_enabled;
       panel.gaugeMarkerType = ffconfig.gauge_marker_type;
+      panel.warQuickAttackAction = ffconfig.war_quick_attack_action;
       panel.isPremium = await check_key_status.is_premium(true);
       panel.addEventListener("ff-save", async (e2) => {
         const detail = e2.detail;
@@ -6428,6 +6517,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
         }
         ffconfig.analytics_enabled = detail.analyticsEnabled;
         ffconfig.gauge_marker_type = detail.gaugeMarkerType;
+        ffconfig.war_quick_attack_action = detail.warQuickAttackAction;
         panel.isPremium = await check_key_status.is_premium(true);
         toast("Settings saved successfully!");
         window.dispatchEvent(new CustomEvent("ff-config-updated"));
@@ -6454,6 +6544,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
         panel.debugLogs = ffconfig.debug_logs;
         panel.analyticsEnabled = ffconfig.analytics_enabled;
         panel.gaugeMarkerType = ffconfig.gauge_marker_type;
+        panel.warQuickAttackAction = ffconfig.war_quick_attack_action;
         toast("Settings reset to defaults!");
         window.dispatchEvent(new CustomEvent("ff-config-updated"));
       });
@@ -6645,7 +6736,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       log$1.error("Failed to patch fetch:", err);
     }
   }
-  const stylesCss = ".ffsv3-gauge{position:relative;display:block;padding:0}.ffsv3-arrow{position:absolute;transform:translate(-50%,-30%);padding:0;top:0;left:calc(var(--ffsv3-arrow-width) / 2 + var(--band-percent) * (100% - var(--ffsv3-arrow-width)) / 100);width:var(--ffsv3-arrow-width);object-fit:cover;pointer-events:none}.ffsv3-bubble{position:absolute;transform:translate(-50%,-30%);top:0;left:calc(var(--ffsv3-arrow-width) / 2 + var(--band-percent) * (100% - var(--ffsv3-arrow-width)) / 100);min-width:22px;height:14px;line-height:12px;border:1px solid rgba(0,0,0,.4);border-radius:8px;font-size:8.5px;font-weight:700;font-family:Geneva,Arial,sans-serif;text-align:center;padding:0 4px;box-sizing:border-box;pointer-events:none;white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;text-shadow:0 1px 1px rgba(0,0,0,.5);box-shadow:0 1px 2px #0000004d;z-index:10}.ffsv3-mini-desc{padding:0 5px}body{--ffsv3-bg-color: #f0f0f0;--ffsv3-alt-bg-color: #fff;--ffsv3-border-color: #ccc;--ffsv3-input-color: #ccc;--ffsv3-text-color: #000;--ffsv3-hover-color: #ddd;--ffsv3-glow-color: #4caf50;--ffsv3-success-color: #4caf50;--ffsv3-arrow-width: 20px}body.dark-mode{--ffsv3-bg-color: #333;--ffsv3-alt-bg-color: #383838;--ffsv3-border-color: #444;--ffsv3-input-color: #504f4f;--ffsv3-text-color: #ccc;--ffsv3-hover-color: #555;--ffsv3-glow-color: #4caf50;--ffsv3-success-color: #4caf50}.ff-premium-upgrade-line{display:block;margin-top:4px;line-height:1.3;white-space:nowrap;font-size:12px;font-style:normal}@media(max-width:768px){.ff-premium-upgrade-line{margin-top:6px;line-height:1.35;white-space:normal;overflow-wrap:anywhere}}ff-settings-panel{display:block}ff-settings-panel .accordion{margin:10px 0;padding:15px;background-color:var(--ffsv3-bg-color);border:1px solid var(--ffsv3-border-color);border-radius:5px;color:var(--ffsv3-text-color)}ff-settings-panel .accordion.glow{border-color:var(--ffsv3-glow-color);box-shadow:0 0 8px #4caf5080}ff-settings-panel .input-row{display:flex;flex-direction:column;gap:5px;margin-bottom:15px}ff-settings-panel .input-row-inline{display:flex;align-items:center;gap:10px;margin-bottom:15px}ff-settings-panel .blur-mode{filter:blur(4px);transition:filter .2s ease}ff-settings-panel .blur-mode:hover,ff-settings-panel .blur-mode:focus{filter:blur(0)}ff-settings-panel .error-msg{color:#f33;font-size:13px;margin-top:5px}ff-settings-panel input[type=text],ff-settings-panel input[type=number]{text-align:left;vertical-align:top;width:178px;height:14px;margin-right:8px;padding:9px 10px;line-height:14px;display:inline-block}ff-settings-panel input[type=number].ff-number{width:52px}ff-settings-panel select{box-sizing:border-box;text-align:left;vertical-align:top;width:178px;height:34px;margin-right:8px;padding:8px 10px;line-height:14px;display:inline-block;border:var(--input-border-color);border-radius:5px;font-family:Arial,serif;color:var(--input-color);background:var(--input-background-color)}:root .dark-mode ff-settings-panel select option{background-color:#000;color:var(--input-color)}ff-settings-panel .ff-api-explanation{background-color:var(--ffsv3-alt-bg-color);border:1px solid var(--ffsv3-border-color);border-radius:8px;color:var(--ffsv3-text-color);margin-bottom:20px;padding:12px 16px;font-size:13px;line-height:1.5}ff-settings-panel a{color:var(--ffsv3-success-color);text-decoration:underline}ff-settings-panel .is_premium_enabled{display:inline-block;background:#4caf50;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;vertical-align:middle}ff-settings-panel .is_premium_disabled{display:inline-block;background:#c62828;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;vertical-align:middle}.profile-status{position:relative}ff-flight-profile-status{position:absolute;right:10px;bottom:2px;z-index:2}.ff-scouter-profile-flight-info{display:inline-block;text-align:right;font-size:11px;line-height:1.25;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.85)}.profile-status .ff-scouter-profile-flight-info a{color:#fff;text-decoration:underline}ff-faction-filter-box{display:block}.ff-filter-box,.ff-filter-box *,.ff-filter-box *:before,.ff-filter-box *:after{box-sizing:border-box!important}.ff-filter-box{background-color:var(--ffsv3-bg-color);border:1px solid var(--ffsv3-border-color);border-radius:8px;padding:12px 16px;margin-bottom:16px;color:var(--ffsv3-text-color);font-family:Arial,sans-serif;box-shadow:0 2px 5px #0000000d}.ff-filter-box.no-borders{background-color:var(--default-bg-panel-color);border-top:1px solid var(--ffsv3-border-color);border-bottom:1px solid var(--ffsv3-border-color);border-left:none;border-right:none;border-radius:0;box-shadow:none;padding:12px 10px;margin:0}.ff-filter-box summary{cursor:pointer;font-size:14px;font-weight:700;outline:none;-webkit-user-select:none;user-select:none}.ff-filter-box[open] summary{border-bottom:1px solid var(--ffsv3-border-color);padding-bottom:6px;margin-bottom:12px}.ff-filter-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.grp-sort{order:1}.grp-level{order:2}.grp-activity{order:3}.grp-status{order:4}.grp-ff{order:5}.grp-stats{order:6}@media(min-width:784px){.ff-filter-grid{grid-template-columns:repeat(3,1fr)}.ff-filter-grid>*{order:0}}.ff-filter-group{display:flex;flex-direction:column;gap:2px}.ff-filter-options{display:flex;flex-direction:column}.ff-filter-options label{display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer}.ff-filter-range-inputs{display:flex;align-items:center;gap:4px}.ff-filter-range-inputs input{flex:1;width:0;min-width:30px;max-width:80px;padding:4px;border:1px solid var(--ffsv3-border-color);border-radius:4px;background:var(--ffsv3-alt-bg-color);color:var(--ffsv3-text-color);font-size:11px;text-align:center}.ff-filter-box button{padding:6px 10px;border:1px solid var(--ffsv3-border-color);border-radius:4px;background:var(--ffsv3-alt-bg-color);color:var(--ffsv3-text-color);font-size:12px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;transition:background-color .2s}.ff-filter-box button:hover{background-color:var(--ffsv3-hover-color)}.chain-options-flex-container{display:flex;flex-wrap:wrap;gap:10px 20px;align-items:center;justify-content:flex-start;margin-left:20px;margin-top:10px;margin-bottom:15px}.chain-options-flex-container .input-row-inline{margin-bottom:0}.faction-war:not([data-ffscouter-col-display=none]) .level[class*=level__]{display:block!important;flex:none!important;width:22px!important;position:relative;margin-right:36px!important;overflow:visible!important}.faction-war:not([data-ffscouter-col-display=none]) .level[class*=level__]:after{content:attr(data-ff-value);display:var(--ff-display, none)!important;position:absolute;left:calc(100% + 4px)!important;top:50%!important;transform:translateY(-50%)!important;width:32px!important;height:20px!important;background-color:var(--ff-bg-color, transparent)!important;color:var(--ff-text-color, inherit)!important;font-size:11px!important;line-height:20px!important;text-align:center!important;align-items:center!important;justify-content:center!important;border-radius:3px!important;box-sizing:border-box!important;z-index:10!important}.faction-war .white-grad{overflow:visible!important}.faction-war:not([data-ffscouter-col-display=none]) .white-grad .level.level___pwbgk{display:block!important;flex:none!important;width:22px!important;position:relative;margin-right:36px!important;overflow:visible!important}.faction-war:not([data-ffscouter-col-display=none]) .white-grad .level.level___pwbgk:after{background-color:transparent!important;font-size:12px;font-weight:700!important;height:auto!important;line-height:normal!important;left:calc(100% + 4px)!important;width:32px!important;content:attr(data-ff-value)!important;display:var(--ff-display, none)!important}.faction-war[data-ffscouter-hide-level=true]:not([data-ffscouter-col-display=none]) .level[class*=level__],.faction-war[data-ffscouter-hide-level=true]:not([data-ffscouter-col-display=none]) .level{width:0!important;margin-right:32px!important;color:transparent!important;font-size:0!important;border-left:none!important;border-right:none!important;background-color:transparent!important;pointer-events:none!important}.faction-war[data-ffscouter-hide-level=true]:not([data-ffscouter-col-display=none]) .level[class*=level__]:after,.faction-war[data-ffscouter-hide-level=true]:not([data-ffscouter-col-display=none]) .level:after{left:0!important;color:var(--ff-text-color, inherit)!important;font-size:11px!important;background-color:var(--ff-bg-color, transparent)!important;pointer-events:auto!important}.faction-war[data-ffscouter-hide-level=true]:not([data-ffscouter-col-display=none]) .white-grad .level[class*=level__],.faction-war[data-ffscouter-hide-level=true]:not([data-ffscouter-col-display=none]) .white-grad .level{width:0!important;margin-right:32px!important;color:transparent!important;font-size:0!important;border-left:none!important;border-right:none!important;background-color:transparent!important;pointer-events:none!important}.faction-war[data-ffscouter-hide-level=true]:not([data-ffscouter-col-display=none]) .white-grad .level[class*=level__]:after,.faction-war[data-ffscouter-hide-level=true]:not([data-ffscouter-col-display=none]) .white-grad .level:after{left:0!important;color:var(--ffsv3-text-color, inherit)!important;font-size:12px!important;font-weight:700!important;pointer-events:auto!important}.faction-war[data-ffscouter-hide-status=true] .status,.faction-war[data-ffscouter-hide-status=true] [class*=status__],.faction-war[data-ffscouter-hide-score=true] [class*=score__],.faction-war[data-ffscouter-hide-score=true] [class*=points__],.faction-war[data-ffscouter-hide-score=true] [class*=respect__],.faction-war[data-ffscouter-hide-score=true] [class*=attacks__]{display:none!important}.grp-columns{order:7}.members-list li.enemy,.members-list li.your,.members-list div.c-pointer,.faction-war div.c-pointer,.chain-attacks-list div.c-pointer{display:flex!important;flex-flow:row nowrap!important;align-items:center!important}.members-list li.enemy>div.clear,.members-list li.your>div.clear{display:none!important}.members-list li.enemy:has(>.tt-stats-estimate),.members-list li.your:has(>.tt-stats-estimate),.members-list li.enemy:has(>div.clear~*),.members-list li.your:has(>div.clear~*){padding-bottom:22px!important;position:relative!important}.members-list li.enemy>.tt-stats-estimate,.members-list li.your>.tt-stats-estimate,.members-list li.enemy>div.clear~*,.members-list li.your>div.clear~*{position:absolute!important;bottom:2px!important;left:10px!important;height:18px!important;line-height:18px!important;font-size:11px!important;width:calc(100% - 20px)!important;display:block!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}";
+  const stylesCss = ".ffsv3-gauge{position:relative;display:block;padding:0}.ffsv3-arrow{position:absolute;transform:translate(-50%,-30%);padding:0;top:0;left:calc(var(--ffsv3-arrow-width) / 2 + var(--band-percent) * (100% - var(--ffsv3-arrow-width)) / 100);width:var(--ffsv3-arrow-width);object-fit:cover;pointer-events:none}.ffsv3-bubble{position:absolute;transform:translate(-50%,-30%);top:0;left:calc(var(--ffsv3-arrow-width) / 2 + var(--band-percent) * (100% - var(--ffsv3-arrow-width)) / 100);min-width:22px;height:14px;line-height:12px;border:1px solid rgba(0,0,0,.4);border-radius:8px;font-size:8.5px;font-weight:700;font-family:Geneva,Arial,sans-serif;text-align:center;padding:0 4px;box-sizing:border-box;pointer-events:none;white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;text-shadow:0 1px 1px rgba(0,0,0,.5);box-shadow:0 1px 2px #0000004d;z-index:10}.ffsv3-mini-desc{padding:0 5px}body{--ffsv3-bg-color: #f0f0f0;--ffsv3-alt-bg-color: #fff;--ffsv3-border-color: #ccc;--ffsv3-input-color: #ccc;--ffsv3-text-color: #000;--ffsv3-hover-color: #ddd;--ffsv3-glow-color: #4caf50;--ffsv3-success-color: #4caf50;--ffsv3-arrow-width: 20px}body.dark-mode{--ffsv3-bg-color: #333;--ffsv3-alt-bg-color: #383838;--ffsv3-border-color: #444;--ffsv3-input-color: #504f4f;--ffsv3-text-color: #ccc;--ffsv3-hover-color: #555;--ffsv3-glow-color: #4caf50;--ffsv3-success-color: #4caf50}.ff-premium-upgrade-line{display:block;margin-top:4px;line-height:1.3;white-space:nowrap;font-size:12px;font-style:normal}@media(max-width:768px){.ff-premium-upgrade-line{margin-top:6px;line-height:1.35;white-space:normal;overflow-wrap:anywhere}}ff-settings-panel{display:block}ff-settings-panel .accordion{margin:10px 0;padding:15px;background-color:var(--ffsv3-bg-color);border:1px solid var(--ffsv3-border-color);border-radius:5px;color:var(--ffsv3-text-color)}ff-settings-panel .accordion.glow{border-color:var(--ffsv3-glow-color);box-shadow:0 0 8px #4caf5080}ff-settings-panel .input-row{display:flex;flex-direction:column;gap:5px;margin-bottom:15px}ff-settings-panel .input-row-inline{display:flex;align-items:center;gap:10px;margin-bottom:15px}ff-settings-panel .blur-mode{filter:blur(4px);transition:filter .2s ease}ff-settings-panel .blur-mode:hover,ff-settings-panel .blur-mode:focus{filter:blur(0)}ff-settings-panel .error-msg{color:#f33;font-size:13px;margin-top:5px}ff-settings-panel input[type=text],ff-settings-panel input[type=number]{text-align:left;vertical-align:top;width:178px;height:14px;margin-right:8px;padding:9px 10px;line-height:14px;display:inline-block}ff-settings-panel input[type=number].ff-number{width:52px}ff-settings-panel select{box-sizing:border-box;text-align:left;vertical-align:top;width:178px;height:34px;margin-right:8px;padding:8px 10px;line-height:14px;display:inline-block;border:var(--input-border-color);border-radius:5px;font-family:Arial,serif;color:var(--input-color);background:var(--input-background-color)}:root .dark-mode ff-settings-panel select option{background-color:#000;color:var(--input-color)}ff-settings-panel .ff-api-explanation{background-color:var(--ffsv3-alt-bg-color);border:1px solid var(--ffsv3-border-color);border-radius:8px;color:var(--ffsv3-text-color);margin-bottom:20px;padding:12px 16px;font-size:13px;line-height:1.5}ff-settings-panel a{color:var(--ffsv3-success-color);text-decoration:underline}ff-settings-panel .is_premium_enabled{display:inline-block;background:#4caf50;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;vertical-align:middle}ff-settings-panel .is_premium_disabled{display:inline-block;background:#c62828;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;vertical-align:middle}.profile-status{position:relative}ff-flight-profile-status{position:absolute;right:10px;bottom:2px;z-index:2}.ff-scouter-profile-flight-info{display:inline-block;text-align:right;font-size:11px;line-height:1.25;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.85)}.profile-status .ff-scouter-profile-flight-info a{color:#fff;text-decoration:underline}ff-faction-filter-box{display:block}.ff-filter-box,.ff-filter-box *,.ff-filter-box *:before,.ff-filter-box *:after{box-sizing:border-box!important}.ff-filter-box{background-color:var(--ffsv3-bg-color);border:1px solid var(--ffsv3-border-color);border-radius:8px;padding:12px 16px;margin-bottom:16px;color:var(--ffsv3-text-color);font-family:Arial,sans-serif;box-shadow:0 2px 5px #0000000d}.ff-filter-box.no-borders{background-color:var(--default-bg-panel-color);border-top:1px solid var(--ffsv3-border-color);border-bottom:1px solid var(--ffsv3-border-color);border-left:none;border-right:none;border-radius:0;box-shadow:none;padding:12px 10px;margin:0}.ff-filter-box summary{cursor:pointer;font-size:14px;font-weight:700;outline:none;-webkit-user-select:none;user-select:none}.ff-filter-box[open] summary{border-bottom:1px solid var(--ffsv3-border-color);padding-bottom:6px;margin-bottom:12px}.ff-filter-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.grp-sort{order:1}.grp-level{order:2}.grp-activity{order:3}.grp-status{order:4}.grp-ff{order:5}.grp-stats{order:6}@media(min-width:784px){.ff-filter-grid{grid-template-columns:repeat(3,1fr)}.ff-filter-grid>*{order:0}}.ff-filter-group{display:flex;flex-direction:column;gap:2px}.ff-filter-options{display:flex;flex-direction:column}.ff-filter-options label{display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer}.ff-filter-range-inputs{display:flex;align-items:center;gap:4px}.ff-filter-range-inputs input{flex:1;width:0;min-width:30px;max-width:80px;padding:4px;border:1px solid var(--ffsv3-border-color);border-radius:4px;background:var(--ffsv3-alt-bg-color);color:var(--ffsv3-text-color);font-size:11px;text-align:center}.ff-filter-box button{padding:6px 10px;border:1px solid var(--ffsv3-border-color);border-radius:4px;background:var(--ffsv3-alt-bg-color);color:var(--ffsv3-text-color);font-size:12px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;transition:background-color .2s}.ff-filter-box button:hover{background-color:var(--ffsv3-hover-color)}.chain-options-flex-container{display:flex;flex-wrap:wrap;gap:10px 20px;align-items:center;justify-content:flex-start;margin-left:20px;margin-top:10px;margin-bottom:15px}.chain-options-flex-container .input-row-inline{margin-bottom:0}.faction-war .ffscouter-cell{display:inline-flex!important;align-items:center!important;justify-content:center!important;width:32px!important;height:20px!important;font-size:11px!important;font-weight:700!important;border-radius:3px!important;box-sizing:border-box!important;margin-left:4px!important;margin-right:4px!important;z-index:10!important;flex:none!important}.ffscouter-cell{cursor:pointer!important}.faction-war .ffscouter-header{display:inline-flex!important;align-items:center!important;justify-content:center!important;width:32px!important;font-size:12px!important;font-weight:700!important;margin-left:4px!important;margin-right:4px!important;flex:none!important;background-color:transparent!important}.faction-war[data-ffscouter-hide-level=true]:not([data-ffscouter-col-display=none]) .level[class*=level__]:not(.ffscouter-cell):not(.ffscouter-header),.faction-war[data-ffscouter-hide-level=true]:not([data-ffscouter-col-display=none]) .level:not(.ffscouter-cell):not(.ffscouter-header){width:0!important;margin-right:0!important;padding-left:0!important;padding-right:0!important;color:transparent!important;font-size:0!important;border-left:none!important;border-right:none!important;background-color:transparent!important;pointer-events:none!important}.faction-war[data-ffscouter-hide-level=true]:not([data-ffscouter-col-display=none]) .white-grad .level[class*=level__]:not(.ffscouter-cell):not(.ffscouter-header),.faction-war[data-ffscouter-hide-level=true]:not([data-ffscouter-col-display=none]) .white-grad .level:not(.ffscouter-cell):not(.ffscouter-header){width:0!important;margin-right:0!important;padding-left:0!important;padding-right:0!important;color:transparent!important;font-size:0!important;border-left:none!important;border-right:none!important;background-color:transparent!important;pointer-events:none!important}.faction-war[data-ffscouter-hide-status=true] .status,.faction-war[data-ffscouter-hide-status=true] [class*=status__],.faction-war[data-ffscouter-hide-score=true] [class*=score__],.faction-war[data-ffscouter-hide-score=true] [class*=points__],.faction-war[data-ffscouter-hide-score=true] [class*=respect__],.faction-war[data-ffscouter-hide-score=true] [class*=attacks__]{display:none!important}.grp-columns{order:7}.members-list li.enemy,.members-list li.your,.members-list div.c-pointer,.faction-war div.c-pointer,.chain-attacks-list div.c-pointer{display:flex!important;flex-flow:row nowrap!important;align-items:center!important}.members-list li.enemy>div.clear,.members-list li.your>div.clear{display:none!important}.members-list li.enemy:has(>.tt-stats-estimate),.members-list li.your:has(>.tt-stats-estimate),.members-list li.enemy:has(>div.clear~*),.members-list li.your:has(>div.clear~*){padding-bottom:22px!important;position:relative!important}.members-list li.enemy>.tt-stats-estimate,.members-list li.your>.tt-stats-estimate,.members-list li.enemy>div.clear~*,.members-list li.your>div.clear~*{position:absolute!important;bottom:2px!important;left:10px!important;height:18px!important;line-height:18px!important;font-size:11px!important;width:calc(100% - 20px)!important;display:block!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}";
   importCSS(stylesCss);
   const log = logger.child("boot");
   const INJECTION_KEY = "__FF_SCOUTER_V3_INJECTED__";
@@ -6656,7 +6747,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       return;
     }
     w[INJECTION_KEY] = true;
-    log.info("Initializing", "3.0-alpha23");
+    log.info("Initializing", "3.0-alpha24");
     if (ffscouter.analytics_enabled) {
       unsafeWindow.ffscouter = ffscouter;
       window.ffscouter = ffscouter;
