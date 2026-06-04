@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { ffconfig } from "@utils/ffconfig";
-import { beforeEach, expect, test } from "vitest";
+import { beforeEach, expect, test, vi } from "vitest";
 import "./faction-filter-box";
 import type { FFFactionFilterBox } from "./faction-filter-box";
 
@@ -292,4 +292,137 @@ test("ff-faction-filter-box supports column visibility toggles and reactive cont
   el.mode = "faction";
   await el.updateComplete;
   expect(el.querySelector(".grp-columns")).toBeNull();
+});
+
+test("ff-faction-filter-box renders compare activity button only in mode='war'", async () => {
+  const el = document.createElement(
+    "ff-faction-filter-box",
+  ) as FFFactionFilterBox;
+  document.body.appendChild(el);
+  await new Promise((resolve) => setTimeout(resolve, 0));
+
+  // In faction mode, button is NOT present
+  expect(el.querySelector("#compare-faction-activity-btn")).toBeNull();
+
+  // In war mode, button IS present
+  el.mode = "war";
+  await el.updateComplete;
+  expect(el.querySelector("#compare-faction-activity-btn")).not.toBeNull();
+});
+
+test("ff-faction-filter-box compare activity button opens correct URL when links are inside the container", async () => {
+  const openSpy = vi.spyOn(window, "open").mockImplementation(() => null);
+
+  const warWrapper = document.createElement("div");
+  warWrapper.className = "faction-war";
+  document.body.appendChild(warWrapper);
+
+  const link1 = document.createElement("a");
+  link1.href = "factions.php?step=profile&ID=9524";
+  warWrapper.appendChild(link1);
+
+  const link2 = document.createElement("a");
+  link2.href = "factions.php?step=profile&ID=22295";
+  warWrapper.appendChild(link2);
+
+  const el = document.createElement(
+    "ff-faction-filter-box",
+  ) as FFFactionFilterBox;
+  el.mode = "war";
+  warWrapper.appendChild(el);
+  await new Promise((resolve) => setTimeout(resolve, 0));
+
+  const compareBtn = el.querySelector(
+    "#compare-faction-activity-btn",
+  ) as HTMLButtonElement;
+  expect(compareBtn).not.toBeNull();
+
+  compareBtn.click();
+
+  expect(openSpy).toHaveBeenCalled();
+  const urlStr = openSpy.mock.calls[0]![0] as string;
+  const url = new URL(urlStr);
+  expect(url.origin).toBe("https://ffscouter.com");
+  expect(url.pathname).toBe("/faction-activity-comparison");
+  expect(url.searchParams.get("faction_id_1")).toBe("9524");
+  expect(url.searchParams.get("faction_id_2")).toBe("22295");
+  expect(url.searchParams.get("bucket_minutes")).toBe("5");
+
+  const startAt = url.searchParams.get("start_at");
+  const endAt = url.searchParams.get("end_at");
+  expect(startAt).not.toBeNull();
+  expect(endAt).not.toBeNull();
+  if (startAt && endAt) {
+    const startDate = new Date(`${startAt}Z`);
+    const endDate = new Date(`${endAt}Z`);
+    expect(endDate.getTime() - startDate.getTime()).toBe(
+      7 * 24 * 60 * 60 * 1000,
+    );
+  }
+
+  openSpy.mockRestore();
+});
+
+test("ff-faction-filter-box compare activity button falls back to document links if not inside container", async () => {
+  const openSpy = vi.spyOn(window, "open").mockImplementation(() => null);
+
+  const link1 = document.createElement("a");
+  link1.href = "factions.php?step=profile&ID=9524";
+  document.body.appendChild(link1);
+
+  const link2 = document.createElement("a");
+  link2.href = "factions.php?step=profile&ID=22295";
+  document.body.appendChild(link2);
+
+  const el = document.createElement(
+    "ff-faction-filter-box",
+  ) as FFFactionFilterBox;
+  el.mode = "war";
+  document.body.appendChild(el);
+  await new Promise((resolve) => setTimeout(resolve, 0));
+
+  const compareBtn = el.querySelector(
+    "#compare-faction-activity-btn",
+  ) as HTMLButtonElement;
+  expect(compareBtn).not.toBeNull();
+
+  compareBtn.click();
+
+  expect(openSpy).toHaveBeenCalled();
+  const urlStr = openSpy.mock.calls[0]![0] as string;
+  const url = new URL(urlStr);
+  expect(url.origin).toBe("https://ffscouter.com");
+  expect(url.pathname).toBe("/faction-activity-comparison");
+  expect(url.searchParams.get("faction_id_1")).toBe("9524");
+  expect(url.searchParams.get("faction_id_2")).toBe("22295");
+  expect(url.searchParams.get("bucket_minutes")).toBe("5");
+
+  openSpy.mockRestore();
+});
+
+test("ff-faction-filter-box compare activity button logs warning and does not redirect if faction IDs are missing", async () => {
+  const openSpy = vi.spyOn(window, "open").mockImplementation(() => null);
+  const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+  const el = document.createElement(
+    "ff-faction-filter-box",
+  ) as FFFactionFilterBox;
+  el.mode = "war";
+  document.body.appendChild(el);
+  await new Promise((resolve) => setTimeout(resolve, 0));
+
+  const compareBtn = el.querySelector(
+    "#compare-faction-activity-btn",
+  ) as HTMLButtonElement;
+  expect(compareBtn).not.toBeNull();
+
+  compareBtn.click();
+
+  expect(openSpy).not.toHaveBeenCalled();
+  expect(warnSpy).toHaveBeenCalledWith(
+    "Could not find faction IDs to compare activity.",
+  );
+
+  openSpy.mockRestore();
+  warnSpy.mockRestore();
 });

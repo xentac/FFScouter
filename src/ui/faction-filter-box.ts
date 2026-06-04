@@ -307,6 +307,81 @@ export class FFFactionFilterBox extends LitElement {
     this.dispatchChange();
   }
 
+  private onCompareActivity() {
+    const container = this.closest(".faction-war");
+    const links = container
+      ? (Array.from(
+          container.querySelectorAll('a[href*="step=profile"]'),
+        ) as HTMLAnchorElement[])
+      : [];
+
+    const seen = new Set<string>();
+    const ids: string[] = [];
+
+    const tryExtract = (link: HTMLAnchorElement) => {
+      try {
+        const url = new URL(link.href, window.location.origin);
+        const id = url.searchParams.get("ID");
+        if (id && !seen.has(id)) {
+          seen.add(id);
+          ids.push(id);
+        }
+      } catch {
+        const match = (link.getAttribute("href") || "").match(/[?&]ID=(\d+)/i);
+        if (match?.[1]) {
+          const id = match[1];
+          if (!seen.has(id)) {
+            seen.add(id);
+            ids.push(id);
+          }
+        }
+      }
+    };
+
+    for (const link of links) {
+      tryExtract(link);
+    }
+
+    if (ids.length < 2) {
+      const docLinks = Array.from(
+        document.querySelectorAll('a[href*="step=profile"]'),
+      ) as HTMLAnchorElement[];
+      for (const link of docLinks) {
+        tryExtract(link);
+      }
+    }
+
+    if (ids.length < 2) {
+      console.warn("Could not find faction IDs to compare activity.");
+      return;
+    }
+
+    const factionId1 = ids[0];
+    const factionId2 = ids[1];
+
+    const now = new Date();
+    const start = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+    const formatUTC = (d: Date) => {
+      const y = d.getUTCFullYear();
+      const m = String(d.getUTCMonth() + 1).padStart(2, "0");
+      const day = String(d.getUTCDate()).padStart(2, "0");
+      const h = String(d.getUTCHours()).padStart(2, "0");
+      const min = String(d.getUTCMinutes()).padStart(2, "0");
+      return `${y}-${m}-${day}T${h}:${min}`;
+    };
+
+    const startAt = formatUTC(start);
+    const endAt = formatUTC(now);
+    const bucketMinutes = 5;
+
+    const scouterUrl = `https://ffscouter.com/faction-activity-comparison?faction_id_1=${factionId1}&faction_id_2=${factionId2}&start_at=${encodeURIComponent(
+      startAt,
+    )}&end_at=${encodeURIComponent(endAt)}&bucket_minutes=${bucketMinutes}`;
+
+    window.open(scouterUrl, "_blank");
+  }
+
   override render() {
     const isEst = this.colDisplay === FactionsColDisplay.BATTLE_STATS;
     const sortText = isEst ? "Stats" : "FF";
@@ -345,6 +420,19 @@ export class FFFactionFilterBox extends LitElement {
                 <option value="battle_stats">Show: BS Estimate</option>
                 <option value="none">Show: None (Hide)</option>
               </select>
+              ${
+                this.mode === "war"
+                  ? html`
+                    <button
+                      id="compare-faction-activity-btn"
+                      @click="${this.onCompareActivity}"
+                      style="width: 100%; height: 32px;"
+                    >
+                      Compare Activity
+                    </button>
+                  `
+                  : ""
+              }
             </div>
           </div>
 
