@@ -365,42 +365,35 @@ export async function apply_ff_columns(membersList: HTMLElement) {
   const isNone = colDisplay === FactionsColDisplay.NONE;
   const expectedText = isEst ? "Est" : "FF";
 
-  if (isWar) {
-    const factionWar = membersList.closest(
-      ".faction-war",
-    ) as HTMLElement | null;
-    if (factionWar) {
-      factionWar.setAttribute("data-ffscouter-col-display", colDisplay);
-    }
-  }
-  membersList.setAttribute("data-ffscouter-col-display", colDisplay);
-
   let headerLi = membersList.querySelector(
     ".ffscouter-header",
   ) as HTMLElement | null;
 
-  if (isWar) {
+  if (isNone) {
     if (headerLi) {
       headerLi.remove();
     }
-    const headerLvlEl = membersList.querySelector(
-      ".white-grad > .level",
-    ) as HTMLElement | null;
-    if (headerLvlEl) {
-      headerLvlEl.setAttribute("data-ff-value", expectedText);
-      if (!isNone) {
-        headerLvlEl.style.setProperty("--ff-display", "inline-flex");
-      } else {
-        headerLvlEl.style.removeProperty("--ff-display");
-      }
-    }
   } else {
-    if (isNone) {
-      if (headerLi) {
-        headerLi.remove();
-      }
-    } else {
-      if (!headerLi) {
+    if (
+      headerLi &&
+      ((isWar && headerLi.tagName !== "DIV") ||
+        (!isWar && headerLi.tagName !== "LI"))
+    ) {
+      headerLi.remove();
+      headerLi = null;
+    }
+
+    if (!headerLi) {
+      if (isWar) {
+        const headerLvlEl = membersList.querySelector(
+          ".white-grad > .level",
+        ) as HTMLElement | null;
+        if (headerLvlEl) {
+          headerLi = document.createElement("div");
+          headerLi.classList.add("level", "ffscouter-header");
+          headerLvlEl.after(headerLi);
+        }
+      } else {
         headerLi = document.createElement("li");
         headerLi.tabIndex = 0;
         headerLi.classList.add(
@@ -412,10 +405,10 @@ export async function apply_ff_columns(membersList: HTMLElement) {
         );
         headerLvl.after(headerLi);
       }
+    }
 
-      if (headerLi.textContent !== expectedText) {
-        headerLi.textContent = expectedText;
-      }
+    if (headerLi && headerLi.textContent !== expectedText) {
+      headerLi.textContent = expectedText;
     }
   }
 
@@ -455,65 +448,23 @@ export async function apply_ff_columns(membersList: HTMLElement) {
   // 5. Update rows and style the injected cells with the retrieved API data
   for (const rp of rowPlayers) {
     let cell = rp.row.querySelector(".ffscouter-cell") as HTMLElement | null;
-    const levelEl = rp.row.querySelector(".level") as HTMLElement | null;
 
-    if (isWar) {
+    if (isNone) {
       if (cell) {
         cell.remove();
       }
-
-      const data = dataMap.get(rp.player_id);
-      if (data && !data.no_data) {
-        // biome-ignore lint/complexity/useLiteralKeys: tsc requires index signature lookup
-        rp.row.dataset["ffValue"] = String(data.fair_fight);
-        // biome-ignore lint/complexity/useLiteralKeys: tsc requires index signature lookup
-        rp.row.dataset["estValue"] = String(data.bs_estimate);
-
-        if (levelEl) {
-          const text = isEst ? data.bs_estimate_human : format_ff_score(data);
-          const bg_color = get_ff_colour(data);
-          const text_color = get_contrast_color(bg_color);
-
-          levelEl.setAttribute("data-ff-value", text);
-          levelEl.style.setProperty("--ff-bg-color", bg_color);
-          levelEl.style.setProperty("--ff-text-color", text_color);
-
-          if (!isNone) {
-            levelEl.style.setProperty("--ff-display", "inline-flex");
-          } else {
-            levelEl.style.removeProperty("--ff-display");
-          }
-
-          if (isEst && data.distribution) {
-            const ageStr = format_relative_time(data.distribution.last_updated);
-            const agePart = ageStr ? ` ${ageStr}` : "";
-            levelEl.title = `Top Stats: ${data.distribution.distribution_human}${agePart}`;
-          } else {
-            levelEl.title = "";
-          }
-        }
-      } else {
-        // biome-ignore lint/complexity/useLiteralKeys: tsc requires index signature lookup
-        rp.row.dataset["ffValue"] = "";
-        // biome-ignore lint/complexity/useLiteralKeys: tsc requires index signature lookup
-        rp.row.dataset["estValue"] = "";
-
-        if (levelEl) {
-          levelEl.removeAttribute("data-ff-value");
-          levelEl.style.removeProperty("--ff-bg-color");
-          levelEl.style.removeProperty("--ff-text-color");
-          levelEl.style.removeProperty("--ff-display");
-          levelEl.title = "";
-        }
-      }
     } else {
-      if (isNone) {
-        if (cell) {
-          cell.remove();
-        }
-      } else {
-        if (!cell) {
-          cell = document.createElement("div");
+      if (!cell) {
+        cell = document.createElement("div");
+        if (isWar) {
+          cell.classList.add("level", "ffscouter-cell");
+          const levelEl = rp.row.querySelector(".level, [class*='level__']");
+          if (levelEl) {
+            levelEl.after(cell);
+          } else {
+            rp.memberDiv.after(cell);
+          }
+        } else {
           cell.classList.add("table-cell", "lvl", "ffscouter-cell");
           const rowLvl = rp.row.querySelector(".lvl");
           if (rowLvl) {
@@ -523,45 +474,45 @@ export async function apply_ff_columns(membersList: HTMLElement) {
           }
         }
       }
+    }
 
-      const data = dataMap.get(rp.player_id);
-      if (data && !data.no_data) {
-        // Store values on data-attributes for fast, local filtering and sorting operations
-        // biome-ignore lint/complexity/useLiteralKeys: tsc requires index signature lookup
-        rp.row.dataset["ffValue"] = String(data.fair_fight);
-        // biome-ignore lint/complexity/useLiteralKeys: tsc requires index signature lookup
-        rp.row.dataset["estValue"] = String(data.bs_estimate);
+    const data = dataMap.get(rp.player_id);
+    if (data && !data.no_data) {
+      // Store values on data-attributes for fast, local filtering and sorting operations
+      // biome-ignore lint/complexity/useLiteralKeys: tsc requires index signature lookup
+      rp.row.dataset["ffValue"] = String(data.fair_fight);
+      // biome-ignore lint/complexity/useLiteralKeys: tsc requires index signature lookup
+      rp.row.dataset["estValue"] = String(data.bs_estimate);
 
-        if (cell) {
-          const text = isEst ? data.bs_estimate_human : format_ff_score(data);
-          const bg_color = get_ff_colour(data);
-          const text_color = get_contrast_color(bg_color);
+      if (cell) {
+        const text = isEst ? data.bs_estimate_human : format_ff_score(data);
+        const bg_color = get_ff_colour(data);
+        const text_color = get_contrast_color(bg_color);
 
-          cell.style.backgroundColor = bg_color;
-          cell.style.color = text_color;
-          cell.style.fontWeight = "bold";
-          cell.textContent = text;
+        cell.style.backgroundColor = bg_color;
+        cell.style.color = text_color;
+        cell.style.fontWeight = "bold";
+        cell.textContent = text;
 
-          if (isEst && data.distribution) {
-            const ageStr = format_relative_time(data.distribution.last_updated);
-            const agePart = ageStr ? ` ${ageStr}` : "";
-            cell.title = `Top Stats: ${data.distribution.distribution_human}${agePart}`;
-          } else {
-            cell.title = "";
-          }
-        }
-      } else {
-        // biome-ignore lint/complexity/useLiteralKeys: tsc requires index signature lookup
-        rp.row.dataset["ffValue"] = "";
-        // biome-ignore lint/complexity/useLiteralKeys: tsc requires index signature lookup
-        rp.row.dataset["estValue"] = "";
-        if (cell) {
-          cell.textContent = "-";
-          cell.style.backgroundColor = "";
-          cell.style.color = "";
-          cell.style.fontWeight = "";
+        if (isEst && data.distribution) {
+          const ageStr = format_relative_time(data.distribution.last_updated);
+          const agePart = ageStr ? ` ${ageStr}` : "";
+          cell.title = `Top Stats: ${data.distribution.distribution_human}${agePart}`;
+        } else {
           cell.title = "";
         }
+      }
+    } else {
+      // biome-ignore lint/complexity/useLiteralKeys: tsc requires index signature lookup
+      rp.row.dataset["ffValue"] = "";
+      // biome-ignore lint/complexity/useLiteralKeys: tsc requires index signature lookup
+      rp.row.dataset["estValue"] = "";
+      if (cell) {
+        cell.textContent = "-";
+        cell.style.backgroundColor = "";
+        cell.style.color = "";
+        cell.style.fontWeight = "";
+        cell.title = "";
       }
     }
   }
