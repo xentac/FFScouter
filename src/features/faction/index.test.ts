@@ -4,7 +4,11 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import { check_key_status } from "@utils/check_key";
 import { on_navigation } from "@utils/dom";
-import { FactionsColDisplay, ffconfig } from "@utils/ffconfig";
+import {
+  FactionsColDisplay,
+  ffconfig,
+  WarQuickAttackAction,
+} from "@utils/ffconfig";
 import { ffscouter } from "@utils/ffscouter";
 import type { PlayerId } from "@utils/types";
 import { beforeEach, describe, expect, test, vi } from "vitest";
@@ -602,6 +606,7 @@ test("apply_ff_columns removes elements when configured to NONE but populates da
 test("apply_ff_columns supports configurable display via real DOM elements when members-list is inside .faction-war", async () => {
   // Configured to display FAIR_FIGHT war columns by default
   ffconfig.war_col_display = FactionsColDisplay.FAIR_FIGHT;
+  ffconfig.war_quick_attack_action = WarQuickAttackAction.NEW_TAB;
 
   vi.mocked(ffscouter.get).mockResolvedValue({
     player_id: 111 as PlayerId,
@@ -625,6 +630,7 @@ test("apply_ff_columns supports configurable display via real DOM elements when 
       <li class="table-row">
         <div class="member"><a href="/profiles.php?XID=111">Player 111</a></div>
         <div class="level">50</div>
+        <div class="icons"><img src="" alt="Offline" /></div>
       </li>
     </ul>
   `;
@@ -639,12 +645,33 @@ test("apply_ff_columns supports configurable display via real DOM elements when 
   expect(header.textContent).toBe("FF");
   expect(header.tagName).toBe("DIV");
 
-  const cell = list.querySelector(".ffscouter-cell") as HTMLElement;
+  const cell = list.querySelector(".ffscouter-cell") as HTMLAnchorElement;
   expect(cell).not.toBeNull();
   expect(cell.textContent).toBe("3.50");
   expect(cell.style.backgroundColor).not.toBe("");
   expect(cell.style.color).not.toBe("");
-  expect(cell.tagName).toBe("DIV");
+  expect(cell.tagName).toBe("A");
+  expect(cell.href).toBe(
+    "https://www.torn.com/page.php?sid=attack&user2ID=111",
+  );
+  expect(cell.target).toBe("_blank");
+
+  // Check the status icon clickability
+  const icons = list.querySelector(".icons") as HTMLElement;
+  expect(icons.style.cursor).toBe("pointer");
+  expect(icons.onclick).toBeTypeOf("function");
+
+  // Check same tab preference for cell and icons
+  ffconfig.war_quick_attack_action = WarQuickAttackAction.CURRENT;
+  await apply_ff_columns(list);
+
+  const cellSameTab = list.querySelector(
+    ".ffscouter-cell",
+  ) as HTMLAnchorElement;
+  expect(cellSameTab.target).toBe("_self");
+
+  // Reset to default new_tab
+  ffconfig.war_quick_attack_action = WarQuickAttackAction.NEW_TAB;
 
   const row = list.querySelector(".table-row") as HTMLElement;
   // biome-ignore lint/complexity/useLiteralKeys: tsc requires index signature lookup

@@ -4,6 +4,7 @@ import {
   CONFIG_DEFAULTS,
   type FactionsColDisplay,
   type GaugeMarkerType,
+  type WarQuickAttackAction,
 } from "@utils/ffconfig";
 import { html, LitElement } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
@@ -49,6 +50,8 @@ export class FFSettingsPanel extends LitElement {
     CONFIG_DEFAULTS.analytics_enabled;
   @property({ type: String }) gaugeMarkerType: GaugeMarkerType =
     CONFIG_DEFAULTS.gauge_marker_type;
+  @property({ type: String }) warQuickAttackAction: WarQuickAttackAction =
+    CONFIG_DEFAULTS.war_quick_attack_action;
   @property({ type: Boolean }) isPremium: boolean = false;
 
   // Draft States
@@ -84,6 +87,8 @@ export class FFSettingsPanel extends LitElement {
     CONFIG_DEFAULTS.analytics_enabled;
   @state() private draftGaugeMarkerType: GaugeMarkerType =
     CONFIG_DEFAULTS.gauge_marker_type;
+  @state() private draftWarQuickAttackAction: WarQuickAttackAction =
+    CONFIG_DEFAULTS.war_quick_attack_action;
 
   @state() private rangeError = "";
   @state() private showSavedMessage = false;
@@ -114,7 +119,8 @@ export class FFSettingsPanel extends LitElement {
       changedProperties.has("warColDisplay") ||
       changedProperties.has("debugLogs") ||
       changedProperties.has("analyticsEnabled") ||
-      changedProperties.has("gaugeMarkerType")
+      changedProperties.has("gaugeMarkerType") ||
+      changedProperties.has("warQuickAttackAction")
     ) {
       this.resetDrafts();
     }
@@ -141,6 +147,7 @@ export class FFSettingsPanel extends LitElement {
     this.draftDebugLogs = this.debugLogs;
     this.draftAnalyticsEnabled = this.analyticsEnabled;
     this.draftGaugeMarkerType = this.gaugeMarkerType;
+    this.draftWarQuickAttackAction = this.warQuickAttackAction;
   }
 
   private handleSave() {
@@ -192,6 +199,7 @@ export class FFSettingsPanel extends LitElement {
           debugLogs: this.draftDebugLogs,
           analyticsEnabled: this.draftAnalyticsEnabled,
           gaugeMarkerType: this.draftGaugeMarkerType,
+          warQuickAttackAction: this.draftWarQuickAttackAction,
         },
         bubbles: true,
         composed: true,
@@ -332,6 +340,12 @@ export class FFSettingsPanel extends LitElement {
   private onWarColDisplayChange(e: Event) {
     this.draftWarColDisplay = (e.target as HTMLSelectElement)
       .value as FactionsColDisplay;
+    this.showSavedMessage = false;
+  }
+
+  private onWarQuickAttackActionChange(e: Event) {
+    this.draftWarQuickAttackAction = (e.target as HTMLSelectElement)
+      .value as WarQuickAttackAction;
     this.showSavedMessage = false;
   }
 
@@ -627,6 +641,19 @@ export class FFSettingsPanel extends LitElement {
               <option value="fair_fight">FF Score</option>
               <option value="battle_stats">BS Estimate</option>
               <option value="none">None (Hide Column)</option>
+            </select>
+          </div>
+
+          <!-- War Quick Attack Action -->
+          <div class="input-row-inline">
+            <label for="war-quick-attack-action">War Page Quick Attack Action:</label>
+            <select
+              id="war-quick-attack-action"
+              .value=${this.draftWarQuickAttackAction}
+              @change=${this.onWarQuickAttackActionChange}
+            >
+              <option value="new_tab">New Tab</option>
+              <option value="current">Same Tab</option>
             </select>
           </div>
 

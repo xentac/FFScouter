@@ -426,6 +426,11 @@ ff-faction-filter-box {
   flex: none !important;
 }
 
+a.ffscouter-cell {
+  text-decoration: none !important;
+  cursor: pointer !important;
+}
+
 .faction-war .ffscouter-header {
   display: inline-flex !important;
   align-items: center !important;

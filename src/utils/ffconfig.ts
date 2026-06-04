@@ -27,6 +27,11 @@ export enum ChainTabType {
   SAMETAB = "sametab",
 }
 
+export enum WarQuickAttackAction {
+  NEW_TAB = "new_tab",
+  CURRENT = "current",
+}
+
 export enum FactionsColDisplay {
   FAIR_FIGHT = "fair_fight",
   BATTLE_STATS = "battle_stats",
@@ -59,6 +64,7 @@ export const CONFIG_DEFAULTS = {
   chain_max_ff: 2.5,
   chain_factionless: false,
   gauge_marker_type: GaugeMarkerType.ARROW,
+  war_quick_attack_action: WarQuickAttackAction.NEW_TAB,
 } as const;
 
 enum CONFIG {
@@ -88,6 +94,7 @@ enum CONFIG {
   CHAIN_TARGETS = "chain_targets",
   CHAIN_TARGET_INDEX = "chain_target_index",
   GAUGE_MARKER_TYPE = "gauge_marker_type",
+  WAR_QUICK_ATTACK_ACTION = "war_quick_attack_action",
 }
 
 export class FFConfig {
@@ -169,6 +176,17 @@ export class FFConfig {
 
   set chain_tab_type(val: ChainTabType) {
     this.storage.set(CONFIG.CHAIN_TAB_TYPE, val);
+  }
+
+  get war_quick_attack_action(): WarQuickAttackAction {
+    return (
+      this.storage.get(CONFIG.WAR_QUICK_ATTACK_ACTION) ??
+      CONFIG_DEFAULTS.war_quick_attack_action
+    );
+  }
+
+  set war_quick_attack_action(val: WarQuickAttackAction) {
+    this.storage.set(CONFIG.WAR_QUICK_ATTACK_ACTION, val);
   }
 
   get chain_ff_target(): number {

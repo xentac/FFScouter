@@ -44,6 +44,7 @@ export default {
     panel.debugLogs = ffconfig.debug_logs;
     panel.analyticsEnabled = ffconfig.analytics_enabled;
     panel.gaugeMarkerType = ffconfig.gauge_marker_type;
+    panel.warQuickAttackAction = ffconfig.war_quick_attack_action;
     panel.isPremium = await check_key_status.is_premium(true);
 
     // Listen for the custom save event
@@ -74,6 +75,7 @@ export default {
       }
       ffconfig.analytics_enabled = detail.analyticsEnabled;
       ffconfig.gauge_marker_type = detail.gaugeMarkerType;
+      ffconfig.war_quick_attack_action = detail.warQuickAttackAction;
       panel.isPremium = await check_key_status.is_premium(true);
 
       toast("Settings saved successfully!");
@@ -105,6 +107,7 @@ export default {
       panel.debugLogs = ffconfig.debug_logs;
       panel.analyticsEnabled = ffconfig.analytics_enabled;
       panel.gaugeMarkerType = ffconfig.gauge_marker_type;
+      panel.warQuickAttackAction = ffconfig.war_quick_attack_action;
 
       toast("Settings reset to defaults!");
       window.dispatchEvent(new CustomEvent("ff-config-updated"));

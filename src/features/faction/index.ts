@@ -455,7 +455,7 @@ export async function apply_ff_columns(membersList: HTMLElement) {
       }
     } else {
       if (!cell) {
-        cell = document.createElement("div");
+        cell = document.createElement("a");
         if (isWar) {
           cell.classList.add("level", "ffscouter-cell");
           const levelEl = rp.row.querySelector(".level, [class*='level__']");
@@ -485,6 +485,11 @@ export async function apply_ff_columns(membersList: HTMLElement) {
       rp.row.dataset["estValue"] = String(data.bs_estimate);
 
       if (cell) {
+        if (cell instanceof HTMLAnchorElement) {
+          cell.href = `https://www.torn.com/page.php?sid=attack&user2ID=${rp.player_id}`;
+          cell.target =
+            ffconfig.war_quick_attack_action === "new_tab" ? "_blank" : "_self";
+        }
         const text = isEst ? data.bs_estimate_human : format_ff_score(data);
         const bg_color = get_ff_colour(data);
         const text_color = get_contrast_color(bg_color);
@@ -508,12 +513,32 @@ export async function apply_ff_columns(membersList: HTMLElement) {
       // biome-ignore lint/complexity/useLiteralKeys: tsc requires index signature lookup
       rp.row.dataset["estValue"] = "";
       if (cell) {
+        if (cell instanceof HTMLAnchorElement) {
+          cell.href = `https://www.torn.com/page.php?sid=attack&user2ID=${rp.player_id}`;
+          cell.target =
+            ffconfig.war_quick_attack_action === "new_tab" ? "_blank" : "_self";
+        }
         cell.textContent = "-";
         cell.style.backgroundColor = "";
         cell.style.color = "";
         cell.style.fontWeight = "";
         cell.title = "";
       }
+    }
+
+    const icons = rp.row.querySelector(".icons") as HTMLElement | null;
+    if (icons) {
+      icons.style.cursor = "pointer";
+      icons.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const url = `https://www.torn.com/page.php?sid=attack&user2ID=${rp.player_id}`;
+        if (ffconfig.war_quick_attack_action === "new_tab") {
+          window.open(url, "_blank");
+        } else {
+          window.location.href = url;
+        }
+      };
     }
   }
 
