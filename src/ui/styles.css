@@ -447,11 +447,11 @@ ff-faction-filter-box {
 .faction-war[data-ffscouter-hide-level="true"]:not(
   [data-ffscouter-col-display="none"]
 )
-.level[class*="level__"],
+.level[class*="level__"]:not(.ffscouter-cell):not(.ffscouter-header),
 .faction-war[data-ffscouter-hide-level="true"]:not(
     [data-ffscouter-col-display="none"]
   )
-  .level {
+  .level:not(.ffscouter-cell):not(.ffscouter-header) {
   width: 0 !important;
   margin-right: 0 !important;
   padding-left: 0 !important;
@@ -468,12 +468,12 @@ ff-faction-filter-box {
 .faction-war[data-ffscouter-hide-level="true"]:not(
     [data-ffscouter-col-display="none"]
   ) .white-grad
-  .level[class*="level__"],
+  .level[class*="level__"]:not(.ffscouter-cell):not(.ffscouter-header),
 .faction-war[data-ffscouter-hide-level="true"]:not(
     [data-ffscouter-col-display="none"]
   )
   .white-grad
-  .level {
+  .level:not(.ffscouter-cell):not(.ffscouter-header) {
   width: 0 !important;
   margin-right: 0 !important;
   padding-left: 0 !important;

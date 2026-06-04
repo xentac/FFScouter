@@ -1,5 +1,7 @@
 // @vitest-environment jsdom
 
+import * as fs from "node:fs";
+import * as path from "node:path";
 import { check_key_status } from "@utils/check_key";
 import { on_navigation } from "@utils/dom";
 import { FactionsColDisplay, ffconfig } from "@utils/ffconfig";
@@ -1102,5 +1104,82 @@ describe("Faction feature run and dynamic navigation integration", () => {
     }
 
     expect(waitForSpy).toHaveBeenCalled();
+  });
+
+  test("injected columns are not hidden when level column is hidden via stylesheet", async () => {
+    // 1. Read and inject the stylesheet styles.css into JSDOM head
+    const cssPath = path.resolve(__dirname, "../../ui/styles.css");
+    const cssContent = fs.readFileSync(cssPath, "utf-8");
+    const styleEl = document.createElement("style");
+    styleEl.textContent = cssContent;
+    document.head.appendChild(styleEl);
+
+    // 2. Configured to display FAIR_FIGHT war columns by default
+    ffconfig.war_col_display = FactionsColDisplay.FAIR_FIGHT;
+
+    vi.mocked(ffscouter.get).mockResolvedValue({
+      player_id: 111 as PlayerId,
+      no_data: false,
+      fair_fight: 3.5,
+      bs_estimate: 5000000,
+      bs_estimate_human: "5M",
+    } as any);
+
+    // 3. Create the table inside faction-war wrapper
+    const factionWar = document.createElement("div");
+    factionWar.className = "faction-war";
+
+    const list = document.createElement("div");
+    list.className = "members-list";
+    list.innerHTML = `
+      <div class="white-grad">
+        <div class="member">Member</div>
+        <div class="level">Lvl</div>
+      </div>
+      <ul class="table-body">
+        <li class="table-row">
+          <div class="member"><a href="/profiles.php?XID=111">Player 111</a></div>
+          <div class="level">50</div>
+        </li>
+      </ul>
+    `;
+    factionWar.appendChild(list);
+    document.body.appendChild(factionWar);
+
+    // 4. Inject the columns
+    await apply_ff_columns(list);
+
+    // Get reference to original lvl elements and injected elements
+    const originalHeaderLvl = list.querySelector(
+      ".white-grad > .level:not(.ffscouter-header)",
+    ) as HTMLElement;
+    const originalCellLvl = list.querySelector(
+      ".table-row > .level:not(.ffscouter-cell)",
+    ) as HTMLElement;
+    const injectedHeader = list.querySelector(
+      ".ffscouter-header",
+    ) as HTMLElement;
+    const injectedCell = list.querySelector(".ffscouter-cell") as HTMLElement;
+
+    // Verify they are visible initially (since getComputedStyle width is auto / not 0px)
+    expect(window.getComputedStyle(originalHeaderLvl).width).not.toBe("0px");
+    expect(window.getComputedStyle(originalCellLvl).width).not.toBe("0px");
+    expect(window.getComputedStyle(injectedHeader).width).not.toBe("0px");
+    expect(window.getComputedStyle(injectedCell).width).not.toBe("0px");
+
+    // 5. Hide the level column by setting data attribute
+    factionWar.setAttribute("data-ffscouter-hide-level", "true");
+
+    // 6. Verify original level cells are collapsed to 0px width
+    expect(window.getComputedStyle(originalHeaderLvl).width).toBe("0px");
+    expect(window.getComputedStyle(originalCellLvl).width).toBe("0px");
+
+    // 7. Verify injected FF/Est header and cell remain visible (not collapsed to 0px width)
+    expect(window.getComputedStyle(injectedHeader).width).not.toBe("0px");
+    expect(window.getComputedStyle(injectedCell).width).not.toBe("0px");
+
+    // Cleanup
+    document.head.removeChild(styleEl);
+    document.body.removeChild(factionWar);
   });
 });
