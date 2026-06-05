@@ -251,19 +251,19 @@ export function get_player_id_in_element(element: Element): PlayerId | null {
   return null;
 }
 
-export async function apply_ff_gauge_selector(
+export function apply_ff_gauge_selector(
   node_list: NodeListOf<HTMLElement>,
   featureName = "Unknown",
-) {
+): void {
   for (const node of node_list) {
     add_ff_arrow(node, featureName);
   }
 }
 
-export async function apply_ff_gauge(
+export function apply_ff_gauge(
   element: Element,
   featureName = "Unknown",
-) {
+): void {
   if (!(element instanceof HTMLElement)) {
     return;
   }

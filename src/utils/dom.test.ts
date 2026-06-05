@@ -219,7 +219,7 @@ test("apply_ff_gauge invokes add_ff_arrow if element is valid", async () => {
   a.href = "https://www.torn.com/profiles.php?XID=456";
   div.appendChild(a);
 
-  await apply_ff_gauge(div);
+  apply_ff_gauge(div);
 
   await new Promise((resolve) => setTimeout(resolve, 10));
   expect(mockGet).toHaveBeenCalledWith(456);

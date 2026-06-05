@@ -112,103 +112,120 @@ export default {
   },
 
   async run() {
+    interface PageConfig {
+      has_page_specific: boolean;
+      page_specific_selectors: string[];
+      combined_selector: string;
+    }
+
+    const IGNORED_TAGS = new Set([
+      "SCRIPT",
+      "STYLE",
+      "LINK",
+      "META",
+      "SVG",
+      "PATH",
+      "BR",
+      "HR",
+      "HEAD",
+      "TITLE",
+    ]);
+
+    const get_page_selectors = (): PageConfig => {
+      const href = window.location.href;
+      let page_specific: string[] = [];
+
+      if (href.startsWith("https://www.torn.com/companies.php")) {
+        page_specific = [".employee", ".director"];
+      } else if (
+        href.startsWith("https://www.torn.com/page.php?sid=competition#/team")
+      ) {
+        page_specific = ['[class*="name__"]'];
+      } else if (href.startsWith("https://www.torn.com/joblist.php")) {
+        page_specific = [".employee", ".director"];
+      } else if (
+        torn_page("messages") ||
+        torn_page("index") ||
+        torn_page("hospitalview") ||
+        torn_page("page", { sid: "UserList" })
+      ) {
+        page_specific = [".name"];
+      } else if (href.startsWith("https://www.torn.com/bounties.php")) {
+        page_specific = [".target, .listed"];
+      } else if (
+        href.startsWith("https://www.torn.com/page.php?sid=attackLog")
+      ) {
+        page_specific = ["ul.participants-list li"];
+      } else if (href.startsWith("https://www.torn.com/forums.php")) {
+        page_specific = [".last-poster, .starter, .last-post, .poster"];
+      } else if (
+        href.includes("page.php?sid=hof") ||
+        torn_page("factions", { step: "profile" }) ||
+        torn_page("factions", { step: "your" }, [
+          "",
+          "#",
+          "#/",
+          "#/tab=info",
+          "#/war/*",
+        ])
+      ) {
+        page_specific = ['[class*="userInfoBox__"]'];
+      }
+
+      if (page_specific.length > 0) {
+        const combined = [".honor-text-wrap", ...page_specific].join(", ");
+        return {
+          has_page_specific: true,
+          page_specific_selectors: page_specific,
+          combined_selector: combined,
+        };
+      }
+
+      return {
+        has_page_specific: false,
+        page_specific_selectors: [],
+        combined_selector: ".honor-text-wrap, .user.name",
+      };
+    };
+
+    let current_config: PageConfig = get_page_selectors();
     let is_observing = false;
 
     const check_mutation = async (node: Element) => {
-      if (!node.querySelectorAll) {
+      if (!node.querySelectorAll || IGNORED_TAGS.has(node.tagName)) {
         return;
       }
-      var honor_bars = node.querySelectorAll(
+
+      // Fast-fail check: skip elements that don't match and don't contain any target selector
+      if (
+        !node.matches(current_config.combined_selector) &&
+        !node.querySelector(current_config.combined_selector)
+      ) {
+        return;
+      }
+
+      const honor_bars = node.querySelectorAll(
         ".honor-text-wrap",
       ) as NodeListOf<HTMLElement>;
-      var name_elems = node.querySelectorAll(
-        ".user.name",
-      ) as NodeListOf<HTMLElement>;
+
       if (honor_bars.length > 0) {
-        await apply_ff_gauge_selector(honor_bars, FEATURE_NAME_HONOR_BAR);
+        apply_ff_gauge_selector(honor_bars, FEATURE_NAME_HONOR_BAR);
+      } else if (current_config.has_page_specific) {
+        for (const selector of current_config.page_specific_selectors) {
+          apply_ff_gauge_selector(
+            node.querySelectorAll(selector),
+            FEATURE_NAME,
+          );
+        }
       } else {
-        if (
-          window.location.href.startsWith("https://www.torn.com/companies.php")
-        ) {
-          await apply_ff_gauge_selector(
-            node.querySelectorAll(".employee"),
-            FEATURE_NAME,
-          );
-        } else if (
-          window.location.href.startsWith(
-            "https://www.torn.com/page.php?sid=competition#/team",
-          )
-        ) {
-          await apply_ff_gauge_selector(
-            node.querySelectorAll('[class*="name__"]'),
-            FEATURE_NAME,
-          );
-        } else if (
-          window.location.href.startsWith("https://www.torn.com/joblist.php")
-        ) {
-          await apply_ff_gauge_selector(
-            node.querySelectorAll(".employee"),
-            FEATURE_NAME,
-          );
-          await apply_ff_gauge_selector(
-            node.querySelectorAll(".director"),
-            FEATURE_NAME,
-          );
-        } else if (
-          torn_page("messages") ||
-          torn_page("index") ||
-          torn_page("hospitalview") ||
-          torn_page("page", { sid: "UserList" })
-        ) {
-          await apply_ff_gauge_selector(
-            node.querySelectorAll(".name"),
-            FEATURE_NAME,
-          );
-        } else if (
-          window.location.href.startsWith("https://www.torn.com/bounties.php")
-        ) {
-          await apply_ff_gauge_selector(
-            node.querySelectorAll(".target, .listed"),
-            FEATURE_NAME,
-          );
-        } else if (
-          window.location.href.startsWith(
-            "https://www.torn.com/page.php?sid=attackLog",
-          )
-        ) {
-          await apply_ff_gauge_selector(
-            node.querySelectorAll("ul.participants-list li"),
-            FEATURE_NAME,
-          );
-        } else if (
-          window.location.href.startsWith("https://www.torn.com/forums.php")
-        ) {
-          await apply_ff_gauge_selector(
-            node.querySelectorAll(
-              ".last-poster, .starter, .last-post, .poster",
-            ),
-            FEATURE_NAME,
-          );
-        } else if (
-          window.location.href.includes("page.php?sid=hof") ||
-          torn_page("factions", { step: "profile" }) ||
-          torn_page("factions", { step: "your" }, [
-            "",
-            "#",
-            "#/",
-            "#/tab=info",
-            "#/war/*",
-          ])
-        ) {
-          await apply_ff_gauge_selector(
-            node.querySelectorAll('[class*="userInfoBox__"]'),
-            FEATURE_NAME,
-          );
-        } else if (name_elems.length > 0) {
-          // Fallback for anyone without honor bars enabled
-          await apply_ff_gauge_selector(name_elems, FEATURE_NAME_USER_NAME);
+        const name_elems = node.querySelectorAll(
+          ".user.name",
+        ) as NodeListOf<HTMLElement>;
+        if (name_elems.length > 0) {
+          apply_ff_gauge_selector(name_elems, FEATURE_NAME_USER_NAME);
         }
       }
+
       ffscouter.complete();
     };
 
@@ -231,6 +248,7 @@ export default {
           log.debug("Disconnected fallback MutationObserver (excluded page)");
         }
       } else {
+        current_config = get_page_selectors();
         if (!is_observing) {
           const target = await find_mutation_target();
           ff_gauge_observer.observe(target, {
