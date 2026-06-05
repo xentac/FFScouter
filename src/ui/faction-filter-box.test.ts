@@ -426,3 +426,105 @@ test("ff-faction-filter-box compare activity button logs warning and does not re
   openSpy.mockRestore();
   warnSpy.mockRestore();
 });
+
+test("ff-faction-filter-box defaults to level column hidden on mobile viewport", async () => {
+  // Simulate mobile view width
+  Object.defineProperty(window, "innerWidth", {
+    writable: true,
+    configurable: true,
+    value: 375,
+  });
+
+  const warWrapper = document.createElement("div");
+  warWrapper.className = "faction-war";
+  document.body.appendChild(warWrapper);
+
+  const el = document.createElement(
+    "ff-faction-filter-box",
+  ) as FFFactionFilterBox;
+  el.mode = "war";
+  warWrapper.appendChild(el);
+  await new Promise((resolve) => setTimeout(resolve, 0));
+
+  // Verify Level checkbox is unchecked (hidden)
+  const grpColumns = el.querySelector(".grp-columns");
+  expect(grpColumns).not.toBeNull();
+  const [lvlCheckbox] = Array.from(
+    grpColumns?.querySelectorAll('input[type="checkbox"]') || [],
+  ) as [HTMLInputElement];
+  expect(lvlCheckbox.checked).toBe(false); // level is hidden by default on mobile
+
+  // Verify hiding attribute is set on wrapper
+  expect(warWrapper.getAttribute("data-ffscouter-hide-level")).toBe("true");
+
+  // Cleanup
+  document.body.removeChild(warWrapper);
+});
+
+test("ff-faction-filter-box separates desktop and mobile visible column settings", async () => {
+  // A. Start on desktop
+  Object.defineProperty(window, "innerWidth", {
+    writable: true,
+    configurable: true,
+    value: 1024,
+  });
+
+  const warWrapper = document.createElement("div");
+  warWrapper.className = "faction-war";
+  document.body.appendChild(warWrapper);
+
+  const el = document.createElement(
+    "ff-faction-filter-box",
+  ) as FFFactionFilterBox;
+  el.mode = "war";
+  warWrapper.appendChild(el);
+  await new Promise((resolve) => setTimeout(resolve, 0));
+
+  // Toggling Level checkbox on desktop to unchecked (hidden)
+  const grpColumns = el.querySelector(".grp-columns");
+  const [lvlCheckbox] = Array.from(
+    grpColumns?.querySelectorAll('input[type="checkbox"]') || [],
+  ) as [HTMLInputElement];
+  expect(lvlCheckbox.checked).toBe(true); // default visible on desktop
+
+  lvlCheckbox.click();
+  await el.updateComplete;
+
+  expect(ffconfig.war_filter_state?.hiddenColumns?.level).toBe(true);
+  expect(ffconfig.war_filter_state?.hiddenColumnsMobile?.level).toBe(true); // mobile default level hidden is true
+
+  // Now, toggle Level back to checked (visible) on desktop
+  lvlCheckbox.click();
+  await el.updateComplete;
+
+  expect(ffconfig.war_filter_state?.hiddenColumns?.level).toBe(false);
+  expect(ffconfig.war_filter_state?.hiddenColumnsMobile?.level).toBe(true); // mobile setting should remain true
+
+  // B. Switch to mobile view (reload state)
+  Object.defineProperty(window, "innerWidth", {
+    writable: true,
+    configurable: true,
+    value: 375,
+  });
+  // Re-trigger loadState/resize simulation
+  window.dispatchEvent(new Event("resize"));
+  await el.updateComplete;
+
+  // Level should load as mobile preference (hidden)
+  const [lvlCheckboxMobile] = Array.from(
+    el
+      .querySelector(".grp-columns")
+      ?.querySelectorAll('input[type="checkbox"]') || [],
+  ) as [HTMLInputElement];
+  expect(lvlCheckboxMobile.checked).toBe(false);
+
+  // Now, on mobile, toggle Level to checked (visible)
+  lvlCheckboxMobile.click();
+  await el.updateComplete;
+
+  expect(ffconfig.war_filter_state?.hiddenColumns?.level).toBe(false); // desktop visible remains false/visible
+  expect(ffconfig.war_filter_state?.hiddenColumnsMobile?.level).toBe(false); // mobile visible is now false/visible
+
+  // Cleanup
+  document.body.removeChild(warWrapper);
+});

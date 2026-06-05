@@ -1298,13 +1298,8 @@ describe("Faction feature run and dynamic navigation integration", () => {
     await apply_ff_columns(list);
 
     expect(factionWar.getAttribute("data-ffscouter-col-display")).toBe("none");
-    expect(window.getComputedStyle(originalHeaderMember).width).not.toBe(
-      "139px",
-    );
-    expect(window.getComputedStyle(originalHeaderLvl).width).not.toBe("30px");
-    expect(window.getComputedStyle(originalHeaderStatus).width).not.toBe(
-      "38px",
-    );
+    expect(window.getComputedStyle(originalHeaderMember).width).toBe("");
+    expect(window.getComputedStyle(originalHeaderLvl).width).toBe("");
 
     // B. With display = FAIR_FIGHT, they should have reduced widths
     ffconfig.war_col_display = FactionsColDisplay.FAIR_FIGHT;
@@ -1313,12 +1308,21 @@ describe("Faction feature run and dynamic navigation integration", () => {
     expect(factionWar.getAttribute("data-ffscouter-col-display")).toBe(
       "fair_fight",
     );
-    expect(window.getComputedStyle(originalHeaderMember).width).toBe("139px");
-    expect(window.getComputedStyle(originalCellMember).width).toBe("139px");
-    expect(window.getComputedStyle(originalHeaderLvl).width).toBe("30px");
-    expect(window.getComputedStyle(originalCellLvl).width).toBe("30px");
-    expect(window.getComputedStyle(originalHeaderStatus).width).toBe("38px");
-    expect(window.getComputedStyle(originalCellStatus).width).toBe("38px");
+    expect(window.getComputedStyle(originalHeaderMember).width).toBe("");
+    expect(window.getComputedStyle(originalCellMember).width).toBe("");
+    expect(window.getComputedStyle(originalHeaderLvl).width).toBe("29px");
+    expect(window.getComputedStyle(originalCellLvl).width).toBe("29px");
+    expect(window.getComputedStyle(originalHeaderStatus).width).toBe("50px");
+    expect(window.getComputedStyle(originalCellStatus).width).toBe("50px");
+
+    const originalHeaderPoints = list.querySelector(
+      ".white-grad > .points",
+    ) as HTMLElement;
+    const originalCellPoints = list.querySelector(
+      ".table-row > .points",
+    ) as HTMLElement;
+    expect(window.getComputedStyle(originalHeaderPoints).width).toBe("38px");
+    expect(window.getComputedStyle(originalCellPoints).width).toBe("38px");
 
     // C. With display = BATTLE_STATS, they should have reduced widths
     ffconfig.war_col_display = FactionsColDisplay.BATTLE_STATS;
@@ -1327,21 +1331,18 @@ describe("Faction feature run and dynamic navigation integration", () => {
     expect(factionWar.getAttribute("data-ffscouter-col-display")).toBe(
       "battle_stats",
     );
-    expect(window.getComputedStyle(originalHeaderMember).width).toBe("139px");
-    expect(window.getComputedStyle(originalCellMember).width).toBe("139px");
-    expect(window.getComputedStyle(originalHeaderLvl).width).toBe("30px");
-    expect(window.getComputedStyle(originalCellLvl).width).toBe("30px");
-    expect(window.getComputedStyle(originalHeaderStatus).width).toBe("38px");
-    expect(window.getComputedStyle(originalCellStatus).width).toBe("38px");
+    expect(window.getComputedStyle(originalHeaderMember).width).toBe("");
+    expect(window.getComputedStyle(originalCellMember).width).toBe("");
+    expect(window.getComputedStyle(originalHeaderLvl).width).toBe("29px");
+    expect(window.getComputedStyle(originalCellLvl).width).toBe("29px");
+    expect(window.getComputedStyle(originalHeaderStatus).width).toBe("50px");
+    expect(window.getComputedStyle(originalCellStatus).width).toBe("50px");
+    expect(window.getComputedStyle(originalHeaderPoints).width).toBe("38px");
+    expect(window.getComputedStyle(originalCellPoints).width).toBe("38px");
 
-    // D. If level is hidden, they should NOT have reduced widths (even if custom columns are active)
+    // D. If level is hidden, they should NOT have reduced widths (and default to native sizes)
     factionWar.setAttribute("data-ffscouter-hide-level", "true");
-    expect(window.getComputedStyle(originalHeaderMember).width).not.toBe(
-      "139px",
-    );
-    expect(window.getComputedStyle(originalHeaderStatus).width).not.toBe(
-      "38px",
-    );
+    expect(window.getComputedStyle(originalHeaderLvl).display).toBe("none");
 
     // Cleanup
     document.head.removeChild(styleEl);

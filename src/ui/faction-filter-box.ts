@@ -28,6 +28,11 @@ export interface FactionFilterState {
     status: boolean;
     score: boolean;
   };
+  hiddenColumnsMobile?: {
+    level: boolean;
+    status: boolean;
+    score: boolean;
+  };
 }
 
 const DEFAULT_HIDDEN_COLUMNS = {
@@ -59,6 +64,13 @@ const DEFAULT_STATE: FactionFilterState = {
   hiddenColumns: DEFAULT_HIDDEN_COLUMNS,
 };
 
+/**
+ * Detects whether the screen viewport matches a mobile/tablet view size (under 784px).
+ */
+function isMobileView(): boolean {
+  return typeof window !== "undefined" && window.innerWidth < 784;
+}
+
 @customElement("ff-faction-filter-box")
 export class FFFactionFilterBox extends LitElement {
   protected override createRenderRoot() {
@@ -84,16 +96,28 @@ export class FFFactionFilterBox extends LitElement {
   @state() hiddenColumns = { ...DEFAULT_HIDDEN_COLUMNS };
   @state() private collapsed = false;
 
+  private wasMobile = isMobileView();
+
   override connectedCallback() {
     super.connectedCallback();
     this.loadState();
     window.addEventListener("ff-config-updated", this.onConfigUpdated);
+    window.addEventListener("resize", this.onResize);
   }
 
   override disconnectedCallback() {
+    window.removeEventListener("resize", this.onResize);
     window.removeEventListener("ff-config-updated", this.onConfigUpdated);
     super.disconnectedCallback();
   }
+
+  private onResize = () => {
+    const isMobile = isMobileView();
+    if (isMobile !== this.wasMobile) {
+      this.wasMobile = isMobile;
+      this.loadState();
+    }
+  };
 
   override updated(changedProperties: Map<string | number | symbol, unknown>) {
     super.updated(changedProperties);
@@ -141,6 +165,9 @@ export class FFFactionFilterBox extends LitElement {
     const parsed = isWar
       ? ffconfig.war_filter_state
       : ffconfig.faction_filter_state;
+
+    const isMobile = isMobileView();
+
     if (parsed) {
       const savedSortBy = parsed.sortBy ?? "none";
       this.sortBy =
@@ -155,10 +182,27 @@ export class FFFactionFilterBox extends LitElement {
       this.ffMax = parsed.ffMax ?? null;
       this.statsMin = parsed.statsMin ?? null;
       this.statsMax = parsed.statsMax ?? null;
+
+      if (isMobile) {
+        this.hiddenColumns = {
+          level: parsed.hiddenColumnsMobile?.level ?? true, // Default to true (hidden) on mobile
+          status:
+            parsed.hiddenColumnsMobile?.status ?? DEFAULT_HIDDEN_COLUMNS.status,
+          score:
+            parsed.hiddenColumnsMobile?.score ?? DEFAULT_HIDDEN_COLUMNS.score,
+        };
+      } else {
+        this.hiddenColumns = {
+          level: parsed.hiddenColumns?.level ?? DEFAULT_HIDDEN_COLUMNS.level,
+          status: parsed.hiddenColumns?.status ?? DEFAULT_HIDDEN_COLUMNS.status,
+          score: parsed.hiddenColumns?.score ?? DEFAULT_HIDDEN_COLUMNS.score,
+        };
+      }
+    } else {
       this.hiddenColumns = {
-        level: parsed.hiddenColumns?.level ?? DEFAULT_HIDDEN_COLUMNS.level,
-        status: parsed.hiddenColumns?.status ?? DEFAULT_HIDDEN_COLUMNS.status,
-        score: parsed.hiddenColumns?.score ?? DEFAULT_HIDDEN_COLUMNS.score,
+        level: isMobile, // Default Level column to hidden on mobile
+        status: DEFAULT_HIDDEN_COLUMNS.status,
+        score: DEFAULT_HIDDEN_COLUMNS.score,
       };
     }
     // Dispatch initial state once loaded
@@ -176,6 +220,28 @@ export class FFFactionFilterBox extends LitElement {
   }
 
   private saveState() {
+    const isWar = this.mode === "war";
+    const isMobile = isMobileView();
+    const existingState = isWar
+      ? ffconfig.war_filter_state
+      : ffconfig.faction_filter_state;
+
+    // Preserving the other viewport's settings
+    const savedHiddenColumns = existingState?.hiddenColumns;
+    const savedHiddenColumnsMobile = existingState?.hiddenColumnsMobile;
+
+    const hiddenColumnsToSave = isMobile
+      ? (savedHiddenColumns ?? DEFAULT_HIDDEN_COLUMNS)
+      : this.hiddenColumns;
+
+    const hiddenColumnsMobileToSave = isMobile
+      ? this.hiddenColumns
+      : (savedHiddenColumnsMobile ?? {
+          level: true,
+          status: false,
+          score: false,
+        });
+
     const stateObj: FactionFilterState = {
       sortBy: this.sortBy,
       activity: this.activity,
@@ -186,9 +252,10 @@ export class FFFactionFilterBox extends LitElement {
       ffMax: this.ffMax,
       statsMin: this.statsMin,
       statsMax: this.statsMax,
-      hiddenColumns: this.hiddenColumns,
+      hiddenColumns: hiddenColumnsToSave,
+      hiddenColumnsMobile: hiddenColumnsMobileToSave,
     };
-    if (this.mode === "war") {
+    if (isWar) {
       ffconfig.war_filter_state = stateObj;
     } else {
       ffconfig.faction_filter_state = stateObj;
@@ -590,7 +657,7 @@ export class FFFactionFilterBox extends LitElement {
                     <label>
                       <input
                         type="checkbox"
-                        ?checked="${!this.hiddenColumns.level}"
+                        .checked="${!this.hiddenColumns.level}"
                         @change="${(e: any) =>
                           this.onColumnVisibilityChange(
                             "level",
@@ -602,7 +669,7 @@ export class FFFactionFilterBox extends LitElement {
                     <label>
                       <input
                         type="checkbox"
-                        ?checked="${!this.hiddenColumns.status}"
+                        .checked="${!this.hiddenColumns.status}"
                         @change="${(e: any) =>
                           this.onColumnVisibilityChange(
                             "status",
@@ -614,7 +681,7 @@ export class FFFactionFilterBox extends LitElement {
                     <label>
                       <input
                         type="checkbox"
-                        ?checked="${!this.hiddenColumns.score}"
+                        .checked="${!this.hiddenColumns.score}"
                         @change="${(e: any) =>
                           this.onColumnVisibilityChange(
                             "score",
