@@ -1,5 +1,7 @@
 // @vitest-environment jsdom
 
+import * as fs from "node:fs";
+import * as path from "node:path";
 import { ffconfig } from "@utils/ffconfig";
 import { beforeEach, expect, test, vi } from "vitest";
 import "./faction-filter-box";
@@ -527,4 +529,38 @@ test("ff-faction-filter-box separates desktop and mobile visible column settings
 
   // Cleanup
   document.body.removeChild(warWrapper);
+});
+
+test("ff-faction-filter-box has correct mobile order for filter groups", async () => {
+  const cssPath = path.resolve(__dirname, "./styles.css");
+  const cssContent = fs.readFileSync(cssPath, "utf-8");
+  const styleEl = document.createElement("style");
+  styleEl.textContent = cssContent;
+  document.head.appendChild(styleEl);
+
+  try {
+    const el = document.createElement(
+      "ff-faction-filter-box",
+    ) as FFFactionFilterBox;
+    el.mode = "war";
+    document.body.appendChild(el);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    const getOrder = (selector: string): string => {
+      const target = el.querySelector(selector);
+      if (!target) return "";
+      const style = window.getComputedStyle(target);
+      return style.order;
+    };
+
+    expect(getOrder(".grp-sort")).toBe("1");
+    expect(getOrder(".grp-level")).toBe("2");
+    expect(getOrder(".grp-activity")).toBe("3");
+    expect(getOrder(".grp-status")).toBe("4");
+    expect(getOrder(".grp-ff")).toBe("5");
+    expect(getOrder(".grp-stats")).toBe("6");
+    expect(getOrder(".grp-columns")).toBe("7");
+  } finally {
+    document.head.removeChild(styleEl);
+  }
 });

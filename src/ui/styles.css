@@ -326,6 +326,10 @@ ff-faction-filter-box {
   order: 6;
 }
 
+.grp-columns {
+  order: 7;
+}
+
 @media (min-width: 784px) {
   .ff-filter-grid {
     grid-template-columns: repeat(3, 1fr);
