@@ -390,7 +390,7 @@ export async function apply_ff_columns(membersList: HTMLElement) {
         ) as HTMLElement | null;
         if (headerLvlEl) {
           headerLi = document.createElement("div");
-          headerLi.classList.add("level", "ffscouter-header");
+          headerLi.classList.add("left", "level", "ffscouter-header");
           headerLvlEl.after(headerLi);
         }
       } else {
@@ -457,7 +457,7 @@ export async function apply_ff_columns(membersList: HTMLElement) {
       if (!cell) {
         cell = document.createElement("div");
         if (isWar) {
-          cell.classList.add("level", "ffscouter-cell");
+          cell.classList.add("left", "level", "ffscouter-cell");
           const levelEl = rp.row.querySelector(".level, [class*='level__']");
           if (levelEl) {
             levelEl.after(cell);

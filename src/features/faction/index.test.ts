@@ -1128,7 +1128,7 @@ describe("Faction feature run and dynamic navigation integration", () => {
     expect(waitForSpy).toHaveBeenCalled();
   });
 
-  test("injected columns are not hidden when level column is hidden via stylesheet", async () => {
+  test("columns are correctly hidden via display none when data-attributes are set on .faction-war", async () => {
     // 1. Read and inject the stylesheet styles.css into JSDOM head
     const cssPath = path.resolve(__dirname, "../../ui/styles.css");
     const cssContent = fs.readFileSync(cssPath, "utf-8");
@@ -1157,11 +1157,15 @@ describe("Faction feature run and dynamic navigation integration", () => {
       <div class="white-grad">
         <div class="member">Member</div>
         <div class="level">Lvl</div>
+        <div class="status">Status</div>
+        <div class="points">Points</div>
       </div>
       <ul class="table-body">
         <li class="table-row">
           <div class="member"><a href="/profiles.php?XID=111">Player 111</a></div>
           <div class="level">50</div>
+          <div class="status">Idle</div>
+          <div class="points">10</div>
         </li>
       </ul>
     `;
@@ -1171,34 +1175,65 @@ describe("Faction feature run and dynamic navigation integration", () => {
     // 4. Inject the columns
     await apply_ff_columns(list);
 
-    // Get reference to original lvl elements and injected elements
+    // Get reference to original elements and injected elements
     const originalHeaderLvl = list.querySelector(
       ".white-grad > .level:not(.ffscouter-header)",
     ) as HTMLElement;
     const originalCellLvl = list.querySelector(
       ".table-row > .level:not(.ffscouter-cell)",
     ) as HTMLElement;
+    const originalHeaderStatus = list.querySelector(
+      ".white-grad > .status",
+    ) as HTMLElement;
+    const originalCellStatus = list.querySelector(
+      ".table-row > .status",
+    ) as HTMLElement;
+    const originalHeaderPoints = list.querySelector(
+      ".white-grad > .points",
+    ) as HTMLElement;
+    const originalCellPoints = list.querySelector(
+      ".table-row > .points",
+    ) as HTMLElement;
+
     const injectedHeader = list.querySelector(
       ".ffscouter-header",
     ) as HTMLElement;
     const injectedCell = list.querySelector(".ffscouter-cell") as HTMLElement;
 
-    // Verify they are visible initially (since getComputedStyle width is auto / not 0px)
-    expect(window.getComputedStyle(originalHeaderLvl).width).not.toBe("0px");
-    expect(window.getComputedStyle(originalCellLvl).width).not.toBe("0px");
-    expect(window.getComputedStyle(injectedHeader).width).not.toBe("0px");
-    expect(window.getComputedStyle(injectedCell).width).not.toBe("0px");
+    // Verify display is not "none" initially
+    expect(window.getComputedStyle(originalHeaderLvl).display).not.toBe("none");
+    expect(window.getComputedStyle(originalCellLvl).display).not.toBe("none");
+    expect(window.getComputedStyle(originalHeaderStatus).display).not.toBe(
+      "none",
+    );
+    expect(window.getComputedStyle(originalCellStatus).display).not.toBe(
+      "none",
+    );
+    expect(window.getComputedStyle(originalHeaderPoints).display).not.toBe(
+      "none",
+    );
+    expect(window.getComputedStyle(originalCellPoints).display).not.toBe(
+      "none",
+    );
+    expect(window.getComputedStyle(injectedHeader).display).not.toBe("none");
+    expect(window.getComputedStyle(injectedCell).display).not.toBe("none");
 
-    // 5. Hide the level column by setting data attribute
+    // Test Level Hiding
     factionWar.setAttribute("data-ffscouter-hide-level", "true");
+    expect(window.getComputedStyle(originalHeaderLvl).display).toBe("none");
+    expect(window.getComputedStyle(originalCellLvl).display).toBe("none");
+    expect(window.getComputedStyle(injectedHeader).display).not.toBe("none");
+    expect(window.getComputedStyle(injectedCell).display).not.toBe("none");
 
-    // 6. Verify original level cells are collapsed to 0px width
-    expect(window.getComputedStyle(originalHeaderLvl).width).toBe("0px");
-    expect(window.getComputedStyle(originalCellLvl).width).toBe("0px");
+    // Test Status Hiding
+    factionWar.setAttribute("data-ffscouter-hide-status", "true");
+    expect(window.getComputedStyle(originalHeaderStatus).display).toBe("none");
+    expect(window.getComputedStyle(originalCellStatus).display).toBe("none");
 
-    // 7. Verify injected FF/Est header and cell remain visible (not collapsed to 0px width)
-    expect(window.getComputedStyle(injectedHeader).width).not.toBe("0px");
-    expect(window.getComputedStyle(injectedCell).width).not.toBe("0px");
+    // Test Points Hiding
+    factionWar.setAttribute("data-ffscouter-hide-score", "true");
+    expect(window.getComputedStyle(originalHeaderPoints).display).toBe("none");
+    expect(window.getComputedStyle(originalCellPoints).display).toBe("none");
 
     // Cleanup
     document.head.removeChild(styleEl);

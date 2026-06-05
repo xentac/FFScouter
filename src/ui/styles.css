@@ -411,9 +411,7 @@ ff-faction-filter-box {
 
 /* Real DOM FF/Est columns inside faction war lists */
 .faction-war .ffscouter-cell {
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
+  float: left !important;
   width: 32px !important;
   height: 20px !important;
   font-size: 11px !important;
@@ -422,8 +420,9 @@ ff-faction-filter-box {
   box-sizing: border-box !important;
   margin-left: 4px !important;
   margin-right: 4px !important;
+  text-align: center !important;
+  line-height: 20px !important;
   z-index: 10 !important;
-  flex: none !important;
 }
 
 .ffscouter-cell {
@@ -431,15 +430,13 @@ ff-faction-filter-box {
 }
 
 .faction-war .ffscouter-header {
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
+  float: left !important;
   width: 32px !important;
   font-size: 12px !important;
   font-weight: bold !important;
   margin-left: 4px !important;
   margin-right: 4px !important;
-  flex: none !important;
+  text-align: center !important;
   background-color: transparent !important;
 }
 
@@ -447,81 +444,19 @@ ff-faction-filter-box {
    COLUMN VISIBILITY TOGGLES (Ranked War)
    ============================================================================ */
 
-/* 1. Level Column: Collapse standard text/width */
-.faction-war[data-ffscouter-hide-level="true"]:not(
-  [data-ffscouter-col-display="none"]
-)
-.level[class*="level__"]:not(.ffscouter-cell):not(.ffscouter-header),
-.faction-war[data-ffscouter-hide-level="true"]:not(
-    [data-ffscouter-col-display="none"]
-  )
-  .level:not(.ffscouter-cell):not(.ffscouter-header) {
-  width: 0 !important;
-  margin-right: 0 !important;
-  padding-left: 0 !important;
-  padding-right: 0 !important;
-  color: transparent !important;
-  font-size: 0 !important;
-  border-left: none !important;
-  border-right: none !important;
-  background-color: transparent !important;
-  pointer-events: none !important;
-}
-
-/* 2. Level Header: Collapse standard text/width */
-.faction-war[data-ffscouter-hide-level="true"]:not(
-    [data-ffscouter-col-display="none"]
-  ) .white-grad
-  .level[class*="level__"]:not(.ffscouter-cell):not(.ffscouter-header),
-.faction-war[data-ffscouter-hide-level="true"]:not(
-    [data-ffscouter-col-display="none"]
-  )
-  .white-grad
-  .level:not(.ffscouter-cell):not(.ffscouter-header) {
-  width: 0 !important;
-  margin-right: 0 !important;
-  padding-left: 0 !important;
-  padding-right: 0 !important;
-  color: transparent !important;
-  font-size: 0 !important;
-  border-left: none !important;
-  border-right: none !important;
-  background-color: transparent !important;
-  pointer-events: none !important;
-}
-
-/* 3. Status Column */
-.faction-war[data-ffscouter-hide-status="true"] .status,
-.faction-war[data-ffscouter-hide-status="true"] [class*="status__"] {
+/* 1. Level Column & Header (Excluding our injected columns) */
+.faction-war[data-ffscouter-hide-level="true"]
+.level:not(.ffscouter-cell):not(.ffscouter-header) {
   display: none !important;
 }
 
-/* 4. Score / Points / Respect / Attacks Columns */
-.faction-war[data-ffscouter-hide-score="true"] [class*="score__"],
-.faction-war[data-ffscouter-hide-score="true"] [class*="points__"],
-.faction-war[data-ffscouter-hide-score="true"] [class*="respect__"],
-.faction-war[data-ffscouter-hide-score="true"] [class*="attacks__"] {
+/* 2. Status Column & Header */
+.faction-war[data-ffscouter-hide-status="true"] .status {
   display: none !important;
 }
 
-/* Grid layout ordering for bottom-left placement on mobile */
-.grp-columns {
-  order: 7;
-}
-
-/* Prevent wrapping inside members list rows and headers */
-.members-list li.enemy,
-.members-list li.your,
-.members-list div.c-pointer,
-.faction-war div.c-pointer,
-.chain-attacks-list div.c-pointer {
-  display: flex !important;
-  flex-flow: row nowrap !important;
-  align-items: center !important;
-}
-
-.members-list li.enemy > div.clear,
-.members-list li.your > div.clear {
+/* 3. Score Column & Header */
+.faction-war[data-ffscouter-hide-score="true"] .points {
   display: none !important;
 }
 
