@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FF Scouter V3
 // @namespace    xentac-v3
-// @version      3.0-alpha25
+// @version      3.0-alpha26
 // @author       xentac [3354782], MAVRI [2402357], rDacted [2670953], Weav3r [1853324], Glasnost [1844049]
 // @description  Shows the expected Fair Fight score against targets and faction war status
 // @license      GPLv3
@@ -2440,12 +2440,12 @@ event.oldVersion,
     }
     return null;
   }
-  async function apply_ff_gauge_selector(node_list, featureName = "Unknown") {
+  function apply_ff_gauge_selector(node_list, featureName = "Unknown") {
     for (const node of node_list) {
       add_ff_arrow(node, featureName);
     }
   }
-  async function apply_ff_gauge(element, featureName = "Unknown") {
+  function apply_ff_gauge(element, featureName = "Unknown") {
     if (!(element instanceof HTMLElement)) {
       return;
     }
@@ -3280,11 +3280,15 @@ async willUpdate(changedProperties) {
       abroad: true
     }
   };
+  function isMobileView() {
+    return typeof window !== "undefined" && window.innerWidth < 784;
+  }
   let FFFactionFilterBox = class extends i {
     constructor() {
       super(...arguments);
       this.mode = "faction";
       this.sortBy = "none";
+      this.filterEnabled = true;
       this.colDisplay = FactionsColDisplay.FAIR_FIGHT;
       this.activity = { ...DEFAULT_STATE.activity };
       this.status = { ...DEFAULT_STATE.status };
@@ -3296,6 +3300,14 @@ async willUpdate(changedProperties) {
       this.statsMax = null;
       this.hiddenColumns = { ...DEFAULT_HIDDEN_COLUMNS };
       this.collapsed = false;
+      this.wasMobile = isMobileView();
+      this.onResize = () => {
+        const isMobile = isMobileView();
+        if (isMobile !== this.wasMobile) {
+          this.wasMobile = isMobile;
+          this.loadState();
+        }
+      };
       this.onConfigUpdated = () => {
         this.colDisplay = this.mode === "war" ? ffconfig.war_col_display : ffconfig.factions_col_display;
         this.requestUpdate();
@@ -3308,8 +3320,10 @@ async willUpdate(changedProperties) {
       super.connectedCallback();
       this.loadState();
       window.addEventListener("ff-config-updated", this.onConfigUpdated);
+      window.addEventListener("resize", this.onResize);
     }
     disconnectedCallback() {
+      window.removeEventListener("resize", this.onResize);
       window.removeEventListener("ff-config-updated", this.onConfigUpdated);
       super.disconnectedCallback();
     }
@@ -3339,9 +3353,11 @@ async willUpdate(changedProperties) {
       this.collapsed = isWar ? ffconfig.war_filter_collapsed : ffconfig.faction_filter_collapsed;
       this.colDisplay = isWar ? ffconfig.war_col_display : ffconfig.factions_col_display;
       const parsed = isWar ? ffconfig.war_filter_state : ffconfig.faction_filter_state;
+      const isMobile = isMobileView();
       if (parsed) {
         const savedSortBy = parsed.sortBy ?? "none";
         this.sortBy = savedSortBy === "ff-asc" || savedSortBy === "ff-desc" ? savedSortBy : "none";
+        this.filterEnabled = parsed.filterEnabled ?? true;
         this.activity = { ...DEFAULT_STATE.activity, ...parsed.activity };
         this.status = { ...DEFAULT_STATE.status, ...parsed.status };
         this.levelMin = parsed.levelMin ?? null;
@@ -3350,10 +3366,24 @@ async willUpdate(changedProperties) {
         this.ffMax = parsed.ffMax ?? null;
         this.statsMin = parsed.statsMin ?? null;
         this.statsMax = parsed.statsMax ?? null;
+        if (isMobile) {
+          this.hiddenColumns = {
+            level: parsed.hiddenColumnsMobile?.level ?? true,
+status: parsed.hiddenColumnsMobile?.status ?? DEFAULT_HIDDEN_COLUMNS.status,
+            score: parsed.hiddenColumnsMobile?.score ?? DEFAULT_HIDDEN_COLUMNS.score
+          };
+        } else {
+          this.hiddenColumns = {
+            level: parsed.hiddenColumns?.level ?? DEFAULT_HIDDEN_COLUMNS.level,
+            status: parsed.hiddenColumns?.status ?? DEFAULT_HIDDEN_COLUMNS.status,
+            score: parsed.hiddenColumns?.score ?? DEFAULT_HIDDEN_COLUMNS.score
+          };
+        }
+      } else {
         this.hiddenColumns = {
-          level: parsed.hiddenColumns?.level ?? DEFAULT_HIDDEN_COLUMNS.level,
-          status: parsed.hiddenColumns?.status ?? DEFAULT_HIDDEN_COLUMNS.status,
-          score: parsed.hiddenColumns?.score ?? DEFAULT_HIDDEN_COLUMNS.score
+          level: isMobile,
+status: DEFAULT_HIDDEN_COLUMNS.status,
+          score: DEFAULT_HIDDEN_COLUMNS.score
         };
       }
       this.dispatchChange();
@@ -3368,8 +3398,20 @@ async willUpdate(changedProperties) {
       }
     }
     saveState() {
+      const isWar = this.mode === "war";
+      const isMobile = isMobileView();
+      const existingState = isWar ? ffconfig.war_filter_state : ffconfig.faction_filter_state;
+      const savedHiddenColumns = existingState?.hiddenColumns;
+      const savedHiddenColumnsMobile = existingState?.hiddenColumnsMobile;
+      const hiddenColumnsToSave = isMobile ? savedHiddenColumns ?? DEFAULT_HIDDEN_COLUMNS : this.hiddenColumns;
+      const hiddenColumnsMobileToSave = isMobile ? this.hiddenColumns : savedHiddenColumnsMobile ?? {
+        level: true,
+        status: false,
+        score: false
+      };
       const stateObj = {
         sortBy: this.sortBy,
+        filterEnabled: this.filterEnabled,
         activity: this.activity,
         status: this.status,
         levelMin: this.levelMin,
@@ -3378,9 +3420,10 @@ async willUpdate(changedProperties) {
         ffMax: this.ffMax,
         statsMin: this.statsMin,
         statsMax: this.statsMax,
-        hiddenColumns: this.hiddenColumns
+        hiddenColumns: hiddenColumnsToSave,
+        hiddenColumnsMobile: hiddenColumnsMobileToSave
       };
-      if (this.mode === "war") {
+      if (isWar) {
         ffconfig.war_filter_state = stateObj;
       } else {
         ffconfig.faction_filter_state = stateObj;
@@ -3391,6 +3434,7 @@ async willUpdate(changedProperties) {
         new CustomEvent("filter-change", {
           detail: {
             sortBy: this.sortBy,
+            filterEnabled: this.filterEnabled,
             activity: this.activity,
             status: this.status,
             levelMin: this.levelMin,
@@ -3480,6 +3524,37 @@ async willUpdate(changedProperties) {
       this.saveState();
       this.dispatchChange();
     }
+    onToggleFilter(e2) {
+      if (e2) {
+        e2.preventDefault();
+        e2.stopPropagation();
+      }
+      this.filterEnabled = !this.filterEnabled;
+      this.saveState();
+      this.dispatchChange();
+    }
+    onResetFilters(e2) {
+      if (e2) {
+        e2.preventDefault();
+        e2.stopPropagation();
+      }
+      this.activity = { online: true, idle: true, offline: true };
+      this.status = {
+        okay: true,
+        traveling: true,
+        hospital: true,
+        jail: true,
+        abroad: true
+      };
+      this.levelMin = null;
+      this.levelMax = null;
+      this.ffMin = null;
+      this.ffMax = null;
+      this.statsMin = null;
+      this.statsMax = null;
+      this.saveState();
+      this.dispatchChange();
+    }
     onCompareActivity() {
       const container = this.closest(".faction-war");
       const links = container ? Array.from(
@@ -3553,13 +3628,51 @@ async willUpdate(changedProperties) {
         <summary
           style="cursor: pointer; font-weight: bold; font-size: 14px; outline: none; user-select: none;"
         >
-          FFScouter Filter & Sort Controls
+          <div
+            style="display: inline-flex; justify-content: space-between; align-items: center; width: calc(100% - 24px); vertical-align: middle;"
+          >
+            <span>FFScouter Filter & Sort Controls</span>
+            <div
+              class="ff-filter-header-actions"
+              @click="${(e2) => {
+      e2.preventDefault();
+      e2.stopPropagation();
+    }}"
+            >
+              <button
+                class="ff-action-icon-btn ${this.filterEnabled ? "active" : "inactive"}"
+                title="${this.filterEnabled ? "Turn off filtering" : "Turn on filtering"}"
+                @click="${(e2) => this.onToggleFilter(e2)}"
+              >
+                ${this.filterEnabled ? b`
+                    <svg viewBox="0 0 16 16">
+                      <path d="M1.5 1.5A.5.5 0 0 1 2 1h12a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.124.318l-4.5 5.5v4.682a.5.5 0 0 1-.168.373l-2.5 2a.5.5 0 0 1-.832-.373v-6.682l-4.5-5.5A.5.5 0 0 1 1.5 3.5v-2z" />
+                    </svg>
+                  ` : b`
+                    <svg viewBox="0 0 16 16">
+                      <path d="M1.5 1.5A.5.5 0 0 1 2 1h12a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.124.318l-4.5 5.5v4.682a.5.5 0 0 1-.168.373l-2.5 2a.5.5 0 0 1-.832-.373v-6.682l-4.5-5.5A.5.5 0 0 1 1.5 3.5v-2z" />
+                      <line x1="1.5" y1="14.5" x2="14.5" y2="1.5" stroke="currentColor" stroke-width="1.5" />
+                    </svg>
+                  `}
+              </button>
+              <button
+                class="ff-action-icon-btn reset-btn"
+                title="Reset filters to default"
+                @click="${(e2) => this.onResetFilters(e2)}"
+              >
+                <svg viewBox="0 0 16 16">
+                  <path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
+                  <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/>
+                </svg>
+              </button>
+            </div>
+          </div>
         </summary>
         <div class="ff-filter-grid" style="margin-top: 12px;">
           <div class="ff-filter-group grp-sort">
             <strong>Sort & Display</strong>
             <div style="display: flex; flex-direction: column; gap: 8px;">
-              <button @click="${this.onSortToggle}" style="width: 100%;">
+              <button id="sort-toggle-btn" @click="${this.onSortToggle}" style="width: 100%;">
                 ${this.sortBy === "none" ? "Sort: Default" : this.sortBy === "ff-asc" ? `Sort: ${sortText} ▲` : `Sort: ${sortText} ▼`}
               </button>
               <select
@@ -3726,7 +3839,7 @@ async willUpdate(changedProperties) {
                     <label>
                       <input
                         type="checkbox"
-                        ?checked="${!this.hiddenColumns.level}"
+                        .checked="${!this.hiddenColumns.level}"
                         @change="${(e2) => this.onColumnVisibilityChange(
       "level",
       !e2.target.checked
@@ -3737,7 +3850,7 @@ async willUpdate(changedProperties) {
                     <label>
                       <input
                         type="checkbox"
-                        ?checked="${!this.hiddenColumns.status}"
+                        .checked="${!this.hiddenColumns.status}"
                         @change="${(e2) => this.onColumnVisibilityChange(
       "status",
       !e2.target.checked
@@ -3748,7 +3861,7 @@ async willUpdate(changedProperties) {
                     <label>
                       <input
                         type="checkbox"
-                        ?checked="${!this.hiddenColumns.score}"
+                        .checked="${!this.hiddenColumns.score}"
                         @change="${(e2) => this.onColumnVisibilityChange(
       "score",
       !e2.target.checked
@@ -3770,6 +3883,9 @@ async willUpdate(changedProperties) {
   __decorateClass$2([
     r()
   ], FFFactionFilterBox.prototype, "sortBy", 2);
+  __decorateClass$2([
+    r()
+  ], FFFactionFilterBox.prototype, "filterEnabled", 2);
   __decorateClass$2([
     r()
   ], FFFactionFilterBox.prototype, "colDisplay", 2);
@@ -3818,6 +3934,10 @@ async willUpdate(changedProperties) {
         tbody.querySelectorAll(":scope > .table-row, .enemy, .your")
       );
       for (const row of rows) {
+        if (filters.filterEnabled === false) {
+          show_row(row);
+          continue;
+        }
         const activityImg = row.querySelector(".icons img");
         const activity = (activityImg?.getAttribute("alt") || "offline").toLowerCase();
         const allActivityUnchecked = !filters.activity.online && !filters.activity.idle && !filters.activity.offline;
@@ -4138,6 +4258,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     if (filterBox?.activity) {
       apply_filters_and_sort(membersList, {
         sortBy: filterBox.sortBy ?? "none",
+        filterEnabled: filterBox.filterEnabled,
         activity: filterBox.activity,
         status: filterBox.status,
         levelMin: filterBox.levelMin ?? null,
@@ -4188,6 +4309,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
         if (filterBox?.activity) {
           apply_filters_and_sort(membersList, {
             sortBy: filterBox.sortBy ?? "none",
+            filterEnabled: filterBox.filterEnabled,
             activity: filterBox.activity,
             status: filterBox.status,
             levelMin: filterBox.levelMin ?? null,
@@ -4386,6 +4508,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
         if (filterBox?.activity) {
           apply_filters_and_sort(list, {
             sortBy: filterBox.sortBy ?? "none",
+            filterEnabled: filterBox.filterEnabled,
             activity: filterBox.activity,
             status: filterBox.status,
             levelMin: filterBox.levelMin ?? null,
@@ -4616,78 +4739,85 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       return true;
     },
     async run() {
+      const IGNORED_TAGS = new Set([
+        "SCRIPT",
+        "STYLE",
+        "LINK",
+        "META",
+        "SVG",
+        "PATH",
+        "BR",
+        "HR",
+        "HEAD",
+        "TITLE"
+      ]);
+      const get_page_selectors = () => {
+        const href = window.location.href;
+        let page_specific = [];
+        if (href.startsWith("https://www.torn.com/companies.php")) {
+          page_specific = [".employee", ".director"];
+        } else if (href.startsWith("https://www.torn.com/page.php?sid=competition#/team")) {
+          page_specific = ['[class*="name__"]'];
+        } else if (href.startsWith("https://www.torn.com/joblist.php")) {
+          page_specific = [".employee", ".director"];
+        } else if (torn_page("messages") || torn_page("index") || torn_page("hospitalview") || torn_page("page", { sid: "UserList" })) {
+          page_specific = [".name"];
+        } else if (href.startsWith("https://www.torn.com/bounties.php")) {
+          page_specific = [".target, .listed"];
+        } else if (href.startsWith("https://www.torn.com/page.php?sid=attackLog")) {
+          page_specific = ["ul.participants-list li"];
+        } else if (href.startsWith("https://www.torn.com/forums.php")) {
+          page_specific = [".last-poster, .starter, .last-post, .poster"];
+        } else if (href.includes("page.php?sid=hof") || torn_page("factions", { step: "profile" }) || torn_page("factions", { step: "your" }, [
+          "",
+          "#",
+          "#/",
+          "#/tab=info",
+          "#/war/*"
+        ])) {
+          page_specific = ['[class*="userInfoBox__"]'];
+        }
+        if (page_specific.length > 0) {
+          const combined = [".honor-text-wrap", ...page_specific].join(", ");
+          return {
+            has_page_specific: true,
+            page_specific_selectors: page_specific,
+            combined_selector: combined
+          };
+        }
+        return {
+          has_page_specific: false,
+          page_specific_selectors: [],
+          combined_selector: ".honor-text-wrap, .user.name"
+        };
+      };
+      let current_config = get_page_selectors();
       let is_observing = false;
       const check_mutation = async (node) => {
-        if (!node.querySelectorAll) {
+        if (!node.querySelectorAll || IGNORED_TAGS.has(node.tagName)) {
           return;
         }
-        var honor_bars = node.querySelectorAll(
+        if (!node.matches(current_config.combined_selector) && !node.querySelector(current_config.combined_selector)) {
+          return;
+        }
+        const honor_bars = node.querySelectorAll(
           ".honor-text-wrap"
         );
-        var name_elems = node.querySelectorAll(
-          ".user.name"
-        );
         if (honor_bars.length > 0) {
-          await apply_ff_gauge_selector(honor_bars, FEATURE_NAME_HONOR_BAR);
+          apply_ff_gauge_selector(honor_bars, FEATURE_NAME_HONOR_BAR);
+        } else if (current_config.has_page_specific) {
+          for (const selector of current_config.page_specific_selectors) {
+            apply_ff_gauge_selector(
+              node.querySelectorAll(selector),
+              FEATURE_NAME$3
+            );
+          }
         } else {
-          if (window.location.href.startsWith("https://www.torn.com/companies.php")) {
-            await apply_ff_gauge_selector(
-              node.querySelectorAll(".employee"),
-              FEATURE_NAME$3
-            );
-          } else if (window.location.href.startsWith(
-            "https://www.torn.com/page.php?sid=competition#/team"
-          )) {
-            await apply_ff_gauge_selector(
-              node.querySelectorAll('[class*="name__"]'),
-              FEATURE_NAME$3
-            );
-          } else if (window.location.href.startsWith("https://www.torn.com/joblist.php")) {
-            await apply_ff_gauge_selector(
-              node.querySelectorAll(".employee"),
-              FEATURE_NAME$3
-            );
-            await apply_ff_gauge_selector(
-              node.querySelectorAll(".director"),
-              FEATURE_NAME$3
-            );
-          } else if (torn_page("messages") || torn_page("index") || torn_page("hospitalview") || torn_page("page", { sid: "UserList" })) {
-            await apply_ff_gauge_selector(
-              node.querySelectorAll(".name"),
-              FEATURE_NAME$3
-            );
-          } else if (window.location.href.startsWith("https://www.torn.com/bounties.php")) {
-            await apply_ff_gauge_selector(
-              node.querySelectorAll(".target, .listed"),
-              FEATURE_NAME$3
-            );
-          } else if (window.location.href.startsWith(
-            "https://www.torn.com/page.php?sid=attackLog"
-          )) {
-            await apply_ff_gauge_selector(
-              node.querySelectorAll("ul.participants-list li"),
-              FEATURE_NAME$3
-            );
-          } else if (window.location.href.startsWith("https://www.torn.com/forums.php")) {
-            await apply_ff_gauge_selector(
-              node.querySelectorAll(
-                ".last-poster, .starter, .last-post, .poster"
-              ),
-              FEATURE_NAME$3
-            );
-          } else if (window.location.href.includes("page.php?sid=hof") || torn_page("factions", { step: "profile" }) || torn_page("factions", { step: "your" }, [
-            "",
-            "#",
-            "#/",
-            "#/tab=info",
-            "#/war/*"
-          ])) {
-            await apply_ff_gauge_selector(
-              node.querySelectorAll('[class*="userInfoBox__"]'),
-              FEATURE_NAME$3
-            );
-          } else if (name_elems.length > 0) {
-            await apply_ff_gauge_selector(name_elems, FEATURE_NAME_USER_NAME);
+          const name_elems = node.querySelectorAll(
+            ".user.name"
+          );
+          if (name_elems.length > 0) {
+            apply_ff_gauge_selector(name_elems, FEATURE_NAME_USER_NAME);
           }
         }
         ffscouter.complete();
@@ -4710,6 +4840,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
             log$8.debug("Disconnected fallback MutationObserver (excluded page)");
           }
         } else {
+          current_config = get_page_selectors();
           if (!is_observing) {
             const target = await find_mutation_target();
             ff_gauge_observer.observe(target, {
@@ -6740,7 +6871,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       log$1.error("Failed to patch fetch:", err);
     }
   }
-  const stylesCss = ".ffsv3-gauge{position:relative;display:block;padding:0}.ffsv3-arrow{position:absolute;transform:translate(-50%,-30%);padding:0;top:0;left:calc(var(--ffsv3-arrow-width) / 2 + var(--band-percent) * (100% - var(--ffsv3-arrow-width)) / 100);width:var(--ffsv3-arrow-width);object-fit:cover;pointer-events:none}.ffsv3-bubble{position:absolute;transform:translate(-50%,-30%);top:0;left:calc(var(--ffsv3-arrow-width) / 2 + var(--band-percent) * (100% - var(--ffsv3-arrow-width)) / 100);min-width:22px;height:14px;line-height:12px;border:1px solid rgba(0,0,0,.4);border-radius:8px;font-size:8.5px;font-weight:700;font-family:Geneva,Arial,sans-serif;text-align:center;padding:0 4px;box-sizing:border-box;pointer-events:none;white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;text-shadow:0 1px 1px rgba(0,0,0,.5);box-shadow:0 1px 2px #0000004d;z-index:10}.ffsv3-mini-desc{padding:0 5px}body{--ffsv3-bg-color: #f0f0f0;--ffsv3-alt-bg-color: #fff;--ffsv3-border-color: #ccc;--ffsv3-input-color: #ccc;--ffsv3-text-color: #000;--ffsv3-hover-color: #ddd;--ffsv3-glow-color: #4caf50;--ffsv3-success-color: #4caf50;--ffsv3-arrow-width: 20px}body.dark-mode{--ffsv3-bg-color: #333;--ffsv3-alt-bg-color: #383838;--ffsv3-border-color: #444;--ffsv3-input-color: #504f4f;--ffsv3-text-color: #ccc;--ffsv3-hover-color: #555;--ffsv3-glow-color: #4caf50;--ffsv3-success-color: #4caf50}.ff-premium-upgrade-line{display:block;margin-top:4px;line-height:1.3;white-space:nowrap;font-size:12px;font-style:normal}@media(max-width:768px){.ff-premium-upgrade-line{margin-top:6px;line-height:1.35;white-space:normal;overflow-wrap:anywhere}}ff-settings-panel{display:block}ff-settings-panel .accordion{margin:10px 0;padding:15px;background-color:var(--ffsv3-bg-color);border:1px solid var(--ffsv3-border-color);border-radius:5px;color:var(--ffsv3-text-color)}ff-settings-panel .accordion.glow{border-color:var(--ffsv3-glow-color);box-shadow:0 0 8px #4caf5080}ff-settings-panel .input-row{display:flex;flex-direction:column;gap:5px;margin-bottom:15px}ff-settings-panel .input-row-inline{display:flex;align-items:center;gap:10px;margin-bottom:15px}ff-settings-panel .blur-mode{filter:blur(4px);transition:filter .2s ease}ff-settings-panel .blur-mode:hover,ff-settings-panel .blur-mode:focus{filter:blur(0)}ff-settings-panel .error-msg{color:#f33;font-size:13px;margin-top:5px}ff-settings-panel input[type=text],ff-settings-panel input[type=number]{text-align:left;vertical-align:top;width:178px;height:14px;margin-right:8px;padding:9px 10px;line-height:14px;display:inline-block}ff-settings-panel input[type=number].ff-number{width:52px}ff-settings-panel select{box-sizing:border-box;text-align:left;vertical-align:top;width:178px;height:34px;margin-right:8px;padding:8px 10px;line-height:14px;display:inline-block;border:var(--input-border-color);border-radius:5px;font-family:Arial,serif;color:var(--input-color);background:var(--input-background-color)}:root .dark-mode ff-settings-panel select option{background-color:#000;color:var(--input-color)}ff-settings-panel .ff-api-explanation{background-color:var(--ffsv3-alt-bg-color);border:1px solid var(--ffsv3-border-color);border-radius:8px;color:var(--ffsv3-text-color);margin-bottom:20px;padding:12px 16px;font-size:13px;line-height:1.5}ff-settings-panel a{color:var(--ffsv3-success-color);text-decoration:underline}ff-settings-panel .is_premium_enabled{display:inline-block;background:#4caf50;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;vertical-align:middle}ff-settings-panel .is_premium_disabled{display:inline-block;background:#c62828;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;vertical-align:middle}.profile-status{position:relative}ff-flight-profile-status{position:absolute;right:10px;bottom:2px;z-index:2}.ff-scouter-profile-flight-info{display:inline-block;text-align:right;font-size:11px;line-height:1.25;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.85)}.profile-status .ff-scouter-profile-flight-info a{color:#fff;text-decoration:underline}ff-faction-filter-box{display:block}.ff-filter-box,.ff-filter-box *,.ff-filter-box *:before,.ff-filter-box *:after{box-sizing:border-box!important}.ff-filter-box{background-color:var(--ffsv3-bg-color);border:1px solid var(--ffsv3-border-color);border-radius:8px;padding:12px 16px;margin-bottom:16px;color:var(--ffsv3-text-color);font-family:Arial,sans-serif;box-shadow:0 2px 5px #0000000d}.ff-filter-box.no-borders{background-color:var(--default-bg-panel-color);border-top:1px solid var(--ffsv3-border-color);border-bottom:1px solid var(--ffsv3-border-color);border-left:none;border-right:none;border-radius:0;box-shadow:none;padding:12px 10px;margin:0}.ff-filter-box summary{cursor:pointer;font-size:14px;font-weight:700;outline:none;-webkit-user-select:none;user-select:none}.ff-filter-box[open] summary{border-bottom:1px solid var(--ffsv3-border-color);padding-bottom:6px;margin-bottom:12px}.ff-filter-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.grp-sort{order:1}.grp-level{order:2}.grp-activity{order:3}.grp-status{order:4}.grp-ff{order:5}.grp-stats{order:6}@media(min-width:784px){.ff-filter-grid{grid-template-columns:repeat(3,1fr)}.ff-filter-grid>*{order:0}}.ff-filter-group{display:flex;flex-direction:column;gap:2px}.ff-filter-options{display:flex;flex-direction:column}.ff-filter-options label{display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer}.ff-filter-range-inputs{display:flex;align-items:center;gap:4px}.ff-filter-range-inputs input{flex:1;width:0;min-width:30px;max-width:80px;padding:4px;border:1px solid var(--ffsv3-border-color);border-radius:4px;background:var(--ffsv3-alt-bg-color);color:var(--ffsv3-text-color);font-size:11px;text-align:center}.ff-filter-box button{padding:6px 10px;border:1px solid var(--ffsv3-border-color);border-radius:4px;background:var(--ffsv3-alt-bg-color);color:var(--ffsv3-text-color);font-size:12px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;transition:background-color .2s}.ff-filter-box button:hover{background-color:var(--ffsv3-hover-color)}.chain-options-flex-container{display:flex;flex-wrap:wrap;gap:10px 20px;align-items:center;justify-content:flex-start;margin-left:20px;margin-top:10px;margin-bottom:15px}.chain-options-flex-container .input-row-inline{margin-bottom:0}.faction-war .ffscouter-cell{float:left!important;width:32px!important;height:20px!important;font-size:11px!important;font-weight:700!important;border-radius:3px!important;box-sizing:border-box!important;margin:7px 4px!important;padding:0!important;text-align:center!important;line-height:20px!important;z-index:10!important}.ffscouter-cell{cursor:pointer!important}.faction-war .ffscouter-header{float:left!important;width:38px!important;font-size:12px!important;font-weight:700!important;padding:0!important;text-align:center!important;background-color:transparent!important}.faction-war[data-ffscouter-hide-level=true] .level:not(.ffscouter-cell):not(.ffscouter-header){display:none!important}.faction-war[data-ffscouter-hide-status=true] .status,.faction-war[data-ffscouter-hide-score=true] .points{display:none!important}.faction-war[data-ffscouter-col-display=fair_fight]:not([data-ffscouter-hide-level=true]) .level:not(.ffscouter-cell):not(.ffscouter-header),.faction-war[data-ffscouter-col-display=battle_stats]:not([data-ffscouter-hide-level=true]) .level:not(.ffscouter-cell):not(.ffscouter-header){width:29px!important}.faction-war[data-ffscouter-col-display=fair_fight]:not([data-ffscouter-hide-level=true]) .status,.faction-war[data-ffscouter-col-display=battle_stats]:not([data-ffscouter-hide-level=true]) .status{width:50px!important}.faction-war[data-ffscouter-col-display=fair_fight]:not([data-ffscouter-hide-level=true]) .points,.faction-war[data-ffscouter-col-display=battle_stats]:not([data-ffscouter-hide-level=true]) .points{width:38px!important}.members-list li.enemy:has(>.tt-stats-estimate),.members-list li.your:has(>.tt-stats-estimate),.members-list li.enemy:has(>div.clear~*),.members-list li.your:has(>div.clear~*){padding-bottom:22px!important;position:relative!important}.members-list li.enemy>.tt-stats-estimate,.members-list li.your>.tt-stats-estimate,.members-list li.enemy>div.clear~*,.members-list li.your>div.clear~*{position:absolute!important;bottom:2px!important;left:10px!important;height:18px!important;line-height:18px!important;font-size:11px!important;width:calc(100% - 20px)!important;display:block!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}";
+  const stylesCss = ".ffsv3-gauge{position:relative;display:block;padding:0}.ffsv3-arrow{position:absolute;transform:translate(-50%,-30%);padding:0;top:0;left:calc(var(--ffsv3-arrow-width) / 2 + var(--band-percent) * (100% - var(--ffsv3-arrow-width)) / 100);width:var(--ffsv3-arrow-width);object-fit:cover;pointer-events:none}.ffsv3-bubble{position:absolute;transform:translate(-50%,-30%);top:0;left:calc(var(--ffsv3-arrow-width) / 2 + var(--band-percent) * (100% - var(--ffsv3-arrow-width)) / 100);min-width:22px;height:14px;line-height:12px;border:1px solid rgba(0,0,0,.4);border-radius:8px;font-size:8.5px;font-weight:700;font-family:Geneva,Arial,sans-serif;text-align:center;padding:0 4px;box-sizing:border-box;pointer-events:none;white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;text-shadow:0 1px 1px rgba(0,0,0,.5);box-shadow:0 1px 2px #0000004d;z-index:10}.ffsv3-mini-desc{padding:0 5px}body{--ffsv3-bg-color: #f0f0f0;--ffsv3-alt-bg-color: #fff;--ffsv3-border-color: #ccc;--ffsv3-input-color: #ccc;--ffsv3-text-color: #000;--ffsv3-hover-color: #ddd;--ffsv3-glow-color: #4caf50;--ffsv3-success-color: #4caf50;--ffsv3-arrow-width: 20px}body.dark-mode{--ffsv3-bg-color: #333;--ffsv3-alt-bg-color: #383838;--ffsv3-border-color: #444;--ffsv3-input-color: #504f4f;--ffsv3-text-color: #ccc;--ffsv3-hover-color: #555;--ffsv3-glow-color: #4caf50;--ffsv3-success-color: #4caf50}.ff-premium-upgrade-line{display:block;margin-top:4px;line-height:1.3;white-space:nowrap;font-size:12px;font-style:normal}@media(max-width:768px){.ff-premium-upgrade-line{margin-top:6px;line-height:1.35;white-space:normal;overflow-wrap:anywhere}}ff-settings-panel{display:block}ff-settings-panel .accordion{margin:10px 0;padding:15px;background-color:var(--ffsv3-bg-color);border:1px solid var(--ffsv3-border-color);border-radius:5px;color:var(--ffsv3-text-color)}ff-settings-panel .accordion.glow{border-color:var(--ffsv3-glow-color);box-shadow:0 0 8px #4caf5080}ff-settings-panel .input-row{display:flex;flex-direction:column;gap:5px;margin-bottom:15px}ff-settings-panel .input-row-inline{display:flex;align-items:center;gap:10px;margin-bottom:15px}ff-settings-panel .blur-mode{filter:blur(4px);transition:filter .2s ease}ff-settings-panel .blur-mode:hover,ff-settings-panel .blur-mode:focus{filter:blur(0)}ff-settings-panel .error-msg{color:#f33;font-size:13px;margin-top:5px}ff-settings-panel input[type=text],ff-settings-panel input[type=number]{text-align:left;vertical-align:top;width:178px;height:14px;margin-right:8px;padding:9px 10px;line-height:14px;display:inline-block}ff-settings-panel input[type=number].ff-number{width:52px}ff-settings-panel select{box-sizing:border-box;text-align:left;vertical-align:top;width:178px;height:34px;margin-right:8px;padding:8px 10px;line-height:14px;display:inline-block;border:var(--input-border-color);border-radius:5px;font-family:Arial,serif;color:var(--input-color);background:var(--input-background-color)}:root .dark-mode ff-settings-panel select option{background-color:#000;color:var(--input-color)}ff-settings-panel .ff-api-explanation{background-color:var(--ffsv3-alt-bg-color);border:1px solid var(--ffsv3-border-color);border-radius:8px;color:var(--ffsv3-text-color);margin-bottom:20px;padding:12px 16px;font-size:13px;line-height:1.5}ff-settings-panel a{color:var(--ffsv3-success-color);text-decoration:underline}ff-settings-panel .is_premium_enabled{display:inline-block;background:#4caf50;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;vertical-align:middle}ff-settings-panel .is_premium_disabled{display:inline-block;background:#c62828;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;vertical-align:middle}.profile-status{position:relative}ff-flight-profile-status{position:absolute;right:10px;bottom:2px;z-index:2}.ff-scouter-profile-flight-info{display:inline-block;text-align:right;font-size:11px;line-height:1.25;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.85)}.profile-status .ff-scouter-profile-flight-info a{color:#fff;text-decoration:underline}ff-faction-filter-box{display:block}.ff-filter-box,.ff-filter-box *,.ff-filter-box *:before,.ff-filter-box *:after{box-sizing:border-box!important}.ff-filter-box{background-color:var(--ffsv3-bg-color);border:1px solid var(--ffsv3-border-color);border-radius:8px;padding:12px 16px;margin-bottom:16px;color:var(--ffsv3-text-color);font-family:Arial,sans-serif;box-shadow:0 2px 5px #0000000d}.ff-filter-box.no-borders{background-color:var(--default-bg-panel-color);border-top:1px solid var(--ffsv3-border-color);border-bottom:1px solid var(--ffsv3-border-color);border-left:none;border-right:none;border-radius:0;box-shadow:none;padding:12px 10px;margin:0}.ff-filter-box summary{cursor:pointer;font-size:14px;font-weight:700;outline:none;-webkit-user-select:none;user-select:none}.ff-filter-box[open] summary{border-bottom:1px solid var(--ffsv3-border-color);padding-bottom:6px;margin-bottom:12px}.ff-filter-header-actions{display:flex;gap:6px;align-items:center}.ff-filter-box .ff-action-icon-btn{background:var(--ffsv3-alt-bg-color);border:1px solid var(--ffsv3-border-color);border-radius:4px;color:var(--ffsv3-text-color);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;padding:0;transition:background-color .2s,color .2s,opacity .2s}.ff-filter-box .ff-action-icon-btn:hover{background-color:var(--ffsv3-hover-color)}.ff-filter-box .ff-action-icon-btn.active{color:var(--ffsv3-text-color);opacity:1}.ff-filter-box .ff-action-icon-btn.inactive{color:var(--ffsv3-text-color);opacity:.4}.ff-filter-box .ff-action-icon-btn svg{width:14px;height:14px;fill:currentColor}.ff-filter-box .ff-action-icon-btn.reset-btn svg{transition:transform .25s ease-in-out}.ff-filter-box .ff-action-icon-btn.reset-btn:hover svg{transform:rotate(-180deg)}.ff-filter-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.grp-sort{order:1}.grp-level{order:2}.grp-activity{order:3}.grp-status{order:4}.grp-ff{order:5}.grp-stats{order:6}.grp-columns{order:7}@media(min-width:784px){.ff-filter-grid{grid-template-columns:repeat(3,1fr)}.ff-filter-grid>*{order:0}}.ff-filter-group{display:flex;flex-direction:column;gap:2px}.ff-filter-options{display:flex;flex-direction:column}.ff-filter-options label{display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer}.ff-filter-range-inputs{display:flex;align-items:center;gap:4px}.ff-filter-range-inputs input{flex:1;width:0;min-width:30px;max-width:80px;padding:4px;border:1px solid var(--ffsv3-border-color);border-radius:4px;background:var(--ffsv3-alt-bg-color);color:var(--ffsv3-text-color);font-size:11px;text-align:center}.ff-filter-box button{padding:6px 10px;border:1px solid var(--ffsv3-border-color);border-radius:4px;background:var(--ffsv3-alt-bg-color);color:var(--ffsv3-text-color);font-size:12px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;transition:background-color .2s}.ff-filter-box button:hover{background-color:var(--ffsv3-hover-color)}.chain-options-flex-container{display:flex;flex-wrap:wrap;gap:10px 20px;align-items:center;justify-content:flex-start;margin-left:20px;margin-top:10px;margin-bottom:15px}.chain-options-flex-container .input-row-inline{margin-bottom:0}.faction-war .ffscouter-cell{float:left!important;width:32px!important;height:20px!important;font-size:11px!important;font-weight:700!important;border-radius:3px!important;box-sizing:border-box!important;margin:7px 4px!important;padding:0!important;text-align:center!important;line-height:20px!important;z-index:10!important}.ffscouter-cell{cursor:pointer!important}.faction-war .ffscouter-header{float:left!important;width:38px!important;font-size:12px!important;font-weight:700!important;padding:0!important;text-align:center!important;background-color:transparent!important}.faction-war[data-ffscouter-hide-level=true] .level:not(.ffscouter-cell):not(.ffscouter-header){display:none!important}.faction-war[data-ffscouter-hide-status=true] .status,.faction-war[data-ffscouter-hide-score=true] .points{display:none!important}.faction-war[data-ffscouter-col-display=fair_fight]:not([data-ffscouter-hide-level=true]) .level:not(.ffscouter-cell):not(.ffscouter-header),.faction-war[data-ffscouter-col-display=battle_stats]:not([data-ffscouter-hide-level=true]) .level:not(.ffscouter-cell):not(.ffscouter-header){width:29px!important}.faction-war[data-ffscouter-col-display=fair_fight]:not([data-ffscouter-hide-level=true]) .status,.faction-war[data-ffscouter-col-display=battle_stats]:not([data-ffscouter-hide-level=true]) .status{width:50px!important}.faction-war[data-ffscouter-col-display=fair_fight]:not([data-ffscouter-hide-level=true]) .points,.faction-war[data-ffscouter-col-display=battle_stats]:not([data-ffscouter-hide-level=true]) .points{width:38px!important}.members-list li.enemy:has(>.tt-stats-estimate),.members-list li.your:has(>.tt-stats-estimate),.members-list li.enemy:has(>div.clear~*),.members-list li.your:has(>div.clear~*){padding-bottom:22px!important;position:relative!important}.members-list li.enemy>.tt-stats-estimate,.members-list li.your>.tt-stats-estimate,.members-list li.enemy>div.clear~*,.members-list li.your>div.clear~*{position:absolute!important;bottom:2px!important;left:10px!important;height:18px!important;line-height:18px!important;font-size:11px!important;width:calc(100% - 20px)!important;display:block!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}";
   importCSS(stylesCss);
   const log = logger.child("boot");
   const INJECTION_KEY = "__FF_SCOUTER_V3_INJECTED__";
@@ -6751,7 +6882,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       return;
     }
     w[INJECTION_KEY] = true;
-    log.info("Initializing", "3.0-alpha25");
+    log.info("Initializing", "3.0-alpha26");
     if (ffscouter.analytics_enabled) {
       unsafeWindow.ffscouter = ffscouter;
       window.ffscouter = ffscouter;
