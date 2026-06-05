@@ -1239,4 +1239,112 @@ describe("Faction feature run and dynamic navigation integration", () => {
     document.head.removeChild(styleEl);
     document.body.removeChild(factionWar);
   });
+
+  test("column widths are correctly reduced when custom columns are active and level is visible", async () => {
+    // 1. Read and inject the stylesheet styles.css into JSDOM head
+    const cssPath = path.resolve(__dirname, "../../ui/styles.css");
+    const cssContent = fs.readFileSync(cssPath, "utf-8");
+    const styleEl = document.createElement("style");
+    styleEl.textContent = cssContent;
+    document.head.appendChild(styleEl);
+
+    // 2. Create the table inside faction-war wrapper
+    const factionWar = document.createElement("div");
+    factionWar.className = "faction-war";
+
+    const list = document.createElement("div");
+    list.className = "members-list";
+    list.innerHTML = `
+      <div class="white-grad">
+        <div class="member">Member</div>
+        <div class="level">Lvl</div>
+        <div class="status">Status</div>
+        <div class="points">Points</div>
+      </div>
+      <ul class="table-body">
+        <li class="table-row">
+          <div class="member"><a href="/profiles.php?XID=111">Player 111</a></div>
+          <div class="level">50</div>
+          <div class="status">Idle</div>
+          <div class="points">10</div>
+        </li>
+      </ul>
+    `;
+    factionWar.appendChild(list);
+    document.body.appendChild(factionWar);
+
+    // Get reference to original elements
+    const originalHeaderMember = list.querySelector(
+      ".white-grad > .member",
+    ) as HTMLElement;
+    const originalCellMember = list.querySelector(
+      ".table-row > .member",
+    ) as HTMLElement;
+    const originalHeaderLvl = list.querySelector(
+      ".white-grad > .level",
+    ) as HTMLElement;
+    const originalCellLvl = list.querySelector(
+      ".table-row > .level",
+    ) as HTMLElement;
+    const originalHeaderStatus = list.querySelector(
+      ".white-grad > .status",
+    ) as HTMLElement;
+    const originalCellStatus = list.querySelector(
+      ".table-row > .status",
+    ) as HTMLElement;
+
+    // A. Initially, with display = NONE, they should not have reduced widths
+    ffconfig.war_col_display = FactionsColDisplay.NONE;
+    await apply_ff_columns(list);
+
+    expect(factionWar.getAttribute("data-ffscouter-col-display")).toBe("none");
+    expect(window.getComputedStyle(originalHeaderMember).width).not.toBe(
+      "139px",
+    );
+    expect(window.getComputedStyle(originalHeaderLvl).width).not.toBe("30px");
+    expect(window.getComputedStyle(originalHeaderStatus).width).not.toBe(
+      "38px",
+    );
+
+    // B. With display = FAIR_FIGHT, they should have reduced widths
+    ffconfig.war_col_display = FactionsColDisplay.FAIR_FIGHT;
+    await apply_ff_columns(list);
+
+    expect(factionWar.getAttribute("data-ffscouter-col-display")).toBe(
+      "fair_fight",
+    );
+    expect(window.getComputedStyle(originalHeaderMember).width).toBe("139px");
+    expect(window.getComputedStyle(originalCellMember).width).toBe("139px");
+    expect(window.getComputedStyle(originalHeaderLvl).width).toBe("30px");
+    expect(window.getComputedStyle(originalCellLvl).width).toBe("30px");
+    expect(window.getComputedStyle(originalHeaderStatus).width).toBe("38px");
+    expect(window.getComputedStyle(originalCellStatus).width).toBe("38px");
+
+    // C. With display = BATTLE_STATS, they should have reduced widths
+    ffconfig.war_col_display = FactionsColDisplay.BATTLE_STATS;
+    await apply_ff_columns(list);
+
+    expect(factionWar.getAttribute("data-ffscouter-col-display")).toBe(
+      "battle_stats",
+    );
+    expect(window.getComputedStyle(originalHeaderMember).width).toBe("139px");
+    expect(window.getComputedStyle(originalCellMember).width).toBe("139px");
+    expect(window.getComputedStyle(originalHeaderLvl).width).toBe("30px");
+    expect(window.getComputedStyle(originalCellLvl).width).toBe("30px");
+    expect(window.getComputedStyle(originalHeaderStatus).width).toBe("38px");
+    expect(window.getComputedStyle(originalCellStatus).width).toBe("38px");
+
+    // D. If level is hidden, they should NOT have reduced widths (even if custom columns are active)
+    factionWar.setAttribute("data-ffscouter-hide-level", "true");
+    expect(window.getComputedStyle(originalHeaderMember).width).not.toBe(
+      "139px",
+    );
+    expect(window.getComputedStyle(originalHeaderStatus).width).not.toBe(
+      "38px",
+    );
+
+    // Cleanup
+    document.head.removeChild(styleEl);
+    document.body.removeChild(factionWar);
+  });
 });

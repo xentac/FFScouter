@@ -431,10 +431,9 @@ ff-faction-filter-box {
 
 .faction-war .ffscouter-header {
   float: left !important;
-  width: 32px !important;
+  width: 38px !important;
   font-size: 12px !important;
   font-weight: bold !important;
-  margin: 0 4px !important;
   padding: 0 !important;
   text-align: center !important;
   background-color: transparent !important;
@@ -458,6 +457,40 @@ ff-faction-filter-box {
 /* 3. Score Column & Header */
 .faction-war[data-ffscouter-hide-score="true"] .points {
   display: none !important;
+}
+
+/* 4. Column Width Reductions to accommodate custom columns without overflow */
+.faction-war[data-ffscouter-col-display="fair_fight"]:not(
+  [data-ffscouter-hide-level="true"]
+)
+.level:not(.ffscouter-cell):not(.ffscouter-header),
+.faction-war[data-ffscouter-col-display="battle_stats"]:not(
+    [data-ffscouter-hide-level="true"]
+  )
+  .level:not(.ffscouter-cell):not(.ffscouter-header) {
+  width: 29px !important;
+}
+
+.faction-war[data-ffscouter-col-display="fair_fight"]:not(
+    [data-ffscouter-hide-level="true"]
+  )
+  .status,
+.faction-war[data-ffscouter-col-display="battle_stats"]:not(
+    [data-ffscouter-hide-level="true"]
+  )
+  .status {
+  width: 50px !important;
+}
+
+.faction-war[data-ffscouter-col-display="fair_fight"]:not(
+    [data-ffscouter-hide-level="true"]
+  )
+  .points,
+.faction-war[data-ffscouter-col-display="battle_stats"]:not(
+    [data-ffscouter-hide-level="true"]
+  )
+  .points {
+  width: 38px !important;
 }
 
 /* Ensure space is reserved when TornTools adds estimate rows */

@@ -365,6 +365,11 @@ export async function apply_ff_columns(membersList: HTMLElement) {
   const isNone = colDisplay === FactionsColDisplay.NONE;
   const expectedText = isEst ? "Est" : "FF";
 
+  const factionWar = membersList.closest(".faction-war") as HTMLElement | null;
+  if (factionWar) {
+    factionWar.setAttribute("data-ffscouter-col-display", colDisplay);
+  }
+
   let headerLi = membersList.querySelector(
     ".ffscouter-header",
   ) as HTMLElement | null;
