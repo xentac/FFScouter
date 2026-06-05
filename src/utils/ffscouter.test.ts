@@ -830,6 +830,57 @@ test("get_aggregated_analytics aggregates and groups entries correctly", async (
   await c.delete_db();
 });
 
+test("get_aggregated_analytics correctly handles query parsing edge cases", async () => {
+  const c = new FFCache("test-scouter-analytics-edge-cases");
+  const f = new FFScouter(config, c);
+
+  const mockEntries = [
+    {
+      feature: "fallback",
+      player_id: 1,
+      status: "applied" as const,
+      url: "https://www.torn.com/profiles.php",
+      params: "?sid=hello+world%20test", // plus decoding + percent-decoding
+      hash: "",
+      timestamp: Date.now(),
+    },
+    {
+      feature: "fallback",
+      player_id: 2,
+      status: "applied" as const,
+      url: "https://www.torn.com/profiles.php",
+      params: "?othersid=123&sid=actual-sid", // prefix match exclusion
+      hash: "",
+      timestamp: Date.now(),
+    },
+  ];
+
+  vi.spyOn(c, "get_analytics").mockResolvedValue(mockEntries);
+
+  const aggregated = await f.get_aggregated_analytics();
+
+  expect(aggregated).toEqual(
+    expect.arrayContaining([
+      {
+        url: "https://www.torn.com/profiles.php",
+        param: "hello world test",
+        feature: "fallback",
+        status: "applied",
+        count: 1,
+      },
+      {
+        url: "https://www.torn.com/profiles.php",
+        param: "actual-sid",
+        feature: "fallback",
+        status: "applied",
+        count: 1,
+      },
+    ]),
+  );
+
+  await c.delete_db();
+});
+
 test("clear_analytics on FFScouter calls c.clear_analytics", async () => {
   const c = new FFCache("test-scouter-analytics-clear");
   const f = new FFScouter(config, c);

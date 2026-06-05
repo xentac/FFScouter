@@ -35,6 +35,49 @@ type Job<T> = {
   api_attempts: number;
 };
 
+/**
+ * Fast query parameter extractor.
+ * Avoids instantiating URLSearchParams, which is slow for a large number of entries.
+ */
+function getParamFast(queryString: string, paramName: string): string | null {
+  if (!queryString) return null;
+
+  const target = `${paramName}=`;
+  if (!queryString.includes(target)) return null;
+
+  let startIdx = 0;
+  if (queryString.charCodeAt(0) === 63) {
+    // '?'
+    startIdx = 1;
+  }
+
+  let pos = queryString.indexOf(target, startIdx);
+  while (pos !== -1) {
+    if (
+      pos === startIdx ||
+      queryString.charCodeAt(pos - 1) === 38 || // '&'
+      queryString.charCodeAt(pos - 1) === 63 // '?'
+    ) {
+      const valStart = pos + target.length;
+      let valEnd = queryString.indexOf("&", valStart);
+      if (valEnd === -1) {
+        valEnd = queryString.length;
+      }
+      const rawVal = queryString.substring(valStart, valEnd);
+      if (rawVal.indexOf("%") === -1 && rawVal.indexOf("+") === -1) {
+        return rawVal;
+      }
+      try {
+        return decodeURIComponent(rawVal.replace(/\+/g, " "));
+      } catch {
+        return rawVal;
+      }
+    }
+    pos = queryString.indexOf(target, pos + 1);
+  }
+  return null;
+}
+
 export class FFScouter {
   private config: FFConfig;
 
@@ -608,8 +651,10 @@ export class FFScouter {
     for (const entry of entries) {
       let param = "";
       if (entry.params) {
-        const searchParams = new URLSearchParams(entry.params);
-        param = searchParams.get("sid") || searchParams.get("step") || "";
+        param =
+          getParamFast(entry.params, "sid") ||
+          getParamFast(entry.params, "step") ||
+          "";
       }
       if (!param && entry.hash) {
         let hashClean = entry.hash;
@@ -621,8 +666,10 @@ export class FFScouter {
         if (!hashClean.startsWith("!") && !hashClean.startsWith("?")) {
           hashClean = `?${hashClean}`;
         }
-        const hashParams = new URLSearchParams(hashClean);
-        param = hashParams.get("sid") || hashParams.get("step") || "";
+        param =
+          getParamFast(hashClean, "sid") ||
+          getParamFast(hashClean, "step") ||
+          "";
       }
 
       const key = `${entry.url}|${param}|${entry.feature}|${entry.status}`;
