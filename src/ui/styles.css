@@ -418,8 +418,8 @@ ff-faction-filter-box {
   font-weight: bold !important;
   border-radius: 3px !important;
   box-sizing: border-box !important;
-  margin-left: 4px !important;
-  margin-right: 4px !important;
+  margin: 7px 4px !important;
+  padding: 0 !important;
   text-align: center !important;
   line-height: 20px !important;
   z-index: 10 !important;
@@ -434,8 +434,8 @@ ff-faction-filter-box {
   width: 32px !important;
   font-size: 12px !important;
   font-weight: bold !important;
-  margin-left: 4px !important;
-  margin-right: 4px !important;
+  margin: 0 4px !important;
+  padding: 0 !important;
   text-align: center !important;
   background-color: transparent !important;
 }
