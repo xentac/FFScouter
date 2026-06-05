@@ -37,72 +37,84 @@ test("ff-faction-filter-box renders with default state and dispatches filter-cha
 });
 
 test("ff-faction-filter-box updates state and dispatches filter-change event on input change", async () => {
-  const el = document.createElement(
-    "ff-faction-filter-box",
-  ) as FFFactionFilterBox;
-  document.body.appendChild(el);
-  await new Promise((resolve) => setTimeout(resolve, 0));
+  vi.useFakeTimers();
+  try {
+    const el = document.createElement(
+      "ff-faction-filter-box",
+    ) as FFFactionFilterBox;
+    document.body.appendChild(el);
 
-  const events: any[] = [];
-  el.addEventListener("filter-change", (e: any) => {
-    events.push(e.detail);
-  });
+    const mountPromise = new Promise((resolve) => setTimeout(resolve, 0));
+    vi.advanceTimersByTime(10);
+    await mountPromise;
+    await el.updateComplete;
 
-  const button = el.querySelector("#sort-toggle-btn") as HTMLButtonElement;
-  expect(button).not.toBeNull();
-  if (button) {
-    button.click(); // none -> ff-desc
-    button.click(); // ff-desc -> ff-asc
-  }
+    const events: any[] = [];
+    el.addEventListener("filter-change", (e: any) => {
+      events.push(e.detail);
+    });
 
-  expect(events[events.length - 1].sortBy).toBe("ff-asc");
+    const button = el.querySelector("#sort-toggle-btn") as HTMLButtonElement;
+    expect(button).not.toBeNull();
+    if (button) {
+      button.click(); // none -> ff-desc
+      button.click(); // ff-desc -> ff-asc
+    }
 
-  const onlineCheckbox = el.querySelector(
-    'input[type="checkbox"]',
-  ) as HTMLInputElement;
-  expect(onlineCheckbox).not.toBeNull();
-  if (onlineCheckbox) {
-    onlineCheckbox.checked = false;
-    onlineCheckbox.dispatchEvent(new Event("change"));
-  }
+    expect(events[events.length - 1].sortBy).toBe("ff-asc");
 
-  expect(events[events.length - 1].activity.online).toBe(false);
+    const onlineCheckbox = el.querySelector(
+      'input[type="checkbox"]',
+    ) as HTMLInputElement;
+    expect(onlineCheckbox).not.toBeNull();
+    if (onlineCheckbox) {
+      onlineCheckbox.checked = false;
+      onlineCheckbox.dispatchEvent(new Event("change"));
+    }
 
-  const minLvlInput = el.querySelector(
-    'input[placeholder="Min"]',
-  ) as HTMLInputElement;
-  expect(minLvlInput).not.toBeNull();
-  if (minLvlInput) {
-    minLvlInput.value = "50";
-    minLvlInput.dispatchEvent(new Event("input"));
-  }
+    expect(events[events.length - 1].activity.online).toBe(false);
 
-  expect(events[events.length - 1].levelMin).toBe(50);
-
-  const filterGroups = Array.from(el.querySelectorAll(".ff-filter-group"));
-  const statsGroup = filterGroups.find(
-    (g) => g.querySelector("strong")?.textContent === "Stats Range",
-  );
-  expect(statsGroup).toBeDefined();
-
-  if (statsGroup) {
-    const minInput = statsGroup.querySelector(
+    const minLvlInput = el.querySelector(
       'input[placeholder="Min"]',
     ) as HTMLInputElement;
-    const maxInput = statsGroup.querySelector(
-      'input[placeholder="Max"]',
-    ) as HTMLInputElement;
+    expect(minLvlInput).not.toBeNull();
+    if (minLvlInput) {
+      minLvlInput.value = "50";
+      minLvlInput.dispatchEvent(new Event("input"));
+    }
 
-    expect(minInput).not.toBeNull();
-    expect(maxInput).not.toBeNull();
+    vi.advanceTimersByTime(250);
+    expect(events[events.length - 1].levelMin).toBe(50);
 
-    minInput.value = "1.5m";
-    minInput.dispatchEvent(new Event("input"));
-    expect(events[events.length - 1].statsMin).toBe(1500000);
+    const filterGroups = Array.from(el.querySelectorAll(".ff-filter-group"));
+    const statsGroup = filterGroups.find(
+      (g) => g.querySelector("strong")?.textContent === "Stats Range",
+    );
+    expect(statsGroup).toBeDefined();
 
-    maxInput.value = "2b";
-    maxInput.dispatchEvent(new Event("input"));
-    expect(events[events.length - 1].statsMax).toBe(2000000000);
+    if (statsGroup) {
+      const minInput = statsGroup.querySelector(
+        'input[placeholder="Min"]',
+      ) as HTMLInputElement;
+      const maxInput = statsGroup.querySelector(
+        'input[placeholder="Max"]',
+      ) as HTMLInputElement;
+
+      expect(minInput).not.toBeNull();
+      expect(maxInput).not.toBeNull();
+
+      minInput.value = "1.5m";
+      minInput.dispatchEvent(new Event("input"));
+      vi.advanceTimersByTime(250);
+      expect(events[events.length - 1].statsMin).toBe(1500000);
+
+      maxInput.value = "2b";
+      maxInput.dispatchEvent(new Event("input"));
+      vi.advanceTimersByTime(250);
+      expect(events[events.length - 1].statsMax).toBe(2000000000);
+    }
+  } finally {
+    vi.useRealTimers();
   }
 });
 
@@ -601,58 +613,70 @@ test("ff-faction-filter-box supports toggling filtering on and off", async () =>
 });
 
 test("ff-faction-filter-box supports resetting filters to defaults while keeping sort", async () => {
-  const el = document.createElement(
-    "ff-faction-filter-box",
-  ) as FFFactionFilterBox;
-  document.body.appendChild(el);
-  await new Promise((resolve) => setTimeout(resolve, 0));
+  vi.useFakeTimers();
+  try {
+    const el = document.createElement(
+      "ff-faction-filter-box",
+    ) as FFFactionFilterBox;
+    document.body.appendChild(el);
 
-  const events: any[] = [];
-  el.addEventListener("filter-change", (e: any) => {
-    events.push(e.detail);
-  });
+    const mountPromise = new Promise((resolve) => setTimeout(resolve, 0));
+    vi.advanceTimersByTime(10);
+    await mountPromise;
+    await el.updateComplete;
 
-  // Change some filters first
-  const onlineCheckbox = el.querySelector(
-    'input[type="checkbox"]',
-  ) as HTMLInputElement;
-  if (onlineCheckbox) {
-    onlineCheckbox.checked = false;
-    onlineCheckbox.dispatchEvent(new Event("change"));
+    const events: any[] = [];
+    el.addEventListener("filter-change", (e: any) => {
+      events.push(e.detail);
+    });
+
+    // Change some filters first
+    const onlineCheckbox = el.querySelector(
+      'input[type="checkbox"]',
+    ) as HTMLInputElement;
+    expect(onlineCheckbox).not.toBeNull();
+    if (onlineCheckbox) {
+      onlineCheckbox.checked = false;
+      onlineCheckbox.dispatchEvent(new Event("change"));
+    }
+
+    const minLvlInput = el.querySelector(
+      'input[placeholder="Min"]',
+    ) as HTMLInputElement;
+    expect(minLvlInput).not.toBeNull();
+    if (minLvlInput) {
+      minLvlInput.value = "45";
+      minLvlInput.dispatchEvent(new Event("input"));
+    }
+
+    // Sort
+    const sortBtn = el.querySelector("#sort-toggle-btn") as HTMLButtonElement;
+    expect(sortBtn).not.toBeNull();
+    if (sortBtn) {
+      sortBtn.click(); // none -> ff-desc
+    }
+
+    await el.updateComplete;
+
+    expect(el.activity.online).toBe(false);
+    expect(el.levelMin).toBe(45);
+    expect(el.sortBy).toBe("ff-desc");
+
+    // Click reset button
+    const resetBtn = el.querySelector(".reset-btn") as HTMLButtonElement;
+    expect(resetBtn).not.toBeNull();
+    resetBtn.click();
+    await el.updateComplete;
+
+    // Verify filters are reset
+    expect(el.activity.online).toBe(true);
+    expect(el.levelMin).toBeNull();
+    // Verify sort is untouched
+    expect(el.sortBy).toBe("ff-desc");
+    expect(events[events.length - 1].sortBy).toBe("ff-desc");
+    expect(events[events.length - 1].activity.online).toBe(true);
+    expect(events[events.length - 1].levelMin).toBeNull();
+  } finally {
+    vi.useRealTimers();
   }
-
-  const minLvlInput = el.querySelector(
-    'input[placeholder="Min"]',
-  ) as HTMLInputElement;
-  if (minLvlInput) {
-    minLvlInput.value = "45";
-    minLvlInput.dispatchEvent(new Event("input"));
-  }
-
-  // Sort
-  const sortBtn = el.querySelector("#sort-toggle-btn") as HTMLButtonElement;
-  if (sortBtn) {
-    sortBtn.click(); // none -> ff-desc
-  }
-
-  await el.updateComplete;
-
-  expect(el.activity.online).toBe(false);
-  expect(el.levelMin).toBe(45);
-  expect(el.sortBy).toBe("ff-desc");
-
-  // Click reset button
-  const resetBtn = el.querySelector(".reset-btn") as HTMLButtonElement;
-  expect(resetBtn).not.toBeNull();
-  resetBtn.click();
-  await el.updateComplete;
-
-  // Verify filters are reset
-  expect(el.activity.online).toBe(true);
-  expect(el.levelMin).toBeNull();
-  // Verify sort is untouched
-  expect(el.sortBy).toBe("ff-desc");
-  expect(events[events.length - 1].sortBy).toBe("ff-desc");
-  expect(events[events.length - 1].activity.online).toBe(true);
-  expect(events[events.length - 1].levelMin).toBeNull();
 });

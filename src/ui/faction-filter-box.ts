@@ -100,6 +100,7 @@ export class FFFactionFilterBox extends LitElement {
   @state() private collapsed = false;
 
   private wasMobile = isMobileView();
+  private debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
   override connectedCallback() {
     super.connectedCallback();
@@ -109,6 +110,10 @@ export class FFFactionFilterBox extends LitElement {
   }
 
   override disconnectedCallback() {
+    if (this.debounceTimer) {
+      clearTimeout(this.debounceTimer);
+      this.debounceTimer = null;
+    }
     window.removeEventListener("resize", this.onResize);
     window.removeEventListener("ff-config-updated", this.onConfigUpdated);
     super.disconnectedCallback();
@@ -267,6 +272,26 @@ export class FFFactionFilterBox extends LitElement {
     }
   }
 
+  private queueChange() {
+    if (this.debounceTimer) {
+      clearTimeout(this.debounceTimer);
+    }
+    this.debounceTimer = setTimeout(() => {
+      this.saveState();
+      this.dispatchChange();
+      this.debounceTimer = null;
+    }, 250);
+  }
+
+  private executeChangeImmediately() {
+    if (this.debounceTimer) {
+      clearTimeout(this.debounceTimer);
+      this.debounceTimer = null;
+    }
+    this.saveState();
+    this.dispatchChange();
+  }
+
   private dispatchChange() {
     this.dispatchEvent(
       new CustomEvent("filter-change", {
@@ -296,8 +321,7 @@ export class FFFactionFilterBox extends LitElement {
       ...this.hiddenColumns,
       [key]: val,
     };
-    this.saveState();
-    this.dispatchChange();
+    this.executeChangeImmediately();
   }
 
   private onSortToggle() {
@@ -308,8 +332,7 @@ export class FFFactionFilterBox extends LitElement {
     } else {
       this.sortBy = "none";
     }
-    this.saveState();
-    this.dispatchChange();
+    this.executeChangeImmediately();
   }
 
   private onDisplayChange(e: Event) {
@@ -321,6 +344,7 @@ export class FFFactionFilterBox extends LitElement {
       ffconfig.factions_col_display = val;
     }
     window.dispatchEvent(new CustomEvent("ff-config-updated"));
+    this.executeChangeImmediately();
   }
 
   private onActivityChange(
@@ -331,8 +355,7 @@ export class FFFactionFilterBox extends LitElement {
       ...this.activity,
       [key]: val,
     };
-    this.saveState();
-    this.dispatchChange();
+    this.executeChangeImmediately();
   }
 
   private onStatusChange(
@@ -343,8 +366,7 @@ export class FFFactionFilterBox extends LitElement {
       ...this.status,
       [key]: val,
     };
-    this.saveState();
-    this.dispatchChange();
+    this.executeChangeImmediately();
   }
 
   private onLevelChange(type: "min" | "max", valStr: string) {
@@ -354,8 +376,7 @@ export class FFFactionFilterBox extends LitElement {
     } else {
       this.levelMax = val;
     }
-    this.saveState();
-    this.dispatchChange();
+    this.queueChange();
   }
 
   private onFFChange(type: "min" | "max", valStr: string) {
@@ -365,8 +386,7 @@ export class FFFactionFilterBox extends LitElement {
     } else {
       this.ffMax = val;
     }
-    this.saveState();
-    this.dispatchChange();
+    this.queueChange();
   }
 
   private onStatsChange(type: "min" | "max", valStr: string) {
@@ -376,8 +396,7 @@ export class FFFactionFilterBox extends LitElement {
     } else {
       this.statsMax = val;
     }
-    this.saveState();
-    this.dispatchChange();
+    this.queueChange();
   }
 
   private onToggleFilter(e?: Event) {
@@ -386,8 +405,7 @@ export class FFFactionFilterBox extends LitElement {
       e.stopPropagation();
     }
     this.filterEnabled = !this.filterEnabled;
-    this.saveState();
-    this.dispatchChange();
+    this.executeChangeImmediately();
   }
 
   private onResetFilters(e?: Event) {
@@ -409,8 +427,7 @@ export class FFFactionFilterBox extends LitElement {
     this.ffMax = null;
     this.statsMin = null;
     this.statsMax = null;
-    this.saveState();
-    this.dispatchChange();
+    this.executeChangeImmediately();
   }
 
   private onCompareActivity() {
