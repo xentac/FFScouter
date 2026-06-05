@@ -48,7 +48,7 @@ test("ff-faction-filter-box updates state and dispatches filter-change event on 
     events.push(e.detail);
   });
 
-  const button = el.querySelector("button");
+  const button = el.querySelector("#sort-toggle-btn") as HTMLButtonElement;
   expect(button).not.toBeNull();
   if (button) {
     button.click(); // none -> ff-desc
@@ -161,7 +161,7 @@ test("ff-faction-filter-box handles display mode dropdown and dynamic config upd
     await el.updateComplete;
 
     // Check that the sort button label changes to reflect "FF" instead of "Stats"
-    const button = el.querySelector("button");
+    const button = el.querySelector("#sort-toggle-btn") as HTMLButtonElement;
     button?.click(); // none -> ff-desc
     await el.updateComplete;
     expect(button?.textContent?.trim()).toContain("FF ▼");
@@ -563,4 +563,96 @@ test("ff-faction-filter-box has correct mobile order for filter groups", async (
   } finally {
     document.head.removeChild(styleEl);
   }
+});
+
+test("ff-faction-filter-box supports toggling filtering on and off", async () => {
+  const el = document.createElement(
+    "ff-faction-filter-box",
+  ) as FFFactionFilterBox;
+  document.body.appendChild(el);
+  await new Promise((resolve) => setTimeout(resolve, 0));
+
+  const events: any[] = [];
+  el.addEventListener("filter-change", (e: any) => {
+    events.push(e.detail);
+  });
+
+  const toggleBtn = el.querySelector(
+    ".ff-action-icon-btn:not(.reset-btn)",
+  ) as HTMLButtonElement;
+  expect(toggleBtn).not.toBeNull();
+  expect(el.filterEnabled).toBe(true);
+
+  // Click to toggle off
+  toggleBtn.click();
+  await el.updateComplete;
+
+  expect(el.filterEnabled).toBe(false);
+  expect(ffconfig.faction_filter_state?.filterEnabled).toBe(false);
+  expect(events[events.length - 1].filterEnabled).toBe(false);
+
+  // Click to toggle back on
+  toggleBtn.click();
+  await el.updateComplete;
+
+  expect(el.filterEnabled).toBe(true);
+  expect(ffconfig.faction_filter_state?.filterEnabled).toBe(true);
+  expect(events[events.length - 1].filterEnabled).toBe(true);
+});
+
+test("ff-faction-filter-box supports resetting filters to defaults while keeping sort", async () => {
+  const el = document.createElement(
+    "ff-faction-filter-box",
+  ) as FFFactionFilterBox;
+  document.body.appendChild(el);
+  await new Promise((resolve) => setTimeout(resolve, 0));
+
+  const events: any[] = [];
+  el.addEventListener("filter-change", (e: any) => {
+    events.push(e.detail);
+  });
+
+  // Change some filters first
+  const onlineCheckbox = el.querySelector(
+    'input[type="checkbox"]',
+  ) as HTMLInputElement;
+  if (onlineCheckbox) {
+    onlineCheckbox.checked = false;
+    onlineCheckbox.dispatchEvent(new Event("change"));
+  }
+
+  const minLvlInput = el.querySelector(
+    'input[placeholder="Min"]',
+  ) as HTMLInputElement;
+  if (minLvlInput) {
+    minLvlInput.value = "45";
+    minLvlInput.dispatchEvent(new Event("input"));
+  }
+
+  // Sort
+  const sortBtn = el.querySelector("#sort-toggle-btn") as HTMLButtonElement;
+  if (sortBtn) {
+    sortBtn.click(); // none -> ff-desc
+  }
+
+  await el.updateComplete;
+
+  expect(el.activity.online).toBe(false);
+  expect(el.levelMin).toBe(45);
+  expect(el.sortBy).toBe("ff-desc");
+
+  // Click reset button
+  const resetBtn = el.querySelector(".reset-btn") as HTMLButtonElement;
+  expect(resetBtn).not.toBeNull();
+  resetBtn.click();
+  await el.updateComplete;
+
+  // Verify filters are reset
+  expect(el.activity.online).toBe(true);
+  expect(el.levelMin).toBeNull();
+  // Verify sort is untouched
+  expect(el.sortBy).toBe("ff-desc");
+  expect(events[events.length - 1].sortBy).toBe("ff-desc");
+  expect(events[events.length - 1].activity.online).toBe(true);
+  expect(events[events.length - 1].levelMin).toBeNull();
 });

@@ -5,6 +5,7 @@ import { parse_suffix_number } from "../utils/strings";
 
 export interface FactionFilterState {
   sortBy: "ff-asc" | "ff-desc" | "none";
+  filterEnabled?: boolean;
   activity: {
     online: boolean;
     idle: boolean;
@@ -43,6 +44,7 @@ const DEFAULT_HIDDEN_COLUMNS = {
 
 const DEFAULT_STATE: FactionFilterState = {
   sortBy: "none",
+  filterEnabled: true,
   activity: {
     online: true,
     idle: true,
@@ -80,6 +82,7 @@ export class FFFactionFilterBox extends LitElement {
   @property({ type: String }) mode: "faction" | "war" = "faction";
 
   @state() sortBy: FactionFilterState["sortBy"] = "none";
+  @state() filterEnabled = true;
   @state() colDisplay: FactionsColDisplay = FactionsColDisplay.FAIR_FIGHT;
 
   @state() activity = { ...DEFAULT_STATE.activity };
@@ -174,6 +177,7 @@ export class FFFactionFilterBox extends LitElement {
         savedSortBy === "ff-asc" || savedSortBy === "ff-desc"
           ? savedSortBy
           : "none";
+      this.filterEnabled = parsed.filterEnabled ?? true;
       this.activity = { ...DEFAULT_STATE.activity, ...parsed.activity };
       this.status = { ...DEFAULT_STATE.status, ...parsed.status };
       this.levelMin = parsed.levelMin ?? null;
@@ -244,6 +248,7 @@ export class FFFactionFilterBox extends LitElement {
 
     const stateObj: FactionFilterState = {
       sortBy: this.sortBy,
+      filterEnabled: this.filterEnabled,
       activity: this.activity,
       status: this.status,
       levelMin: this.levelMin,
@@ -267,6 +272,7 @@ export class FFFactionFilterBox extends LitElement {
       new CustomEvent("filter-change", {
         detail: {
           sortBy: this.sortBy,
+          filterEnabled: this.filterEnabled,
           activity: this.activity,
           status: this.status,
           levelMin: this.levelMin,
@@ -374,6 +380,39 @@ export class FFFactionFilterBox extends LitElement {
     this.dispatchChange();
   }
 
+  private onToggleFilter(e?: Event) {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    this.filterEnabled = !this.filterEnabled;
+    this.saveState();
+    this.dispatchChange();
+  }
+
+  private onResetFilters(e?: Event) {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    this.activity = { online: true, idle: true, offline: true };
+    this.status = {
+      okay: true,
+      traveling: true,
+      hospital: true,
+      jail: true,
+      abroad: true,
+    };
+    this.levelMin = null;
+    this.levelMax = null;
+    this.ffMin = null;
+    this.ffMax = null;
+    this.statsMin = null;
+    this.statsMax = null;
+    this.saveState();
+    this.dispatchChange();
+  }
+
   private onCompareActivity() {
     const container = this.closest(".faction-war");
     const links = container
@@ -462,13 +501,55 @@ export class FFFactionFilterBox extends LitElement {
         <summary
           style="cursor: pointer; font-weight: bold; font-size: 14px; outline: none; user-select: none;"
         >
-          FFScouter Filter & Sort Controls
+          <div
+            style="display: inline-flex; justify-content: space-between; align-items: center; width: calc(100% - 24px); vertical-align: middle;"
+          >
+            <span>FFScouter Filter & Sort Controls</span>
+            <div
+              class="ff-filter-header-actions"
+              @click="${(e: Event) => {
+                e.preventDefault();
+                e.stopPropagation();
+              }}"
+            >
+              <button
+                class="ff-action-icon-btn ${this.filterEnabled ? "active" : "inactive"}"
+                title="${this.filterEnabled ? "Turn off filtering" : "Turn on filtering"}"
+                @click="${(e: Event) => this.onToggleFilter(e)}"
+              >
+                ${
+                  this.filterEnabled
+                    ? html`
+                    <svg viewBox="0 0 16 16">
+                      <path d="M1.5 1.5A.5.5 0 0 1 2 1h12a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.124.318l-4.5 5.5v4.682a.5.5 0 0 1-.168.373l-2.5 2a.5.5 0 0 1-.832-.373v-6.682l-4.5-5.5A.5.5 0 0 1 1.5 3.5v-2z" />
+                    </svg>
+                  `
+                    : html`
+                    <svg viewBox="0 0 16 16">
+                      <path d="M1.5 1.5A.5.5 0 0 1 2 1h12a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.124.318l-4.5 5.5v4.682a.5.5 0 0 1-.168.373l-2.5 2a.5.5 0 0 1-.832-.373v-6.682l-4.5-5.5A.5.5 0 0 1 1.5 3.5v-2z" />
+                      <line x1="1.5" y1="14.5" x2="14.5" y2="1.5" stroke="currentColor" stroke-width="1.5" />
+                    </svg>
+                  `
+                }
+              </button>
+              <button
+                class="ff-action-icon-btn reset-btn"
+                title="Reset filters to default"
+                @click="${(e: Event) => this.onResetFilters(e)}"
+              >
+                <svg viewBox="0 0 16 16">
+                  <path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
+                  <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/>
+                </svg>
+              </button>
+            </div>
+          </div>
         </summary>
         <div class="ff-filter-grid" style="margin-top: 12px;">
           <div class="ff-filter-group grp-sort">
             <strong>Sort & Display</strong>
             <div style="display: flex; flex-direction: column; gap: 8px;">
-              <button @click="${this.onSortToggle}" style="width: 100%;">
+              <button id="sort-toggle-btn" @click="${this.onSortToggle}" style="width: 100%;">
                 ${
                   this.sortBy === "none"
                     ? "Sort: Default"

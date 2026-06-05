@@ -36,6 +36,7 @@ export function apply_filters_and_sort(
   membersList: HTMLElement,
   filters: {
     sortBy: "ff-asc" | "ff-desc" | "none";
+    filterEnabled?: boolean;
     activity: { online: boolean; idle: boolean; offline: boolean };
     status: {
       okay: boolean;
@@ -68,6 +69,11 @@ export function apply_filters_and_sort(
     ) as HTMLElement[];
 
     for (const row of rows) {
+      if (filters.filterEnabled === false) {
+        show_row(row);
+        continue;
+      }
+
       // Activity
       const activityImg = row.querySelector(".icons img");
       const activity = (
@@ -556,6 +562,7 @@ export async function apply_ff_columns(membersList: HTMLElement) {
   if (filterBox?.activity) {
     apply_filters_and_sort(membersList, {
       sortBy: filterBox.sortBy ?? "none",
+      filterEnabled: filterBox.filterEnabled,
       activity: filterBox.activity,
       status: filterBox.status,
       levelMin: filterBox.levelMin ?? null,
@@ -633,6 +640,7 @@ export function initialize_features(membersList: HTMLElement) {
       if (filterBox?.activity) {
         apply_filters_and_sort(membersList, {
           sortBy: filterBox.sortBy ?? "none",
+          filterEnabled: filterBox.filterEnabled,
           activity: filterBox.activity,
           status: filterBox.status,
           levelMin: filterBox.levelMin ?? null,
@@ -896,6 +904,7 @@ function initialize_war_list(list: HTMLElement) {
       if (filterBox?.activity) {
         apply_filters_and_sort(list, {
           sortBy: filterBox.sortBy ?? "none",
+          filterEnabled: filterBox.filterEnabled,
           activity: filterBox.activity,
           status: filterBox.status,
           levelMin: filterBox.levelMin ?? null,

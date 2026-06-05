@@ -732,6 +732,61 @@ test("apply_filters_and_sort sets and removes data-ffscouter-active-filter attri
   expect(tbody.getAttribute("data-ffscouter-active-filter")).toBeNull();
 });
 
+test("apply_filters_and_sort bypasses filtering but still sorts when filterEnabled is false", () => {
+  const container = document.createElement("div");
+  container.className = "members-list";
+  container.innerHTML = `
+    <div class="table-body">
+      <div class="table-row" id="row-1" data-ff-value="1.5" data-est-value="1000">
+        <div class="member"><a href="/profiles.php?XID=111">Player 111</a></div>
+        <div class="lvl">50</div>
+        <div class="status traveling">Traveling</div>
+        <div class="icons"><img alt="Offline" /></div>
+      </div>
+      <div class="table-row" id="row-2" data-ff-value="3.5" data-est-value="5000">
+        <div class="member"><a href="/profiles.php?XID=222">Player 222</a></div>
+        <div class="lvl">60</div>
+        <div class="status okay">Okay</div>
+        <div class="icons"><img alt="Online" /></div>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(container);
+
+  const filters = {
+    sortBy: "ff-desc" as const,
+    filterEnabled: false,
+    activity: { online: true, idle: false, offline: false },
+    status: {
+      okay: true,
+      hospital: false,
+      jail: false,
+      abroad: false,
+      traveling: false,
+    },
+    levelMin: 55,
+    levelMax: null,
+    ffMin: null,
+    ffMax: null,
+  };
+
+  const row1 = container.querySelector("#row-1") as HTMLElement;
+  const row2 = container.querySelector("#row-2") as HTMLElement;
+
+  apply_filters_and_sort(container, filters);
+
+  // Both rows should be visible because filtering is disabled
+  expect(row1.style.display).not.toBe("none");
+  expect(row2.style.display).not.toBe("none");
+
+  // Sorting should still have occurred (ff-desc, so row-2 (3.5) before row-1 (1.5))
+  const rows = Array.from(container.querySelectorAll(".table-row"));
+  expect(rows[0]?.id).toBe("row-2");
+  expect(rows[1]?.id).toBe("row-1");
+
+  document.body.removeChild(container);
+});
+
 test("setup_war_features detects enemy-faction and your-faction lists and setup filter box", async () => {
   vi.mocked(ffscouter.get).mockResolvedValue({
     player_id: 111 as PlayerId,
