@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FF Scouter V3
 // @namespace    xentac-v3
-// @version      3.0-alpha26
+// @version      3.0-alpha27
 // @author       xentac [3354782], MAVRI [2402357], rDacted [2670953], Weav3r [1853324], Glasnost [1844049]
 // @description  Shows the expected Fair Fight score against targets and faction war status
 // @license      GPLv3
@@ -161,7 +161,7 @@ formatArgs(args) {
     "FFSV3",
     0
 );
-  const log$f = logger.child("storage");
+  const log$e = logger.child("storage");
   var Time = ((Time2) => {
     Time2[Time2["Seconds"] = 1e3] = "Seconds";
     Time2[Time2["Minutes"] = 6e4] = "Minutes";
@@ -183,7 +183,7 @@ set(key, value, expireConfig) {
         };
         localStorage.setItem(this.prefix + key, JSON.stringify(item));
       } catch (error) {
-        log$f.error(`Error storing item '${key}':`, error);
+        log$e.error(`Error storing item '${key}':`, error);
       }
     }
 get(key) {
@@ -199,18 +199,18 @@ get(key) {
           item = null;
         }
         if (!item) {
-          log$f.warn(`Key '${key}' has invalid JSON in it.`);
+          log$e.warn(`Key '${key}' has invalid JSON in it.`);
           this.remove(key);
           return null;
         }
         if (item.expiration && Date.now() > item.expiration) {
           this.remove(key);
-          log$f.debug(`Key ${key} has expired.`);
+          log$e.debug(`Key ${key} has expired.`);
           return null;
         }
         return item.value;
       } catch (error) {
-        log$f.error(`Error retrieving item '${key}':`, error);
+        log$e.error(`Error retrieving item '${key}':`, error);
         return null;
       }
     }
@@ -218,7 +218,7 @@ remove(key) {
       try {
         localStorage.removeItem(this.prefix + key);
       } catch (error) {
-        log$f.error(`Error removing item [${key}]:`, error);
+        log$e.error(`Error removing item [${key}]:`, error);
       }
     }
 has(key) {
@@ -230,7 +230,7 @@ clearAll() {
           localStorage.removeItem(key);
         });
       } catch (error) {
-        log$f.error("Error clearing storage:", error);
+        log$e.error("Error clearing storage:", error);
       }
     }
   }
@@ -1035,7 +1035,7 @@ clearAll() {
     }
     return parsed;
   };
-  const log$e = logger.child("api");
+  const log$d = logger.child("api");
   const CHECK_KEY = "check-key-status";
   class CheckKeyStatus {
     constructor(config, storage) {
@@ -1050,7 +1050,7 @@ clearAll() {
         try {
           result = await check_key(this.config.key);
         } catch (err) {
-          log$e.error(
+          log$d.error(
             "Received error response querying ffscouter check-key api:",
             err
           );
@@ -1324,7 +1324,7 @@ event.oldVersion,
       return isIteratorProp(target, prop) || oldTraps.has(target, prop);
     }
   }));
-  const log$d = logger.child("storage");
+  const log$c = logger.child("storage");
   const STORES = {
     CACHE: "cache",
     FLIGHTS: "flights",
@@ -1338,6 +1338,11 @@ event.oldVersion,
       this.last_clean = 0;
       this.active_operations = 0;
       this.close_timer = null;
+      this.open_promise = null;
+      this.channel = null;
+      this.state = "CLOSED";
+      this.deletion_promise = null;
+      this.resolve_deletion = null;
       this.migrations = new Map([
         [
           1,
@@ -1378,37 +1383,65 @@ event.oldVersion,
         if (this.db) {
           return this.db;
         }
-        const cache = this;
-        this.db = await openDB(this.db_name, this.db_version, {
-          upgrade(db, oldVersion, newVersion, transaction, _event) {
-            log$d.info("Need to upgrade from", oldVersion, "to", newVersion);
-            for (let i2 = (oldVersion ?? 0) + 1; i2 <= cache.db_version; i2++) {
-              log$d.debug(`Migration: ${i2}`);
-              const m2 = cache.migrations.get(i2);
-              if (m2) {
-                m2(db, transaction);
-              } else {
-                log$d.debug(`Migration not found: ${i2}`);
-              }
-              log$d.debug(`Migration complete: ${i2}`);
-            }
-          },
-          blocking(currentVersion, blockedVersion, _event) {
-            log$d.debug(
-              `Can't open ${blockedVersion} because ${currentVersion} is open. Closing and reopening.`
-            );
-            cache.db?.close();
+        if (this.open_promise) {
+          return this.open_promise;
+        }
+        if (typeof BroadcastChannel !== "undefined" && !this.channel) {
+          this.channel = new BroadcastChannel(`ffcache-channel-${this.db_name}`);
+          this.channel.onmessage = (event) => {
+            this.handle_broadcast(event.data);
+          };
+          if (typeof this.channel.unref === "function") {
+            this.channel.unref();
           }
+        }
+        const cache = this;
+        this.open_promise = (async () => {
+          try {
+            const db = await openDB(this.db_name, this.db_version, {
+              upgrade(db2, oldVersion, newVersion, transaction, _event) {
+                log$c.info("Need to upgrade from", oldVersion, "to", newVersion);
+                for (let i2 = (oldVersion ?? 0) + 1; i2 <= cache.db_version; i2++) {
+                  log$c.debug(`Migration: ${i2}`);
+                  const m2 = cache.migrations.get(i2);
+                  if (m2) {
+                    m2(db2, transaction);
+                  } else {
+                    log$c.debug(`Migration not found: ${i2}`);
+                  }
+                  log$c.debug(`Migration complete: ${i2}`);
+                }
+              },
+              blocking(currentVersion, blockedVersion, event) {
+                log$c.debug(
+                  `Can't open ${blockedVersion} because ${currentVersion} is open. Closing.`
+                );
+                cache.close();
+                if (event?.target && typeof event.target.close === "function") {
+                  event.target.close();
+                }
+              }
 });
-        return this.db;
+            cache.db = db;
+            cache.state = "OPEN";
+            return db;
+          } finally {
+            cache.open_promise = null;
+          }
+        })();
+        return this.open_promise;
       };
       this.close = () => {
         if (this.db) {
           this.db.close();
           this.db = null;
         }
+        this.state = "CLOSED";
       };
       this.start_op = async () => {
+        if (this.state === "DELETING_LOCAL" || this.state === "DELETING_REMOTE") {
+          await this.wait_for_deletion_complete();
+        }
         this.active_operations++;
         if (this.close_timer) {
           clearTimeout(this.close_timer);
@@ -1433,13 +1466,70 @@ event.oldVersion,
           clearTimeout(this.close_timer);
           this.close_timer = null;
         }
+        this.state = "DELETING_LOCAL";
+        this.channel?.postMessage({ type: "deleting" });
+        await this.wait_for_active_ops();
         this.close();
-        await deleteDB(this.db_name, {
-          blocked: () => {
-            log$d.debug("deleteDB blocked callback called!");
+        try {
+          await deleteDB(this.db_name, {
+            blocked: () => {
+              log$c.debug("deleteDB blocked callback called!");
+            }
+          });
+          log$c.info(`Successfully deleted ${this.db_name} IndexedDB.`);
+        } finally {
+          this.channel?.postMessage({ type: "deleted" });
+          this.state = "CLOSED";
+          if (this.resolve_deletion) {
+            this.resolve_deletion();
+            this.resolve_deletion = null;
+            this.deletion_promise = null;
           }
-        });
-        log$d.info(`Successfully deleted ${this.db_name} IndexedDB.`);
+          if (this.channel) {
+            this.channel.close();
+            this.channel = null;
+          }
+        }
+      };
+      this.handle_broadcast = (data) => {
+        if (data && typeof data === "object") {
+          if (data.type === "deleting") {
+            this.state = "DELETING_REMOTE";
+            if (!this.deletion_promise) {
+              this.deletion_promise = new Promise((resolve) => {
+                this.resolve_deletion = resolve;
+              });
+            }
+            this.close();
+          } else if (data.type === "deleted") {
+            this.state = "CLOSED";
+            if (this.resolve_deletion) {
+              this.resolve_deletion();
+              this.resolve_deletion = null;
+              this.deletion_promise = null;
+            }
+          }
+        }
+      };
+      this.wait_for_deletion_complete = async () => {
+        while (this.state === "DELETING_LOCAL" || this.state === "DELETING_REMOTE") {
+          if (this.deletion_promise) {
+            await this.deletion_promise;
+          } else {
+            await new Promise((resolve) => setTimeout(resolve, 10));
+          }
+        }
+      };
+      this.wait_for_active_ops = async () => {
+        if (this.open_promise) {
+          try {
+            await this.open_promise;
+          } catch {
+          }
+        }
+        while (this.active_operations > 0) {
+          await new Promise((resolve) => setTimeout(resolve, 10));
+        }
       };
       this.get = async (player_ids) => {
         const db = await this.start_op();
@@ -1491,7 +1581,7 @@ event.oldVersion,
               const index2 = tx.store.index("expiry");
               const range = IDBKeyRange.upperBound(Date.now());
               const r2 = await index2.getAllKeys(range);
-              log$d.info(`Found ${r2.length} expired values to delete from cache.`);
+              log$c.info(`Found ${r2.length} expired values to delete from cache.`);
               await Promise.all(r2.map((id) => tx.store.delete(id)));
               await tx.done;
             }
@@ -1500,7 +1590,7 @@ event.oldVersion,
               const index2 = tx.store.index("expiry");
               const range = IDBKeyRange.upperBound(Date.now());
               const r2 = await index2.getAllKeys(range);
-              log$d.info(`Found ${r2.length} expired values to delete from flights.`);
+              log$c.info(`Found ${r2.length} expired values to delete from flights.`);
               await Promise.all(r2.map((id) => tx.store.delete(id)));
               await tx.done;
             }
@@ -1510,7 +1600,7 @@ event.oldVersion,
               const thirty_days_ago = Date.now() - 30 * 24 * 60 * 60 * 1e3;
               const range = IDBKeyRange.upperBound(thirty_days_ago);
               const r2 = await index2.getAllKeys(range);
-              log$d.info(
+              log$c.info(
                 `Found ${r2.length} expired values to delete from analytics.`
               );
               await Promise.all(r2.map((id) => tx.store.delete(id)));
@@ -1625,15 +1715,55 @@ event.oldVersion,
         }
       };
       this.db_name = db_name;
+      if (typeof BroadcastChannel !== "undefined") {
+        this.channel = new BroadcastChannel(`ffcache-channel-${db_name}`);
+        this.channel.onmessage = (event) => {
+          this.handle_broadcast(event.data);
+        };
+        if (typeof this.channel.unref === "function") {
+          this.channel.unref();
+        }
+      }
     }
   }
-  const log$c = logger.child("api");
+  const log$b = logger.child("api");
   const DB_NAME = "FFSV3-cache";
   const RECHECK_RETRY_DELAY = 60 * 1e3;
   const RECHECK_WINDOW_DURATION = 3 * 60 * 1e3;
   const FINALIZED_NO_FLIGHT_TTL = 30 * 60 * 1e3;
   const FLIGHT_PACING_DELAY = 1e3;
   const GLOBAL_BUDGET_RESERVE = 50;
+  function getParamFast(queryString, paramName) {
+    if (!queryString) return null;
+    const target = `${paramName}=`;
+    if (!queryString.includes(target)) return null;
+    let startIdx = 0;
+    if (queryString.charCodeAt(0) === 63) {
+      startIdx = 1;
+    }
+    let pos = queryString.indexOf(target, startIdx);
+    while (pos !== -1) {
+      if (pos === startIdx || queryString.charCodeAt(pos - 1) === 38 ||
+queryString.charCodeAt(pos - 1) === 63) {
+        const valStart = pos + target.length;
+        let valEnd = queryString.indexOf("&", valStart);
+        if (valEnd === -1) {
+          valEnd = queryString.length;
+        }
+        const rawVal = queryString.substring(valStart, valEnd);
+        if (rawVal.indexOf("%") === -1 && rawVal.indexOf("+") === -1) {
+          return rawVal;
+        }
+        try {
+          return decodeURIComponent(rawVal.replace(/\+/g, " "));
+        } catch {
+          return rawVal;
+        }
+      }
+      pos = queryString.indexOf(target, pos + 1);
+    }
+    return null;
+  }
   class FFScouter {
     constructor(config, cache) {
       this.cache = new FFCache(DB_NAME);
@@ -1682,7 +1812,7 @@ event.oldVersion,
         try {
           await this.cache.delete_flight(player_id);
         } catch (err) {
-          log$c.error("Failed to delete flight from cache", err);
+          log$b.error("Failed to delete flight from cache", err);
         }
       };
       this.calculate_flight_cache_ttl = (result) => {
@@ -1730,7 +1860,7 @@ event.oldVersion,
           return;
         }
         if (this.last_limits && this.last_limits.reset_time > new Date() && this.last_limits.remaining <= GLOBAL_BUDGET_RESERVE) {
-          log$c.warn(
+          log$b.warn(
             `Total API quota <= ${GLOBAL_BUDGET_RESERVE}. Deferring flight status checks to prioritize stats.`
           );
           this.schedule_flight_processor(5e3);
@@ -1745,7 +1875,7 @@ event.oldVersion,
           this.schedule_flight_processor(0);
           return;
         }
-        log$c.debug(`Querying paced flight API for player ${player_id}`);
+        log$b.debug(`Querying paced flight API for player ${player_id}`);
         try {
           const response = await query_flights(this.config.key, player_id);
           if (response.blank) {
@@ -1762,10 +1892,10 @@ event.oldVersion,
               const ttl = this.calculate_flight_cache_ttl(response.result);
               await this.cache.update_flight(response.result, ttl);
             } catch (err) {
-              log$c.error("Failed to update flight cache", err);
+              log$b.error("Failed to update flight cache", err);
             }
           } else {
-            log$c.debug(`Start rechecking cycle for player ${player_id}`);
+            log$b.debug(`Start rechecking cycle for player ${player_id}`);
             const now = Date.now();
             const next_retry_at = now + RECHECK_RETRY_DELAY;
             const existing_recheck_until = this.flight_recheck_until.get(player_id);
@@ -1782,7 +1912,7 @@ event.oldVersion,
               const remaining_ttl = Math.max(0, recheck_until - now);
               await this.cache.update_flight(rechecking_response, remaining_ttl);
             } catch (err) {
-              log$c.error("Failed to update flight cache during recheck", err);
+              log$b.error("Failed to update flight cache during recheck", err);
             }
             finalResult = rechecking_response;
           }
@@ -1790,7 +1920,7 @@ event.oldVersion,
             job.resolve(finalResult);
           }
         } catch (err) {
-          log$c.error(`Paced flight API query failed for ${player_id}:`, err);
+          log$b.error(`Paced flight API query failed for ${player_id}:`, err);
           const apiErr = err;
           if (apiErr?.ff_api_limits) {
             this.last_limits = apiErr.ff_api_limits;
@@ -1804,7 +1934,7 @@ event.oldVersion,
           try {
             await this.cache.clean_expired();
           } catch (err) {
-            log$c.error("Failed to clean expired cache entries", err);
+            log$b.error("Failed to clean expired cache entries", err);
           }
           if (this.flight_queue.length > 0) {
             this.schedule_flight_processor(FLIGHT_PACING_DELAY);
@@ -1812,7 +1942,7 @@ event.oldVersion,
         }
       };
       this.get_flights = async (player_id) => {
-        log$c.debug(`get_flights called for ${player_id}`);
+        log$b.debug(`get_flights called for ${player_id}`);
         if (!this.config.key) {
           return {
             player_id,
@@ -1824,14 +1954,14 @@ event.oldVersion,
         try {
           cached = await this.cache.get_flight(player_id);
         } catch (err) {
-          log$c.error("Failed to query flight cache", err);
+          log$b.error("Failed to query flight cache", err);
         }
         if (cached) {
-          log$c.debug(`Flight cache hit for player ${player_id}`);
+          log$b.debug(`Flight cache hit for player ${player_id}`);
           if (cached.rechecking) {
             const now = Date.now();
             if (cached.recheck_until && now >= cached.recheck_until) {
-              log$c.debug(
+              log$b.debug(
                 `Rechecking window expired for player ${player_id}. Finalizing no data.`
               );
               const final_response = {
@@ -1846,12 +1976,12 @@ event.oldVersion,
                   FINALIZED_NO_FLIGHT_TTL
                 );
               } catch (err) {
-                log$c.error("Failed to finalize flight cache", err);
+                log$b.error("Failed to finalize flight cache", err);
               }
               return final_response;
             }
             if (cached.next_retry_at && now >= cached.next_retry_at) {
-              log$c.debug(
+              log$b.debug(
                 `Retrying API call for player ${player_id} during recheck window`
               );
               const result2 = await this.enqueue_flight_api(
@@ -1875,7 +2005,7 @@ event.oldVersion,
             recent_flights: cached.recent_flights
           };
         }
-        log$c.debug(`Flight cache miss for player ${player_id}. Querying API paced.`);
+        log$b.debug(`Flight cache miss for player ${player_id}. Querying API paced.`);
         const result = await this.enqueue_flight_api(player_id);
         return result;
       };
@@ -1883,16 +2013,16 @@ event.oldVersion,
         this.process_cache();
       };
       this.enqueue_cache = (player_id) => {
-        log$c.debug(`Enqueuing cache ${player_id}`);
+        log$b.debug(`Enqueuing cache ${player_id}`);
         this.cache_queue.add(player_id);
         this.schedule_cache();
       };
       this.schedule_cache = () => {
         if (this.cache_timer) {
-          log$c.debug(`schedule_cache called but job already scheduled`);
+          log$b.debug(`schedule_cache called but job already scheduled`);
           return;
         }
-        log$c.debug(
+        log$b.debug(
           `schedule_cache called and job scheduled for ${this.cache_delay} ms`
         );
         this.cache_timer = this.schedule(this.process_cache, this.cache_delay);
@@ -1913,14 +2043,14 @@ event.oldVersion,
         } catch (_2) {
           results = new Map();
         }
-        log$c.debug("Received results", results);
+        log$b.debug("Received results", results);
         for (const id of ids) {
           const v2 = results.get(id);
           if (v2) {
-            log$c.debug("Id", id, "found in cache. Resolving value.");
+            log$b.debug("Id", id, "found in cache. Resolving value.");
             this.resolve(id, v2);
           } else {
-            log$c.debug("Id", id, "not found in cache. Scheduling api call.");
+            log$b.debug("Id", id, "not found in cache. Scheduling api call.");
             this.enqueue_api(id);
           }
         }
@@ -1930,20 +2060,20 @@ event.oldVersion,
         check_key_status.clear();
       };
       this.enqueue_api = (player_id) => {
-        log$c.debug(`Enqueuing api ${player_id}`);
+        log$b.debug(`Enqueuing api ${player_id}`);
         this.api_queue.add(player_id);
         this.schedule_api();
       };
       this.schedule_api = (delay = this.api_initial_delay) => {
         if (this.api_timer) {
-          log$c.debug(`schedule_api called but job already scheduled`);
+          log$b.debug(`schedule_api called but job already scheduled`);
           return;
         }
-        log$c.debug(`schedule_api called and job scheduled for ${delay} ms`);
+        log$b.debug(`schedule_api called and job scheduled for ${delay} ms`);
         this.api_timer = this.schedule(this.process_api, delay);
       };
       this.process_api = async () => {
-        log$c.debug("process_api called");
+        log$b.debug("process_api called");
         if (this.api_timer) {
           this.clear(this.api_timer);
           this.api_timer = null;
@@ -1955,18 +2085,18 @@ event.oldVersion,
         for (const id of ids) {
           this.api_queue.delete(id);
         }
-        log$c.debug(`Processing ${ids} api requests`);
+        log$b.debug(`Processing ${ids} api requests`);
         if (ids.length <= 0) {
-          log$c.debug("No ids found to query");
+          log$b.debug("No ids found to query");
           return;
         }
         let next_run = this.api_default_delay;
         let results;
         try {
-          log$c.debug("Calling query_stats with", this.config.key, ",", ids);
+          log$b.debug("Calling query_stats with", this.config.key, ",", ids);
           results = await query_stats(this.config.key, ids);
         } catch (err) {
-          log$c.error("Received error response querying ffscouter api:", err);
+          log$b.error("Received error response querying ffscouter api:", err);
           for (const id of ids) {
             this.reject(id, err);
           }
@@ -1977,7 +2107,7 @@ event.oldVersion,
             limits: ff_error.ff_api_limits
           };
         }
-        log$c.debug("Received results", results);
+        log$b.debug("Received results", results);
         if (results.blank) {
           for (const id of ids) {
             this.requeue_api(id);
@@ -1986,15 +2116,15 @@ event.oldVersion,
           try {
             await this.cache.update(Array.from(results.result.values()));
           } catch (err) {
-            log$c.error("Failed to update cache", err);
+            log$b.error("Failed to update cache", err);
           }
           for (const id of ids) {
             const v2 = results.result.get(id);
             if (v2) {
-              log$c.debug("Id", id, "found in results. Resolving value.");
+              log$b.debug("Id", id, "found in results. Resolving value.");
               this.resolve(id, v2);
             } else {
-              log$c.debug("Id", id, "not found in results. Resolving no_data.");
+              log$b.debug("Id", id, "not found in results. Resolving no_data.");
               this.resolve(id, { player_id: id, no_data: true });
             }
           }
@@ -2061,14 +2191,14 @@ event.oldVersion,
             hash
           });
         } catch (err) {
-          log$c.error("Failed to add analytics entry", err);
+          log$b.error("Failed to add analytics entry", err);
         }
       };
       this.get_analytics_entries = async () => {
         try {
           return await this.cache.get_analytics();
         } catch (err) {
-          log$c.error("Failed to get analytics entries", err);
+          log$b.error("Failed to get analytics entries", err);
           return [];
         }
       };
@@ -2078,8 +2208,7 @@ event.oldVersion,
         for (const entry of entries) {
           let param = "";
           if (entry.params) {
-            const searchParams = new URLSearchParams(entry.params);
-            param = searchParams.get("sid") || searchParams.get("step") || "";
+            param = getParamFast(entry.params, "sid") || getParamFast(entry.params, "step") || "";
           }
           if (!param && entry.hash) {
             let hashClean = entry.hash;
@@ -2091,8 +2220,7 @@ event.oldVersion,
             if (!hashClean.startsWith("!") && !hashClean.startsWith("?")) {
               hashClean = `?${hashClean}`;
             }
-            const hashParams = new URLSearchParams(hashClean);
-            param = hashParams.get("sid") || hashParams.get("step") || "";
+            param = getParamFast(hashClean, "sid") || getParamFast(hashClean, "step") || "";
           }
           const key = `${entry.url}|${param}|${entry.feature}|${entry.status}`;
           const existing = aggregationMap.get(key);
@@ -2114,7 +2242,7 @@ event.oldVersion,
         try {
           await this.cache.clear_analytics();
         } catch (err) {
-          log$c.error("Failed to clear analytics entries", err);
+          log$b.error("Failed to clear analytics entries", err);
         }
       };
       this.config = config;
@@ -3121,7 +3249,7 @@ event.oldVersion,
     if (kind && result) __defProp$3(target, key, result);
     return result;
   };
-  const log$b = logger.child("ui");
+  const log$a = logger.child("ui");
   const PREMIUM_UPGRADE_URL$1 = "https://ffscouter.com/premium";
   let FFHeaderLine = class extends i {
     constructor() {
@@ -3133,16 +3261,21 @@ event.oldVersion,
     createRenderRoot() {
       return this;
     }
-async willUpdate(changedProperties) {
+willUpdate(changedProperties) {
       if (changedProperties.has("data") && this.data) {
         this.loading = true;
-        try {
-          this.is_premium = await check_key_status.is_premium();
-        } catch (error) {
-          log$b.error(error);
-        } finally {
-          this.loading = false;
-        }
+        const currentData = this.data;
+        check_key_status.is_premium().then((premium) => {
+          if (this.data === currentData) {
+            this.is_premium = premium;
+          }
+        }).catch((error) => {
+          log$a.error(error);
+        }).finally(() => {
+          if (this.data === currentData) {
+            this.loading = false;
+          }
+        });
       }
     }
     render() {
@@ -3205,7 +3338,7 @@ async willUpdate(changedProperties) {
   FFHeaderLine = __decorateClass$3([
     t("ff-header-line")
   ], FFHeaderLine);
-  const log$a = logger.child("feature:attack");
+  const log$9 = logger.child("feature:attack");
   async function inject_info_line$1(info_line) {
     const h4 = await wait_for_element("h4", 1e4);
     if (!h4) {
@@ -3228,7 +3361,7 @@ async willUpdate(changedProperties) {
       if (!player_id) {
         return;
       }
-      log$a.debug("On the attack page, found player_id", player_id);
+      log$9.debug("On the attack page, found player_id", player_id);
       const info_line = create_info_line();
       ffscouter.get(player_id).then(async (data) => {
         const line = document.createElement("ff-header-line");
@@ -3301,6 +3434,7 @@ async willUpdate(changedProperties) {
       this.hiddenColumns = { ...DEFAULT_HIDDEN_COLUMNS };
       this.collapsed = false;
       this.wasMobile = isMobileView();
+      this.debounceTimer = null;
       this.onResize = () => {
         const isMobile = isMobileView();
         if (isMobile !== this.wasMobile) {
@@ -3323,6 +3457,10 @@ async willUpdate(changedProperties) {
       window.addEventListener("resize", this.onResize);
     }
     disconnectedCallback() {
+      if (this.debounceTimer) {
+        clearTimeout(this.debounceTimer);
+        this.debounceTimer = null;
+      }
       window.removeEventListener("resize", this.onResize);
       window.removeEventListener("ff-config-updated", this.onConfigUpdated);
       super.disconnectedCallback();
@@ -3429,6 +3567,24 @@ status: DEFAULT_HIDDEN_COLUMNS.status,
         ffconfig.faction_filter_state = stateObj;
       }
     }
+    queueChange() {
+      if (this.debounceTimer) {
+        clearTimeout(this.debounceTimer);
+      }
+      this.debounceTimer = setTimeout(() => {
+        this.saveState();
+        this.dispatchChange();
+        this.debounceTimer = null;
+      }, 250);
+    }
+    executeChangeImmediately() {
+      if (this.debounceTimer) {
+        clearTimeout(this.debounceTimer);
+        this.debounceTimer = null;
+      }
+      this.saveState();
+      this.dispatchChange();
+    }
     dispatchChange() {
       this.dispatchEvent(
         new CustomEvent("filter-change", {
@@ -3454,8 +3610,7 @@ status: DEFAULT_HIDDEN_COLUMNS.status,
         ...this.hiddenColumns,
         [key]: val
       };
-      this.saveState();
-      this.dispatchChange();
+      this.executeChangeImmediately();
     }
     onSortToggle() {
       if (this.sortBy === "none") {
@@ -3465,8 +3620,7 @@ status: DEFAULT_HIDDEN_COLUMNS.status,
       } else {
         this.sortBy = "none";
       }
-      this.saveState();
-      this.dispatchChange();
+      this.executeChangeImmediately();
     }
     onDisplayChange(e2) {
       const val = e2.target.value;
@@ -3477,22 +3631,21 @@ status: DEFAULT_HIDDEN_COLUMNS.status,
         ffconfig.factions_col_display = val;
       }
       window.dispatchEvent(new CustomEvent("ff-config-updated"));
+      this.executeChangeImmediately();
     }
     onActivityChange(key, val) {
       this.activity = {
         ...this.activity,
         [key]: val
       };
-      this.saveState();
-      this.dispatchChange();
+      this.executeChangeImmediately();
     }
     onStatusChange(key, val) {
       this.status = {
         ...this.status,
         [key]: val
       };
-      this.saveState();
-      this.dispatchChange();
+      this.executeChangeImmediately();
     }
     onLevelChange(type, valStr) {
       const val = valStr === "" ? null : Number.parseInt(valStr, 10);
@@ -3501,8 +3654,7 @@ status: DEFAULT_HIDDEN_COLUMNS.status,
       } else {
         this.levelMax = val;
       }
-      this.saveState();
-      this.dispatchChange();
+      this.queueChange();
     }
     onFFChange(type, valStr) {
       const val = valStr === "" ? null : Number.parseFloat(valStr);
@@ -3511,8 +3663,7 @@ status: DEFAULT_HIDDEN_COLUMNS.status,
       } else {
         this.ffMax = val;
       }
-      this.saveState();
-      this.dispatchChange();
+      this.queueChange();
     }
     onStatsChange(type, valStr) {
       const val = valStr.trim() === "" ? null : valStr;
@@ -3521,8 +3672,7 @@ status: DEFAULT_HIDDEN_COLUMNS.status,
       } else {
         this.statsMax = val;
       }
-      this.saveState();
-      this.dispatchChange();
+      this.queueChange();
     }
     onToggleFilter(e2) {
       if (e2) {
@@ -3530,8 +3680,7 @@ status: DEFAULT_HIDDEN_COLUMNS.status,
         e2.stopPropagation();
       }
       this.filterEnabled = !this.filterEnabled;
-      this.saveState();
-      this.dispatchChange();
+      this.executeChangeImmediately();
     }
     onResetFilters(e2) {
       if (e2) {
@@ -3552,8 +3701,7 @@ status: DEFAULT_HIDDEN_COLUMNS.status,
       this.ffMax = null;
       this.statsMin = null;
       this.statsMax = null;
-      this.saveState();
-      this.dispatchChange();
+      this.executeChangeImmediately();
     }
     onCompareActivity() {
       const container = this.closest(".faction-war");
@@ -3626,7 +3774,7 @@ status: DEFAULT_HIDDEN_COLUMNS.status,
         @toggle="${this.onToggle}"
       >
         <summary
-          style="cursor: pointer; font-weight: bold; font-size: 14px; outline: none; user-select: none;"
+          style="cursor: pointer; font-weight: bold; font-size: 14px; user-select: none;"
         >
           <div
             style="display: inline-flex; justify-content: space-between; align-items: center; width: calc(100% - 24px); vertical-align: middle;"
@@ -3922,7 +4070,7 @@ status: DEFAULT_HIDDEN_COLUMNS.status,
   FFFactionFilterBox = __decorateClass$2([
     t("ff-faction-filter-box")
   ], FFFactionFilterBox);
-  const log$9 = logger.child("feature:faction");
+  const log$8 = logger.child("feature:faction");
   const FEATURE_NAME$4 = "faction";
   let isApplying = false;
   function apply_filters_and_sort(membersList, filters) {
@@ -4089,7 +4237,7 @@ Number.parseInt(row.dataset["estValue"], 10)
             p2.row.removeAttribute("data-latest-arrival");
           }
         } catch (err) {
-          log$9.error(`Failed to fetch flights for player ${p2.player_id}`, err);
+          log$8.error(`Failed to fetch flights for player ${p2.player_id}`, err);
         }
       })
     );
@@ -4540,13 +4688,13 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
   const process_page = () => {
     wait_for_element(".members-list", 1e4).then((node) => {
       if (node instanceof HTMLElement) {
-        log$9.debug("Found members-list!");
+        log$8.debug("Found members-list!");
         monitor_member_list(node);
       }
     });
     wait_for_element(".chain-attacks-list", 1e4).then((node) => {
       if (node instanceof HTMLElement) {
-        log$9.debug("Found chain-attacks-list!");
+        log$8.debug("Found chain-attacks-list!");
         monitor_member_list(node, true);
       }
     });
@@ -4554,12 +4702,12 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       if (!node) {
         return;
       }
-      log$9.debug("Found faction_war_list_id");
+      log$8.debug("Found faction_war_list_id");
       const descriptions_observer = new MutationObserver(async (mutations) => {
         for (const mutation of mutations) {
           for (const node2 of mutation.addedNodes) {
             if (node2 instanceof HTMLElement && node2.classList.contains("descriptions")) {
-              log$9.debug(
+              log$8.debug(
                 "Observed mutation that included adding descriptions",
                 node2
               );
@@ -4572,7 +4720,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
         }
       });
       descriptions_observer.observe(node, { childList: true });
-      log$9.debug("Set up descriptions observer on", node);
+      log$8.debug("Set up descriptions observer on", node);
       const existing_descriptions = node.querySelector(".descriptions");
       if (existing_descriptions) {
         const faction_war = await wait_for_element(
@@ -4645,7 +4793,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     setup_war_features,
     should_run_faction
   }, Symbol.toStringTag, { value: "Module" }));
-  const log$8 = logger.child("feature:fallback");
+  const log$7 = logger.child("feature:fallback");
   const FEATURE_NAME_HONOR_BAR = "fallback-honor-bar";
   const FEATURE_NAME_USER_NAME = "fallback-user-name";
   const FEATURE_NAME$3 = "fallback";
@@ -4837,7 +4985,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
           if (is_observing) {
             ff_gauge_observer.disconnect();
             is_observing = false;
-            log$8.debug("Disconnected fallback MutationObserver (excluded page)");
+            log$7.debug("Disconnected fallback MutationObserver (excluded page)");
           }
         } else {
           current_config = get_page_selectors();
@@ -4850,7 +4998,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
               subtree: true
             });
             is_observing = true;
-            log$8.debug("Connected fallback MutationObserver (included page)");
+            log$7.debug("Connected fallback MutationObserver (included page)");
             if (target) {
               check_mutation(target);
             }
@@ -4858,7 +5006,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
         }
       };
       on_navigation(() => {
-        log$8.debug("Navigation detected, re-evaluating fallback observer state");
+        log$7.debug("Navigation detected, re-evaluating fallback observer state");
         update_observer_state();
       });
       update_observer_state();
@@ -4876,7 +5024,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     __proto__: null,
     default: index$a
   }, Symbol.toStringTag, { value: "Module" }));
-  const log$7 = logger.child("ui");
+  const log$6 = logger.child("ui");
   var TOAST_LEVEL = ((TOAST_LEVEL2) => {
     TOAST_LEVEL2[TOAST_LEVEL2["DEBUG"] = 0] = "DEBUG";
     TOAST_LEVEL2[TOAST_LEVEL2["INFO"] = 1] = "INFO";
@@ -4921,12 +5069,17 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     toast2.style.display = "flex";
     toast2.style.alignItems = "center";
     toast2.style.gap = "10px";
-    const closeBtn = document.createElement("span");
+    const closeBtn = document.createElement("button");
     closeBtn.textContent = "×";
     closeBtn.style.cursor = "pointer";
     closeBtn.style.marginLeft = "8px";
     closeBtn.style.fontWeight = "bold";
     closeBtn.style.fontSize = "18px";
+    closeBtn.style.background = "none";
+    closeBtn.style.border = "none";
+    closeBtn.style.color = "inherit";
+    closeBtn.style.padding = "0";
+    closeBtn.style.lineHeight = "1";
     closeBtn.setAttribute("aria-label", "Close");
     closeBtn.onclick = () => toast2.remove();
     toast2.style.background = get_toast_colour(level);
@@ -4936,7 +5089,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     } else {
       msg.textContent = `FairFight Scouter V2: ${message}`;
     }
-    log$7.info("[FF Scouter V2] Toast: ", message);
+    log$6.info("[FF Scouter V2] Toast: ", message);
     toast2.appendChild(msg);
     toast2.appendChild(closeBtn);
     document.body.appendChild(toast2);
@@ -4947,7 +5100,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       }
     }, 4e3);
   }
-  const log$6 = logger.child("feature:ff-button");
+  const log$5 = logger.child("feature:ff-button");
   const CACHE_LIFETIME_MS = 7 * 24 * 60 * 60 * 1e3;
   const POLL_INTERVAL_MS = 24 * 60 * 60 * 1e3;
   function get_active_filters() {
@@ -4966,7 +5119,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
   async function update_ff_targets(force = false) {
     const key = ffconfig.key;
     if (!key) {
-      log$6.debug("API key not set, skipping target fetch");
+      log$5.debug("API key not set, skipping target fetch");
       return;
     }
     const currentFilters = get_active_filters();
@@ -4975,7 +5128,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     const filtersChanged = cached && filters_changed(cached.filters, currentFilters);
     const timeToRefresh = cached && (!cached.last_updated || Date.now() - cached.last_updated > POLL_INTERVAL_MS);
     if (!force && !hasNoCacheOrExpired && !filtersChanged && !timeToRefresh) {
-      log$6.debug(
+      log$5.debug(
         "Using cached targets, not expired, filters match, and not time to poll yet"
       );
       return;
@@ -4998,12 +5151,12 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
           filters: currentFilters
         };
         ffconfig.chain_target_index = 0;
-        log$6.info(
+        log$5.info(
           `Chain targets updated successfully: ${response.targets.length} targets found`
         );
       }
     } catch (err) {
-      log$6.error("Failed to update chain targets:", err);
+      log$5.error("Failed to update chain targets:", err);
     }
   }
   function get_next_target_index(maxLen) {
@@ -5142,7 +5295,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
         const cached = ffconfig.chain_targets;
         const currentFilters = get_active_filters();
         if (!cached || filters_changed(cached.filters, currentFilters)) {
-          log$6.info("Target filters changed, refetching targets immediately");
+          log$5.info("Target filters changed, refetching targets immediately");
           await update_ff_targets(true);
         }
         create_chain_button();
@@ -5231,7 +5384,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     if (kind && result) __defProp$1(target, key, result);
     return result;
   };
-  const log$5 = logger.child("ui");
+  const log$4 = logger.child("ui");
   const PREMIUM_UPGRADE_URL = "https://ffscouter.com/premium";
   const premium_action = b`<a
   href="${PREMIUM_UPGRADE_URL}"
@@ -5321,28 +5474,33 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
         this.fetch_interval = null;
       }
     }
-    async willUpdate(changedProperties) {
+    willUpdate(changedProperties) {
       if (changedProperties.has("playerId") && this.playerId) {
         this.data = null;
         this.error = null;
         this.loading = true;
         this.is_premium = null;
-        await this.fetch_data();
+        this.fetch_data();
       }
     }
     async fetch_data() {
       if (!this.playerId) return;
+      const fetchId = this.playerId;
       try {
-        this.is_premium = await check_key_status.is_premium();
-        if (!this.is_premium) {
+        const is_premium = await check_key_status.is_premium();
+        if (this.playerId !== fetchId) return;
+        this.is_premium = is_premium;
+        if (!is_premium) {
           this.loading = false;
           return;
         }
         const result = await ffscouter.get_flights(this.playerId);
+        if (this.playerId !== fetchId) return;
         this.data = result;
         this.error = null;
       } catch (err) {
-        log$5.error("Failed to fetch flight data", err);
+        if (this.playerId !== fetchId) return;
+        log$4.error("Failed to fetch flight data", err);
         if (err instanceof FFApiError) {
           const code = err.ff_api_error?.code;
           if (code === 19) {
@@ -5358,7 +5516,9 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
           this.error = err.message || "Flight tracking unavailable";
         }
       } finally {
-        this.loading = false;
+        if (this.playerId === fetchId) {
+          this.loading = false;
+        }
       }
     }
     render() {
@@ -5449,14 +5609,14 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
   FFFlightProfileStatus = __decorateClass$1([
     t("ff-flight-profile-status")
   ], FFFlightProfileStatus);
-  const log$4 = logger.child("feature:mini-profile-flights");
+  const log$3 = logger.child("feature:mini-profile-flights");
   function is_flying$1(status) {
     return status.classList.contains("travelling");
   }
   const monitor_mini_profile_root$1 = () => {
     const miniprofile = document.querySelector("#profile-mini-root");
     if (miniprofile) {
-      log$4.debug("profile-mini-root already exists.");
+      log$3.debug("profile-mini-root already exists.");
       setup_mini_flight_observer();
       return;
     }
@@ -5479,6 +5639,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     }
     const flight_element = document.createElement("ff-flight-profile-status");
     flight_element.compact = true;
+    let lastPlayerId = null;
     const mp_observer = new MutationObserver((mutations) => {
       for (const mutation of mutations) {
         if (Array.from(mutation.addedNodes).some(
@@ -5489,8 +5650,13 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       }
       const player_id2 = get_player_id_in_element(miniroot);
       if (!player_id2) {
+        lastPlayerId = null;
         return;
       }
+      if (player_id2 === lastPlayerId) {
+        return;
+      }
+      lastPlayerId = player_id2;
       const status2 = miniroot.querySelector(".profile-container");
       if (!status2) {
         return;
@@ -5499,7 +5665,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       if (is_flying$1(status2)) {
         const description = status2.querySelector(".description");
         if (description && !description.contains(flight_element)) {
-          log$4.debug(
+          log$3.debug(
             `Player ${player_id2} is flying, adding flight tracker to mini-profile`
           );
           description.appendChild(flight_element);
@@ -5531,7 +5697,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     },
     async run() {
       monitor_mini_profile_root$1();
-      log$4.debug("mini-profile-flights installed");
+      log$3.debug("mini-profile-flights installed");
     },
     httpIntercept: {
       before(_url, _init) {
@@ -5546,12 +5712,12 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     __proto__: null,
     default: index$7
   }, Symbol.toStringTag, { value: "Module" }));
-  const log$3 = logger.child("feature:mini-profile");
+  const log$2 = logger.child("feature:mini-profile");
   const FEATURE_NAME$1 = "mini-profile";
   const monitor_mini_profile_root = () => {
     const miniprofile = document.querySelector("#profile-mini-root");
     if (miniprofile) {
-      log$3.debug("profile-mini-root already exists.");
+      log$2.debug("profile-mini-root already exists.");
       setup_mini_observer();
       return;
     }
@@ -5572,6 +5738,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     if (!miniroot) {
       return;
     }
+    let lastPlayerId = null;
     const mp_observer = new MutationObserver((mutations) => {
       for (const mutation of mutations) {
         if (mutation.target instanceof HTMLElement && mutation.target.classList.contains("ffsv3-gauge")) {
@@ -5585,13 +5752,22 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       }
       const player_id = get_player_id_in_element(miniroot);
       if (!player_id) {
+        lastPlayerId = null;
         return;
       }
+      if (player_id === lastPlayerId) {
+        return;
+      }
+      lastPlayerId = player_id;
       ffscouter.get(player_id).then(async (d2) => {
+        const current_player_id = get_player_id_in_element(miniroot);
+        if (current_player_id !== player_id) {
+          return;
+        }
         if (d2.no_data) {
           return;
         }
-        log$3.debug(`Found mini profile update for ${player_id}, adding ff data`);
+        log$2.debug(`Found mini profile update for ${player_id}, adding ff data`);
         for (const bar of miniroot.querySelectorAll(".honor-text-wrap")) {
           apply_ff_gauge(bar, FEATURE_NAME$1);
         }
@@ -5619,7 +5795,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     },
     async run() {
       monitor_mini_profile_root();
-      log$3.debug("mini-profile installed");
+      log$2.debug("mini-profile installed");
     },
     httpIntercept: {
       before(_url, _init) {
@@ -5821,7 +5997,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
         const user_info_wrapper = node.querySelector(
           '.honor-text-wrap, [class*="userInfoBlock__"]'
         );
-        return user_info_wrapper !== void 0;
+        return user_info_wrapper !== null;
       };
       const row_handler = (options) => {
         if (!options.added) {
@@ -5930,9 +6106,45 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       this.resetDrafts();
     }
     willUpdate(changedProperties) {
-      if (changedProperties.has("apiKey") || changedProperties.has("lowRange") || changedProperties.has("highRange") || changedProperties.has("maxRange") || changedProperties.has("chainButtonEnabled") || changedProperties.has("chainLinkType") || changedProperties.has("chainTabType") || changedProperties.has("chainFFTarget") || changedProperties.has("chainMinLevel") || changedProperties.has("chainMaxLevel") || changedProperties.has("chainInactive") || changedProperties.has("chainMinFF") || changedProperties.has("chainMaxFF") || changedProperties.has("chainFactionless") || changedProperties.has("ffHistoryEnabled") || changedProperties.has("factionsColDisplay") || changedProperties.has("warColDisplay") || changedProperties.has("debugLogs") || changedProperties.has("analyticsEnabled") || changedProperties.has("gaugeMarkerType") || changedProperties.has("warQuickAttackAction")) {
-        this.resetDrafts();
-      }
+      if (changedProperties.has("apiKey")) this.draftApiKey = this.apiKey;
+      if (changedProperties.has("lowRange")) this.draftLowRange = this.lowRange;
+      if (changedProperties.has("highRange"))
+        this.draftHighRange = this.highRange;
+      if (changedProperties.has("maxRange")) this.draftMaxRange = this.maxRange;
+      if (changedProperties.has("chainButtonEnabled"))
+        this.draftChainButtonEnabled = this.chainButtonEnabled;
+      if (changedProperties.has("chainLinkType"))
+        this.draftChainLinkType = this.chainLinkType;
+      if (changedProperties.has("chainTabType"))
+        this.draftChainTabType = this.chainTabType;
+      if (changedProperties.has("chainFFTarget"))
+        this.draftChainFFTarget = this.chainFFTarget;
+      if (changedProperties.has("chainMinLevel"))
+        this.draftChainMinLevel = this.chainMinLevel;
+      if (changedProperties.has("chainMaxLevel"))
+        this.draftChainMaxLevel = this.chainMaxLevel;
+      if (changedProperties.has("chainInactive"))
+        this.draftChainInactive = this.chainInactive;
+      if (changedProperties.has("chainMinFF"))
+        this.draftChainMinFF = this.chainMinFF;
+      if (changedProperties.has("chainMaxFF"))
+        this.draftChainMaxFF = this.chainMaxFF;
+      if (changedProperties.has("chainFactionless"))
+        this.draftChainFactionless = this.chainFactionless;
+      if (changedProperties.has("ffHistoryEnabled"))
+        this.draftFFHistoryEnabled = this.ffHistoryEnabled;
+      if (changedProperties.has("factionsColDisplay"))
+        this.draftFactionsColDisplay = this.factionsColDisplay;
+      if (changedProperties.has("warColDisplay"))
+        this.draftWarColDisplay = this.warColDisplay;
+      if (changedProperties.has("debugLogs"))
+        this.draftDebugLogs = this.debugLogs;
+      if (changedProperties.has("analyticsEnabled"))
+        this.draftAnalyticsEnabled = this.analyticsEnabled;
+      if (changedProperties.has("gaugeMarkerType"))
+        this.draftGaugeMarkerType = this.gaugeMarkerType;
+      if (changedProperties.has("warQuickAttackAction"))
+        this.draftWarQuickAttackAction = this.warQuickAttackAction;
     }
     resetDrafts() {
       this.draftApiKey = this.apiKey;
@@ -6749,7 +6961,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     __proto__: null,
     default: index$1
   }, Symbol.toStringTag, { value: "Module" }));
-  const log$2 = logger.child("feature:test-feature");
+  const log$1 = logger.child("feature:test-feature");
   const index = {
     name: "Test Feature!",
     description: "It's literally a test feature :P",
@@ -6758,7 +6970,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       return true;
     },
     async run() {
-      log$2.info("hello world but from feature");
+      log$1.info("hello world but from feature");
     },
     httpIntercept: {
       before(_url, _init) {
@@ -6791,87 +7003,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
   const Features = Object.values(modules).map((mod) => mod.default).filter(
     (feat) => !!feat && "name" in feat && feat.name !== "Test Feature!"
   );
-  const log$1 = logger.child("network");
-  const pageWindow = unsafeWindow || window;
-  let httpInterceptor = null;
-  let httpPatched = false;
-  function setHttpInterceptor(interceptor) {
-    if (httpInterceptor) {
-      throw new Error("HTTP interceptor already set. Only one allowed.");
-    }
-    httpInterceptor = interceptor;
-    if (!httpPatched) patchFetch();
-  }
-  function patchFetch() {
-    try {
-      const originalFetch = pageWindow.fetch.bind(pageWindow);
-      pageWindow.fetch = async function patchedFetch(input, init) {
-        if (!httpInterceptor) return originalFetch(input, init);
-        const requestIsObj = input instanceof Request;
-        let url = requestIsObj ? input.url : typeof input === "string" ? input : input.toString();
-        let currentInit = init;
-        if (requestIsObj && !currentInit && (httpInterceptor.before || httpInterceptor.after)) {
-          const r2 = input;
-          currentInit = {
-            method: r2.method,
-            headers: r2.headers,
-            body: r2.method !== "GET" && r2.method !== "HEAD" ? r2.clone().body : void 0,
-            credentials: r2.credentials,
-            mode: r2.mode,
-            cache: r2.cache,
-            redirect: r2.redirect,
-            referrer: r2.referrer,
-            referrerPolicy: r2.referrerPolicy,
-            integrity: r2.integrity,
-            duplex: r2.duplex
-          };
-        }
-        if (httpInterceptor.before) {
-          try {
-            const res = httpInterceptor.before(url, currentInit);
-            if (typeof res === "string") url = res;
-            else if (res) {
-              if (res.url) url = res.url;
-              if (res.init) currentInit = res.init;
-            }
-          } catch (err) {
-            log$1.error("HTTP before interceptor error:", err);
-          }
-        }
-        const finalRequest = requestIsObj ? url === input.url && currentInit === init ? input : new Request(url, currentInit ?? {}) : url;
-        const response = await originalFetch(finalRequest, currentInit);
-        if (!httpInterceptor.after) return response;
-        let bodyText = "";
-        try {
-          bodyText = await response.clone().text();
-        } catch (err) {
-          log$1.error("Failed reading response body for interceptor:", err);
-          return response;
-        }
-        try {
-          const maybeNew = await httpInterceptor.after(bodyText, response, {
-            url,
-            init: currentInit
-          });
-          if (typeof maybeNew === "string") {
-            return new Response(maybeNew, {
-              status: response.status,
-              statusText: response.statusText,
-              headers: new Headers(response.headers)
-            });
-          }
-        } catch (err) {
-          log$1.error("HTTP after interceptor error:", err);
-        }
-        return response;
-      };
-      httpPatched = true;
-      log$1.debug("Fetch patched for HTTP interception");
-    } catch (err) {
-      log$1.error("Failed to patch fetch:", err);
-    }
-  }
-  const stylesCss = ".ffsv3-gauge{position:relative;display:block;padding:0}.ffsv3-arrow{position:absolute;transform:translate(-50%,-30%);padding:0;top:0;left:calc(var(--ffsv3-arrow-width) / 2 + var(--band-percent) * (100% - var(--ffsv3-arrow-width)) / 100);width:var(--ffsv3-arrow-width);object-fit:cover;pointer-events:none}.ffsv3-bubble{position:absolute;transform:translate(-50%,-30%);top:0;left:calc(var(--ffsv3-arrow-width) / 2 + var(--band-percent) * (100% - var(--ffsv3-arrow-width)) / 100);min-width:22px;height:14px;line-height:12px;border:1px solid rgba(0,0,0,.4);border-radius:8px;font-size:8.5px;font-weight:700;font-family:Geneva,Arial,sans-serif;text-align:center;padding:0 4px;box-sizing:border-box;pointer-events:none;white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;text-shadow:0 1px 1px rgba(0,0,0,.5);box-shadow:0 1px 2px #0000004d;z-index:10}.ffsv3-mini-desc{padding:0 5px}body{--ffsv3-bg-color: #f0f0f0;--ffsv3-alt-bg-color: #fff;--ffsv3-border-color: #ccc;--ffsv3-input-color: #ccc;--ffsv3-text-color: #000;--ffsv3-hover-color: #ddd;--ffsv3-glow-color: #4caf50;--ffsv3-success-color: #4caf50;--ffsv3-arrow-width: 20px}body.dark-mode{--ffsv3-bg-color: #333;--ffsv3-alt-bg-color: #383838;--ffsv3-border-color: #444;--ffsv3-input-color: #504f4f;--ffsv3-text-color: #ccc;--ffsv3-hover-color: #555;--ffsv3-glow-color: #4caf50;--ffsv3-success-color: #4caf50}.ff-premium-upgrade-line{display:block;margin-top:4px;line-height:1.3;white-space:nowrap;font-size:12px;font-style:normal}@media(max-width:768px){.ff-premium-upgrade-line{margin-top:6px;line-height:1.35;white-space:normal;overflow-wrap:anywhere}}ff-settings-panel{display:block}ff-settings-panel .accordion{margin:10px 0;padding:15px;background-color:var(--ffsv3-bg-color);border:1px solid var(--ffsv3-border-color);border-radius:5px;color:var(--ffsv3-text-color)}ff-settings-panel .accordion.glow{border-color:var(--ffsv3-glow-color);box-shadow:0 0 8px #4caf5080}ff-settings-panel .input-row{display:flex;flex-direction:column;gap:5px;margin-bottom:15px}ff-settings-panel .input-row-inline{display:flex;align-items:center;gap:10px;margin-bottom:15px}ff-settings-panel .blur-mode{filter:blur(4px);transition:filter .2s ease}ff-settings-panel .blur-mode:hover,ff-settings-panel .blur-mode:focus{filter:blur(0)}ff-settings-panel .error-msg{color:#f33;font-size:13px;margin-top:5px}ff-settings-panel input[type=text],ff-settings-panel input[type=number]{text-align:left;vertical-align:top;width:178px;height:14px;margin-right:8px;padding:9px 10px;line-height:14px;display:inline-block}ff-settings-panel input[type=number].ff-number{width:52px}ff-settings-panel select{box-sizing:border-box;text-align:left;vertical-align:top;width:178px;height:34px;margin-right:8px;padding:8px 10px;line-height:14px;display:inline-block;border:var(--input-border-color);border-radius:5px;font-family:Arial,serif;color:var(--input-color);background:var(--input-background-color)}:root .dark-mode ff-settings-panel select option{background-color:#000;color:var(--input-color)}ff-settings-panel .ff-api-explanation{background-color:var(--ffsv3-alt-bg-color);border:1px solid var(--ffsv3-border-color);border-radius:8px;color:var(--ffsv3-text-color);margin-bottom:20px;padding:12px 16px;font-size:13px;line-height:1.5}ff-settings-panel a{color:var(--ffsv3-success-color);text-decoration:underline}ff-settings-panel .is_premium_enabled{display:inline-block;background:#4caf50;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;vertical-align:middle}ff-settings-panel .is_premium_disabled{display:inline-block;background:#c62828;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;vertical-align:middle}.profile-status{position:relative}ff-flight-profile-status{position:absolute;right:10px;bottom:2px;z-index:2}.ff-scouter-profile-flight-info{display:inline-block;text-align:right;font-size:11px;line-height:1.25;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.85)}.profile-status .ff-scouter-profile-flight-info a{color:#fff;text-decoration:underline}ff-faction-filter-box{display:block}.ff-filter-box,.ff-filter-box *,.ff-filter-box *:before,.ff-filter-box *:after{box-sizing:border-box!important}.ff-filter-box{background-color:var(--ffsv3-bg-color);border:1px solid var(--ffsv3-border-color);border-radius:8px;padding:12px 16px;margin-bottom:16px;color:var(--ffsv3-text-color);font-family:Arial,sans-serif;box-shadow:0 2px 5px #0000000d}.ff-filter-box.no-borders{background-color:var(--default-bg-panel-color);border-top:1px solid var(--ffsv3-border-color);border-bottom:1px solid var(--ffsv3-border-color);border-left:none;border-right:none;border-radius:0;box-shadow:none;padding:12px 10px;margin:0}.ff-filter-box summary{cursor:pointer;font-size:14px;font-weight:700;outline:none;-webkit-user-select:none;user-select:none}.ff-filter-box[open] summary{border-bottom:1px solid var(--ffsv3-border-color);padding-bottom:6px;margin-bottom:12px}.ff-filter-header-actions{display:flex;gap:6px;align-items:center}.ff-filter-box .ff-action-icon-btn{background:var(--ffsv3-alt-bg-color);border:1px solid var(--ffsv3-border-color);border-radius:4px;color:var(--ffsv3-text-color);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;padding:0;transition:background-color .2s,color .2s,opacity .2s}.ff-filter-box .ff-action-icon-btn:hover{background-color:var(--ffsv3-hover-color)}.ff-filter-box .ff-action-icon-btn.active{color:var(--ffsv3-text-color);opacity:1}.ff-filter-box .ff-action-icon-btn.inactive{color:var(--ffsv3-text-color);opacity:.4}.ff-filter-box .ff-action-icon-btn svg{width:14px;height:14px;fill:currentColor}.ff-filter-box .ff-action-icon-btn.reset-btn svg{transition:transform .25s ease-in-out}.ff-filter-box .ff-action-icon-btn.reset-btn:hover svg{transform:rotate(-180deg)}.ff-filter-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.grp-sort{order:1}.grp-level{order:2}.grp-activity{order:3}.grp-status{order:4}.grp-ff{order:5}.grp-stats{order:6}.grp-columns{order:7}@media(min-width:784px){.ff-filter-grid{grid-template-columns:repeat(3,1fr)}.ff-filter-grid>*{order:0}}.ff-filter-group{display:flex;flex-direction:column;gap:2px}.ff-filter-options{display:flex;flex-direction:column}.ff-filter-options label{display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer}.ff-filter-range-inputs{display:flex;align-items:center;gap:4px}.ff-filter-range-inputs input{flex:1;width:0;min-width:30px;max-width:80px;padding:4px;border:1px solid var(--ffsv3-border-color);border-radius:4px;background:var(--ffsv3-alt-bg-color);color:var(--ffsv3-text-color);font-size:11px;text-align:center}.ff-filter-box button{padding:6px 10px;border:1px solid var(--ffsv3-border-color);border-radius:4px;background:var(--ffsv3-alt-bg-color);color:var(--ffsv3-text-color);font-size:12px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;transition:background-color .2s}.ff-filter-box button:hover{background-color:var(--ffsv3-hover-color)}.chain-options-flex-container{display:flex;flex-wrap:wrap;gap:10px 20px;align-items:center;justify-content:flex-start;margin-left:20px;margin-top:10px;margin-bottom:15px}.chain-options-flex-container .input-row-inline{margin-bottom:0}.faction-war .ffscouter-cell{float:left!important;width:32px!important;height:20px!important;font-size:11px!important;font-weight:700!important;border-radius:3px!important;box-sizing:border-box!important;margin:7px 4px!important;padding:0!important;text-align:center!important;line-height:20px!important;z-index:10!important}.ffscouter-cell{cursor:pointer!important}.faction-war .ffscouter-header{float:left!important;width:38px!important;font-size:12px!important;font-weight:700!important;padding:0!important;text-align:center!important;background-color:transparent!important}.faction-war[data-ffscouter-hide-level=true] .level:not(.ffscouter-cell):not(.ffscouter-header){display:none!important}.faction-war[data-ffscouter-hide-status=true] .status,.faction-war[data-ffscouter-hide-score=true] .points{display:none!important}.faction-war[data-ffscouter-col-display=fair_fight]:not([data-ffscouter-hide-level=true]) .level:not(.ffscouter-cell):not(.ffscouter-header),.faction-war[data-ffscouter-col-display=battle_stats]:not([data-ffscouter-hide-level=true]) .level:not(.ffscouter-cell):not(.ffscouter-header){width:29px!important}.faction-war[data-ffscouter-col-display=fair_fight]:not([data-ffscouter-hide-level=true]) .status,.faction-war[data-ffscouter-col-display=battle_stats]:not([data-ffscouter-hide-level=true]) .status{width:50px!important}.faction-war[data-ffscouter-col-display=fair_fight]:not([data-ffscouter-hide-level=true]) .points,.faction-war[data-ffscouter-col-display=battle_stats]:not([data-ffscouter-hide-level=true]) .points{width:38px!important}.members-list li.enemy:has(>.tt-stats-estimate),.members-list li.your:has(>.tt-stats-estimate),.members-list li.enemy:has(>div.clear~*),.members-list li.your:has(>div.clear~*){padding-bottom:22px!important;position:relative!important}.members-list li.enemy>.tt-stats-estimate,.members-list li.your>.tt-stats-estimate,.members-list li.enemy>div.clear~*,.members-list li.your>div.clear~*{position:absolute!important;bottom:2px!important;left:10px!important;height:18px!important;line-height:18px!important;font-size:11px!important;width:calc(100% - 20px)!important;display:block!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}";
+  const stylesCss = ".ffsv3-gauge{position:relative;display:block;padding:0}.ffsv3-arrow{position:absolute;transform:translate(-50%,-30%);padding:0;top:0;left:calc(var(--ffsv3-arrow-width) / 2 + var(--band-percent) * (100% - var(--ffsv3-arrow-width)) / 100);width:var(--ffsv3-arrow-width);object-fit:cover;pointer-events:none}.ffsv3-bubble{position:absolute;transform:translate(-50%,-30%);top:0;left:calc(var(--ffsv3-arrow-width) / 2 + var(--band-percent) * (100% - var(--ffsv3-arrow-width)) / 100);min-width:22px;height:14px;line-height:12px;border:1px solid rgba(0,0,0,.4);border-radius:8px;font-size:8.5px;font-weight:700;font-family:Geneva,Arial,sans-serif;text-align:center;padding:0 4px;box-sizing:border-box;pointer-events:none;white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;text-shadow:0 1px 1px rgba(0,0,0,.5);box-shadow:0 1px 2px #0000004d;z-index:10}.ffsv3-mini-desc{padding:0 5px}body{--ffsv3-bg-color: #f0f0f0;--ffsv3-alt-bg-color: #fff;--ffsv3-border-color: #ccc;--ffsv3-input-color: #ccc;--ffsv3-text-color: #000;--ffsv3-hover-color: #ddd;--ffsv3-glow-color: #4caf50;--ffsv3-success-color: #4caf50;--ffsv3-arrow-width: 20px}body.dark-mode{--ffsv3-bg-color: #333;--ffsv3-alt-bg-color: #383838;--ffsv3-border-color: #444;--ffsv3-input-color: #504f4f;--ffsv3-text-color: #ccc;--ffsv3-hover-color: #555;--ffsv3-glow-color: #4caf50;--ffsv3-success-color: #4caf50}.ff-premium-upgrade-line{display:block;margin-top:4px;line-height:1.3;white-space:nowrap;font-size:12px;font-style:normal}@media(max-width:768px){.ff-premium-upgrade-line{margin-top:6px;line-height:1.35;white-space:normal;overflow-wrap:anywhere}}ff-settings-panel{display:block}ff-settings-panel .accordion{margin:10px 0;padding:15px;background-color:var(--ffsv3-bg-color);border:1px solid var(--ffsv3-border-color);border-radius:5px;color:var(--ffsv3-text-color)}ff-settings-panel .accordion.glow{border-color:var(--ffsv3-glow-color);box-shadow:0 0 8px #4caf5080}ff-settings-panel .input-row{display:flex;flex-direction:column;gap:5px;margin-bottom:15px}ff-settings-panel .input-row-inline{display:flex;align-items:center;gap:10px;margin-bottom:15px}ff-settings-panel .blur-mode{filter:blur(4px);transition:filter .2s ease}ff-settings-panel .blur-mode:hover,ff-settings-panel .blur-mode:focus{filter:blur(0)}ff-settings-panel .error-msg{color:#f33;font-size:13px;margin-top:5px}ff-settings-panel input[type=text],ff-settings-panel input[type=number]{box-sizing:border-box!important;text-align:left;vertical-align:top;width:178px;height:34px!important;margin-right:8px;padding:9px 10px;line-height:14px;display:inline-block}ff-settings-panel input[type=number].ff-number{width:80px}ff-settings-panel select{box-sizing:border-box;text-align:left;vertical-align:top;width:178px;height:34px;margin-right:8px;padding:8px 10px;line-height:14px;display:inline-block;border:var(--input-border-color, 1px solid var(--ffsv3-border-color));border-radius:5px;font-family:Arial,serif;color:var(--input-color, var(--ffsv3-text-color));background:var(--input-background-color, var(--ffsv3-alt-bg-color))}:root .dark-mode ff-settings-panel select option{background-color:#000;color:var(--input-color)}ff-settings-panel .ff-api-explanation{background-color:var(--ffsv3-alt-bg-color);border:1px solid var(--ffsv3-border-color);border-radius:8px;color:var(--ffsv3-text-color);margin-bottom:20px;padding:12px 16px;font-size:13px;line-height:1.5}ff-settings-panel a{color:var(--ffsv3-success-color);text-decoration:underline}ff-settings-panel .is_premium_enabled{display:inline-block;background:#4caf50;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;vertical-align:middle}ff-settings-panel .is_premium_disabled{display:inline-block;background:#c62828;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;vertical-align:middle}.profile-status{position:relative}ff-flight-profile-status{position:absolute;right:10px;bottom:2px;z-index:2}.ff-scouter-profile-flight-info{display:inline-block;text-align:right;font-size:11px;line-height:1.25;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.85)}.profile-status .ff-scouter-profile-flight-info a{color:#fff;text-decoration:underline}ff-faction-filter-box{display:block}.ff-filter-box,.ff-filter-box *,.ff-filter-box *:before,.ff-filter-box *:after{box-sizing:border-box!important}.ff-filter-box{background-color:var(--ffsv3-bg-color);border:1px solid var(--ffsv3-border-color);border-radius:8px;padding:12px 16px;margin-bottom:16px;color:var(--ffsv3-text-color);font-family:Arial,sans-serif;box-shadow:0 2px 5px #0000000d}.ff-filter-box.no-borders{background-color:var(--default-bg-panel-color);border-top:1px solid var(--ffsv3-border-color);border-bottom:1px solid var(--ffsv3-border-color);border-left:none;border-right:none;border-radius:0;box-shadow:none;padding:12px 10px;margin:0}.ff-filter-box summary{cursor:pointer;font-size:14px;font-weight:700;outline:none;-webkit-user-select:none;user-select:none}.ff-filter-box[open] summary{border-bottom:1px solid var(--ffsv3-border-color);padding-bottom:6px;margin-bottom:12px}.ff-filter-header-actions{display:flex;gap:6px;align-items:center}.ff-filter-box .ff-action-icon-btn{background:var(--ffsv3-alt-bg-color);border:1px solid var(--ffsv3-border-color);border-radius:4px;color:var(--ffsv3-text-color);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;padding:0;transition:background-color .2s,color .2s,opacity .2s}.ff-filter-box .ff-action-icon-btn:hover{background-color:var(--ffsv3-hover-color)}.ff-filter-box .ff-action-icon-btn.active{color:var(--ffsv3-text-color);opacity:1}.ff-filter-box .ff-action-icon-btn.inactive{color:var(--ffsv3-text-color);opacity:.4}.ff-filter-box .ff-action-icon-btn svg{width:14px;height:14px;fill:currentColor}.ff-filter-box .ff-action-icon-btn.reset-btn svg{transition:transform .25s ease-in-out}.ff-filter-box .ff-action-icon-btn.reset-btn:hover svg{transform:rotate(-180deg)}.ff-filter-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.grp-sort{order:1}.grp-level{order:2}.grp-activity{order:3}.grp-status{order:4}.grp-ff{order:5}.grp-stats{order:6}.grp-columns{order:7}@media(min-width:784px){.ff-filter-grid{grid-template-columns:repeat(3,1fr)}.ff-filter-grid>*{order:0}}.ff-filter-group{display:flex;flex-direction:column;gap:2px}.ff-filter-options{display:flex;flex-direction:column}.ff-filter-options label{display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer}.ff-filter-range-inputs{display:flex;align-items:center;gap:4px}.ff-filter-range-inputs input{flex:1;width:0;min-width:30px;max-width:80px;padding:4px;border:1px solid var(--ffsv3-border-color);border-radius:4px;background:var(--ffsv3-alt-bg-color);color:var(--ffsv3-text-color);font-size:11px;text-align:center}.ff-filter-box button{padding:6px 10px;border:1px solid var(--ffsv3-border-color);border-radius:4px;background:var(--ffsv3-alt-bg-color);color:var(--ffsv3-text-color);font-size:12px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;transition:background-color .2s}.ff-filter-box button:hover{background-color:var(--ffsv3-hover-color)}.chain-options-flex-container{display:flex;flex-wrap:wrap;gap:10px 20px;align-items:center;justify-content:flex-start;margin-left:20px;margin-top:10px;margin-bottom:15px}.chain-options-flex-container .input-row-inline{margin-bottom:0}.faction-war .ffscouter-cell{float:left!important;width:32px!important;height:20px!important;font-size:11px!important;font-weight:700!important;border-radius:3px!important;box-sizing:border-box!important;margin:7px 4px!important;padding:0!important;text-align:center!important;line-height:20px!important;z-index:10!important}.ffscouter-cell{cursor:pointer!important}.faction-war .ffscouter-header{float:left!important;width:38px!important;font-size:12px!important;font-weight:700!important;padding:0!important;text-align:center!important;background-color:transparent!important}.faction-war[data-ffscouter-hide-level=true] .level:not(.ffscouter-cell):not(.ffscouter-header){display:none!important}.faction-war[data-ffscouter-hide-status=true] .status,.faction-war[data-ffscouter-hide-score=true] .points{display:none!important}.faction-war[data-ffscouter-col-display=fair_fight]:not([data-ffscouter-hide-level=true]) .level:not(.ffscouter-cell):not(.ffscouter-header),.faction-war[data-ffscouter-col-display=battle_stats]:not([data-ffscouter-hide-level=true]) .level:not(.ffscouter-cell):not(.ffscouter-header){width:29px!important}.faction-war[data-ffscouter-col-display=fair_fight]:not([data-ffscouter-hide-level=true]) .status,.faction-war[data-ffscouter-col-display=battle_stats]:not([data-ffscouter-hide-level=true]) .status{width:50px!important}.faction-war[data-ffscouter-col-display=fair_fight]:not([data-ffscouter-hide-level=true]) .points,.faction-war[data-ffscouter-col-display=battle_stats]:not([data-ffscouter-hide-level=true]) .points{width:38px!important}.members-list li.enemy:has(>.tt-stats-estimate),.members-list li.your:has(>.tt-stats-estimate),.members-list li.enemy:has(>div.clear~*),.members-list li.your:has(>div.clear~*){padding-bottom:22px!important;position:relative!important}.members-list li.enemy>.tt-stats-estimate,.members-list li.your>.tt-stats-estimate,.members-list li.enemy>div.clear~*,.members-list li.your>div.clear~*{position:absolute!important;bottom:2px!important;left:10px!important;height:18px!important;line-height:18px!important;font-size:11px!important;width:calc(100% - 20px)!important;display:block!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ff-filter-box summary:focus-visible{outline:2px solid var(--ffsv3-glow-color);outline-offset:2px}";
   importCSS(stylesCss);
   const log = logger.child("boot");
   const INJECTION_KEY = "__FF_SCOUTER_V3_INJECTED__";
@@ -6882,30 +7014,11 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       return;
     }
     w[INJECTION_KEY] = true;
-    log.info("Initializing", "3.0-alpha26");
+    log.info("Initializing", "3.0-alpha27");
     if (ffscouter.analytics_enabled) {
       unsafeWindow.ffscouter = ffscouter;
       window.ffscouter = ffscouter;
     }
-    setHttpInterceptor({
-
-before(url, init) {
-        for (const feat of Features) {
-          if (feat.httpIntercept?.before) {
-            feat.httpIntercept.before(url, init);
-          }
-        }
-        return void 0;
-      },
-      after(bodyText, response, ctx) {
-        for (const feat of Features) {
-          if (feat.httpIntercept?.after) {
-            feat.httpIntercept.after(bodyText, response, ctx);
-          }
-        }
-        return void 0;
-      }
-    });
     for (const feat of Features) {
       if (feat.executionTime === StartTime.DocumentStart && await feat.shouldRun())
         feat.run();
