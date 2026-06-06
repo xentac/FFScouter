@@ -3,7 +3,6 @@ import { Features } from "@features/index";
 import { wait_for_body } from "@utils/dom";
 import { ffscouter } from "@utils/ffscouter";
 import logger from "@utils/logger";
-import { setHttpInterceptor } from "@utils/network";
 import { init_ui } from "./ui";
 
 const log = logger.child("boot");
@@ -27,34 +26,7 @@ async function main() {
     (window as any).ffscouter = ffscouter;
   }
 
-  // todo: settings panel
-
   // loop over features, check if enabled, see if we need to wait for document ready
-
-  // this needs to be redone as we lose the ability to change url in before & resp in after
-  setHttpInterceptor({
-    // also a check if the feature's active and it has before / after set up
-    // (unsure why this doesn't throw an error btw)
-    before(url, init) {
-      for (const feat of Features) {
-        if (feat.httpIntercept?.before) {
-          feat.httpIntercept.before(url, init);
-        }
-      }
-
-      return undefined;
-    },
-
-    after(bodyText, response, ctx) {
-      for (const feat of Features) {
-        if (feat.httpIntercept?.after) {
-          feat.httpIntercept.after(bodyText, response, ctx);
-        }
-      }
-
-      return undefined;
-    },
-  });
 
   for (const feat of Features) {
     // + check if feature is toggled
