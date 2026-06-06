@@ -27,18 +27,28 @@ export class FFHeaderLine extends LitElement {
   @state() private loading = false;
 
   // 2. Intercept property changes and run the async work
-  protected override async willUpdate(
+  protected override willUpdate(
     changedProperties: Map<string | number | symbol, unknown>,
   ) {
     if (changedProperties.has("data") && this.data) {
       this.loading = true;
-      try {
-        this.is_premium = await check_key_status.is_premium();
-      } catch (error) {
-        log.error(error);
-      } finally {
-        this.loading = false;
-      }
+      const currentData = this.data;
+
+      check_key_status
+        .is_premium()
+        .then((premium) => {
+          if (this.data === currentData) {
+            this.is_premium = premium;
+          }
+        })
+        .catch((error) => {
+          log.error(error);
+        })
+        .finally(() => {
+          if (this.data === currentData) {
+            this.loading = false;
+          }
+        });
     }
   }
 

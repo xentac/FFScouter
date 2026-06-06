@@ -41,6 +41,8 @@ const setup_mini_observer = () => {
     return;
   }
 
+  let lastPlayerId: number | null = null;
+
   const mp_observer = new MutationObserver((mutations) => {
     // If the mutation is us, don't do any more processing
     for (const mutation of mutations) {
@@ -65,10 +67,22 @@ const setup_mini_observer = () => {
     const player_id = get_player_id_in_element(miniroot);
 
     if (!player_id) {
+      lastPlayerId = null;
       return;
     }
+    if (player_id === lastPlayerId) {
+      return;
+    }
+    lastPlayerId = player_id;
+
     // Get FF Scouter data
     ffscouter.get(player_id).then(async (d: FFData) => {
+      // Discard if the profile opened a different player in the meantime
+      const current_player_id = get_player_id_in_element(miniroot);
+      if (current_player_id !== player_id) {
+        return;
+      }
+
       if (d.no_data) {
         return;
       }

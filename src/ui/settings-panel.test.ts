@@ -56,3 +56,21 @@ test("ff-settings-panel dispatches ff-save event with correct gaugeMarkerType wh
   expect(saveEvents.length).toBe(1);
   expect(saveEvents[0]?.detail?.gaugeMarkerType).toBe("bubble_ff");
 });
+
+test("ff-settings-panel retains unsaved draft changes for other properties when a single property is updated externally", async () => {
+  const el = document.createElement("ff-settings-panel") as FFSettingsPanel;
+  document.body.appendChild(el);
+  await el.updateComplete;
+
+  const panel = el as any;
+  // Make an unsaved draft edit
+  panel.draftLowRange = 1.5;
+
+  // Simulate an external property update from the parent (e.g. key verification success)
+  el.apiKey = "new-verified-key";
+  await el.updateComplete;
+
+  // Verify that apiKey was updated, but the unsaved draft change was not reset
+  expect(panel.draftApiKey).toBe("new-verified-key");
+  expect(panel.draftLowRange).toBe(1.5);
+});

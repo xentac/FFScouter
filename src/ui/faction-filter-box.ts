@@ -516,7 +516,7 @@ export class FFFactionFilterBox extends LitElement {
         @toggle="${this.onToggle}"
       >
         <summary
-          style="cursor: pointer; font-weight: bold; font-size: 14px; outline: none; user-select: none;"
+          style="cursor: pointer; font-weight: bold; font-size: 14px; user-select: none;"
         >
           <div
             style="display: inline-flex; justify-content: space-between; align-items: center; width: calc(100% - 24px); vertical-align: middle;"

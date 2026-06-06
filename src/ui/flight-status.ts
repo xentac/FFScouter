@@ -111,7 +111,7 @@ export class FFFlightProfileStatus extends LitElement {
     }
   }
 
-  protected override async willUpdate(
+  protected override willUpdate(
     changedProperties: Map<string | number | symbol, unknown>,
   ) {
     if (changedProperties.has("playerId") && this.playerId) {
@@ -119,25 +119,31 @@ export class FFFlightProfileStatus extends LitElement {
       this.error = null;
       this.loading = true;
       this.is_premium = null;
-      await this.fetch_data();
+      this.fetch_data();
     }
   }
 
   private async fetch_data() {
     if (!this.playerId) return;
+    const fetchId = this.playerId;
 
     try {
-      this.is_premium = await check_key_status.is_premium();
+      const is_premium = await check_key_status.is_premium();
+      if (this.playerId !== fetchId) return;
 
-      if (!this.is_premium) {
+      this.is_premium = is_premium;
+
+      if (!is_premium) {
         this.loading = false;
         return;
       }
 
       const result = await ffscouter.get_flights(this.playerId);
+      if (this.playerId !== fetchId) return;
       this.data = result;
       this.error = null;
     } catch (err: any) {
+      if (this.playerId !== fetchId) return;
       log.error("Failed to fetch flight data", err);
 
       if (err instanceof FFApiError) {
@@ -158,7 +164,9 @@ export class FFFlightProfileStatus extends LitElement {
         this.error = err.message || "Flight tracking unavailable";
       }
     } finally {
-      this.loading = false;
+      if (this.playerId === fetchId) {
+        this.loading = false;
+      }
     }
   }
 

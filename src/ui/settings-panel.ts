@@ -99,31 +99,45 @@ export class FFSettingsPanel extends LitElement {
   }
 
   override willUpdate(changedProperties: Map<PropertyKey, unknown>) {
-    if (
-      changedProperties.has("apiKey") ||
-      changedProperties.has("lowRange") ||
-      changedProperties.has("highRange") ||
-      changedProperties.has("maxRange") ||
-      changedProperties.has("chainButtonEnabled") ||
-      changedProperties.has("chainLinkType") ||
-      changedProperties.has("chainTabType") ||
-      changedProperties.has("chainFFTarget") ||
-      changedProperties.has("chainMinLevel") ||
-      changedProperties.has("chainMaxLevel") ||
-      changedProperties.has("chainInactive") ||
-      changedProperties.has("chainMinFF") ||
-      changedProperties.has("chainMaxFF") ||
-      changedProperties.has("chainFactionless") ||
-      changedProperties.has("ffHistoryEnabled") ||
-      changedProperties.has("factionsColDisplay") ||
-      changedProperties.has("warColDisplay") ||
-      changedProperties.has("debugLogs") ||
-      changedProperties.has("analyticsEnabled") ||
-      changedProperties.has("gaugeMarkerType") ||
-      changedProperties.has("warQuickAttackAction")
-    ) {
-      this.resetDrafts();
-    }
+    if (changedProperties.has("apiKey")) this.draftApiKey = this.apiKey;
+    if (changedProperties.has("lowRange")) this.draftLowRange = this.lowRange;
+    if (changedProperties.has("highRange"))
+      this.draftHighRange = this.highRange;
+    if (changedProperties.has("maxRange")) this.draftMaxRange = this.maxRange;
+    if (changedProperties.has("chainButtonEnabled"))
+      this.draftChainButtonEnabled = this.chainButtonEnabled;
+    if (changedProperties.has("chainLinkType"))
+      this.draftChainLinkType = this.chainLinkType;
+    if (changedProperties.has("chainTabType"))
+      this.draftChainTabType = this.chainTabType;
+    if (changedProperties.has("chainFFTarget"))
+      this.draftChainFFTarget = this.chainFFTarget;
+    if (changedProperties.has("chainMinLevel"))
+      this.draftChainMinLevel = this.chainMinLevel;
+    if (changedProperties.has("chainMaxLevel"))
+      this.draftChainMaxLevel = this.chainMaxLevel;
+    if (changedProperties.has("chainInactive"))
+      this.draftChainInactive = this.chainInactive;
+    if (changedProperties.has("chainMinFF"))
+      this.draftChainMinFF = this.chainMinFF;
+    if (changedProperties.has("chainMaxFF"))
+      this.draftChainMaxFF = this.chainMaxFF;
+    if (changedProperties.has("chainFactionless"))
+      this.draftChainFactionless = this.chainFactionless;
+    if (changedProperties.has("ffHistoryEnabled"))
+      this.draftFFHistoryEnabled = this.ffHistoryEnabled;
+    if (changedProperties.has("factionsColDisplay"))
+      this.draftFactionsColDisplay = this.factionsColDisplay;
+    if (changedProperties.has("warColDisplay"))
+      this.draftWarColDisplay = this.warColDisplay;
+    if (changedProperties.has("debugLogs"))
+      this.draftDebugLogs = this.debugLogs;
+    if (changedProperties.has("analyticsEnabled"))
+      this.draftAnalyticsEnabled = this.analyticsEnabled;
+    if (changedProperties.has("gaugeMarkerType"))
+      this.draftGaugeMarkerType = this.gaugeMarkerType;
+    if (changedProperties.has("warQuickAttackAction"))
+      this.draftWarQuickAttackAction = this.warQuickAttackAction;
   }
 
   private resetDrafts() {

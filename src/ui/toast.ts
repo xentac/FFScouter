@@ -42,12 +42,17 @@ export function toast(message: string, level: TOAST_LEVEL = TOAST_LEVEL.INFO) {
   toast.style.alignItems = "center";
   toast.style.gap = "10px";
 
-  const closeBtn = document.createElement("span");
+  const closeBtn = document.createElement("button");
   closeBtn.textContent = "×";
   closeBtn.style.cursor = "pointer";
   closeBtn.style.marginLeft = "8px";
   closeBtn.style.fontWeight = "bold";
   closeBtn.style.fontSize = "18px";
+  closeBtn.style.background = "none";
+  closeBtn.style.border = "none";
+  closeBtn.style.color = "inherit";
+  closeBtn.style.padding = "0";
+  closeBtn.style.lineHeight = "1";
   closeBtn.setAttribute("aria-label", "Close");
   closeBtn.onclick = () => toast.remove();
 

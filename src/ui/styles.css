@@ -148,10 +148,11 @@ ff-settings-panel .error-msg {
 
 ff-settings-panel input[type="text"],
 ff-settings-panel input[type="number"] {
+  box-sizing: border-box !important;
   text-align: left;
   vertical-align: top;
   width: 178px;
-  height: 14px;
+  height: 34px !important;
   margin-right: 8px;
   padding: 9px 10px;
   line-height: 14px;
@@ -159,7 +160,7 @@ ff-settings-panel input[type="number"] {
 }
 
 ff-settings-panel input[type="number"].ff-number {
-  width: 52px;
+  width: 80px;
 }
 
 ff-settings-panel select {
@@ -173,11 +174,11 @@ ff-settings-panel select {
   line-height: 14px;
   display: inline-block;
 
-  border: var(--input-border-color);
+  border: var(--input-border-color, 1px solid var(--ffsv3-border-color));
   border-radius: 5px;
   font-family: Arial, serif;
-  color: var(--input-color);
-  background: var(--input-background-color);
+  color: var(--input-color, var(--ffsv3-text-color));
+  background: var(--input-background-color, var(--ffsv3-alt-bg-color));
 }
 
 :root .dark-mode ff-settings-panel select option {
@@ -574,4 +575,9 @@ ff-faction-filter-box {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.ff-filter-box summary:focus-visible {
+  outline: 2px solid var(--ffsv3-glow-color);
+  outline-offset: 2px;
 }

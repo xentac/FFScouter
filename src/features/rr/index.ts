@@ -31,7 +31,7 @@ export default {
       const user_info_wrapper = node.querySelector(
         '.honor-text-wrap, [class*="userInfoBlock__"]',
       );
-      return user_info_wrapper !== undefined;
+      return user_info_wrapper !== null;
     };
     const row_handler = (options: HandlerFnOptions) => {
       if (!options.added) {

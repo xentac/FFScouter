@@ -41,6 +41,8 @@ const setup_mini_flight_observer = () => {
   const flight_element = document.createElement("ff-flight-profile-status");
   flight_element.compact = true;
 
+  let lastPlayerId: number | null = null;
+
   const mp_observer = new MutationObserver((mutations) => {
     // Prevent infinite loop from our own changes
     for (const mutation of mutations) {
@@ -58,8 +60,13 @@ const setup_mini_flight_observer = () => {
 
     const player_id = get_player_id_in_element(miniroot);
     if (!player_id) {
+      lastPlayerId = null;
       return;
     }
+    if (player_id === lastPlayerId) {
+      return;
+    }
+    lastPlayerId = player_id;
 
     const status = miniroot.querySelector(".profile-container");
     if (!status) {
