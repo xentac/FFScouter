@@ -297,3 +297,29 @@ test("clear_analytics clears all analytics entries in cache", async () => {
 
   await c.delete_db();
 });
+
+test("multi-tab deletion: delete_db does not hang when another connection is open, and other connection reopens transparently", async () => {
+  const dbName = "test-multi-tab";
+  const c1 = new FFCache(dbName);
+  const c2 = new FFCache(dbName);
+
+  await c1.update([get_player(1)]);
+  await c2.update([get_player(2)]);
+
+  expect(await c1.get([1])).toEqual(new Map([[1, add_expiry(get_player(1))]]));
+  expect(await c2.get([2])).toEqual(new Map([[2, add_expiry(get_player(2))]]));
+
+  const deletePromise = c1.delete_db();
+  const timeoutPromise = new Promise((_, reject) =>
+    setTimeout(() => reject(new Error("delete_db hung")), 2000),
+  );
+
+  await expect(
+    Promise.race([deletePromise, timeoutPromise]),
+  ).resolves.not.toThrow();
+
+  const getPromise = c2.get([2]);
+  await expect(getPromise).resolves.toEqual(new Map([[2, null]]));
+
+  await c2.delete_db();
+});

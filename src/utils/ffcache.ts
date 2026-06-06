@@ -58,6 +58,12 @@ export class FFCache {
   private last_clean = 0;
   private active_operations = 0;
   private close_timer: ReturnType<typeof setTimeout> | null = null;
+  private open_promise: Promise<IDBPDatabase<CacheDB>> | null = null;
+  private channel: BroadcastChannel | null = null;
+  private state: "CLOSED" | "OPEN" | "DELETING_LOCAL" | "DELETING_REMOTE" =
+    "CLOSED";
+  private deletion_promise: Promise<void> | null = null;
+  private resolve_deletion: (() => void) | null = null;
 
   private migrations: Map<number, MigrationFn> = new Map([
     [
@@ -98,44 +104,80 @@ export class FFCache {
 
   constructor(db_name: string) {
     this.db_name = db_name;
+    if (typeof BroadcastChannel !== "undefined") {
+      this.channel = new BroadcastChannel(`ffcache-channel-${db_name}`);
+      this.channel.onmessage = (event) => {
+        this.handle_broadcast(event.data);
+      };
+      if (typeof (this.channel as any).unref === "function") {
+        (this.channel as any).unref();
+      }
+    }
   }
 
   open = async () => {
     if (this.db) {
       return this.db;
     }
+    if (this.open_promise) {
+      return this.open_promise;
+    }
+    if (typeof BroadcastChannel !== "undefined" && !this.channel) {
+      this.channel = new BroadcastChannel(`ffcache-channel-${this.db_name}`);
+      this.channel.onmessage = (event) => {
+        this.handle_broadcast(event.data);
+      };
+      if (typeof (this.channel as any).unref === "function") {
+        (this.channel as any).unref();
+      }
+    }
     const cache = this;
-    this.db = await openDB<CacheDB>(this.db_name, this.db_version, {
-      upgrade(db, oldVersion, newVersion, transaction, _event) {
-        // …
-        log.info("Need to upgrade from", oldVersion, "to", newVersion);
+    this.open_promise = (async () => {
+      try {
+        const db = await openDB<CacheDB>(this.db_name, this.db_version, {
+          upgrade(db, oldVersion, newVersion, transaction, _event) {
+            // …
+            log.info("Need to upgrade from", oldVersion, "to", newVersion);
 
-        for (let i = (oldVersion ?? 0) + 1; i <= cache.db_version; i++) {
-          log.debug(`Migration: ${i}`);
-          const m = cache.migrations.get(i);
-          if (m) {
-            m(db, transaction);
-          } else {
-            log.debug(`Migration not found: ${i}`);
-          }
-          log.debug(`Migration complete: ${i}`);
-        }
-      },
-      blocking(currentVersion, blockedVersion, _event) {
-        log.debug(
-          `Can't open ${blockedVersion} because ${currentVersion} is open. Closing and reopening.`,
-        );
-        cache.db?.close();
-      },
-      /*blocked(currentVersion, blockedVersion, event) {
-        // …
-      },
-      terminated() {
-        // …
-      },*/
-    });
+            for (let i = (oldVersion ?? 0) + 1; i <= cache.db_version; i++) {
+              log.debug(`Migration: ${i}`);
+              const m = cache.migrations.get(i);
+              if (m) {
+                m(db, transaction);
+              } else {
+                log.debug(`Migration not found: ${i}`);
+              }
+              log.debug(`Migration complete: ${i}`);
+            }
+          },
+          blocking(currentVersion, blockedVersion, event) {
+            log.debug(
+              `Can't open ${blockedVersion} because ${currentVersion} is open. Closing.`,
+            );
+            cache.close();
+            if (
+              event?.target &&
+              typeof (event.target as any).close === "function"
+            ) {
+              (event.target as any).close();
+            }
+          },
+          /*blocked(currentVersion, blockedVersion, event) {
+            // …
+          },
+          terminated() {
+            // …
+          },*/
+        });
+        cache.db = db;
+        cache.state = "OPEN";
+        return db;
+      } finally {
+        cache.open_promise = null;
+      }
+    })();
 
-    return this.db;
+    return this.open_promise;
   };
 
   close = () => {
@@ -143,9 +185,13 @@ export class FFCache {
       this.db.close();
       this.db = null;
     }
+    this.state = "CLOSED";
   };
 
   start_op = async (): Promise<IDBPDatabase<CacheDB>> => {
+    if (this.state === "DELETING_LOCAL" || this.state === "DELETING_REMOTE") {
+      await this.wait_for_deletion_complete();
+    }
     this.active_operations++;
     if (this.close_timer) {
       clearTimeout(this.close_timer);
@@ -172,15 +218,80 @@ export class FFCache {
       clearTimeout(this.close_timer);
       this.close_timer = null;
     }
+
+    this.state = "DELETING_LOCAL";
+    this.channel?.postMessage({ type: "deleting" });
+
+    await this.wait_for_active_ops();
     this.close();
 
-    await deleteDB(this.db_name, {
-      blocked: () => {
-        log.debug("deleteDB blocked callback called!");
-      },
-    });
+    try {
+      await deleteDB(this.db_name, {
+        blocked: () => {
+          log.debug("deleteDB blocked callback called!");
+        },
+      });
+      log.info(`Successfully deleted ${this.db_name} IndexedDB.`);
+    } finally {
+      this.channel?.postMessage({ type: "deleted" });
+      this.state = "CLOSED";
+      if (this.resolve_deletion) {
+        this.resolve_deletion();
+        this.resolve_deletion = null;
+        this.deletion_promise = null;
+      }
+      if (this.channel) {
+        this.channel.close();
+        this.channel = null;
+      }
+    }
+  };
 
-    log.info(`Successfully deleted ${this.db_name} IndexedDB.`);
+  private handle_broadcast = (data: any) => {
+    if (data && typeof data === "object") {
+      if (data.type === "deleting") {
+        this.state = "DELETING_REMOTE";
+        if (!this.deletion_promise) {
+          this.deletion_promise = new Promise<void>((resolve) => {
+            this.resolve_deletion = resolve;
+          });
+        }
+        this.close();
+      } else if (data.type === "deleted") {
+        this.state = "CLOSED";
+        if (this.resolve_deletion) {
+          this.resolve_deletion();
+          this.resolve_deletion = null;
+          this.deletion_promise = null;
+        }
+      }
+    }
+  };
+
+  private wait_for_deletion_complete = async () => {
+    while (
+      this.state === "DELETING_LOCAL" ||
+      this.state === "DELETING_REMOTE"
+    ) {
+      if (this.deletion_promise) {
+        await this.deletion_promise;
+      } else {
+        await new Promise((resolve) => setTimeout(resolve, 10));
+      }
+    }
+  };
+
+  private wait_for_active_ops = async () => {
+    if (this.open_promise) {
+      try {
+        await this.open_promise;
+      } catch {
+        // ignore
+      }
+    }
+    while (this.active_operations > 0) {
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    }
   };
 
   get = async (

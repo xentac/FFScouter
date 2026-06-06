@@ -1,6 +1,11 @@
+import { BroadcastChannel as NodeBroadcastChannel } from "node:worker_threads";
 import { setup } from "vitest-indexeddb";
 
 setup();
+
+if (typeof globalThis.BroadcastChannel === "undefined") {
+  globalThis.BroadcastChannel = NodeBroadcastChannel as any;
+}
 
 // Polyfill localStorage if it's missing or incomplete (e.g. Node 25+ or Bun native stubs)
 if (
