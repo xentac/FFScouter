@@ -33,6 +33,9 @@ test("FFConfig gets default values when storage is empty", () => {
   expect(config.war_col_display).toEqual(CONFIG_DEFAULTS.war_col_display);
   expect(config.debug_logs).toEqual(CONFIG_DEFAULTS.debug_logs);
   expect(config.analytics_enabled).toEqual(CONFIG_DEFAULTS.analytics_enabled);
+  expect(config.network_interception_enabled).toEqual(
+    CONFIG_DEFAULTS.network_interception_enabled,
+  );
   expect(config.chain_min_level).toEqual(CONFIG_DEFAULTS.chain_min_level);
   expect(config.chain_max_level).toEqual(CONFIG_DEFAULTS.chain_max_level);
   expect(config.chain_inactive).toEqual(CONFIG_DEFAULTS.chain_inactive);
@@ -57,6 +60,7 @@ test("FFConfig sets and gets custom configuration values", () => {
   config.war_col_display = FactionsColDisplay.FAIR_FIGHT;
   config.debug_logs = true;
   config.analytics_enabled = true;
+  config.network_interception_enabled = false;
   config.chain_min_level = 10;
   config.chain_max_level = 90;
   config.chain_inactive = false;
@@ -78,6 +82,7 @@ test("FFConfig sets and gets custom configuration values", () => {
   expect(config.war_col_display).toEqual(FactionsColDisplay.FAIR_FIGHT);
   expect(config.debug_logs).toBe(true);
   expect(config.analytics_enabled).toBe(true);
+  expect(config.network_interception_enabled).toBe(false);
   expect(config.chain_min_level).toEqual(10);
   expect(config.chain_max_level).toEqual(90);
   expect(config.chain_inactive).toBe(false);
@@ -108,6 +113,7 @@ test("FFConfig.reset resets values to their default states except the api key", 
   config.low_ff_range = 5.0;
   config.debug_logs = true;
   config.analytics_enabled = true;
+  config.network_interception_enabled = false;
   config.chain_min_level = 15;
   config.chain_max_level = 85;
   config.chain_inactive = false;
@@ -134,6 +140,9 @@ test("FFConfig.reset resets values to their default states except the api key", 
   expect(config.war_col_display).toEqual(CONFIG_DEFAULTS.war_col_display);
   expect(config.debug_logs).toEqual(CONFIG_DEFAULTS.debug_logs);
   expect(config.analytics_enabled).toEqual(CONFIG_DEFAULTS.analytics_enabled);
+  expect(config.network_interception_enabled).toEqual(
+    CONFIG_DEFAULTS.network_interception_enabled,
+  );
   expect(config.chain_min_level).toEqual(CONFIG_DEFAULTS.chain_min_level);
   expect(config.chain_max_level).toEqual(CONFIG_DEFAULTS.chain_max_level);
   expect(config.chain_inactive).toEqual(CONFIG_DEFAULTS.chain_inactive);

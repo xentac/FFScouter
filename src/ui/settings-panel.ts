@@ -48,6 +48,8 @@ export class FFSettingsPanel extends LitElement {
   @property({ type: Boolean }) debugLogs: boolean = CONFIG_DEFAULTS.debug_logs;
   @property({ type: Boolean }) analyticsEnabled: boolean =
     CONFIG_DEFAULTS.analytics_enabled;
+  @property({ type: Boolean }) networkInterceptionEnabled: boolean =
+    CONFIG_DEFAULTS.network_interception_enabled;
   @property({ type: String }) gaugeMarkerType: GaugeMarkerType =
     CONFIG_DEFAULTS.gauge_marker_type;
   @property({ type: String }) warQuickAttackAction: WarQuickAttackAction =
@@ -85,6 +87,8 @@ export class FFSettingsPanel extends LitElement {
   @state() private draftDebugLogs: boolean = CONFIG_DEFAULTS.debug_logs;
   @state() private draftAnalyticsEnabled: boolean =
     CONFIG_DEFAULTS.analytics_enabled;
+  @state() private draftNetworkInterceptionEnabled: boolean =
+    CONFIG_DEFAULTS.network_interception_enabled;
   @state() private draftGaugeMarkerType: GaugeMarkerType =
     CONFIG_DEFAULTS.gauge_marker_type;
   @state() private draftWarQuickAttackAction: WarQuickAttackAction =
@@ -134,6 +138,8 @@ export class FFSettingsPanel extends LitElement {
       this.draftDebugLogs = this.debugLogs;
     if (changedProperties.has("analyticsEnabled"))
       this.draftAnalyticsEnabled = this.analyticsEnabled;
+    if (changedProperties.has("networkInterceptionEnabled"))
+      this.draftNetworkInterceptionEnabled = this.networkInterceptionEnabled;
     if (changedProperties.has("gaugeMarkerType"))
       this.draftGaugeMarkerType = this.gaugeMarkerType;
     if (changedProperties.has("warQuickAttackAction"))
@@ -160,6 +166,7 @@ export class FFSettingsPanel extends LitElement {
     this.draftWarColDisplay = this.warColDisplay;
     this.draftDebugLogs = this.debugLogs;
     this.draftAnalyticsEnabled = this.analyticsEnabled;
+    this.draftNetworkInterceptionEnabled = this.networkInterceptionEnabled;
     this.draftGaugeMarkerType = this.gaugeMarkerType;
     this.draftWarQuickAttackAction = this.warQuickAttackAction;
   }
@@ -212,6 +219,7 @@ export class FFSettingsPanel extends LitElement {
           warColDisplay: this.draftWarColDisplay,
           debugLogs: this.draftDebugLogs,
           analyticsEnabled: this.draftAnalyticsEnabled,
+          networkInterceptionEnabled: this.draftNetworkInterceptionEnabled,
           gaugeMarkerType: this.draftGaugeMarkerType,
           warQuickAttackAction: this.draftWarQuickAttackAction,
         },
@@ -370,6 +378,13 @@ export class FFSettingsPanel extends LitElement {
 
   private onAnalyticsEnabledChange(e: Event) {
     this.draftAnalyticsEnabled = (e.target as HTMLInputElement).checked;
+    this.showSavedMessage = false;
+  }
+
+  private onNetworkInterceptionEnabledChange(e: Event) {
+    this.draftNetworkInterceptionEnabled = (
+      e.target as HTMLInputElement
+    ).checked;
     this.showSavedMessage = false;
   }
 
@@ -693,6 +708,19 @@ export class FFSettingsPanel extends LitElement {
             />
             <label for="analytics-toggle"
               >Enable local analytics logging (last 30 days)</label
+            >
+          </div>
+
+          <!-- Network Interception Toggle -->
+          <div class="input-row-inline">
+            <input
+              id="network-interception-toggle"
+              type="checkbox"
+              .checked=${this.draftNetworkInterceptionEnabled}
+              @change=${this.onNetworkInterceptionEnabledChange}
+            />
+            <label for="network-interception-toggle"
+              >Enable network request interception (Fetch/XHR/WS)</label
             >
           </div>
 

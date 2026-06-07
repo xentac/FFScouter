@@ -43,6 +43,7 @@ export default {
     panel.warColDisplay = ffconfig.war_col_display;
     panel.debugLogs = ffconfig.debug_logs;
     panel.analyticsEnabled = ffconfig.analytics_enabled;
+    panel.networkInterceptionEnabled = ffconfig.network_interception_enabled;
     panel.gaugeMarkerType = ffconfig.gauge_marker_type;
     panel.warQuickAttackAction = ffconfig.war_quick_attack_action;
     panel.isPremium = await check_key_status.is_premium(true);
@@ -74,6 +75,7 @@ export default {
         logger.setLevel(LogLevel.INFO);
       }
       ffconfig.analytics_enabled = detail.analyticsEnabled;
+      ffconfig.network_interception_enabled = detail.networkInterceptionEnabled;
       ffconfig.gauge_marker_type = detail.gaugeMarkerType;
       ffconfig.war_quick_attack_action = detail.warQuickAttackAction;
       panel.isPremium = await check_key_status.is_premium(true);
@@ -106,6 +108,7 @@ export default {
       panel.warColDisplay = ffconfig.war_col_display;
       panel.debugLogs = ffconfig.debug_logs;
       panel.analyticsEnabled = ffconfig.analytics_enabled;
+      panel.networkInterceptionEnabled = ffconfig.network_interception_enabled;
       panel.gaugeMarkerType = ffconfig.gauge_marker_type;
       panel.warQuickAttackAction = ffconfig.war_quick_attack_action;
 

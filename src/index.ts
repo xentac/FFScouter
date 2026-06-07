@@ -3,6 +3,7 @@ import { Features } from "@features/index";
 import { wait_for_body } from "@utils/dom";
 import { ffscouter } from "@utils/ffscouter";
 import logger from "@utils/logger";
+import { registerHttpInterceptor } from "@utils/network";
 import { init_ui } from "./ui";
 
 const log = logger.child("boot");
@@ -33,8 +34,13 @@ async function main() {
     if (
       feat.executionTime === StartTime.DocumentStart &&
       (await feat.shouldRun())
-    )
+    ) {
+      if (feat.httpIntercept) {
+        feat.httpIntercept.name = feat.name;
+        registerHttpInterceptor(feat.httpIntercept);
+      }
       feat.run();
+    }
   }
 
   await wait_for_body(10_000);
@@ -44,8 +50,13 @@ async function main() {
     if (
       feat.executionTime === StartTime.DocumentBody &&
       (await feat.shouldRun())
-    )
+    ) {
+      if (feat.httpIntercept) {
+        feat.httpIntercept.name = feat.name;
+        registerHttpInterceptor(feat.httpIntercept);
+      }
       feat.run();
+    }
   }
 }
 
