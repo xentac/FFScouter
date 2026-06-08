@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FF Scouter V3
 // @namespace    xentac-v3
-// @version      3.0-alpha27
+// @version      3.0-alpha28
 // @author       xentac [3354782], MAVRI [2402357], rDacted [2670953], Weav3r [1853324], Glasnost [1844049]
 // @description  Shows the expected Fair Fight score against targets and faction war status
 // @license      GPLv3
@@ -161,7 +161,7 @@ formatArgs(args) {
     "FFSV3",
     0
 );
-  const log$e = logger.child("storage");
+  const log$f = logger.child("storage");
   var Time = ((Time2) => {
     Time2[Time2["Seconds"] = 1e3] = "Seconds";
     Time2[Time2["Minutes"] = 6e4] = "Minutes";
@@ -183,7 +183,7 @@ set(key, value, expireConfig) {
         };
         localStorage.setItem(this.prefix + key, JSON.stringify(item));
       } catch (error) {
-        log$e.error(`Error storing item '${key}':`, error);
+        log$f.error(`Error storing item '${key}':`, error);
       }
     }
 get(key) {
@@ -199,18 +199,18 @@ get(key) {
           item = null;
         }
         if (!item) {
-          log$e.warn(`Key '${key}' has invalid JSON in it.`);
+          log$f.warn(`Key '${key}' has invalid JSON in it.`);
           this.remove(key);
           return null;
         }
         if (item.expiration && Date.now() > item.expiration) {
           this.remove(key);
-          log$e.debug(`Key ${key} has expired.`);
+          log$f.debug(`Key ${key} has expired.`);
           return null;
         }
         return item.value;
       } catch (error) {
-        log$e.error(`Error retrieving item '${key}':`, error);
+        log$f.error(`Error retrieving item '${key}':`, error);
         return null;
       }
     }
@@ -218,7 +218,7 @@ remove(key) {
       try {
         localStorage.removeItem(this.prefix + key);
       } catch (error) {
-        log$e.error(`Error removing item [${key}]:`, error);
+        log$f.error(`Error removing item [${key}]:`, error);
       }
     }
 has(key) {
@@ -230,7 +230,7 @@ clearAll() {
           localStorage.removeItem(key);
         });
       } catch (error) {
-        log$e.error("Error clearing storage:", error);
+        log$f.error("Error clearing storage:", error);
       }
     }
   }
@@ -266,8 +266,9 @@ clearAll() {
     chain_max_ff: 2.5,
     chain_factionless: false,
     gauge_marker_type: "arrow",
-    war_quick_attack_action: "new_tab"
-};
+    war_quick_attack_action: "new_tab",
+    network_interception_enabled: false
+  };
   class FFConfig {
     constructor(name) {
       this.name = name;
@@ -456,6 +457,14 @@ clearAll() {
     set analytics_enabled(val) {
       this.storage.set("analytics_enabled", val);
     }
+    get network_interception_enabled() {
+      return this.storage.get(
+        "network_interception_enabled"
+) ?? CONFIG_DEFAULTS.network_interception_enabled;
+    }
+    set network_interception_enabled(val) {
+      this.storage.set("network_interception_enabled", val);
+    }
     get gauge_marker_type() {
       return this.storage.get(
         "gauge_marker_type"
@@ -554,6 +563,9 @@ clearAll() {
 );
       this.storage.remove(
         "analytics_enabled"
+);
+      this.storage.remove(
+        "network_interception_enabled"
 );
       this.storage.remove(
         "faction_filter_state"
@@ -1035,7 +1047,7 @@ clearAll() {
     }
     return parsed;
   };
-  const log$d = logger.child("api");
+  const log$e = logger.child("api");
   const CHECK_KEY = "check-key-status";
   class CheckKeyStatus {
     constructor(config, storage) {
@@ -1050,7 +1062,7 @@ clearAll() {
         try {
           result = await check_key(this.config.key);
         } catch (err) {
-          log$d.error(
+          log$e.error(
             "Received error response querying ffscouter check-key api:",
             err
           );
@@ -1324,7 +1336,7 @@ event.oldVersion,
       return isIteratorProp(target, prop) || oldTraps.has(target, prop);
     }
   }));
-  const log$c = logger.child("storage");
+  const log$d = logger.child("storage");
   const STORES = {
     CACHE: "cache",
     FLIGHTS: "flights",
@@ -1400,20 +1412,20 @@ event.oldVersion,
           try {
             const db = await openDB(this.db_name, this.db_version, {
               upgrade(db2, oldVersion, newVersion, transaction, _event) {
-                log$c.info("Need to upgrade from", oldVersion, "to", newVersion);
+                log$d.info("Need to upgrade from", oldVersion, "to", newVersion);
                 for (let i2 = (oldVersion ?? 0) + 1; i2 <= cache.db_version; i2++) {
-                  log$c.debug(`Migration: ${i2}`);
+                  log$d.debug(`Migration: ${i2}`);
                   const m2 = cache.migrations.get(i2);
                   if (m2) {
                     m2(db2, transaction);
                   } else {
-                    log$c.debug(`Migration not found: ${i2}`);
+                    log$d.debug(`Migration not found: ${i2}`);
                   }
-                  log$c.debug(`Migration complete: ${i2}`);
+                  log$d.debug(`Migration complete: ${i2}`);
                 }
               },
               blocking(currentVersion, blockedVersion, event) {
-                log$c.debug(
+                log$d.debug(
                   `Can't open ${blockedVersion} because ${currentVersion} is open. Closing.`
                 );
                 cache.close();
@@ -1473,10 +1485,10 @@ event.oldVersion,
         try {
           await deleteDB(this.db_name, {
             blocked: () => {
-              log$c.debug("deleteDB blocked callback called!");
+              log$d.debug("deleteDB blocked callback called!");
             }
           });
-          log$c.info(`Successfully deleted ${this.db_name} IndexedDB.`);
+          log$d.info(`Successfully deleted ${this.db_name} IndexedDB.`);
         } finally {
           this.channel?.postMessage({ type: "deleted" });
           this.state = "CLOSED";
@@ -1581,7 +1593,7 @@ event.oldVersion,
               const index2 = tx.store.index("expiry");
               const range = IDBKeyRange.upperBound(Date.now());
               const r2 = await index2.getAllKeys(range);
-              log$c.info(`Found ${r2.length} expired values to delete from cache.`);
+              log$d.info(`Found ${r2.length} expired values to delete from cache.`);
               await Promise.all(r2.map((id) => tx.store.delete(id)));
               await tx.done;
             }
@@ -1590,7 +1602,7 @@ event.oldVersion,
               const index2 = tx.store.index("expiry");
               const range = IDBKeyRange.upperBound(Date.now());
               const r2 = await index2.getAllKeys(range);
-              log$c.info(`Found ${r2.length} expired values to delete from flights.`);
+              log$d.info(`Found ${r2.length} expired values to delete from flights.`);
               await Promise.all(r2.map((id) => tx.store.delete(id)));
               await tx.done;
             }
@@ -1600,7 +1612,7 @@ event.oldVersion,
               const thirty_days_ago = Date.now() - 30 * 24 * 60 * 60 * 1e3;
               const range = IDBKeyRange.upperBound(thirty_days_ago);
               const r2 = await index2.getAllKeys(range);
-              log$c.info(
+              log$d.info(
                 `Found ${r2.length} expired values to delete from analytics.`
               );
               await Promise.all(r2.map((id) => tx.store.delete(id)));
@@ -1726,7 +1738,7 @@ event.oldVersion,
       }
     }
   }
-  const log$b = logger.child("api");
+  const log$c = logger.child("api");
   const DB_NAME = "FFSV3-cache";
   const RECHECK_RETRY_DELAY = 60 * 1e3;
   const RECHECK_WINDOW_DURATION = 3 * 60 * 1e3;
@@ -1812,7 +1824,7 @@ queryString.charCodeAt(pos - 1) === 63) {
         try {
           await this.cache.delete_flight(player_id);
         } catch (err) {
-          log$b.error("Failed to delete flight from cache", err);
+          log$c.error("Failed to delete flight from cache", err);
         }
       };
       this.calculate_flight_cache_ttl = (result) => {
@@ -1860,7 +1872,7 @@ queryString.charCodeAt(pos - 1) === 63) {
           return;
         }
         if (this.last_limits && this.last_limits.reset_time > new Date() && this.last_limits.remaining <= GLOBAL_BUDGET_RESERVE) {
-          log$b.warn(
+          log$c.warn(
             `Total API quota <= ${GLOBAL_BUDGET_RESERVE}. Deferring flight status checks to prioritize stats.`
           );
           this.schedule_flight_processor(5e3);
@@ -1875,7 +1887,7 @@ queryString.charCodeAt(pos - 1) === 63) {
           this.schedule_flight_processor(0);
           return;
         }
-        log$b.debug(`Querying paced flight API for player ${player_id}`);
+        log$c.debug(`Querying paced flight API for player ${player_id}`);
         try {
           const response = await query_flights(this.config.key, player_id);
           if (response.blank) {
@@ -1892,10 +1904,10 @@ queryString.charCodeAt(pos - 1) === 63) {
               const ttl = this.calculate_flight_cache_ttl(response.result);
               await this.cache.update_flight(response.result, ttl);
             } catch (err) {
-              log$b.error("Failed to update flight cache", err);
+              log$c.error("Failed to update flight cache", err);
             }
           } else {
-            log$b.debug(`Start rechecking cycle for player ${player_id}`);
+            log$c.debug(`Start rechecking cycle for player ${player_id}`);
             const now = Date.now();
             const next_retry_at = now + RECHECK_RETRY_DELAY;
             const existing_recheck_until = this.flight_recheck_until.get(player_id);
@@ -1912,7 +1924,7 @@ queryString.charCodeAt(pos - 1) === 63) {
               const remaining_ttl = Math.max(0, recheck_until - now);
               await this.cache.update_flight(rechecking_response, remaining_ttl);
             } catch (err) {
-              log$b.error("Failed to update flight cache during recheck", err);
+              log$c.error("Failed to update flight cache during recheck", err);
             }
             finalResult = rechecking_response;
           }
@@ -1920,7 +1932,7 @@ queryString.charCodeAt(pos - 1) === 63) {
             job.resolve(finalResult);
           }
         } catch (err) {
-          log$b.error(`Paced flight API query failed for ${player_id}:`, err);
+          log$c.error(`Paced flight API query failed for ${player_id}:`, err);
           const apiErr = err;
           if (apiErr?.ff_api_limits) {
             this.last_limits = apiErr.ff_api_limits;
@@ -1934,7 +1946,7 @@ queryString.charCodeAt(pos - 1) === 63) {
           try {
             await this.cache.clean_expired();
           } catch (err) {
-            log$b.error("Failed to clean expired cache entries", err);
+            log$c.error("Failed to clean expired cache entries", err);
           }
           if (this.flight_queue.length > 0) {
             this.schedule_flight_processor(FLIGHT_PACING_DELAY);
@@ -1942,7 +1954,7 @@ queryString.charCodeAt(pos - 1) === 63) {
         }
       };
       this.get_flights = async (player_id) => {
-        log$b.debug(`get_flights called for ${player_id}`);
+        log$c.debug(`get_flights called for ${player_id}`);
         if (!this.config.key) {
           return {
             player_id,
@@ -1954,14 +1966,14 @@ queryString.charCodeAt(pos - 1) === 63) {
         try {
           cached = await this.cache.get_flight(player_id);
         } catch (err) {
-          log$b.error("Failed to query flight cache", err);
+          log$c.error("Failed to query flight cache", err);
         }
         if (cached) {
-          log$b.debug(`Flight cache hit for player ${player_id}`);
+          log$c.debug(`Flight cache hit for player ${player_id}`);
           if (cached.rechecking) {
             const now = Date.now();
             if (cached.recheck_until && now >= cached.recheck_until) {
-              log$b.debug(
+              log$c.debug(
                 `Rechecking window expired for player ${player_id}. Finalizing no data.`
               );
               const final_response = {
@@ -1976,12 +1988,12 @@ queryString.charCodeAt(pos - 1) === 63) {
                   FINALIZED_NO_FLIGHT_TTL
                 );
               } catch (err) {
-                log$b.error("Failed to finalize flight cache", err);
+                log$c.error("Failed to finalize flight cache", err);
               }
               return final_response;
             }
             if (cached.next_retry_at && now >= cached.next_retry_at) {
-              log$b.debug(
+              log$c.debug(
                 `Retrying API call for player ${player_id} during recheck window`
               );
               const result2 = await this.enqueue_flight_api(
@@ -2005,7 +2017,7 @@ queryString.charCodeAt(pos - 1) === 63) {
             recent_flights: cached.recent_flights
           };
         }
-        log$b.debug(`Flight cache miss for player ${player_id}. Querying API paced.`);
+        log$c.debug(`Flight cache miss for player ${player_id}. Querying API paced.`);
         const result = await this.enqueue_flight_api(player_id);
         return result;
       };
@@ -2013,16 +2025,16 @@ queryString.charCodeAt(pos - 1) === 63) {
         this.process_cache();
       };
       this.enqueue_cache = (player_id) => {
-        log$b.debug(`Enqueuing cache ${player_id}`);
+        log$c.debug(`Enqueuing cache ${player_id}`);
         this.cache_queue.add(player_id);
         this.schedule_cache();
       };
       this.schedule_cache = () => {
         if (this.cache_timer) {
-          log$b.debug(`schedule_cache called but job already scheduled`);
+          log$c.debug(`schedule_cache called but job already scheduled`);
           return;
         }
-        log$b.debug(
+        log$c.debug(
           `schedule_cache called and job scheduled for ${this.cache_delay} ms`
         );
         this.cache_timer = this.schedule(this.process_cache, this.cache_delay);
@@ -2043,14 +2055,14 @@ queryString.charCodeAt(pos - 1) === 63) {
         } catch (_2) {
           results = new Map();
         }
-        log$b.debug("Received results", results);
+        log$c.debug("Received results", results);
         for (const id of ids) {
           const v2 = results.get(id);
           if (v2) {
-            log$b.debug("Id", id, "found in cache. Resolving value.");
+            log$c.debug("Id", id, "found in cache. Resolving value.");
             this.resolve(id, v2);
           } else {
-            log$b.debug("Id", id, "not found in cache. Scheduling api call.");
+            log$c.debug("Id", id, "not found in cache. Scheduling api call.");
             this.enqueue_api(id);
           }
         }
@@ -2060,20 +2072,20 @@ queryString.charCodeAt(pos - 1) === 63) {
         check_key_status.clear();
       };
       this.enqueue_api = (player_id) => {
-        log$b.debug(`Enqueuing api ${player_id}`);
+        log$c.debug(`Enqueuing api ${player_id}`);
         this.api_queue.add(player_id);
         this.schedule_api();
       };
       this.schedule_api = (delay = this.api_initial_delay) => {
         if (this.api_timer) {
-          log$b.debug(`schedule_api called but job already scheduled`);
+          log$c.debug(`schedule_api called but job already scheduled`);
           return;
         }
-        log$b.debug(`schedule_api called and job scheduled for ${delay} ms`);
+        log$c.debug(`schedule_api called and job scheduled for ${delay} ms`);
         this.api_timer = this.schedule(this.process_api, delay);
       };
       this.process_api = async () => {
-        log$b.debug("process_api called");
+        log$c.debug("process_api called");
         if (this.api_timer) {
           this.clear(this.api_timer);
           this.api_timer = null;
@@ -2085,18 +2097,18 @@ queryString.charCodeAt(pos - 1) === 63) {
         for (const id of ids) {
           this.api_queue.delete(id);
         }
-        log$b.debug(`Processing ${ids} api requests`);
+        log$c.debug(`Processing ${ids} api requests`);
         if (ids.length <= 0) {
-          log$b.debug("No ids found to query");
+          log$c.debug("No ids found to query");
           return;
         }
         let next_run = this.api_default_delay;
         let results;
         try {
-          log$b.debug("Calling query_stats with", this.config.key, ",", ids);
+          log$c.debug("Calling query_stats with", this.config.key, ",", ids);
           results = await query_stats(this.config.key, ids);
         } catch (err) {
-          log$b.error("Received error response querying ffscouter api:", err);
+          log$c.error("Received error response querying ffscouter api:", err);
           for (const id of ids) {
             this.reject(id, err);
           }
@@ -2107,7 +2119,7 @@ queryString.charCodeAt(pos - 1) === 63) {
             limits: ff_error.ff_api_limits
           };
         }
-        log$b.debug("Received results", results);
+        log$c.debug("Received results", results);
         if (results.blank) {
           for (const id of ids) {
             this.requeue_api(id);
@@ -2116,15 +2128,15 @@ queryString.charCodeAt(pos - 1) === 63) {
           try {
             await this.cache.update(Array.from(results.result.values()));
           } catch (err) {
-            log$b.error("Failed to update cache", err);
+            log$c.error("Failed to update cache", err);
           }
           for (const id of ids) {
             const v2 = results.result.get(id);
             if (v2) {
-              log$b.debug("Id", id, "found in results. Resolving value.");
+              log$c.debug("Id", id, "found in results. Resolving value.");
               this.resolve(id, v2);
             } else {
-              log$b.debug("Id", id, "not found in results. Resolving no_data.");
+              log$c.debug("Id", id, "not found in results. Resolving no_data.");
               this.resolve(id, { player_id: id, no_data: true });
             }
           }
@@ -2191,14 +2203,14 @@ queryString.charCodeAt(pos - 1) === 63) {
             hash
           });
         } catch (err) {
-          log$b.error("Failed to add analytics entry", err);
+          log$c.error("Failed to add analytics entry", err);
         }
       };
       this.get_analytics_entries = async () => {
         try {
           return await this.cache.get_analytics();
         } catch (err) {
-          log$b.error("Failed to get analytics entries", err);
+          log$c.error("Failed to get analytics entries", err);
           return [];
         }
       };
@@ -2242,7 +2254,7 @@ queryString.charCodeAt(pos - 1) === 63) {
         try {
           await this.cache.clear_analytics();
         } catch (err) {
-          log$b.error("Failed to clear analytics entries", err);
+          log$c.error("Failed to clear analytics entries", err);
         }
       };
       this.config = config;
@@ -3249,7 +3261,7 @@ queryString.charCodeAt(pos - 1) === 63) {
     if (kind && result) __defProp$3(target, key, result);
     return result;
   };
-  const log$a = logger.child("ui");
+  const log$b = logger.child("ui");
   const PREMIUM_UPGRADE_URL$1 = "https://ffscouter.com/premium";
   let FFHeaderLine = class extends i {
     constructor() {
@@ -3270,7 +3282,7 @@ willUpdate(changedProperties) {
             this.is_premium = premium;
           }
         }).catch((error) => {
-          log$a.error(error);
+          log$b.error(error);
         }).finally(() => {
           if (this.data === currentData) {
             this.loading = false;
@@ -3338,7 +3350,7 @@ willUpdate(changedProperties) {
   FFHeaderLine = __decorateClass$3([
     t("ff-header-line")
   ], FFHeaderLine);
-  const log$9 = logger.child("feature:attack");
+  const log$a = logger.child("feature:attack");
   async function inject_info_line$1(info_line) {
     const h4 = await wait_for_element("h4", 1e4);
     if (!h4) {
@@ -3361,7 +3373,7 @@ willUpdate(changedProperties) {
       if (!player_id) {
         return;
       }
-      log$9.debug("On the attack page, found player_id", player_id);
+      log$a.debug("On the attack page, found player_id", player_id);
       const info_line = create_info_line();
       ffscouter.get(player_id).then(async (data) => {
         const line = document.createElement("ff-header-line");
@@ -4070,7 +4082,7 @@ status: DEFAULT_HIDDEN_COLUMNS.status,
   FFFactionFilterBox = __decorateClass$2([
     t("ff-faction-filter-box")
   ], FFFactionFilterBox);
-  const log$8 = logger.child("feature:faction");
+  const log$9 = logger.child("feature:faction");
   const FEATURE_NAME$4 = "faction";
   let isApplying = false;
   function apply_filters_and_sort(membersList, filters) {
@@ -4237,7 +4249,7 @@ Number.parseInt(row.dataset["estValue"], 10)
             p2.row.removeAttribute("data-latest-arrival");
           }
         } catch (err) {
-          log$8.error(`Failed to fetch flights for player ${p2.player_id}`, err);
+          log$9.error(`Failed to fetch flights for player ${p2.player_id}`, err);
         }
       })
     );
@@ -4688,13 +4700,13 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
   const process_page = () => {
     wait_for_element(".members-list", 1e4).then((node) => {
       if (node instanceof HTMLElement) {
-        log$8.debug("Found members-list!");
+        log$9.debug("Found members-list!");
         monitor_member_list(node);
       }
     });
     wait_for_element(".chain-attacks-list", 1e4).then((node) => {
       if (node instanceof HTMLElement) {
-        log$8.debug("Found chain-attacks-list!");
+        log$9.debug("Found chain-attacks-list!");
         monitor_member_list(node, true);
       }
     });
@@ -4702,12 +4714,12 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       if (!node) {
         return;
       }
-      log$8.debug("Found faction_war_list_id");
+      log$9.debug("Found faction_war_list_id");
       const descriptions_observer = new MutationObserver(async (mutations) => {
         for (const mutation of mutations) {
           for (const node2 of mutation.addedNodes) {
             if (node2 instanceof HTMLElement && node2.classList.contains("descriptions")) {
-              log$8.debug(
+              log$9.debug(
                 "Observed mutation that included adding descriptions",
                 node2
               );
@@ -4720,7 +4732,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
         }
       });
       descriptions_observer.observe(node, { childList: true });
-      log$8.debug("Set up descriptions observer on", node);
+      log$9.debug("Set up descriptions observer on", node);
       const existing_descriptions = node.querySelector(".descriptions");
       if (existing_descriptions) {
         const faction_war = await wait_for_element(
@@ -4793,7 +4805,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     setup_war_features,
     should_run_faction
   }, Symbol.toStringTag, { value: "Module" }));
-  const log$7 = logger.child("feature:fallback");
+  const log$8 = logger.child("feature:fallback");
   const FEATURE_NAME_HONOR_BAR = "fallback-honor-bar";
   const FEATURE_NAME_USER_NAME = "fallback-user-name";
   const FEATURE_NAME$3 = "fallback";
@@ -4985,7 +4997,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
           if (is_observing) {
             ff_gauge_observer.disconnect();
             is_observing = false;
-            log$7.debug("Disconnected fallback MutationObserver (excluded page)");
+            log$8.debug("Disconnected fallback MutationObserver (excluded page)");
           }
         } else {
           current_config = get_page_selectors();
@@ -4998,7 +5010,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
               subtree: true
             });
             is_observing = true;
-            log$7.debug("Connected fallback MutationObserver (included page)");
+            log$8.debug("Connected fallback MutationObserver (included page)");
             if (target) {
               check_mutation(target);
             }
@@ -5006,7 +5018,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
         }
       };
       on_navigation(() => {
-        log$7.debug("Navigation detected, re-evaluating fallback observer state");
+        log$8.debug("Navigation detected, re-evaluating fallback observer state");
         update_observer_state();
       });
       update_observer_state();
@@ -5024,7 +5036,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     __proto__: null,
     default: index$a
   }, Symbol.toStringTag, { value: "Module" }));
-  const log$6 = logger.child("ui");
+  const log$7 = logger.child("ui");
   var TOAST_LEVEL = ((TOAST_LEVEL2) => {
     TOAST_LEVEL2[TOAST_LEVEL2["DEBUG"] = 0] = "DEBUG";
     TOAST_LEVEL2[TOAST_LEVEL2["INFO"] = 1] = "INFO";
@@ -5089,7 +5101,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     } else {
       msg.textContent = `FairFight Scouter V2: ${message}`;
     }
-    log$6.info("[FF Scouter V2] Toast: ", message);
+    log$7.info("[FF Scouter V2] Toast: ", message);
     toast2.appendChild(msg);
     toast2.appendChild(closeBtn);
     document.body.appendChild(toast2);
@@ -5100,7 +5112,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       }
     }, 4e3);
   }
-  const log$5 = logger.child("feature:ff-button");
+  const log$6 = logger.child("feature:ff-button");
   const CACHE_LIFETIME_MS = 7 * 24 * 60 * 60 * 1e3;
   const POLL_INTERVAL_MS = 24 * 60 * 60 * 1e3;
   function get_active_filters() {
@@ -5119,7 +5131,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
   async function update_ff_targets(force = false) {
     const key = ffconfig.key;
     if (!key) {
-      log$5.debug("API key not set, skipping target fetch");
+      log$6.debug("API key not set, skipping target fetch");
       return;
     }
     const currentFilters = get_active_filters();
@@ -5128,7 +5140,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     const filtersChanged = cached && filters_changed(cached.filters, currentFilters);
     const timeToRefresh = cached && (!cached.last_updated || Date.now() - cached.last_updated > POLL_INTERVAL_MS);
     if (!force && !hasNoCacheOrExpired && !filtersChanged && !timeToRefresh) {
-      log$5.debug(
+      log$6.debug(
         "Using cached targets, not expired, filters match, and not time to poll yet"
       );
       return;
@@ -5151,12 +5163,12 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
           filters: currentFilters
         };
         ffconfig.chain_target_index = 0;
-        log$5.info(
+        log$6.info(
           `Chain targets updated successfully: ${response.targets.length} targets found`
         );
       }
     } catch (err) {
-      log$5.error("Failed to update chain targets:", err);
+      log$6.error("Failed to update chain targets:", err);
     }
   }
   function get_next_target_index(maxLen) {
@@ -5295,7 +5307,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
         const cached = ffconfig.chain_targets;
         const currentFilters = get_active_filters();
         if (!cached || filters_changed(cached.filters, currentFilters)) {
-          log$5.info("Target filters changed, refetching targets immediately");
+          log$6.info("Target filters changed, refetching targets immediately");
           await update_ff_targets(true);
         }
         create_chain_button();
@@ -5384,7 +5396,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     if (kind && result) __defProp$1(target, key, result);
     return result;
   };
-  const log$4 = logger.child("ui");
+  const log$5 = logger.child("ui");
   const PREMIUM_UPGRADE_URL = "https://ffscouter.com/premium";
   const premium_action = b`<a
   href="${PREMIUM_UPGRADE_URL}"
@@ -5500,7 +5512,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
         this.error = null;
       } catch (err) {
         if (this.playerId !== fetchId) return;
-        log$4.error("Failed to fetch flight data", err);
+        log$5.error("Failed to fetch flight data", err);
         if (err instanceof FFApiError) {
           const code = err.ff_api_error?.code;
           if (code === 19) {
@@ -5609,14 +5621,14 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
   FFFlightProfileStatus = __decorateClass$1([
     t("ff-flight-profile-status")
   ], FFFlightProfileStatus);
-  const log$3 = logger.child("feature:mini-profile-flights");
+  const log$4 = logger.child("feature:mini-profile-flights");
   function is_flying$1(status) {
     return status.classList.contains("travelling");
   }
   const monitor_mini_profile_root$1 = () => {
     const miniprofile = document.querySelector("#profile-mini-root");
     if (miniprofile) {
-      log$3.debug("profile-mini-root already exists.");
+      log$4.debug("profile-mini-root already exists.");
       setup_mini_flight_observer();
       return;
     }
@@ -5665,7 +5677,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       if (is_flying$1(status2)) {
         const description = status2.querySelector(".description");
         if (description && !description.contains(flight_element)) {
-          log$3.debug(
+          log$4.debug(
             `Player ${player_id2} is flying, adding flight tracker to mini-profile`
           );
           description.appendChild(flight_element);
@@ -5697,7 +5709,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     },
     async run() {
       monitor_mini_profile_root$1();
-      log$3.debug("mini-profile-flights installed");
+      log$4.debug("mini-profile-flights installed");
     },
     httpIntercept: {
       before(_url, _init) {
@@ -5712,12 +5724,12 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     __proto__: null,
     default: index$7
   }, Symbol.toStringTag, { value: "Module" }));
-  const log$2 = logger.child("feature:mini-profile");
+  const log$3 = logger.child("feature:mini-profile");
   const FEATURE_NAME$1 = "mini-profile";
   const monitor_mini_profile_root = () => {
     const miniprofile = document.querySelector("#profile-mini-root");
     if (miniprofile) {
-      log$2.debug("profile-mini-root already exists.");
+      log$3.debug("profile-mini-root already exists.");
       setup_mini_observer();
       return;
     }
@@ -5767,7 +5779,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
         if (d2.no_data) {
           return;
         }
-        log$2.debug(`Found mini profile update for ${player_id}, adding ff data`);
+        log$3.debug(`Found mini profile update for ${player_id}, adding ff data`);
         for (const bar of miniroot.querySelectorAll(".honor-text-wrap")) {
           apply_ff_gauge(bar, FEATURE_NAME$1);
         }
@@ -5795,7 +5807,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     },
     async run() {
       monitor_mini_profile_root();
-      log$2.debug("mini-profile installed");
+      log$3.debug("mini-profile installed");
     },
     httpIntercept: {
       before(_url, _init) {
@@ -6071,6 +6083,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       this.warColDisplay = CONFIG_DEFAULTS.war_col_display;
       this.debugLogs = CONFIG_DEFAULTS.debug_logs;
       this.analyticsEnabled = CONFIG_DEFAULTS.analytics_enabled;
+      this.networkInterceptionEnabled = CONFIG_DEFAULTS.network_interception_enabled;
       this.gaugeMarkerType = CONFIG_DEFAULTS.gauge_marker_type;
       this.warQuickAttackAction = CONFIG_DEFAULTS.war_quick_attack_action;
       this.isPremium = false;
@@ -6093,6 +6106,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       this.draftWarColDisplay = CONFIG_DEFAULTS.war_col_display;
       this.draftDebugLogs = CONFIG_DEFAULTS.debug_logs;
       this.draftAnalyticsEnabled = CONFIG_DEFAULTS.analytics_enabled;
+      this.draftNetworkInterceptionEnabled = CONFIG_DEFAULTS.network_interception_enabled;
       this.draftGaugeMarkerType = CONFIG_DEFAULTS.gauge_marker_type;
       this.draftWarQuickAttackAction = CONFIG_DEFAULTS.war_quick_attack_action;
       this.rangeError = "";
@@ -6141,6 +6155,8 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
         this.draftDebugLogs = this.debugLogs;
       if (changedProperties.has("analyticsEnabled"))
         this.draftAnalyticsEnabled = this.analyticsEnabled;
+      if (changedProperties.has("networkInterceptionEnabled"))
+        this.draftNetworkInterceptionEnabled = this.networkInterceptionEnabled;
       if (changedProperties.has("gaugeMarkerType"))
         this.draftGaugeMarkerType = this.gaugeMarkerType;
       if (changedProperties.has("warQuickAttackAction"))
@@ -6166,6 +6182,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       this.draftWarColDisplay = this.warColDisplay;
       this.draftDebugLogs = this.debugLogs;
       this.draftAnalyticsEnabled = this.analyticsEnabled;
+      this.draftNetworkInterceptionEnabled = this.networkInterceptionEnabled;
       this.draftGaugeMarkerType = this.gaugeMarkerType;
       this.draftWarQuickAttackAction = this.warQuickAttackAction;
     }
@@ -6212,6 +6229,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
             warColDisplay: this.draftWarColDisplay,
             debugLogs: this.draftDebugLogs,
             analyticsEnabled: this.draftAnalyticsEnabled,
+            networkInterceptionEnabled: this.draftNetworkInterceptionEnabled,
             gaugeMarkerType: this.draftGaugeMarkerType,
             warQuickAttackAction: this.draftWarQuickAttackAction
           },
@@ -6342,6 +6360,10 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     }
     onAnalyticsEnabledChange(e2) {
       this.draftAnalyticsEnabled = e2.target.checked;
+      this.showSavedMessage = false;
+    }
+    onNetworkInterceptionEnabledChange(e2) {
+      this.draftNetworkInterceptionEnabled = e2.target.checked;
       this.showSavedMessage = false;
     }
     onGaugeMarkerTypeChange(e2) {
@@ -6645,6 +6667,19 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
             >
           </div>
 
+          <!-- Network Interception Toggle -->
+          <div class="input-row-inline">
+            <input
+              id="network-interception-toggle"
+              type="checkbox"
+              .checked=${this.draftNetworkInterceptionEnabled}
+              @change=${this.onNetworkInterceptionEnabledChange}
+            />
+            <label for="network-interception-toggle"
+              >Enable network request interception (Fetch/XHR/WS)</label
+            >
+          </div>
+
           <!-- Action Buttons Area -->
           <div
             style="display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px; margin-top: 20px;"
@@ -6726,6 +6761,9 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     n2({ type: Boolean })
   ], FFSettingsPanel.prototype, "analyticsEnabled", 2);
   __decorateClass([
+    n2({ type: Boolean })
+  ], FFSettingsPanel.prototype, "networkInterceptionEnabled", 2);
+  __decorateClass([
     n2({ type: String })
   ], FFSettingsPanel.prototype, "gaugeMarkerType", 2);
   __decorateClass([
@@ -6793,6 +6831,9 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
   ], FFSettingsPanel.prototype, "draftAnalyticsEnabled", 2);
   __decorateClass([
     r()
+  ], FFSettingsPanel.prototype, "draftNetworkInterceptionEnabled", 2);
+  __decorateClass([
+    r()
   ], FFSettingsPanel.prototype, "draftGaugeMarkerType", 2);
   __decorateClass([
     r()
@@ -6834,6 +6875,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       panel.warColDisplay = ffconfig.war_col_display;
       panel.debugLogs = ffconfig.debug_logs;
       panel.analyticsEnabled = ffconfig.analytics_enabled;
+      panel.networkInterceptionEnabled = ffconfig.network_interception_enabled;
       panel.gaugeMarkerType = ffconfig.gauge_marker_type;
       panel.warQuickAttackAction = ffconfig.war_quick_attack_action;
       panel.isPremium = await check_key_status.is_premium(true);
@@ -6863,6 +6905,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
           logger.setLevel(LogLevel.INFO);
         }
         ffconfig.analytics_enabled = detail.analyticsEnabled;
+        ffconfig.network_interception_enabled = detail.networkInterceptionEnabled;
         ffconfig.gauge_marker_type = detail.gaugeMarkerType;
         ffconfig.war_quick_attack_action = detail.warQuickAttackAction;
         panel.isPremium = await check_key_status.is_premium(true);
@@ -6890,6 +6933,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
         panel.warColDisplay = ffconfig.war_col_display;
         panel.debugLogs = ffconfig.debug_logs;
         panel.analyticsEnabled = ffconfig.analytics_enabled;
+        panel.networkInterceptionEnabled = ffconfig.network_interception_enabled;
         panel.gaugeMarkerType = ffconfig.gauge_marker_type;
         panel.warQuickAttackAction = ffconfig.war_quick_attack_action;
         toast("Settings reset to defaults!");
@@ -6961,7 +7005,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     __proto__: null,
     default: index$1
   }, Symbol.toStringTag, { value: "Module" }));
-  const log$1 = logger.child("feature:test-feature");
+  const log$2 = logger.child("feature:test-feature");
   const index = {
     name: "Test Feature!",
     description: "It's literally a test feature :P",
@@ -6970,7 +7014,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       return true;
     },
     async run() {
-      log$1.info("hello world but from feature");
+      log$2.info("hello world but from feature");
     },
     httpIntercept: {
       before(_url, _init) {
@@ -7003,6 +7047,899 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
   const Features = Object.values(modules).map((mod) => mod.default).filter(
     (feat) => !!feat && "name" in feat && feat.name !== "Test Feature!"
   );
+  const log$1 = logger.child("network");
+  const pageWindow = typeof unsafeWindow !== "undefined" ? unsafeWindow : typeof globalThis !== "undefined" ? globalThis : typeof window !== "undefined" ? window : void 0;
+  const httpInterceptors = [];
+  const wsInterceptors = [];
+  function registerHttpInterceptor(interceptor) {
+    httpInterceptors.push(interceptor);
+    httpInterceptors.sort((a2, b2) => (b2.priority ?? 0) - (a2.priority ?? 0));
+  }
+  function matchesUrl(url, init, predicate) {
+    if (predicate === void 0) return true;
+    if (typeof predicate === "string") {
+      return url.includes(predicate);
+    }
+    if (predicate && typeof predicate.test === "function") {
+      return predicate.test(url);
+    }
+    if (typeof predicate === "function") {
+      return predicate(url, init);
+    }
+    return false;
+  }
+  function matchesWsUrl(url, predicate) {
+    if (predicate === void 0) return true;
+    if (typeof predicate === "string") {
+      return url.includes(predicate);
+    }
+    if (predicate && typeof predicate.test === "function") {
+      return predicate.test(url);
+    }
+    if (typeof predicate === "function") {
+      return predicate(url);
+    }
+    return false;
+  }
+  function initNetworkInterception(force = false) {
+    if (!pageWindow) return;
+    const currentFetch = pageWindow.fetch;
+    if (currentFetch && (force || !currentFetch.__isPatched)) {
+      patchFetch();
+    }
+    const currentXHR = pageWindow.XMLHttpRequest;
+    if (currentXHR && (force || !currentXHR.__isPatched)) {
+      patchXMLHttpRequest();
+    }
+    const currentWS = pageWindow.WebSocket;
+    if (currentWS && (force || !currentWS.__isPatched)) {
+      patchWebSocket();
+    }
+  }
+  function patchFetch() {
+    try {
+      const originalFetch = pageWindow.fetch;
+      if (!originalFetch || originalFetch.__isPatched) return;
+      const patched = async function patchedFetch(input, init) {
+        if (!ffconfig.network_interception_enabled || httpInterceptors.length === 0) {
+          return originalFetch(input, init);
+        }
+        const requestIsObj = input instanceof Request;
+        let currentUrl = requestIsObj ? input.url : typeof input === "string" ? input : input.toString();
+        let currentInit = init;
+        for (const interceptor of httpInterceptors) {
+          if (interceptor.before && matchesUrl(currentUrl, currentInit, interceptor.match)) {
+            try {
+              const res = await interceptor.before(currentUrl, currentInit);
+              if (res instanceof Response) {
+                return res;
+              }
+              if (typeof res === "string") {
+                currentUrl = res;
+              } else if (res) {
+                if ("url" in res && res.url) {
+                  currentUrl = res.url;
+                }
+                if ("init" in res && res.init) {
+                  currentInit = res.init;
+                } else if (!("url" in res)) {
+                  currentInit = res;
+                }
+              }
+            } catch (err) {
+              log$1.error(
+                `HTTP before interceptor error in ${interceptor.name || "unnamed"}:`,
+                err
+              );
+            }
+          }
+        }
+        let finalRequest;
+        if (requestIsObj) {
+          const originalRequest = input;
+          if (currentUrl !== originalRequest.url || currentInit !== init) {
+            const newInit = {
+              method: originalRequest.method,
+              headers: originalRequest.headers,
+              body: originalRequest.body,
+              credentials: originalRequest.credentials,
+              mode: originalRequest.mode,
+              cache: originalRequest.cache,
+              redirect: originalRequest.redirect,
+              referrer: originalRequest.referrer,
+              referrerPolicy: originalRequest.referrerPolicy,
+              integrity: originalRequest.integrity,
+              signal: originalRequest.signal,
+              ...currentInit
+            };
+            if (newInit.body && originalRequest.method !== "GET" && originalRequest.method !== "HEAD") {
+              newInit.duplex = "half";
+            }
+            finalRequest = new Request(currentUrl, newInit);
+          } else {
+            finalRequest = originalRequest;
+          }
+        } else {
+          finalRequest = currentUrl;
+        }
+        const response = requestIsObj ? await originalFetch(finalRequest) : await originalFetch(finalRequest, currentInit);
+        const matchedAfterInterceptors = [];
+        let needsBody = false;
+        const resContextInit = currentInit ?? {};
+        for (const interceptor of httpInterceptors) {
+          if (interceptor.after && matchesUrl(currentUrl, currentInit, interceptor.match)) {
+            matchedAfterInterceptors.push(interceptor);
+            if (interceptor.needBody !== void 0) {
+              const resContext = {
+                url: currentUrl,
+                init: resContextInit,
+                response
+              };
+              if (typeof interceptor.needBody === "function") {
+                if (interceptor.needBody(resContext)) {
+                  needsBody = true;
+                }
+              } else if (interceptor.needBody) {
+                needsBody = true;
+              }
+            } else {
+              needsBody = true;
+            }
+          }
+        }
+        if (matchedAfterInterceptors.length === 0) return response;
+        let bodyText = null;
+        if (needsBody) {
+          const contentType = response.headers.get("content-type") || "";
+          const isBinaryOrStream = contentType.includes("image/") || contentType.includes("video/") || contentType.includes("audio/") || contentType.includes("application/octet-stream") || contentType.includes("application/zip") || contentType.includes("application/pdf") || contentType.includes("text/event-stream");
+          if (!isBinaryOrStream) {
+            try {
+              bodyText = await response.clone().text();
+            } catch (err) {
+              log$1.error("Failed reading response body for interceptor:", err);
+            }
+          }
+        }
+        let currentResponse = response;
+        let currentBody = bodyText;
+        for (const interceptor of matchedAfterInterceptors) {
+          try {
+            const resContext = {
+              url: currentUrl,
+              init: resContextInit,
+              response: currentResponse
+            };
+            const maybeNew = await interceptor.after(
+              currentBody,
+              currentResponse,
+              resContext
+            );
+            if (maybeNew instanceof Response) {
+              currentResponse = maybeNew;
+              currentBody = null;
+            } else if (typeof maybeNew === "string") {
+              currentBody = maybeNew;
+              const cleanHeaders = new Headers(currentResponse.headers);
+              cleanHeaders.delete("content-encoding");
+              cleanHeaders.delete("content-length");
+              const modified = new Response(maybeNew, {
+                status: currentResponse.status,
+                statusText: currentResponse.statusText,
+                headers: cleanHeaders
+              });
+              Object.defineProperty(modified, "url", {
+                value: currentResponse.url
+              });
+              Object.defineProperty(modified, "redirected", {
+                value: currentResponse.redirected
+              });
+              Object.defineProperty(modified, "type", {
+                value: currentResponse.type
+              });
+              currentResponse = modified;
+            }
+          } catch (err) {
+            log$1.error(
+              `HTTP after interceptor error in ${interceptor.name || "unnamed"}:`,
+              err
+            );
+          }
+        }
+        return currentResponse;
+      };
+      patched.__isPatched = true;
+      pageWindow.fetch = patched;
+      log$1.debug("Fetch patched for network interception");
+    } catch (err) {
+      log$1.error("Failed to patch fetch:", err);
+    }
+  }
+  function patchXMLHttpRequest() {
+    try {
+      const OriginalXHR = pageWindow.XMLHttpRequest;
+      if (!OriginalXHR || OriginalXHR.__isPatched) return;
+      const _PatchedXMLHttpRequest = class _PatchedXMLHttpRequest {
+        constructor() {
+          this._method = "";
+          this._url = "";
+          this._async = true;
+          this._requestHeaders = {};
+          this._isIntercepted = false;
+          this._status = 0;
+          this._statusText = "";
+          this._responseHeaders = "";
+          this._response = null;
+          this._responseText = "";
+          this._responseXML = null;
+          this._listeners = {};
+          this._onreadystatechange = null;
+          this._onload = null;
+          this._onloadstart = null;
+          this._onprogress = null;
+          this._onabort = null;
+          this._onerror = null;
+          this._ontimeout = null;
+          this._onloadend = null;
+          this.UNSENT = 0;
+          this.OPENED = 1;
+          this.HEADERS_RECEIVED = 2;
+          this.LOADING = 3;
+          this.DONE = 4;
+          this._xhr = new OriginalXHR();
+          this._setupNativeListeners();
+        }
+        get readyState() {
+          return this._xhr.readyState;
+        }
+        get responseType() {
+          return this._xhr.responseType;
+        }
+        set responseType(val) {
+          this._xhr.responseType = val;
+        }
+        get timeout() {
+          return this._xhr.timeout;
+        }
+        set timeout(val) {
+          this._xhr.timeout = val;
+        }
+        get withCredentials() {
+          return this._xhr.withCredentials;
+        }
+        set withCredentials(val) {
+          this._xhr.withCredentials = val;
+        }
+        get upload() {
+          return this._xhr.upload;
+        }
+        get responseURL() {
+          return this._xhr.responseURL;
+        }
+        get status() {
+          return this._isIntercepted ? this._status : this._xhr.status;
+        }
+        get statusText() {
+          return this._isIntercepted ? this._statusText : this._xhr.statusText;
+        }
+        get response() {
+          return this._isIntercepted ? this._response : this._xhr.response;
+        }
+        get responseText() {
+          return this._isIntercepted ? this._responseText : this._xhr.responseText;
+        }
+        get responseXML() {
+          return this._isIntercepted ? this._responseXML : this._xhr.responseXML;
+        }
+        open(method, url, async = true, username, password) {
+          this._method = method;
+          this._url = url.toString();
+          this._async = async;
+          if (!ffconfig.network_interception_enabled) {
+            if (username !== void 0) {
+              this._xhr.open(method, url, async, username, password);
+            } else {
+              this._xhr.open(method, url, async);
+            }
+            return;
+          }
+          let finalUrl = this._url;
+          let finalMethod = this._method;
+          for (const interceptor of httpInterceptors) {
+            if (interceptor.before && matchesUrl(
+              this._url,
+              {
+                method: this._method,
+                headers: new Headers(this._requestHeaders)
+              },
+              interceptor.match
+            )) {
+              try {
+                const res = interceptor.before(this._url, {
+                  method: this._method,
+                  headers: new Headers(this._requestHeaders)
+                });
+                if (typeof res === "string") {
+                  finalUrl = res;
+                } else if (res && !(res instanceof Response) && typeof res === "object") {
+                  const resObj = res;
+                  if (resObj.url) finalUrl = resObj.url;
+                  if (resObj.init) {
+                    const initObj = resObj.init;
+                    if (initObj.method) finalMethod = initObj.method;
+                    if (initObj.headers) {
+                      const headers = new Headers(initObj.headers);
+                      headers.forEach((val, key) => {
+                        this._requestHeaders[key] = val;
+                      });
+                    }
+                  } else if (!("url" in resObj)) {
+                    const initObj = resObj;
+                    if (initObj.method) finalMethod = initObj.method;
+                    if (initObj.headers) {
+                      const headers = new Headers(initObj.headers);
+                      headers.forEach((val, key) => {
+                        this._requestHeaders[key] = val;
+                      });
+                    }
+                  }
+                }
+              } catch (err) {
+                log$1.error(
+                  `XHR before interceptor error in ${interceptor.name || "unnamed"}:`,
+                  err
+                );
+              }
+            }
+          }
+          if (username !== void 0) {
+            this._xhr.open(
+              finalMethod,
+              finalUrl,
+              this._async,
+              username,
+              password
+            );
+          } else {
+            this._xhr.open(finalMethod, finalUrl, this._async);
+          }
+        }
+        setRequestHeader(name, value) {
+          this._requestHeaders[name] = value;
+          this._xhr.setRequestHeader(name, value);
+        }
+        send(body) {
+          this._xhr.send(body);
+        }
+        abort() {
+          this._xhr.abort();
+        }
+        getAllResponseHeaders() {
+          return this._isIntercepted ? this._responseHeaders : this._xhr.getAllResponseHeaders();
+        }
+        getResponseHeader(name) {
+          const headersStr = this.getAllResponseHeaders();
+          if (!headersStr) return null;
+          const lines = headersStr.split("\r\n");
+          for (const line of lines) {
+            const parts = line.split(":");
+            if (parts[0] && parts[0].trim().toLowerCase() === name.toLowerCase()) {
+              return parts.slice(1).join(":").trim();
+            }
+          }
+          return null;
+        }
+        overrideMimeType(mime) {
+          this._xhr.overrideMimeType(mime);
+        }
+        addEventListener(type, listener, _options) {
+          if (!this._listeners[type]) {
+            this._listeners[type] = new Set();
+          }
+          this._listeners[type].add(listener);
+        }
+        removeEventListener(type, listener, _options) {
+          if (this._listeners[type]) {
+            this._listeners[type].delete(listener);
+          }
+        }
+        dispatchEvent(event) {
+          const type = event.type;
+          const listeners = this._listeners[type];
+          if (!listeners && !this._hasAttributeHandler(type)) return true;
+          const proxyEvent = new Proxy(event, {
+            get: (target, prop) => {
+              if (prop === "target" || prop === "currentTarget") return this;
+              const val = Reflect.get(target, prop);
+              return typeof val === "function" ? val.bind(target) : val;
+            }
+          });
+          const attrHandler = this._getAttributeHandler(type);
+          if (attrHandler) {
+            try {
+              attrHandler.call(this, proxyEvent);
+            } catch (err) {
+              log$1.error(`Error in on${type} handler:`, err);
+            }
+          }
+          if (listeners) {
+            for (const listener of listeners) {
+              try {
+                if (typeof listener === "function") {
+                  listener.call(this, proxyEvent);
+                } else if (listener && typeof listener.handleEvent === "function") {
+                  listener.handleEvent(proxyEvent);
+                }
+              } catch (err) {
+                log$1.error(`Error in ${type} event listener:`, err);
+              }
+            }
+          }
+          return !proxyEvent.defaultPrevented;
+        }
+        get onreadystatechange() {
+          return this._onreadystatechange;
+        }
+        set onreadystatechange(val) {
+          this._onreadystatechange = val;
+        }
+        get onload() {
+          return this._onload;
+        }
+        set onload(val) {
+          this._onload = val;
+        }
+        get onloadstart() {
+          return this._onloadstart;
+        }
+        set onloadstart(val) {
+          this._onloadstart = val;
+        }
+        get onprogress() {
+          return this._onprogress;
+        }
+        set onprogress(val) {
+          this._onprogress = val;
+        }
+        get onabort() {
+          return this._onabort;
+        }
+        set onabort(val) {
+          this._onabort = val;
+        }
+        get onerror() {
+          return this._onerror;
+        }
+        set onerror(val) {
+          this._onerror = val;
+        }
+        get ontimeout() {
+          return this._ontimeout;
+        }
+        set ontimeout(val) {
+          this._ontimeout = val;
+        }
+        get onloadend() {
+          return this._onloadend;
+        }
+        set onloadend(val) {
+          this._onloadend = val;
+        }
+        _hasAttributeHandler(type) {
+          return this._getAttributeHandler(type) !== null;
+        }
+        _getAttributeHandler(type) {
+          switch (type) {
+            case "readystatechange":
+              return this._onreadystatechange;
+            case "load":
+              return this._onload;
+            case "loadstart":
+              return this._onloadstart;
+            case "progress":
+              return this._onprogress;
+            case "abort":
+              return this._onabort;
+            case "error":
+              return this._onerror;
+            case "timeout":
+              return this._ontimeout;
+            case "loadend":
+              return this._onloadend;
+            default:
+              return null;
+          }
+        }
+        _setupNativeListeners() {
+          const passthroughEvents = [
+            "loadstart",
+            "progress",
+            "abort",
+            "error",
+            "timeout"
+          ];
+          for (const eventName of passthroughEvents) {
+            this._xhr.addEventListener(eventName, (e2) => {
+              if (this.readyState < 4) {
+                this.dispatchEvent(e2);
+              }
+            });
+          }
+          this._xhr.addEventListener("readystatechange", (e2) => {
+            if (this.readyState === 4) {
+              this._handleCompletion();
+            } else {
+              this.dispatchEvent(e2);
+            }
+          });
+        }
+        async _handleCompletion() {
+          if (!this._async || !ffconfig.network_interception_enabled) {
+            this.dispatchEvent(new Event("readystatechange"));
+            this.dispatchEvent(new Event("load"));
+            this.dispatchEvent(new Event("loadend"));
+            return;
+          }
+          const matchedAfterInterceptors = [];
+          let needsBody = false;
+          const resContextInit = {
+            method: this._method,
+            headers: new Headers(this._requestHeaders)
+          };
+          for (const interceptor of httpInterceptors) {
+            if (interceptor.after && matchesUrl(this._url, resContextInit, interceptor.match)) {
+              matchedAfterInterceptors.push(interceptor);
+              if (interceptor.needBody !== void 0) {
+                const dummyResponse = new Response("", {
+                  status: this._xhr.status,
+                  statusText: this._xhr.statusText,
+                  headers: this._parseResponseHeaders(
+                    this._xhr.getAllResponseHeaders()
+                  )
+                });
+                const resContext = {
+                  url: this._url,
+                  init: resContextInit,
+                  response: dummyResponse
+                };
+                if (typeof interceptor.needBody === "function") {
+                  if (interceptor.needBody(resContext)) {
+                    needsBody = true;
+                  }
+                } else if (interceptor.needBody) {
+                  needsBody = true;
+                }
+              } else {
+                needsBody = true;
+              }
+            }
+          }
+          if (matchedAfterInterceptors.length === 0) {
+            this.dispatchEvent(new Event("readystatechange"));
+            this.dispatchEvent(new Event("load"));
+            this.dispatchEvent(new Event("loadend"));
+            return;
+          }
+          let rawResponseText = "";
+          if (needsBody && this._xhr.status > 0) {
+            try {
+              const type = this._xhr.responseType;
+              if (type === "" || type === "text") {
+                rawResponseText = this._xhr.responseText;
+              } else if (type === "json") {
+                rawResponseText = JSON.stringify(this._xhr.response);
+              } else if (type === "arraybuffer") {
+                rawResponseText = new TextDecoder("utf-8").decode(
+                  this._xhr.response
+                );
+              } else if (type === "blob") {
+                rawResponseText = await this._xhr.response.text();
+              } else if (type === "document") {
+                rawResponseText = new XMLSerializer().serializeToString(
+                  this._xhr.response
+                );
+              }
+            } catch (err) {
+              log$1.error("Failed to read response body for XHR interceptor:", err);
+            }
+          }
+          let currentResponseText = rawResponseText;
+          let currentResponse = new Response(rawResponseText, {
+            status: this._xhr.status,
+            statusText: this._xhr.statusText,
+            headers: this._parseResponseHeaders(
+              this._xhr.getAllResponseHeaders()
+            )
+          });
+          for (const interceptor of matchedAfterInterceptors) {
+            try {
+              const resContext = {
+                url: this._url,
+                init: resContextInit,
+                response: currentResponse
+              };
+              const maybeNew = await interceptor.after(
+                currentResponseText,
+                currentResponse,
+                resContext
+              );
+              if (maybeNew instanceof Response) {
+                currentResponse = maybeNew;
+                currentResponseText = await maybeNew.clone().text();
+              } else if (typeof maybeNew === "string") {
+                currentResponseText = maybeNew;
+                currentResponse = new Response(maybeNew, {
+                  status: currentResponse.status,
+                  statusText: currentResponse.statusText,
+                  headers: currentResponse.headers
+                });
+              }
+            } catch (err) {
+              log$1.error(
+                `XHR after interceptor error in ${interceptor.name || "unnamed"}:`,
+                err
+              );
+            }
+          }
+          if (currentResponseText !== rawResponseText) {
+            this._isIntercepted = true;
+            this._status = this._xhr.status;
+            this._statusText = this._xhr.statusText;
+            this._responseHeaders = this._xhr.getAllResponseHeaders();
+            this._responseText = currentResponseText;
+            const type = this._xhr.responseType;
+            try {
+              if (type === "" || type === "text") {
+                this._response = currentResponseText;
+              } else if (type === "json") {
+                this._response = JSON.parse(currentResponseText);
+              } else if (type === "arraybuffer") {
+                this._response = new TextEncoder().encode(
+                  currentResponseText
+                ).buffer;
+              } else if (type === "blob") {
+                this._response = new Blob([currentResponseText], {
+                  type: this._xhr.getResponseHeader("content-type") || "text/plain"
+                });
+              } else if (type === "document") {
+                const parser = new DOMParser();
+                const mime = this._xhr.getResponseHeader("content-type")?.split(";")[0] || "text/xml";
+                this._responseXML = parser.parseFromString(
+                  currentResponseText,
+                  mime
+                );
+                this._response = this._responseXML;
+              }
+            } catch (err) {
+              log$1.error(
+                "Failed to convert modified response text to type:",
+                type,
+                err
+              );
+              this._isIntercepted = false;
+            }
+          }
+          this.dispatchEvent(new Event("readystatechange"));
+          this.dispatchEvent(new Event("load"));
+          this.dispatchEvent(new Event("loadend"));
+        }
+        _parseResponseHeaders(headersStr) {
+          const headers = new Headers();
+          if (!headersStr) return headers;
+          const lines = headersStr.split("\r\n");
+          for (const line of lines) {
+            if (!line.trim()) continue;
+            const index2 = line.indexOf(":");
+            if (index2 > -1) {
+              const key = line.substring(0, index2).trim();
+              const val = line.substring(index2 + 1).trim();
+              headers.append(key, val);
+            }
+          }
+          return headers;
+        }
+      };
+      _PatchedXMLHttpRequest.UNSENT = 0;
+      _PatchedXMLHttpRequest.OPENED = 1;
+      _PatchedXMLHttpRequest.HEADERS_RECEIVED = 2;
+      _PatchedXMLHttpRequest.LOADING = 3;
+      _PatchedXMLHttpRequest.DONE = 4;
+      let PatchedXMLHttpRequest = _PatchedXMLHttpRequest;
+      PatchedXMLHttpRequest.prototype.constructor = OriginalXHR;
+      Object.defineProperty(PatchedXMLHttpRequest, "__isPatched", {
+        value: true,
+        enumerable: false
+      });
+      pageWindow.XMLHttpRequest = PatchedXMLHttpRequest;
+      log$1.debug("XMLHttpRequest patched for network interception");
+    } catch (err) {
+      log$1.error("Failed to patch XMLHttpRequest:", err);
+    }
+  }
+  function patchWebSocket() {
+    try {
+      let getWrappedListener = function(socket, listener) {
+        if (typeof listener !== "function" && (!listener || typeof listener.handleEvent !== "function")) {
+          return listener;
+        }
+        let map = socket[listenersMapSym];
+        if (!map) {
+          map = new WeakMap();
+          socket[listenersMapSym] = map;
+        }
+        if (map.has(listener)) {
+          return map.get(listener);
+        }
+        const socketInstance = socket;
+        const wrapped = function(event) {
+          const msgEvent = event;
+          if (!ffconfig.network_interception_enabled) {
+            if (typeof listener === "function") {
+              listener.call(this || socketInstance, msgEvent);
+            } else {
+              listener.handleEvent(msgEvent);
+            }
+            return;
+          }
+          let currentData = msgEvent.data;
+          let modified = false;
+          for (const interceptor of wsInterceptors) {
+            if (interceptor.afterMessage && matchesWsUrl(socketInstance.url, interceptor.match)) {
+              try {
+                const proxyEvent = new Proxy(msgEvent, {
+                  get(target, prop, receiver) {
+                    if (prop === "data") return currentData;
+                    const val = Reflect.get(target, prop, receiver);
+                    return typeof val === "function" ? val.bind(target) : val;
+                  }
+                });
+                const maybe = interceptor.afterMessage(
+                  currentData,
+                  proxyEvent,
+                  this || socketInstance
+                );
+                if (maybe !== void 0) {
+                  currentData = maybe;
+                  modified = true;
+                }
+              } catch (err) {
+                log$1.error(
+                  `WS afterMessage interceptor error in ${interceptor.name || "unnamed"}:`,
+                  err
+                );
+              }
+            }
+          }
+          let finalEvent = msgEvent;
+          if (modified && currentData !== msgEvent.data) {
+            finalEvent = new Proxy(msgEvent, {
+              get(target, prop, receiver) {
+                if (prop === "data") return currentData;
+                if (prop === "target" || prop === "currentTarget")
+                  return this || socketInstance;
+                const val = Reflect.get(target, prop, receiver);
+                return typeof val === "function" ? val.bind(target) : val;
+              }
+            });
+          }
+          if (typeof listener === "function") {
+            listener.call(this || socketInstance, finalEvent);
+          } else {
+            listener.handleEvent(finalEvent);
+          }
+        };
+        map.set(listener, wrapped);
+        return wrapped;
+      };
+      const OriginalWS = pageWindow.WebSocket;
+      if (!OriginalWS || OriginalWS.__isPatched) return;
+      const onmessageHandlerSym = Symbol("onmessageHandler");
+      const onmessageWrappedSym = Symbol("onmessageWrapped");
+      const listenersMapSym = Symbol("listenersMap");
+      const WrappedWS = function WebSocket(...args) {
+        if (!new.target) {
+          throw new TypeError(
+            "Failed to construct 'WebSocket': Please use the 'new' operator."
+          );
+        }
+        return Reflect.construct(OriginalWS, args, new.target);
+      };
+      WrappedWS.prototype = Object.create(OriginalWS.prototype);
+      WrappedWS.prototype.constructor = WrappedWS;
+      const states = ["CONNECTING", "OPEN", "CLOSING", "CLOSED"];
+      for (const state of states) {
+        Object.defineProperty(WrappedWS, state, {
+          value: OriginalWS[state],
+          writable: false,
+          enumerable: true,
+          configurable: false
+        });
+      }
+      const originalSend = OriginalWS.prototype.send;
+      WrappedWS.prototype.send = function(data) {
+        if (!ffconfig.network_interception_enabled) {
+          originalSend.call(this, data);
+          return;
+        }
+        let currentData = data;
+        for (const interceptor of wsInterceptors) {
+          if (interceptor.beforeSend && matchesWsUrl(this.url, interceptor.match)) {
+            try {
+              const maybe = interceptor.beforeSend(currentData, this);
+              if (maybe !== void 0) {
+                currentData = maybe;
+              }
+            } catch (err) {
+              log$1.error(
+                `WS beforeSend interceptor error in ${interceptor.name || "unnamed"}:`,
+                err
+              );
+            }
+          }
+        }
+        originalSend.call(this, currentData);
+      };
+      const originalAddEventListener = OriginalWS.prototype.addEventListener;
+      WrappedWS.prototype.addEventListener = function(type, listener, options) {
+        if (type === "message") {
+          const wrapped = getWrappedListener(this, listener);
+          originalAddEventListener.call(this, type, wrapped, options);
+        } else {
+          originalAddEventListener.call(this, type, listener, options);
+        }
+      };
+      const originalRemoveEventListener = OriginalWS.prototype.removeEventListener;
+      WrappedWS.prototype.removeEventListener = function(type, listener, options) {
+        if (type === "message") {
+          const map = this[listenersMapSym];
+          const wrapped = map ? map.get(listener) : null;
+          originalRemoveEventListener.call(
+            this,
+            type,
+            wrapped || listener,
+            options
+          );
+          if (map && wrapped) {
+            map.delete(listener);
+          }
+        } else {
+          originalRemoveEventListener.call(this, type, listener, options);
+        }
+      };
+      Object.defineProperty(WrappedWS.prototype, "onmessage", {
+        configurable: true,
+        enumerable: true,
+        get() {
+          return this[onmessageHandlerSym] ?? null;
+        },
+        set(handler) {
+          const self = this;
+          if (self[onmessageWrappedSym]) {
+            this.removeEventListener("message", self[onmessageWrappedSym]);
+            self[onmessageWrappedSym] = null;
+          }
+          if (typeof handler === "function") {
+            self[onmessageHandlerSym] = handler;
+            const wrapper = function(ev) {
+              return handler.call(this, ev);
+            };
+            self[onmessageWrappedSym] = wrapper;
+            this.addEventListener("message", wrapper);
+          } else {
+            self[onmessageHandlerSym] = null;
+          }
+        }
+      });
+      Object.defineProperty(WrappedWS, "__isPatched", {
+        value: true,
+        enumerable: false
+      });
+      pageWindow.WebSocket = WrappedWS;
+      log$1.debug("WebSocket patched for network interception");
+    } catch (err) {
+      log$1.error("Failed to patch WebSocket:", err);
+    }
+  }
+  initNetworkInterception();
   const stylesCss = ".ffsv3-gauge{position:relative;display:block;padding:0}.ffsv3-arrow{position:absolute;transform:translate(-50%,-30%);padding:0;top:0;left:calc(var(--ffsv3-arrow-width) / 2 + var(--band-percent) * (100% - var(--ffsv3-arrow-width)) / 100);width:var(--ffsv3-arrow-width);object-fit:cover;pointer-events:none}.ffsv3-bubble{position:absolute;transform:translate(-50%,-30%);top:0;left:calc(var(--ffsv3-arrow-width) / 2 + var(--band-percent) * (100% - var(--ffsv3-arrow-width)) / 100);min-width:22px;height:14px;line-height:12px;border:1px solid rgba(0,0,0,.4);border-radius:8px;font-size:8.5px;font-weight:700;font-family:Geneva,Arial,sans-serif;text-align:center;padding:0 4px;box-sizing:border-box;pointer-events:none;white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;text-shadow:0 1px 1px rgba(0,0,0,.5);box-shadow:0 1px 2px #0000004d;z-index:10}.ffsv3-mini-desc{padding:0 5px}body{--ffsv3-bg-color: #f0f0f0;--ffsv3-alt-bg-color: #fff;--ffsv3-border-color: #ccc;--ffsv3-input-color: #ccc;--ffsv3-text-color: #000;--ffsv3-hover-color: #ddd;--ffsv3-glow-color: #4caf50;--ffsv3-success-color: #4caf50;--ffsv3-arrow-width: 20px}body.dark-mode{--ffsv3-bg-color: #333;--ffsv3-alt-bg-color: #383838;--ffsv3-border-color: #444;--ffsv3-input-color: #504f4f;--ffsv3-text-color: #ccc;--ffsv3-hover-color: #555;--ffsv3-glow-color: #4caf50;--ffsv3-success-color: #4caf50}.ff-premium-upgrade-line{display:block;margin-top:4px;line-height:1.3;white-space:nowrap;font-size:12px;font-style:normal}@media(max-width:768px){.ff-premium-upgrade-line{margin-top:6px;line-height:1.35;white-space:normal;overflow-wrap:anywhere}}ff-settings-panel{display:block}ff-settings-panel .accordion{margin:10px 0;padding:15px;background-color:var(--ffsv3-bg-color);border:1px solid var(--ffsv3-border-color);border-radius:5px;color:var(--ffsv3-text-color)}ff-settings-panel .accordion.glow{border-color:var(--ffsv3-glow-color);box-shadow:0 0 8px #4caf5080}ff-settings-panel .input-row{display:flex;flex-direction:column;gap:5px;margin-bottom:15px}ff-settings-panel .input-row-inline{display:flex;align-items:center;gap:10px;margin-bottom:15px}ff-settings-panel .blur-mode{filter:blur(4px);transition:filter .2s ease}ff-settings-panel .blur-mode:hover,ff-settings-panel .blur-mode:focus{filter:blur(0)}ff-settings-panel .error-msg{color:#f33;font-size:13px;margin-top:5px}ff-settings-panel input[type=text],ff-settings-panel input[type=number]{box-sizing:border-box!important;text-align:left;vertical-align:top;width:178px;height:34px!important;margin-right:8px;padding:9px 10px;line-height:14px;display:inline-block}ff-settings-panel input[type=number].ff-number{width:80px}ff-settings-panel select{box-sizing:border-box;text-align:left;vertical-align:top;width:178px;height:34px;margin-right:8px;padding:8px 10px;line-height:14px;display:inline-block;border:var(--input-border-color, 1px solid var(--ffsv3-border-color));border-radius:5px;font-family:Arial,serif;color:var(--input-color, var(--ffsv3-text-color));background:var(--input-background-color, var(--ffsv3-alt-bg-color))}:root .dark-mode ff-settings-panel select option{background-color:#000;color:var(--input-color)}ff-settings-panel .ff-api-explanation{background-color:var(--ffsv3-alt-bg-color);border:1px solid var(--ffsv3-border-color);border-radius:8px;color:var(--ffsv3-text-color);margin-bottom:20px;padding:12px 16px;font-size:13px;line-height:1.5}ff-settings-panel a{color:var(--ffsv3-success-color);text-decoration:underline}ff-settings-panel .is_premium_enabled{display:inline-block;background:#4caf50;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;vertical-align:middle}ff-settings-panel .is_premium_disabled{display:inline-block;background:#c62828;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;vertical-align:middle}.profile-status{position:relative}ff-flight-profile-status{position:absolute;right:10px;bottom:2px;z-index:2}.ff-scouter-profile-flight-info{display:inline-block;text-align:right;font-size:11px;line-height:1.25;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.85)}.profile-status .ff-scouter-profile-flight-info a{color:#fff;text-decoration:underline}ff-faction-filter-box{display:block}.ff-filter-box,.ff-filter-box *,.ff-filter-box *:before,.ff-filter-box *:after{box-sizing:border-box!important}.ff-filter-box{background-color:var(--ffsv3-bg-color);border:1px solid var(--ffsv3-border-color);border-radius:8px;padding:12px 16px;margin-bottom:16px;color:var(--ffsv3-text-color);font-family:Arial,sans-serif;box-shadow:0 2px 5px #0000000d}.ff-filter-box.no-borders{background-color:var(--default-bg-panel-color);border-top:1px solid var(--ffsv3-border-color);border-bottom:1px solid var(--ffsv3-border-color);border-left:none;border-right:none;border-radius:0;box-shadow:none;padding:12px 10px;margin:0}.ff-filter-box summary{cursor:pointer;font-size:14px;font-weight:700;outline:none;-webkit-user-select:none;user-select:none}.ff-filter-box[open] summary{border-bottom:1px solid var(--ffsv3-border-color);padding-bottom:6px;margin-bottom:12px}.ff-filter-header-actions{display:flex;gap:6px;align-items:center}.ff-filter-box .ff-action-icon-btn{background:var(--ffsv3-alt-bg-color);border:1px solid var(--ffsv3-border-color);border-radius:4px;color:var(--ffsv3-text-color);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;padding:0;transition:background-color .2s,color .2s,opacity .2s}.ff-filter-box .ff-action-icon-btn:hover{background-color:var(--ffsv3-hover-color)}.ff-filter-box .ff-action-icon-btn.active{color:var(--ffsv3-text-color);opacity:1}.ff-filter-box .ff-action-icon-btn.inactive{color:var(--ffsv3-text-color);opacity:.4}.ff-filter-box .ff-action-icon-btn svg{width:14px;height:14px;fill:currentColor}.ff-filter-box .ff-action-icon-btn.reset-btn svg{transition:transform .25s ease-in-out}.ff-filter-box .ff-action-icon-btn.reset-btn:hover svg{transform:rotate(-180deg)}.ff-filter-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.grp-sort{order:1}.grp-level{order:2}.grp-activity{order:3}.grp-status{order:4}.grp-ff{order:5}.grp-stats{order:6}.grp-columns{order:7}@media(min-width:784px){.ff-filter-grid{grid-template-columns:repeat(3,1fr)}.ff-filter-grid>*{order:0}}.ff-filter-group{display:flex;flex-direction:column;gap:2px}.ff-filter-options{display:flex;flex-direction:column}.ff-filter-options label{display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer}.ff-filter-range-inputs{display:flex;align-items:center;gap:4px}.ff-filter-range-inputs input{flex:1;width:0;min-width:30px;max-width:80px;padding:4px;border:1px solid var(--ffsv3-border-color);border-radius:4px;background:var(--ffsv3-alt-bg-color);color:var(--ffsv3-text-color);font-size:11px;text-align:center}.ff-filter-box button{padding:6px 10px;border:1px solid var(--ffsv3-border-color);border-radius:4px;background:var(--ffsv3-alt-bg-color);color:var(--ffsv3-text-color);font-size:12px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;transition:background-color .2s}.ff-filter-box button:hover{background-color:var(--ffsv3-hover-color)}.chain-options-flex-container{display:flex;flex-wrap:wrap;gap:10px 20px;align-items:center;justify-content:flex-start;margin-left:20px;margin-top:10px;margin-bottom:15px}.chain-options-flex-container .input-row-inline{margin-bottom:0}.faction-war .ffscouter-cell{float:left!important;width:32px!important;height:20px!important;font-size:11px!important;font-weight:700!important;border-radius:3px!important;box-sizing:border-box!important;margin:7px 4px!important;padding:0!important;text-align:center!important;line-height:20px!important;z-index:10!important}.ffscouter-cell{cursor:pointer!important}.faction-war .ffscouter-header{float:left!important;width:38px!important;font-size:12px!important;font-weight:700!important;padding:0!important;text-align:center!important;background-color:transparent!important}.faction-war[data-ffscouter-hide-level=true] .level:not(.ffscouter-cell):not(.ffscouter-header){display:none!important}.faction-war[data-ffscouter-hide-status=true] .status,.faction-war[data-ffscouter-hide-score=true] .points{display:none!important}.faction-war[data-ffscouter-col-display=fair_fight]:not([data-ffscouter-hide-level=true]) .level:not(.ffscouter-cell):not(.ffscouter-header),.faction-war[data-ffscouter-col-display=battle_stats]:not([data-ffscouter-hide-level=true]) .level:not(.ffscouter-cell):not(.ffscouter-header){width:29px!important}.faction-war[data-ffscouter-col-display=fair_fight]:not([data-ffscouter-hide-level=true]) .status,.faction-war[data-ffscouter-col-display=battle_stats]:not([data-ffscouter-hide-level=true]) .status{width:50px!important}.faction-war[data-ffscouter-col-display=fair_fight]:not([data-ffscouter-hide-level=true]) .points,.faction-war[data-ffscouter-col-display=battle_stats]:not([data-ffscouter-hide-level=true]) .points{width:38px!important}.members-list li.enemy:has(>.tt-stats-estimate),.members-list li.your:has(>.tt-stats-estimate),.members-list li.enemy:has(>div.clear~*),.members-list li.your:has(>div.clear~*){padding-bottom:22px!important;position:relative!important}.members-list li.enemy>.tt-stats-estimate,.members-list li.your>.tt-stats-estimate,.members-list li.enemy>div.clear~*,.members-list li.your>div.clear~*{position:absolute!important;bottom:2px!important;left:10px!important;height:18px!important;line-height:18px!important;font-size:11px!important;width:calc(100% - 20px)!important;display:block!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ff-filter-box summary:focus-visible{outline:2px solid var(--ffsv3-glow-color);outline-offset:2px}";
   importCSS(stylesCss);
   const log = logger.child("boot");
@@ -7014,19 +7951,29 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       return;
     }
     w[INJECTION_KEY] = true;
-    log.info("Initializing", "3.0-alpha27");
+    log.info("Initializing", "3.0-alpha28");
     if (ffscouter.analytics_enabled) {
       unsafeWindow.ffscouter = ffscouter;
       window.ffscouter = ffscouter;
     }
     for (const feat of Features) {
-      if (feat.executionTime === StartTime.DocumentStart && await feat.shouldRun())
+      if (feat.executionTime === StartTime.DocumentStart && await feat.shouldRun()) {
+        if (feat.httpIntercept) {
+          feat.httpIntercept.name = feat.name;
+          registerHttpInterceptor(feat.httpIntercept);
+        }
         feat.run();
+      }
     }
     await wait_for_body(1e4);
     for (const feat of Features) {
-      if (feat.executionTime === StartTime.DocumentBody && await feat.shouldRun())
+      if (feat.executionTime === StartTime.DocumentBody && await feat.shouldRun()) {
+        if (feat.httpIntercept) {
+          feat.httpIntercept.name = feat.name;
+          registerHttpInterceptor(feat.httpIntercept);
+        }
         feat.run();
+      }
     }
   }
   main();
