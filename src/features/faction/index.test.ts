@@ -653,11 +653,6 @@ test("apply_ff_columns supports configurable display via real DOM elements when 
   expect(cell.tagName).toBe("DIV");
   expect(cell.onclick).toBeTypeOf("function");
 
-  // Check the status icon clickability
-  const icons = list.querySelector(".icons") as HTMLElement;
-  expect(icons.style.cursor).toBe("pointer");
-  expect(icons.onclick).toBeTypeOf("function");
-
   // Check same tab preference
   ffconfig.war_quick_attack_action = WarQuickAttackAction.CURRENT;
   await apply_ff_columns(list);

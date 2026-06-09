@@ -46,6 +46,7 @@ export default {
     panel.networkInterceptionEnabled = ffconfig.network_interception_enabled;
     panel.gaugeMarkerType = ffconfig.gauge_marker_type;
     panel.warQuickAttackAction = ffconfig.war_quick_attack_action;
+    panel.statusAttackLinksEnabled = ffconfig.status_attack_links_enabled;
     panel.isPremium = await check_key_status.is_premium(true);
 
     // Listen for the custom save event
@@ -78,6 +79,7 @@ export default {
       ffconfig.network_interception_enabled = detail.networkInterceptionEnabled;
       ffconfig.gauge_marker_type = detail.gaugeMarkerType;
       ffconfig.war_quick_attack_action = detail.warQuickAttackAction;
+      ffconfig.status_attack_links_enabled = detail.statusAttackLinksEnabled;
       panel.isPremium = await check_key_status.is_premium(true);
 
       toast("Settings saved successfully!");
@@ -111,6 +113,7 @@ export default {
       panel.networkInterceptionEnabled = ffconfig.network_interception_enabled;
       panel.gaugeMarkerType = ffconfig.gauge_marker_type;
       panel.warQuickAttackAction = ffconfig.war_quick_attack_action;
+      panel.statusAttackLinksEnabled = ffconfig.status_attack_links_enabled;
 
       toast("Settings reset to defaults!");
       window.dispatchEvent(new CustomEvent("ff-config-updated"));

@@ -54,6 +54,8 @@ export class FFSettingsPanel extends LitElement {
     CONFIG_DEFAULTS.gauge_marker_type;
   @property({ type: String }) warQuickAttackAction: WarQuickAttackAction =
     CONFIG_DEFAULTS.war_quick_attack_action;
+  @property({ type: Boolean }) statusAttackLinksEnabled: boolean =
+    CONFIG_DEFAULTS.status_attack_links_enabled;
   @property({ type: Boolean }) isPremium: boolean = false;
 
   // Draft States
@@ -93,6 +95,8 @@ export class FFSettingsPanel extends LitElement {
     CONFIG_DEFAULTS.gauge_marker_type;
   @state() private draftWarQuickAttackAction: WarQuickAttackAction =
     CONFIG_DEFAULTS.war_quick_attack_action;
+  @state() private draftStatusAttackLinksEnabled: boolean =
+    CONFIG_DEFAULTS.status_attack_links_enabled;
 
   @state() private rangeError = "";
   @state() private showSavedMessage = false;
@@ -144,6 +148,8 @@ export class FFSettingsPanel extends LitElement {
       this.draftGaugeMarkerType = this.gaugeMarkerType;
     if (changedProperties.has("warQuickAttackAction"))
       this.draftWarQuickAttackAction = this.warQuickAttackAction;
+    if (changedProperties.has("statusAttackLinksEnabled"))
+      this.draftStatusAttackLinksEnabled = this.statusAttackLinksEnabled;
   }
 
   private resetDrafts() {
@@ -169,6 +175,7 @@ export class FFSettingsPanel extends LitElement {
     this.draftNetworkInterceptionEnabled = this.networkInterceptionEnabled;
     this.draftGaugeMarkerType = this.gaugeMarkerType;
     this.draftWarQuickAttackAction = this.warQuickAttackAction;
+    this.draftStatusAttackLinksEnabled = this.statusAttackLinksEnabled;
   }
 
   private handleSave() {
@@ -222,6 +229,7 @@ export class FFSettingsPanel extends LitElement {
           networkInterceptionEnabled: this.draftNetworkInterceptionEnabled,
           gaugeMarkerType: this.draftGaugeMarkerType,
           warQuickAttackAction: this.draftWarQuickAttackAction,
+          statusAttackLinksEnabled: this.draftStatusAttackLinksEnabled,
         },
         bubbles: true,
         composed: true,
@@ -385,6 +393,11 @@ export class FFSettingsPanel extends LitElement {
     this.draftNetworkInterceptionEnabled = (
       e.target as HTMLInputElement
     ).checked;
+    this.showSavedMessage = false;
+  }
+
+  private onStatusAttackLinksEnabledChange(e: Event) {
+    this.draftStatusAttackLinksEnabled = (e.target as HTMLInputElement).checked;
     this.showSavedMessage = false;
   }
 
@@ -721,6 +734,19 @@ export class FFSettingsPanel extends LitElement {
             />
             <label for="network-interception-toggle"
               >Enable network request interception (Fetch/XHR/WS)</label
+            >
+          </div>
+
+          <!-- Status Attack Links Toggle -->
+          <div class="input-row-inline">
+            <input
+              id="status-attack-links-toggle"
+              type="checkbox"
+              .checked=${this.draftStatusAttackLinksEnabled}
+              @change=${this.onStatusAttackLinksEnabledChange}
+            />
+            <label for="status-attack-links-toggle"
+              >Enable online status indicator quick-attack links</label
             >
           </div>
 

@@ -86,6 +86,35 @@ test("ff-settings-panel dispatches ff-save event with correct networkInterceptio
   expect(saveEvents[0]?.detail?.networkInterceptionEnabled).toBe(false);
 });
 
+test("ff-settings-panel dispatches ff-save event with correct statusAttackLinksEnabled when saved", async () => {
+  const el = document.createElement("ff-settings-panel") as FFSettingsPanel;
+  document.body.appendChild(el);
+  await el.updateComplete;
+
+  const saveEvents: CustomEvent[] = [];
+  el.addEventListener("ff-save", (e: Event) => {
+    saveEvents.push(e as CustomEvent);
+  });
+
+  const checkbox = el.querySelector(
+    "#status-attack-links-toggle",
+  ) as HTMLInputElement;
+  expect(checkbox).not.toBeNull();
+
+  // Toggle checkbox
+  checkbox.checked = false;
+  checkbox.dispatchEvent(new Event("change"));
+
+  const saveBtn = Array.from(el.querySelectorAll("button")).find(
+    (btn) => btn.textContent?.trim() === "Save Settings",
+  ) as HTMLButtonElement;
+  expect(saveBtn).not.toBeNull();
+  saveBtn.click();
+
+  expect(saveEvents.length).toBe(1);
+  expect(saveEvents[0]?.detail?.statusAttackLinksEnabled).toBe(false);
+});
+
 test("ff-settings-panel retains unsaved draft changes for other properties when a single property is updated externally", async () => {
   const el = document.createElement("ff-settings-panel") as FFSettingsPanel;
   document.body.appendChild(el);

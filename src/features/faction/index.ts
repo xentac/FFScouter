@@ -538,21 +538,6 @@ export async function apply_ff_columns(membersList: HTMLElement) {
         cell.title = "";
       }
     }
-
-    const icons = rp.row.querySelector(".icons") as HTMLElement | null;
-    if (icons) {
-      icons.style.cursor = "pointer";
-      icons.onclick = (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        const url = `https://www.torn.com/page.php?sid=attack&user2ID=${rp.player_id}`;
-        if (ffconfig.war_quick_attack_action === "new_tab") {
-          window.open(url, "_blank");
-        } else {
-          window.location.href = url;
-        }
-      };
-    }
   }
 
   // Trigger filtering and sorting if filter box is connected

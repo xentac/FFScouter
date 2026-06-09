@@ -581,3 +581,27 @@ ff-faction-filter-box {
   outline: 2px solid var(--ffsv3-glow-color);
   outline-offset: 2px;
 }
+
+/* ============================================================================
+   ONLINE STATUS QUICK-ATTACK LINKS
+   ============================================================================ */
+body[data-ff-status-attack-enabled="true"] [class*="userStatusWrap__"],
+body[data-ff-status-attack-enabled="true"]
+  li[id^="icon"][id*="-profile-"].user-status-16-Online,
+body[data-ff-status-attack-enabled="true"]
+  li[id^="icon"][id*="-profile-"].user-status-16-Away,
+body[data-ff-status-attack-enabled="true"]
+  li[id^="icon"][id*="-profile-"].user-status-16-Offline,
+body[data-ff-status-attack-enabled="true"]
+  #profile-mini-root
+  li[id^="icon"][id*="-mini-profile-"].user-status-16-Online,
+body[data-ff-status-attack-enabled="true"]
+  #profile-mini-root
+  li[id^="icon"][id*="-mini-profile-"].user-status-16-Away,
+body[data-ff-status-attack-enabled="true"]
+  #profile-mini-root
+  li[id^="icon"][id*="-mini-profile-"].user-status-16-Offline,
+body[data-ff-status-attack-enabled="true"]
+  li[id^="icon"][id*="___"].iconShow.ffscouter-forum-status {
+  cursor: crosshair !important;
+}

@@ -66,6 +66,7 @@ export const CONFIG_DEFAULTS = {
   gauge_marker_type: GaugeMarkerType.ARROW,
   war_quick_attack_action: WarQuickAttackAction.NEW_TAB,
   network_interception_enabled: false,
+  status_attack_links_enabled: true,
 } as const;
 
 enum CONFIG {
@@ -97,6 +98,7 @@ enum CONFIG {
   GAUGE_MARKER_TYPE = "gauge_marker_type",
   WAR_QUICK_ATTACK_ACTION = "war_quick_attack_action",
   NETWORK_INTERCEPTION_ENABLED = "network_interception_enabled",
+  STATUS_ATTACK_LINKS_ENABLED = "status_attack_links_enabled",
 }
 
 export class FFConfig {
@@ -344,6 +346,17 @@ export class FFConfig {
     this.storage.set(CONFIG.NETWORK_INTERCEPTION_ENABLED, val);
   }
 
+  get status_attack_links_enabled(): boolean {
+    return (
+      this.storage.get(CONFIG.STATUS_ATTACK_LINKS_ENABLED) ??
+      CONFIG_DEFAULTS.status_attack_links_enabled
+    );
+  }
+
+  set status_attack_links_enabled(val: boolean) {
+    this.storage.set(CONFIG.STATUS_ATTACK_LINKS_ENABLED, val);
+  }
+
   get gauge_marker_type(): GaugeMarkerType {
     return (
       this.storage.get(CONFIG.GAUGE_MARKER_TYPE) ??
@@ -434,6 +447,8 @@ export class FFConfig {
     this.storage.remove(CONFIG.CHAIN_TARGETS);
     this.storage.remove(CONFIG.CHAIN_TARGET_INDEX);
     this.storage.remove(CONFIG.GAUGE_MARKER_TYPE);
+    this.storage.remove(CONFIG.WAR_QUICK_ATTACK_ACTION);
+    this.storage.remove(CONFIG.STATUS_ATTACK_LINKS_ENABLED);
   }
 }
 
