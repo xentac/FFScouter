@@ -686,9 +686,22 @@ export class FFSettingsPanel extends LitElement {
             </select>
           </div>
 
+          <!-- Status Attack Links Toggle -->
+          <div class="input-row-inline">
+            <input
+              id="status-attack-links-toggle"
+              type="checkbox"
+              .checked=${this.draftStatusAttackLinksEnabled}
+              @change=${this.onStatusAttackLinksEnabledChange}
+            />
+            <label for="status-attack-links-toggle"
+              >Enable online status indicator quick attack links</label
+            >
+          </div>
+
           <!-- War Quick Attack Action -->
           <div class="input-row-inline">
-            <label for="war-quick-attack-action">War Page Quick Attack Action:</label>
+            <label for="war-quick-attack-action">Quick Attack Action:</label>
             <select
               id="war-quick-attack-action"
               .value=${this.draftWarQuickAttackAction}
@@ -734,19 +747,6 @@ export class FFSettingsPanel extends LitElement {
             />
             <label for="network-interception-toggle"
               >Enable network request interception (Fetch/XHR/WS)</label
-            >
-          </div>
-
-          <!-- Status Attack Links Toggle -->
-          <div class="input-row-inline">
-            <input
-              id="status-attack-links-toggle"
-              type="checkbox"
-              .checked=${this.draftStatusAttackLinksEnabled}
-              @change=${this.onStatusAttackLinksEnabledChange}
-            />
-            <label for="status-attack-links-toggle"
-              >Enable online status indicator quick-attack links</label
             >
           </div>
 
