@@ -23,6 +23,8 @@ describe("Network Interception Registry and Patches", () => {
     // Reset interceptor arrays
     httpInterceptors.length = 0;
     wsInterceptors.length = 0;
+
+    ffconfig.network_interception_enabled = true;
   });
 
   afterEach(() => {
