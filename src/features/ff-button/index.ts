@@ -1,5 +1,6 @@
 import { TOAST_LEVEL, toast } from "@ui/toast";
 import { type FFTarget, query_targets } from "@utils/api";
+import { get_attack_url } from "@utils/dom";
 import { type CachedTargets, ffconfig } from "@utils/ffconfig";
 import logger from "@utils/logger";
 import { type Feature, StartTime } from "../feature";
@@ -133,7 +134,7 @@ export function update_anchor_attributes(anchor: HTMLAnchorElement) {
   anchor.href =
     linkType === "profile"
       ? `https://www.torn.com/profiles.php?XID=${currentTarget.player_id}`
-      : `https://www.torn.com/page.php?sid=attack&user2ID=${currentTarget.player_id}`;
+      : get_attack_url(currentTarget.player_id);
 
   anchor.target = ffconfig.chain_tab_type === "sametab" ? "_self" : "_blank";
 }

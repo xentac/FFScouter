@@ -3,6 +3,7 @@ import {
   apply_ff_gauge_selector,
   get_player_id_in_element,
   on_navigation,
+  open_attack_link,
   torn_page,
   wait_for_element,
 } from "@utils/dom";
@@ -490,12 +491,10 @@ export async function apply_ff_columns(membersList: HTMLElement) {
       cell.onclick = (e) => {
         e.preventDefault();
         e.stopPropagation();
-        const url = `https://www.torn.com/page.php?sid=attack&user2ID=${rp.player_id}`;
-        if (ffconfig.war_quick_attack_action === "new_tab") {
-          window.open(url, "_blank");
-        } else {
-          window.location.href = url;
-        }
+        const forceNewTab = e.ctrlKey || e.metaKey || e.button === 1;
+        open_attack_link(rp.player_id, {
+          openInNewTab: forceNewTab ? true : undefined,
+        });
       };
     }
 

@@ -550,3 +550,34 @@ export function on_navigation(callback: () => void): () => void {
     window.removeEventListener("hashchange", delayedCallback);
   };
 }
+
+/**
+ * Generates the attack URL for a player
+ * @param playerId The player ID
+ * @returns The attack URL string
+ */
+export function get_attack_url(playerId: PlayerId | number | string): string {
+  return `https://www.torn.com/page.php?sid=attack&user2ID=${playerId}`;
+}
+
+/**
+ * Navigates to the attack page or opens it in a new tab/window
+ * @param playerId The player ID
+ * @param options Navigation options (e.g. override tab behavior)
+ */
+export function open_attack_link(
+  playerId: PlayerId | number | string,
+  options?: { openInNewTab?: boolean },
+): void {
+  const url = get_attack_url(playerId);
+  const shouldOpenInNewTab =
+    options?.openInNewTab !== undefined
+      ? options.openInNewTab
+      : ffconfig.war_quick_attack_action === "new_tab";
+
+  if (shouldOpenInNewTab) {
+    window.open(url, "_blank");
+  } else {
+    window.location.href = url;
+  }
+}

@@ -1,6 +1,7 @@
 import {
   get_player_id_in_element,
   getLocalUserId,
+  open_attack_link,
   torn_page,
 } from "@utils/dom";
 import { ffconfig } from "@utils/ffconfig";
@@ -185,18 +186,10 @@ function handleStatusClick(e: MouseEvent) {
 
   log.debug("Initiating attack on user:", playerId);
 
-  const url = `https://www.torn.com/page.php?sid=attack&user2ID=${playerId}`;
-  const openInNewTab =
-    ffconfig.war_quick_attack_action === "new_tab" ||
-    e.ctrlKey ||
-    e.metaKey ||
-    e.button === 1;
-
-  if (openInNewTab) {
-    window.open(url, "_blank");
-  } else {
-    window.location.href = url;
-  }
+  const forceNewTab = e.ctrlKey || e.metaKey || e.button === 1;
+  open_attack_link(playerId, {
+    openInNewTab: forceNewTab ? true : undefined,
+  });
 }
 
 export default {

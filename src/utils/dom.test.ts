@@ -5,17 +5,19 @@ import {
   apply_ff_gauge,
   create_info_line,
   extract_id_from_url,
+  get_attack_url,
   get_player_id_in_element,
   getHashParameters,
   getLocalUserId,
   getRFC,
   MonitorElements,
+  open_attack_link,
   torn_page,
   wait_for_body,
   wait_for_element,
   waitForDocumentReady,
 } from "./dom";
-import { ffconfig, GaugeMarkerType } from "./ffconfig";
+import { ffconfig, GaugeMarkerType, WarQuickAttackAction } from "./ffconfig";
 import { ffscouter } from "./ffscouter";
 
 vi.mock("./ffscouter", () => {
@@ -349,4 +351,67 @@ test("create_info_line creates a styled div container", () => {
   expect(div.className).toEqual("ffsv3-info-line");
   expect(div.style.display).toEqual("block");
   expect(div.style.clear).toEqual("both");
+});
+
+test("get_attack_url returns the correct attack URL format", () => {
+  expect(get_attack_url(12345)).toEqual(
+    "https://www.torn.com/page.php?sid=attack&user2ID=12345",
+  );
+  expect(get_attack_url("67890")).toEqual(
+    "https://www.torn.com/page.php?sid=attack&user2ID=67890",
+  );
+});
+
+test("open_attack_link redirects in same tab when openInNewTab is false", () => {
+  const mockLocation = { href: "" };
+  vi.stubGlobal("location", mockLocation);
+  const openSpy = vi.spyOn(window, "open").mockImplementation(() => null);
+
+  open_attack_link(12345, { openInNewTab: false });
+
+  expect(openSpy).not.toHaveBeenCalled();
+  expect(mockLocation.href).toEqual(
+    "https://www.torn.com/page.php?sid=attack&user2ID=12345",
+  );
+});
+
+test("open_attack_link opens new tab when openInNewTab is true", () => {
+  const mockLocation = { href: "" };
+  vi.stubGlobal("location", mockLocation);
+  const openSpy = vi.spyOn(window, "open").mockImplementation(() => null);
+
+  open_attack_link(12345, { openInNewTab: true });
+
+  expect(openSpy).toHaveBeenCalledWith(
+    "https://www.torn.com/page.php?sid=attack&user2ID=12345",
+    "_blank",
+  );
+  expect(mockLocation.href).toEqual("");
+});
+
+test("open_attack_link respects ffconfig quick attack action when openInNewTab is undefined", () => {
+  const mockLocation = { href: "" };
+  vi.stubGlobal("location", mockLocation);
+  const openSpy = vi.spyOn(window, "open").mockImplementation(() => null);
+
+  // Case 1: config set to current (same tab)
+  ffconfig.war_quick_attack_action = WarQuickAttackAction.CURRENT;
+  open_attack_link(12345);
+  expect(openSpy).not.toHaveBeenCalled();
+  expect(mockLocation.href).toEqual(
+    "https://www.torn.com/page.php?sid=attack&user2ID=12345",
+  );
+
+  // Reset
+  mockLocation.href = "";
+  openSpy.mockClear();
+
+  // Case 2: config set to new_tab
+  ffconfig.war_quick_attack_action = WarQuickAttackAction.NEW_TAB;
+  open_attack_link(12345);
+  expect(openSpy).toHaveBeenCalledWith(
+    "https://www.torn.com/page.php?sid=attack&user2ID=12345",
+    "_blank",
+  );
+  expect(mockLocation.href).toEqual("");
 });
