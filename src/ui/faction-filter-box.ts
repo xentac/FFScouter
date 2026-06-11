@@ -324,6 +324,11 @@ export class FFFactionFilterBox extends LitElement {
     this.executeChangeImmediately();
   }
 
+  public setSortBy(val: "ff-asc" | "ff-desc" | "none") {
+    this.sortBy = val;
+    this.executeChangeImmediately();
+  }
+
   private onSortToggle() {
     if (this.sortBy === "none") {
       this.sortBy = "ff-desc";

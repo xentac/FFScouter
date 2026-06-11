@@ -1,6 +1,7 @@
 import { check_key_status } from "@utils/check_key";
 import {
   apply_ff_gauge_selector,
+  detect_sort_icon_classes,
   get_player_id_in_element,
   on_navigation,
   open_attack_link,
@@ -256,6 +257,42 @@ export function apply_filters_and_sort(
   } finally {
     isApplying = false;
   }
+}
+
+function update_war_header_sort_indicator(
+  list: HTMLElement,
+  sortBy: "ff-asc" | "ff-desc" | "none",
+) {
+  const header = list.querySelector(".ffscouter-header") as HTMLElement | null;
+  if (!header) return;
+
+  if (sortBy === "none") {
+    header.removeAttribute("data-ffscouter-sort");
+    header.querySelector(".ffscouter-sort-icon")?.remove();
+    return;
+  }
+
+  // data attribute drives the :has() CSS rule that hides native sort icons
+  header.setAttribute(
+    "data-ffscouter-sort",
+    sortBy === "ff-asc" ? "asc" : "desc",
+  );
+
+  const classes = detect_sort_icon_classes();
+  if (!classes) return;
+
+  if (classes.tab) header.classList.add(classes.tab);
+
+  let icon = header.querySelector(".ffscouter-sort-icon") as HTMLElement | null;
+  if (!icon) {
+    icon = document.createElement("div");
+    icon.classList.add("ffscouter-sort-icon", classes.sortIcon);
+    if (classes.activeIcon) icon.classList.add(classes.activeIcon);
+    header.appendChild(icon);
+  }
+
+  icon.classList.remove(classes.asc, classes.desc);
+  icon.classList.add(sortBy === "ff-asc" ? classes.asc : classes.desc);
 }
 
 function hide_row(row: HTMLElement) {
@@ -562,6 +599,10 @@ export async function apply_ff_columns(membersList: HTMLElement) {
     });
   }
 
+  if (isWar) {
+    update_war_header_sort_indicator(membersList, filterBox?.sortBy ?? "none");
+  }
+
   // Concurrently scan flights for traveling players
   poll_traveling_flights(membersList);
 }
@@ -766,6 +807,36 @@ const apply_ff_members_list = (root: HTMLElement = document.body) => {
 // Sets up a single, borderless configuration panel and binds it to both tables, waiting
 // for asynchronous rows (li.enemy, li.your) to load.
 // ============================================================================
+function setup_war_header_click(list: HTMLElement) {
+  if (list.hasAttribute("data-ffscouter-header-click")) return;
+  list.setAttribute("data-ffscouter-header-click", "true");
+
+  list.addEventListener(
+    "click",
+    (e: Event) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest(".white-grad")) return;
+
+      const filterBox = list
+        .closest(".faction-war")
+        ?.querySelector("ff-faction-filter-box") as any;
+      if (!filterBox) return;
+
+      if (target.closest(".ffscouter-header")) {
+        e.preventDefault();
+        e.stopPropagation();
+        const newSort = filterBox.sortBy === "ff-desc" ? "ff-asc" : "ff-desc";
+        filterBox.setSortBy(newSort);
+      } else if (target.closest("[class*='tab___']")) {
+        if (filterBox.sortBy !== "none") {
+          filterBox.setSortBy("none");
+        }
+      }
+    },
+    { capture: true },
+  );
+}
+
 export function setup_war_features(factionWar: HTMLElement) {
   const lists = Array.from(
     factionWar.querySelectorAll(".enemy-faction, .your-faction"),
@@ -818,6 +889,7 @@ function initialize_war_features(
     ) as HTMLElement[];
     for (const list of currentLists) {
       apply_filters_and_sort(list, e.detail);
+      update_war_header_sort_indicator(list, e.detail.sortBy);
     }
   };
   filterBox.addEventListener("filter-change", filterBox._onFilterChange);
@@ -853,6 +925,7 @@ function setup_war_list(list: HTMLElement) {
 }
 
 function initialize_war_list(list: HTMLElement) {
+  setup_war_header_click(list);
   apply_ff_columns(list);
 
   const target = list;

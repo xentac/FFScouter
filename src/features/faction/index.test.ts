@@ -1025,6 +1025,146 @@ test("setup_war_features MutationObserver in Ranked War reacts to status changes
   factionWar.remove();
 });
 
+test("war header click toggles sort between ff-desc and ff-asc, and native column click resets to none", async () => {
+  vi.mocked(ffscouter.get).mockResolvedValue({
+    player_id: 111 as PlayerId,
+    no_data: true,
+  } as any);
+
+  const factionWar = document.createElement("div");
+  factionWar.className = "faction-war";
+
+  const list = document.createElement("div");
+  list.className = "enemy-faction";
+  list.innerHTML = `
+    <div class="white-grad">
+      <div class="member tab___abc">Members</div>
+      <div class="level">Level</div>
+    </div>
+    <li class="enemy">
+      <div class="member"><a href="/profiles.php?XID=111">Enemy 111</a></div>
+      <div class="level">50</div>
+    </li>
+  `;
+
+  factionWar.appendChild(list);
+  document.body.appendChild(factionWar);
+
+  setup_war_features(factionWar);
+  await new Promise((resolve) => setTimeout(resolve, 0));
+
+  const filterBox = factionWar.querySelector("ff-faction-filter-box") as any;
+  expect(filterBox).not.toBeNull();
+
+  const ffHeader = list.querySelector(".ffscouter-header") as HTMLElement;
+  expect(ffHeader).not.toBeNull();
+
+  // First click: none -> ff-desc
+  ffHeader.click();
+  expect(filterBox.sortBy).toBe("ff-desc");
+
+  // Second click: ff-desc -> ff-asc
+  ffHeader.click();
+  expect(filterBox.sortBy).toBe("ff-asc");
+
+  // Click a native tab column: should reset to none
+  const nativeHeader = list.querySelector("[class*='tab___']") as HTMLElement;
+  nativeHeader.click();
+  expect(filterBox.sortBy).toBe("none");
+
+  factionWar.remove();
+});
+
+test("war header click does not reset sort when native column is clicked and sort is already none", async () => {
+  vi.mocked(ffscouter.get).mockResolvedValue({
+    player_id: 111 as PlayerId,
+    no_data: true,
+  } as any);
+
+  const factionWar = document.createElement("div");
+  factionWar.className = "faction-war";
+
+  const list = document.createElement("div");
+  list.className = "enemy-faction";
+  list.innerHTML = `
+    <div class="white-grad">
+      <div class="member tab___abc">Members</div>
+      <div class="level">Level</div>
+    </div>
+    <li class="enemy">
+      <div class="member"><a href="/profiles.php?XID=111">Enemy 111</a></div>
+      <div class="level">50</div>
+    </li>
+  `;
+
+  factionWar.appendChild(list);
+  document.body.appendChild(factionWar);
+
+  setup_war_features(factionWar);
+  await new Promise((resolve) => setTimeout(resolve, 0));
+
+  const filterBox = factionWar.querySelector("ff-faction-filter-box") as any;
+  expect(filterBox.sortBy).toBe("none");
+
+  const setSortBySpy = vi.spyOn(filterBox, "setSortBy");
+
+  const nativeHeader = list.querySelector("[class*='tab___']") as HTMLElement;
+  nativeHeader.click();
+
+  // setSortBy should not have been called since sort was already none
+  expect(setSortBySpy).not.toHaveBeenCalled();
+
+  factionWar.remove();
+});
+
+test("war header sort indicator attribute tracks sort state changes", async () => {
+  vi.mocked(ffscouter.get).mockResolvedValue({
+    player_id: 111 as PlayerId,
+    no_data: true,
+  } as any);
+
+  const factionWar = document.createElement("div");
+  factionWar.className = "faction-war";
+
+  const list = document.createElement("div");
+  list.className = "enemy-faction";
+  list.innerHTML = `
+    <div class="white-grad">
+      <div class="level">Level</div>
+    </div>
+    <li class="enemy">
+      <div class="member"><a href="/profiles.php?XID=111">Enemy 111</a></div>
+      <div class="level">50</div>
+    </li>
+  `;
+
+  factionWar.appendChild(list);
+  document.body.appendChild(factionWar);
+
+  setup_war_features(factionWar);
+  await new Promise((resolve) => setTimeout(resolve, 0));
+
+  const ffHeader = list.querySelector(".ffscouter-header") as HTMLElement;
+  expect(ffHeader).not.toBeNull();
+  expect(ffHeader.getAttribute("data-ffscouter-sort")).toBeNull();
+
+  const filterBox = factionWar.querySelector("ff-faction-filter-box") as any;
+
+  // Set to ff-desc via setSortBy — indicator should update via filter-change
+  filterBox.setSortBy("ff-desc");
+  expect(ffHeader.getAttribute("data-ffscouter-sort")).toBe("desc");
+
+  // Set to ff-asc
+  filterBox.setSortBy("ff-asc");
+  expect(ffHeader.getAttribute("data-ffscouter-sort")).toBe("asc");
+
+  // Reset to none
+  filterBox.setSortBy("none");
+  expect(ffHeader.getAttribute("data-ffscouter-sort")).toBeNull();
+
+  factionWar.remove();
+});
+
 describe("should_run_faction URL and hash matching", () => {
   test("returns true for step=profile with any ID", () => {
     vi.stubGlobal("location", {

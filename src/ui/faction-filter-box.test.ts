@@ -577,6 +577,31 @@ test("ff-faction-filter-box has correct mobile order for filter groups", async (
   }
 });
 
+test("ff-faction-filter-box setSortBy updates sortBy and dispatches filter-change", async () => {
+  const el = document.createElement(
+    "ff-faction-filter-box",
+  ) as FFFactionFilterBox;
+  document.body.appendChild(el);
+  await new Promise((resolve) => setTimeout(resolve, 0));
+
+  const events: any[] = [];
+  el.addEventListener("filter-change", (e: any) => {
+    events.push(e.detail);
+  });
+
+  el.setSortBy("ff-desc");
+  expect(el.sortBy).toBe("ff-desc");
+  expect(events[events.length - 1].sortBy).toBe("ff-desc");
+
+  el.setSortBy("ff-asc");
+  expect(el.sortBy).toBe("ff-asc");
+  expect(events[events.length - 1].sortBy).toBe("ff-asc");
+
+  el.setSortBy("none");
+  expect(el.sortBy).toBe("none");
+  expect(events[events.length - 1].sortBy).toBe("none");
+});
+
 test("ff-faction-filter-box supports toggling filtering on and off", async () => {
   const el = document.createElement(
     "ff-faction-filter-box",

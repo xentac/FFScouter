@@ -494,6 +494,13 @@ ff-faction-filter-box {
   padding: 0 !important;
   text-align: center !important;
   background-color: transparent !important;
+  cursor: pointer !important;
+}
+
+/* Hide native column sort icons while FF/Est sort is active, but not our own */
+.faction-war:has(.ffscouter-header[data-ffscouter-sort])
+[class*="sortIcon___"]:not(.ffscouter-sort-icon) {
+  visibility: hidden !important;
 }
 
 /* ============================================================================
