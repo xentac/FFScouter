@@ -486,7 +486,8 @@ ff-faction-filter-box {
   cursor: pointer !important;
 }
 
-.faction-war .ffscouter-header {
+.faction-war .ffscouter-header,
+.table-header .ffscouter-header {
   float: left !important;
   width: 38px !important;
   font-size: 12px !important;
@@ -499,7 +500,9 @@ ff-faction-filter-box {
 
 /* Hide native column sort icons while FF/Est sort is active, but not our own */
 .faction-war:has(.ffscouter-header[data-ffscouter-sort])
-[class*="sortIcon___"]:not(.ffscouter-sort-icon) {
+[class*="sortIcon___"]:not(.ffscouter-sort-icon),
+.members-list:has(.ffscouter-header[data-ffscouter-sort])
+  [class*="sortIcon___"]:not(.ffscouter-sort-icon) {
   visibility: hidden !important;
 }
 

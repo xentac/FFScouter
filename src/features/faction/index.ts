@@ -259,7 +259,7 @@ export function apply_filters_and_sort(
   }
 }
 
-function update_war_header_sort_indicator(
+function update_header_sort_indicator(
   list: HTMLElement,
   sortBy: "ff-asc" | "ff-desc" | "none",
 ) {
@@ -599,9 +599,7 @@ export async function apply_ff_columns(membersList: HTMLElement) {
     });
   }
 
-  if (isWar) {
-    update_war_header_sort_indicator(membersList, filterBox?.sortBy ?? "none");
-  }
+  update_header_sort_indicator(membersList, filterBox?.sortBy ?? "none");
 
   // Concurrently scan flights for traveling players
   poll_traveling_flights(membersList);
@@ -623,6 +621,7 @@ function inject_filter_box(membersList: HTMLElement) {
     filterBox = document.createElement("ff-faction-filter-box");
     filterBox.addEventListener("filter-change", (e: any) => {
       apply_filters_and_sort(membersList, e.detail);
+      update_header_sort_indicator(membersList, e.detail.sortBy);
     });
     parent.insertBefore(filterBox, membersList);
   }
@@ -630,6 +629,7 @@ function inject_filter_box(membersList: HTMLElement) {
 
 export function initialize_features(membersList: HTMLElement) {
   inject_filter_box(membersList);
+  setup_header_click(membersList, ".table-header", "[role='button']");
   apply_ff_columns(membersList);
 
   const target = membersList.querySelector(".table-body") || membersList;
@@ -807,7 +807,11 @@ const apply_ff_members_list = (root: HTMLElement = document.body) => {
 // Sets up a single, borderless configuration panel and binds it to both tables, waiting
 // for asynchronous rows (li.enemy, li.your) to load.
 // ============================================================================
-function setup_war_header_click(list: HTMLElement) {
+function setup_header_click(
+  list: HTMLElement,
+  headerAreaSelector: string,
+  nativeTabSelector: string,
+) {
   if (list.hasAttribute("data-ffscouter-header-click")) return;
   list.setAttribute("data-ffscouter-header-click", "true");
 
@@ -815,11 +819,12 @@ function setup_war_header_click(list: HTMLElement) {
     "click",
     (e: Event) => {
       const target = e.target as HTMLElement;
-      if (!target.closest(".white-grad")) return;
+      if (!target.closest(headerAreaSelector)) return;
 
-      const filterBox = list
-        .closest(".faction-war")
-        ?.querySelector("ff-faction-filter-box") as any;
+      const container = list.closest(".faction-war") ?? list.parentElement;
+      const filterBox = container?.querySelector(
+        "ff-faction-filter-box",
+      ) as any;
       if (!filterBox) return;
 
       if (target.closest(".ffscouter-header")) {
@@ -827,7 +832,7 @@ function setup_war_header_click(list: HTMLElement) {
         e.stopPropagation();
         const newSort = filterBox.sortBy === "ff-desc" ? "ff-asc" : "ff-desc";
         filterBox.setSortBy(newSort);
-      } else if (target.closest("[class*='tab___']")) {
+      } else if (target.closest(nativeTabSelector)) {
         if (filterBox.sortBy !== "none") {
           filterBox.setSortBy("none");
         }
@@ -889,7 +894,7 @@ function initialize_war_features(
     ) as HTMLElement[];
     for (const list of currentLists) {
       apply_filters_and_sort(list, e.detail);
-      update_war_header_sort_indicator(list, e.detail.sortBy);
+      update_header_sort_indicator(list, e.detail.sortBy);
     }
   };
   filterBox.addEventListener("filter-change", filterBox._onFilterChange);
@@ -925,7 +930,7 @@ function setup_war_list(list: HTMLElement) {
 }
 
 function initialize_war_list(list: HTMLElement) {
-  setup_war_header_click(list);
+  setup_header_click(list, ".white-grad", "[class*='tab___']");
   apply_ff_columns(list);
 
   const target = list;
