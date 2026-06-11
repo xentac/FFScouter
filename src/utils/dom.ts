@@ -608,6 +608,12 @@ const SORT_ICON_CLASS_SETS: Record<
     desc: "desc___ZvHWf",
     asc: "asc___YAXFZ",
   },
+  sortIcon___pMyNX: {
+    sortIcon: "sortIcon___pMyNX",
+    activeIcon: "activeIcon___dw8TK",
+    desc: "desc___TLpPc",
+    asc: "asc___Q3bz5",
+  },
 };
 
 export function detect_sort_icon_classes(): SortIconClasses | null {
