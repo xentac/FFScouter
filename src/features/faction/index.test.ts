@@ -241,11 +241,11 @@ test("apply_filters_and_sort filters and sorts member rows correctly", () => {
     },
   );
 
-  expect((tbody.querySelector("#row-1") as HTMLElement).style.display).toBe("");
-  expect((tbody.querySelector("#row-2") as HTMLElement).style.display).toBe(
-    "none",
+  expect((tbody.querySelector("#row-1") as HTMLElement).hasAttribute("data-ffscouter-hidden")).toBe(false);
+  expect((tbody.querySelector("#row-2") as HTMLElement).hasAttribute("data-ffscouter-hidden")).toBe(
+    true,
   );
-  expect((tbody.querySelector("#row-3") as HTMLElement).style.display).toBe("");
+  expect((tbody.querySelector("#row-3") as HTMLElement).hasAttribute("data-ffscouter-hidden")).toBe(false);
 
   // Test 2: Filter status - show only Hospital
   apply_filters_and_sort(
@@ -267,12 +267,12 @@ test("apply_filters_and_sort filters and sorts member rows correctly", () => {
     },
   );
 
-  expect((tbody.querySelector("#row-1") as HTMLElement).style.display).toBe(
-    "none",
+  expect((tbody.querySelector("#row-1") as HTMLElement).hasAttribute("data-ffscouter-hidden")).toBe(
+    true,
   );
-  expect((tbody.querySelector("#row-2") as HTMLElement).style.display).toBe("");
-  expect((tbody.querySelector("#row-3") as HTMLElement).style.display).toBe(
-    "none",
+  expect((tbody.querySelector("#row-2") as HTMLElement).hasAttribute("data-ffscouter-hidden")).toBe(false);
+  expect((tbody.querySelector("#row-3") as HTMLElement).hasAttribute("data-ffscouter-hidden")).toBe(
+    true,
   );
 
   // Test 3: Filter level range - level >= 45 and <= 55 (only Player 111 - level 50)
@@ -295,12 +295,12 @@ test("apply_filters_and_sort filters and sorts member rows correctly", () => {
     },
   );
 
-  expect((tbody.querySelector("#row-1") as HTMLElement).style.display).toBe("");
-  expect((tbody.querySelector("#row-2") as HTMLElement).style.display).toBe(
-    "none",
+  expect((tbody.querySelector("#row-1") as HTMLElement).hasAttribute("data-ffscouter-hidden")).toBe(false);
+  expect((tbody.querySelector("#row-2") as HTMLElement).hasAttribute("data-ffscouter-hidden")).toBe(
+    true,
   );
-  expect((tbody.querySelector("#row-3") as HTMLElement).style.display).toBe(
-    "none",
+  expect((tbody.querySelector("#row-3") as HTMLElement).hasAttribute("data-ffscouter-hidden")).toBe(
+    true,
   );
 
   // Test 4: Filter FF range - ff >= 2.0 and <= 3.0 (only Player 111 - 2.5)
@@ -323,12 +323,12 @@ test("apply_filters_and_sort filters and sorts member rows correctly", () => {
     },
   );
 
-  expect((tbody.querySelector("#row-1") as HTMLElement).style.display).toBe("");
-  expect((tbody.querySelector("#row-2") as HTMLElement).style.display).toBe(
-    "none",
+  expect((tbody.querySelector("#row-1") as HTMLElement).hasAttribute("data-ffscouter-hidden")).toBe(false);
+  expect((tbody.querySelector("#row-2") as HTMLElement).hasAttribute("data-ffscouter-hidden")).toBe(
+    true,
   );
-  expect((tbody.querySelector("#row-3") as HTMLElement).style.display).toBe(
-    "none",
+  expect((tbody.querySelector("#row-3") as HTMLElement).hasAttribute("data-ffscouter-hidden")).toBe(
+    true,
   );
 
   // Test 5: Sort by FF Descending (Row 2, then Row 1, then Row 3)
@@ -403,12 +403,12 @@ test("apply_filters_and_sort filters and sorts member rows correctly", () => {
     },
   );
 
-  expect((tbody.querySelector("#row-1") as HTMLElement).style.display).toBe("");
-  expect((tbody.querySelector("#row-2") as HTMLElement).style.display).toBe(
-    "none",
+  expect((tbody.querySelector("#row-1") as HTMLElement).hasAttribute("data-ffscouter-hidden")).toBe(false);
+  expect((tbody.querySelector("#row-2") as HTMLElement).hasAttribute("data-ffscouter-hidden")).toBe(
+    true,
   );
-  expect((tbody.querySelector("#row-3") as HTMLElement).style.display).toBe(
-    "none",
+  expect((tbody.querySelector("#row-3") as HTMLElement).hasAttribute("data-ffscouter-hidden")).toBe(
+    true,
   );
 
   // Test 8: Empty activity and status filters act as if everything is checked
@@ -431,9 +431,9 @@ test("apply_filters_and_sort filters and sorts member rows correctly", () => {
     },
   );
 
-  expect((tbody.querySelector("#row-1") as HTMLElement).style.display).toBe("");
-  expect((tbody.querySelector("#row-2") as HTMLElement).style.display).toBe("");
-  expect((tbody.querySelector("#row-3") as HTMLElement).style.display).toBe("");
+  expect((tbody.querySelector("#row-1") as HTMLElement).hasAttribute("data-ffscouter-hidden")).toBe(false);
+  expect((tbody.querySelector("#row-2") as HTMLElement).hasAttribute("data-ffscouter-hidden")).toBe(false);
+  expect((tbody.querySelector("#row-3") as HTMLElement).hasAttribute("data-ffscouter-hidden")).toBe(false);
 
   // Test 9: Sort by BS Estimate Descending when configured to BATTLE_STATS (Row 2 [5M], then Row 1 [1M], then Row 3 [500k])
   ffconfig.factions_col_display = FactionsColDisplay.BATTLE_STATS;
@@ -771,8 +771,8 @@ test("apply_filters_and_sort bypasses filtering but still sorts when filterEnabl
   apply_filters_and_sort(container, filters);
 
   // Both rows should be visible because filtering is disabled
-  expect(row1.style.display).not.toBe("none");
-  expect(row2.style.display).not.toBe("none");
+  expect(row1.hasAttribute("data-ffscouter-hidden")).toBe(false);
+  expect(row2.hasAttribute("data-ffscouter-hidden")).toBe(false);
 
   // Sorting should still have occurred (ff-desc, so row-2 (3.5) before row-1 (1.5))
   const rows = Array.from(container.querySelectorAll(".table-row"));
@@ -950,7 +950,7 @@ test("initialize_features MutationObserver reacts to status class changes and fi
 
   const row = container.querySelector("#row-1") as HTMLElement;
   // Row has status 'traveling', so it should be hidden
-  expect(row.style.display).toBe("none");
+  expect(row.hasAttribute("data-ffscouter-hidden")).toBe(true);
 
   // Dynamically change status class to okay
   const statusCell = row.querySelector(".status") as HTMLElement;
@@ -960,7 +960,7 @@ test("initialize_features MutationObserver reacts to status class changes and fi
   await new Promise((resolve) => setTimeout(resolve, 10));
 
   // Row should now be visible!
-  expect(row.style.display).toBe("");
+  expect(row.hasAttribute("data-ffscouter-hidden")).toBe(false);
 
   container.remove();
 });
@@ -1010,7 +1010,7 @@ test("setup_war_features MutationObserver in Ranked War reacts to status changes
 
   const row = enemyList.querySelector("#enemy-1") as HTMLElement;
   // Row has status 'traveling', so it should be visible
-  expect(row.style.display).toBe("");
+  expect(row.hasAttribute("data-ffscouter-hidden")).toBe(false);
 
   // Dynamically change status class to okay
   const statusCell = row.querySelector(".status") as HTMLElement;
@@ -1020,7 +1020,7 @@ test("setup_war_features MutationObserver in Ranked War reacts to status changes
   await new Promise((resolve) => setTimeout(resolve, 10));
 
   // Row should now be hidden!
-  expect(row.style.display).toBe("none");
+  expect(row.hasAttribute("data-ffscouter-hidden")).toBe(true);
 
   factionWar.remove();
 });
