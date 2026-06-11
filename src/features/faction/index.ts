@@ -296,11 +296,11 @@ function update_war_header_sort_indicator(
 }
 
 function hide_row(row: HTMLElement) {
-  row.style.setProperty("display", "none", "important");
+  row.setAttribute("data-ffscouter-hidden", "");
 }
 
 function show_row(row: HTMLElement) {
-  row.style.display = "";
+  row.removeAttribute("data-ffscouter-hidden");
 }
 
 function is_filter_active(filters: {
