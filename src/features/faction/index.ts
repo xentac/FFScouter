@@ -295,12 +295,40 @@ function update_header_sort_indicator(
   icon.classList.add(sortBy === "ff-asc" ? classes.asc : classes.desc);
 }
 
+function is_tt_extra_row(el: Element) {
+  return (
+    el.classList.contains("tt-last-action") ||
+    el.classList.contains("tt-stats-estimate")
+  );
+}
+
+function toggle_tt_siblings(row: HTMLElement, hidden: boolean) {
+  let next = row.nextElementSibling;
+  while (
+    next &&
+    !next.classList.contains("table-row") &&
+    !next.classList.contains("enemy") &&
+    !next.classList.contains("your")
+  ) {
+    if (is_tt_extra_row(next)) {
+      if (hidden) {
+        next.setAttribute("data-ffscouter-hidden", "");
+      } else {
+        next.removeAttribute("data-ffscouter-hidden");
+      }
+    }
+    next = next.nextElementSibling;
+  }
+}
+
 function hide_row(row: HTMLElement) {
   row.setAttribute("data-ffscouter-hidden", "");
+  toggle_tt_siblings(row, true);
 }
 
 function show_row(row: HTMLElement) {
   row.removeAttribute("data-ffscouter-hidden");
+  toggle_tt_siblings(row, false);
 }
 
 function is_filter_active(filters: {
