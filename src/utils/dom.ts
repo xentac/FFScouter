@@ -590,55 +590,42 @@ export interface SortIconClasses {
   tab: string;
 }
 
-let _cachedSortIconClasses: SortIconClasses | null | undefined;
+// Hardcoded Torn CSS module class names per page — update if Torn changes their build hash.
+// Two sets exist because Torn uses different CSS modules on different pages.
+const SORT_ICON_CLASS_SETS: Record<
+  string,
+  Omit<SortIconClasses, "tab">
+> = {
+  sortIcon___wbOOi: {
+    sortIcon: "sortIcon___wbOOi",
+    activeIcon: "activeIcon___wmLLe",
+    desc: "desc___wkA0A",
+    asc: "asc___y_atw",
+  },
+  sortIcon___LNQ9D: {
+    sortIcon: "sortIcon___LNQ9D",
+    activeIcon: "activeIcon___SwNJj",
+    desc: "desc___ZvHWf",
+    asc: "asc___YAXFZ",
+  },
+};
 
 export function detect_sort_icon_classes(): SortIconClasses | null {
-  if (_cachedSortIconClasses !== undefined) return _cachedSortIconClasses;
+  const existing = document.querySelector(
+    "[class*='sortIcon___']:not(.ffscouter-sort-icon)",
+  );
+  if (!existing) return null;
 
-  // Anchor to a sort icon already in the DOM — guarantees we're in the right CSS module
-  const existing = document.querySelector("[class*='sortIcon___']");
   const sortIcon =
-    Array.from(existing?.classList ?? []).find((c) =>
-      c.startsWith("sortIcon___"),
-    ) ?? "";
+    Array.from(existing.classList).find((c) => c.startsWith("sortIcon___")) ??
+    "";
+  const classes = SORT_ICON_CLASS_SETS[sortIcon];
+  if (!classes) return null;
 
-  if (!sortIcon) {
-    _cachedSortIconClasses = null;
-    return null;
-  }
-
-  // The tab___* class on the sort icon's parent scopes the CSS selector
   const tab =
-    Array.from(existing?.parentElement?.classList ?? []).find((c) =>
+    Array.from(existing.parentElement?.classList ?? []).find((c) =>
       c.startsWith("tab___"),
     ) ?? "";
 
-  let desc = "";
-  let asc = "";
-  let activeIcon = "";
-
-  try {
-    for (const sheet of document.styleSheets) {
-      if (desc && asc && activeIcon) break;
-      try {
-        for (const rule of sheet.cssRules) {
-          if (!(rule instanceof CSSStyleRule)) continue;
-          const sel = rule.selectorText;
-          if (!sel.includes(sortIcon)) continue;
-          desc ||= sel.match(/\.(desc___\w+)/)?.[1] ?? "";
-          asc ||= sel.match(/\.(asc___\w+)/)?.[1] ?? "";
-          activeIcon ||= sel.match(/\.(activeIcon___\w+)/)?.[1] ?? "";
-          if (desc && asc && activeIcon) break;
-        }
-      } catch {
-        // cross-origin stylesheet — skip
-      }
-    }
-  } catch {
-    // stylesheet access denied
-  }
-
-  _cachedSortIconClasses =
-    desc && asc ? { sortIcon, desc, asc, activeIcon, tab } : null;
-  return _cachedSortIconClasses;
+  return { ...classes, tab };
 }
