@@ -3,6 +3,7 @@ import { Features } from "@features/index";
 import { wait_for_body } from "@utils/dom";
 import { ffscouter } from "@utils/ffscouter";
 import logger from "@utils/logger";
+import { run_migration } from "@utils/migrate";
 import { registerHttpInterceptor } from "@utils/network";
 import { init_ui } from "./ui";
 
@@ -20,6 +21,7 @@ async function main() {
 
   log.info("Initializing", __FF_SCOUTER_V2_VERSION__);
 
+  run_migration();
   init_ui();
 
   if (ffscouter.analytics_enabled) {

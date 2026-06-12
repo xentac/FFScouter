@@ -7,6 +7,7 @@ import { check_key_status } from "@utils/check_key";
 import { torn_page, wait_for_element } from "@utils/dom";
 import { ffscouter } from "@utils/ffscouter";
 import logger, { LogLevel } from "@utils/logger";
+import { clear_v2_data } from "@utils/migrate";
 import { format_timestamp } from "@utils/strings";
 
 export default {
@@ -123,6 +124,7 @@ export default {
     panel.addEventListener("ff-clear-cache", async () => {
       try {
         ffscouter.clear_cache();
+        clear_v2_data();
         toast("FF Scouter cache cleared successfully!");
       } catch (err) {
         console.error("Failed to delete IndexedDB cache", err);
