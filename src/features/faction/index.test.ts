@@ -242,11 +242,21 @@ test("apply_filters_and_sort filters and sorts member rows correctly", () => {
     },
   );
 
-  expect((tbody.querySelector("#row-1") as HTMLElement).hasAttribute("data-ffscouter-hidden")).toBe(false);
-  expect((tbody.querySelector("#row-2") as HTMLElement).hasAttribute("data-ffscouter-hidden")).toBe(
-    true,
-  );
-  expect((tbody.querySelector("#row-3") as HTMLElement).hasAttribute("data-ffscouter-hidden")).toBe(false);
+  expect(
+    (tbody.querySelector("#row-1") as HTMLElement).hasAttribute(
+      "data-ffscouter-hidden",
+    ),
+  ).toBe(false);
+  expect(
+    (tbody.querySelector("#row-2") as HTMLElement).hasAttribute(
+      "data-ffscouter-hidden",
+    ),
+  ).toBe(true);
+  expect(
+    (tbody.querySelector("#row-3") as HTMLElement).hasAttribute(
+      "data-ffscouter-hidden",
+    ),
+  ).toBe(false);
 
   // Test 2: Filter status - show only Hospital
   apply_filters_and_sort(
@@ -269,13 +279,21 @@ test("apply_filters_and_sort filters and sorts member rows correctly", () => {
     },
   );
 
-  expect((tbody.querySelector("#row-1") as HTMLElement).hasAttribute("data-ffscouter-hidden")).toBe(
-    true,
-  );
-  expect((tbody.querySelector("#row-2") as HTMLElement).hasAttribute("data-ffscouter-hidden")).toBe(false);
-  expect((tbody.querySelector("#row-3") as HTMLElement).hasAttribute("data-ffscouter-hidden")).toBe(
-    true,
-  );
+  expect(
+    (tbody.querySelector("#row-1") as HTMLElement).hasAttribute(
+      "data-ffscouter-hidden",
+    ),
+  ).toBe(true);
+  expect(
+    (tbody.querySelector("#row-2") as HTMLElement).hasAttribute(
+      "data-ffscouter-hidden",
+    ),
+  ).toBe(false);
+  expect(
+    (tbody.querySelector("#row-3") as HTMLElement).hasAttribute(
+      "data-ffscouter-hidden",
+    ),
+  ).toBe(true);
 
   // Test 3: Filter level range - level >= 45 and <= 55 (only Player 111 - level 50)
   apply_filters_and_sort(
@@ -298,13 +316,21 @@ test("apply_filters_and_sort filters and sorts member rows correctly", () => {
     },
   );
 
-  expect((tbody.querySelector("#row-1") as HTMLElement).hasAttribute("data-ffscouter-hidden")).toBe(false);
-  expect((tbody.querySelector("#row-2") as HTMLElement).hasAttribute("data-ffscouter-hidden")).toBe(
-    true,
-  );
-  expect((tbody.querySelector("#row-3") as HTMLElement).hasAttribute("data-ffscouter-hidden")).toBe(
-    true,
-  );
+  expect(
+    (tbody.querySelector("#row-1") as HTMLElement).hasAttribute(
+      "data-ffscouter-hidden",
+    ),
+  ).toBe(false);
+  expect(
+    (tbody.querySelector("#row-2") as HTMLElement).hasAttribute(
+      "data-ffscouter-hidden",
+    ),
+  ).toBe(true);
+  expect(
+    (tbody.querySelector("#row-3") as HTMLElement).hasAttribute(
+      "data-ffscouter-hidden",
+    ),
+  ).toBe(true);
 
   // Test 4: Filter FF range - ff >= 2.0 and <= 3.0 (only Player 111 - 2.5)
   apply_filters_and_sort(
@@ -327,13 +353,21 @@ test("apply_filters_and_sort filters and sorts member rows correctly", () => {
     },
   );
 
-  expect((tbody.querySelector("#row-1") as HTMLElement).hasAttribute("data-ffscouter-hidden")).toBe(false);
-  expect((tbody.querySelector("#row-2") as HTMLElement).hasAttribute("data-ffscouter-hidden")).toBe(
-    true,
-  );
-  expect((tbody.querySelector("#row-3") as HTMLElement).hasAttribute("data-ffscouter-hidden")).toBe(
-    true,
-  );
+  expect(
+    (tbody.querySelector("#row-1") as HTMLElement).hasAttribute(
+      "data-ffscouter-hidden",
+    ),
+  ).toBe(false);
+  expect(
+    (tbody.querySelector("#row-2") as HTMLElement).hasAttribute(
+      "data-ffscouter-hidden",
+    ),
+  ).toBe(true);
+  expect(
+    (tbody.querySelector("#row-3") as HTMLElement).hasAttribute(
+      "data-ffscouter-hidden",
+    ),
+  ).toBe(true);
 
   // Test 5: Sort by FF Descending (Row 2, then Row 1, then Row 3)
   apply_filters_and_sort(
@@ -410,13 +444,21 @@ test("apply_filters_and_sort filters and sorts member rows correctly", () => {
     },
   );
 
-  expect((tbody.querySelector("#row-1") as HTMLElement).hasAttribute("data-ffscouter-hidden")).toBe(false);
-  expect((tbody.querySelector("#row-2") as HTMLElement).hasAttribute("data-ffscouter-hidden")).toBe(
-    true,
-  );
-  expect((tbody.querySelector("#row-3") as HTMLElement).hasAttribute("data-ffscouter-hidden")).toBe(
-    true,
-  );
+  expect(
+    (tbody.querySelector("#row-1") as HTMLElement).hasAttribute(
+      "data-ffscouter-hidden",
+    ),
+  ).toBe(false);
+  expect(
+    (tbody.querySelector("#row-2") as HTMLElement).hasAttribute(
+      "data-ffscouter-hidden",
+    ),
+  ).toBe(true);
+  expect(
+    (tbody.querySelector("#row-3") as HTMLElement).hasAttribute(
+      "data-ffscouter-hidden",
+    ),
+  ).toBe(true);
 
   // Test 8: Empty activity and status filters act as if everything is checked
   apply_filters_and_sort(
@@ -439,9 +481,21 @@ test("apply_filters_and_sort filters and sorts member rows correctly", () => {
     },
   );
 
-  expect((tbody.querySelector("#row-1") as HTMLElement).hasAttribute("data-ffscouter-hidden")).toBe(false);
-  expect((tbody.querySelector("#row-2") as HTMLElement).hasAttribute("data-ffscouter-hidden")).toBe(false);
-  expect((tbody.querySelector("#row-3") as HTMLElement).hasAttribute("data-ffscouter-hidden")).toBe(false);
+  expect(
+    (tbody.querySelector("#row-1") as HTMLElement).hasAttribute(
+      "data-ffscouter-hidden",
+    ),
+  ).toBe(false);
+  expect(
+    (tbody.querySelector("#row-2") as HTMLElement).hasAttribute(
+      "data-ffscouter-hidden",
+    ),
+  ).toBe(false);
+  expect(
+    (tbody.querySelector("#row-3") as HTMLElement).hasAttribute(
+      "data-ffscouter-hidden",
+    ),
+  ).toBe(false);
 
   // Test 9: Sort by BS Estimate Descending when configured to BATTLE_STATS (Row 2 [5M], then Row 1 [1M], then Row 3 [500k])
   apply_filters_and_sort(

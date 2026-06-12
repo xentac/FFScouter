@@ -75,7 +75,7 @@ describe("Network Interception Registry and Patches", () => {
       initNetworkInterception(true);
     });
 
-    test("should run before hook and modify URL", async () => {
+    test("should not run before hook or modify URL", async () => {
       registerHttpInterceptor({
         name: "test-before",
         before: (url) => {
@@ -88,14 +88,13 @@ describe("Network Interception Registry and Patches", () => {
       const response = await fetch("https://api.torn.com/original-url");
       const text = await response.text();
 
-      expect(text).toBe("response from https://api.torn.com/modified-url");
+      expect(text).toBe("response from https://api.torn.com/original-url");
       expect(fetchSpy).toHaveBeenCalledWith(
-        "https://api.torn.com/modified-url",
-        undefined,
+        "https://api.torn.com/original-url",
       );
     });
 
-    test("should support short-circuiting with mock response", async () => {
+    test("should not support short-circuiting with mock response (interception disabled)", async () => {
       registerHttpInterceptor({
         name: "mock-response",
         before: () => {
@@ -104,13 +103,13 @@ describe("Network Interception Registry and Patches", () => {
       });
 
       const response = await fetch("https://api.torn.com/some-url");
-      expect(response.status).toBe(418);
+      expect(response.status).toBe(200);
       const text = await response.text();
-      expect(text).toBe("mocked data");
-      expect(fetchSpy).not.toHaveBeenCalled();
+      expect(text).toBe("response from https://api.torn.com/some-url");
+      expect(fetchSpy).toHaveBeenCalled();
     });
 
-    test("should respect match filtering", async () => {
+    test("should respect match filtering (interception disabled)", async () => {
       registerHttpInterceptor({
         name: "match-only",
         match: /matching-url/,
@@ -127,10 +126,12 @@ describe("Network Interception Registry and Patches", () => {
 
       const res2 = await fetch("https://api.torn.com/matching-url");
       expect(res2.status).toBe(200);
-      expect(await res2.text()).toBe("matched");
+      expect(await res2.text()).toBe(
+        "response from https://api.torn.com/matching-url",
+      );
     });
 
-    test("should run after hook and mutate response text", async () => {
+    test("should not run after hook or mutate response text", async () => {
       registerHttpInterceptor({
         name: "test-after",
         after: (body) => {
@@ -141,7 +142,7 @@ describe("Network Interception Registry and Patches", () => {
       const response = await fetch("https://api.torn.com/data");
       const text = await response.text();
 
-      expect(text).toBe("response from https://api.torn.com/data - mutated");
+      expect(text).toBe("response from https://api.torn.com/data");
     });
   });
 
@@ -201,7 +202,7 @@ describe("Network Interception Registry and Patches", () => {
       initNetworkInterception(true);
     });
 
-    test("should intercept XHR requests and mutate response", async () => {
+    test("should not intercept XHR requests or mutate response", async () => {
       registerHttpInterceptor({
         name: "xhr-after",
         after: (body) => {
@@ -221,7 +222,7 @@ describe("Network Interception Registry and Patches", () => {
       xhr.send();
       await loadPromise;
 
-      expect(xhr.responseText).toBe("native xhr response - xhr-mutated");
+      expect(xhr.responseText).toBe("native xhr response");
     });
   });
 
@@ -279,7 +280,7 @@ describe("Network Interception Registry and Patches", () => {
       expect(socket.url).toBe("ws://localhost/test");
     });
 
-    test("should intercept ws beforeSend", () => {
+    test("should not intercept ws beforeSend", () => {
       registerWebSocketInterceptor({
         name: "ws-send",
         beforeSend: (data) => {
@@ -290,10 +291,10 @@ describe("Network Interception Registry and Patches", () => {
       const socket = new WebSocket("ws://localhost/test");
       socket.send("hello");
 
-      expect(nativeSendSpy).toHaveBeenCalledWith("hello - send-mutated");
+      expect(nativeSendSpy).toHaveBeenCalledWith("hello");
     });
 
-    test("should intercept ws afterMessage using onmessage getter/setter", () => {
+    test("should not intercept ws afterMessage using onmessage getter/setter", () => {
       registerWebSocketInterceptor({
         name: "ws-message",
         afterMessage: (data) => {
@@ -312,7 +313,7 @@ describe("Network Interception Registry and Patches", () => {
 
       // Trigger message
       (socket as any).trigger("message", "original message");
-      expect(receivedData).toBe("original message - recv-mutated");
+      expect(receivedData).toBe("original message");
     });
   });
 

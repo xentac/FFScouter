@@ -592,10 +592,7 @@ export interface SortIconClasses {
 
 // Hardcoded Torn CSS module class names per page — update if Torn changes their build hash.
 // Two sets exist because Torn uses different CSS modules on different pages.
-const SORT_ICON_CLASS_SETS: Record<
-  string,
-  Omit<SortIconClasses, "tab">
-> = {
+const SORT_ICON_CLASS_SETS: Record<string, Omit<SortIconClasses, "tab">> = {
   sortIcon___wbOOi: {
     sortIcon: "sortIcon___wbOOi",
     activeIcon: "activeIcon___wmLLe",
@@ -616,7 +613,9 @@ const SORT_ICON_CLASS_SETS: Record<
   },
 };
 
-export function detect_sort_icon_classes(root: HTMLElement): SortIconClasses | null {
+export function detect_sort_icon_classes(
+  root: HTMLElement,
+): SortIconClasses | null {
   const existing = root.querySelector(
     "[class*='sortIcon___']:not(.ffscouter-sort-icon)",
   );
