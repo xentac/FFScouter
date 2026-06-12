@@ -26,8 +26,8 @@ const log = logger.child("feature:faction");
 
 const FEATURE_NAME = "faction";
 
-// Re-entrancy guard to prevent layout loop on DOM mutation sorting
-let isApplying = false;
+// Per-list re-entrancy guard to prevent layout loop on DOM mutation sorting
+const isApplying = new WeakMap<HTMLElement, boolean>();
 
 // ============================================================================
 // SECTION 1: FILTER & SORT ENGINE
@@ -39,6 +39,7 @@ export function apply_filters_and_sort(
   filters: {
     sortBy: "ff-asc" | "ff-desc" | "none";
     filterEnabled?: boolean;
+    colDisplay: FactionsColDisplay;
     activity: { online: boolean; idle: boolean; offline: boolean };
     status: {
       okay: boolean;
@@ -55,8 +56,8 @@ export function apply_filters_and_sort(
     statsMax?: number | null;
   },
 ) {
-  if (isApplying) return;
-  isApplying = true;
+  if (isApplying.get(membersList)) return;
+  isApplying.set(membersList, true);
 
   try {
     // 1. Resolve the container element for list items (supports standard lists and Ranked War lists)
@@ -208,8 +209,7 @@ export function apply_filters_and_sort(
 
     // 3. If sorting filter is active, sort rows and append them in the updated order
     if (filters.sortBy !== "none") {
-      const isEst =
-        ffconfig.factions_col_display === FactionsColDisplay.BATTLE_STATS;
+      const isEst = filters.colDisplay === FactionsColDisplay.BATTLE_STATS;
       const valKey = isEst ? "estValue" : "ffValue";
       rows.sort((a, b) => {
         const getVal = (row: HTMLElement) => {
@@ -233,7 +233,7 @@ export function apply_filters_and_sort(
           next_sibling &&
           !next_sibling?.classList.contains("table-row") &&
           !next_sibling?.classList.contains("enemy") &&
-          !next_sibling?.classList.contains("enemy")
+          !next_sibling?.classList.contains("your")
         ) {
           if (
             next_sibling.classList.contains("tt-last-action") ||
@@ -255,7 +255,7 @@ export function apply_filters_and_sort(
       tbody.removeAttribute("data-ffscouter-active-filter");
     }
   } finally {
-    isApplying = false;
+    isApplying.set(membersList, false);
   }
 }
 
@@ -278,7 +278,7 @@ function update_header_sort_indicator(
     sortBy === "ff-asc" ? "asc" : "desc",
   );
 
-  const classes = detect_sort_icon_classes();
+  const classes = detect_sort_icon_classes(list);
   if (!classes) return;
 
   if (classes.tab) header.classList.add(classes.tab);
@@ -612,6 +612,7 @@ export async function apply_ff_columns(membersList: HTMLElement) {
     apply_filters_and_sort(membersList, {
       sortBy: filterBox.sortBy ?? "none",
       filterEnabled: filterBox.filterEnabled,
+      colDisplay,
       activity: filterBox.activity,
       status: filterBox.status,
       levelMin: filterBox.levelMin ?? null,
@@ -648,7 +649,10 @@ function inject_filter_box(membersList: HTMLElement) {
   if (!filterBox) {
     filterBox = document.createElement("ff-faction-filter-box");
     filterBox.addEventListener("filter-change", (e: any) => {
-      apply_filters_and_sort(membersList, e.detail);
+      apply_filters_and_sort(membersList, {
+        ...e.detail,
+        colDisplay: ffconfig.factions_col_display,
+      });
       update_header_sort_indicator(membersList, e.detail.sortBy);
     });
     parent.insertBefore(filterBox, membersList);
@@ -661,8 +665,9 @@ export function initialize_features(membersList: HTMLElement) {
   apply_ff_columns(membersList);
 
   const target = membersList.querySelector(".table-body") || membersList;
+  let rafPending = false;
   const attributeObserver = new MutationObserver((mutations) => {
-    if (isApplying) return;
+    if (isApplying.get(membersList)) return;
 
     let shouldReapply = false;
     for (const m of mutations) {
@@ -686,28 +691,33 @@ export function initialize_features(membersList: HTMLElement) {
       }
     }
 
-    if (shouldReapply) {
-      const filterBox = (
-        membersList.closest(".faction-war") || membersList.parentNode
-      )?.querySelector("ff-faction-filter-box") as any;
-      if (filterBox?.activity) {
-        apply_filters_and_sort(membersList, {
-          sortBy: filterBox.sortBy ?? "none",
-          filterEnabled: filterBox.filterEnabled,
-          activity: filterBox.activity,
-          status: filterBox.status,
-          levelMin: filterBox.levelMin ?? null,
-          levelMax: filterBox.levelMax ?? null,
-          ffMin: filterBox.ffMin ?? null,
-          ffMax: filterBox.ffMax ?? null,
-          statsMin: filterBox.statsMin
-            ? parse_suffix_number(filterBox.statsMin)
-            : null,
-          statsMax: filterBox.statsMax
-            ? parse_suffix_number(filterBox.statsMax)
-            : null,
-        });
-      }
+    if (shouldReapply && !rafPending) {
+      rafPending = true;
+      requestAnimationFrame(() => {
+        rafPending = false;
+        const filterBox = (
+          membersList.closest(".faction-war") || membersList.parentNode
+        )?.querySelector("ff-faction-filter-box") as any;
+        if (filterBox?.activity) {
+          apply_filters_and_sort(membersList, {
+            sortBy: filterBox.sortBy ?? "none",
+            filterEnabled: filterBox.filterEnabled,
+            colDisplay: ffconfig.factions_col_display,
+            activity: filterBox.activity,
+            status: filterBox.status,
+            levelMin: filterBox.levelMin ?? null,
+            levelMax: filterBox.levelMax ?? null,
+            ffMin: filterBox.ffMin ?? null,
+            ffMax: filterBox.ffMax ?? null,
+            statsMin: filterBox.statsMin
+              ? parse_suffix_number(filterBox.statsMin)
+              : null,
+            statsMax: filterBox.statsMax
+              ? parse_suffix_number(filterBox.statsMax)
+              : null,
+          });
+        }
+      });
     }
   });
 
@@ -920,8 +930,9 @@ function initialize_war_features(
     const currentLists = Array.from(
       factionWar.querySelectorAll(".enemy-faction, .your-faction"),
     ) as HTMLElement[];
+    const colDisplay = ffconfig.war_col_display;
     for (const list of currentLists) {
-      apply_filters_and_sort(list, e.detail);
+      apply_filters_and_sort(list, { ...e.detail, colDisplay });
       update_header_sort_indicator(list, e.detail.sortBy);
     }
   };
@@ -962,8 +973,9 @@ function initialize_war_list(list: HTMLElement) {
   apply_ff_columns(list);
 
   const target = list;
+  let rafPending = false;
   const attributeObserver = new MutationObserver((mutations) => {
-    if (isApplying) return;
+    if (isApplying.get(list)) return;
 
     let shouldReapply = false;
     for (const m of mutations) {
@@ -987,28 +999,33 @@ function initialize_war_list(list: HTMLElement) {
       }
     }
 
-    if (shouldReapply) {
-      const filterBox = list
-        .closest(".faction-war")
-        ?.querySelector("ff-faction-filter-box") as any;
-      if (filterBox?.activity) {
-        apply_filters_and_sort(list, {
-          sortBy: filterBox.sortBy ?? "none",
-          filterEnabled: filterBox.filterEnabled,
-          activity: filterBox.activity,
-          status: filterBox.status,
-          levelMin: filterBox.levelMin ?? null,
-          levelMax: filterBox.levelMax ?? null,
-          ffMin: filterBox.ffMin ?? null,
-          ffMax: filterBox.ffMax ?? null,
-          statsMin: filterBox.statsMin
-            ? parse_suffix_number(filterBox.statsMin)
-            : null,
-          statsMax: filterBox.statsMax
-            ? parse_suffix_number(filterBox.statsMax)
-            : null,
-        });
-      }
+    if (shouldReapply && !rafPending) {
+      rafPending = true;
+      requestAnimationFrame(() => {
+        rafPending = false;
+        const filterBox = list
+          .closest(".faction-war")
+          ?.querySelector("ff-faction-filter-box") as any;
+        if (filterBox?.activity) {
+          apply_filters_and_sort(list, {
+            sortBy: filterBox.sortBy ?? "none",
+            filterEnabled: filterBox.filterEnabled,
+            colDisplay: ffconfig.war_col_display,
+            activity: filterBox.activity,
+            status: filterBox.status,
+            levelMin: filterBox.levelMin ?? null,
+            levelMax: filterBox.levelMax ?? null,
+            ffMin: filterBox.ffMin ?? null,
+            ffMax: filterBox.ffMax ?? null,
+            statsMin: filterBox.statsMin
+              ? parse_suffix_number(filterBox.statsMin)
+              : null,
+            statsMax: filterBox.statsMax
+              ? parse_suffix_number(filterBox.statsMax)
+              : null,
+          });
+        }
+      });
     }
   });
 
@@ -1144,17 +1161,5 @@ export default {
     if (should_run_faction()) {
       process_page();
     }
-  },
-
-  httpIntercept: {
-    before(_url, _init) {
-      // something
-      return undefined;
-    },
-
-    after(_bodyText, _response, _ctx) {
-      // even more things
-      return undefined;
-    },
   },
 } satisfies Feature;

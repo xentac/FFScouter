@@ -422,8 +422,9 @@ describe("Network Interception Registry and Patches", () => {
 
       initNetworkInterception(true);
 
-      // Disable interception via config
+      // Disable interception via config then re-init to sync the cache
       ffconfig.network_interception_enabled = false;
+      initNetworkInterception(true);
     });
 
     afterEach(() => {

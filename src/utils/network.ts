@@ -3,6 +3,13 @@ import logger from "./logger";
 
 const log = logger.child("network");
 
+let _interceptionEnabled = ffconfig.network_interception_enabled;
+if (typeof window !== "undefined") {
+  window.addEventListener("ff-config-updated", () => {
+    _interceptionEnabled = ffconfig.network_interception_enabled;
+  });
+}
+
 const pageWindow: any =
   typeof unsafeWindow !== "undefined"
     ? unsafeWindow
@@ -161,6 +168,7 @@ function matchesWsUrl(
 // Patches
 export function initNetworkInterception(force = false): void {
   if (!pageWindow) return;
+  _interceptionEnabled = ffconfig.network_interception_enabled;
 
   const currentFetch = pageWindow.fetch;
   if (currentFetch && (force || !(currentFetch as any).__isPatched)) {
@@ -188,7 +196,7 @@ function patchFetch(): void {
       init?: RequestInit,
     ): Promise<Response> {
       if (
-        !ffconfig.network_interception_enabled ||
+        !_interceptionEnabled ||
         httpInterceptors.length === 0
       ) {
         return originalFetch(input, init);
@@ -501,7 +509,7 @@ function patchXMLHttpRequest(): void {
         this._url = url.toString();
         this._async = async;
 
-        if (!ffconfig.network_interception_enabled) {
+        if (!_interceptionEnabled) {
           if (username !== undefined) {
             this._xhr.open(method, url, async, username, password);
           } else {
@@ -786,7 +794,7 @@ function patchXMLHttpRequest(): void {
       }
 
       private async _handleCompletion(): Promise<void> {
-        if (!this._async || !ffconfig.network_interception_enabled) {
+        if (!this._async || !_interceptionEnabled) {
           this.dispatchEvent(new Event("readystatechange"));
           this.dispatchEvent(new Event("load"));
           this.dispatchEvent(new Event("loadend"));
@@ -1014,7 +1022,7 @@ function patchWebSocket(): void {
       const socketInstance = socket;
       const wrapped = function (this: WebSocket, event: Event) {
         const msgEvent = event as MessageEvent;
-        if (!ffconfig.network_interception_enabled) {
+        if (!_interceptionEnabled) {
           if (typeof listener === "function") {
             listener.call(this || socketInstance, msgEvent);
           } else {
@@ -1104,7 +1112,7 @@ function patchWebSocket(): void {
 
     const originalSend = OriginalWS.prototype.send;
     WrappedWS.prototype.send = function (this: WebSocket, data: any) {
-      if (!ffconfig.network_interception_enabled) {
+      if (!_interceptionEnabled) {
         originalSend.call(this, data);
         return;
       }

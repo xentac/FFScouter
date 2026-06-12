@@ -226,6 +226,7 @@ test("apply_filters_and_sort filters and sorts member rows correctly", () => {
     container.querySelector(".members-list") as HTMLElement,
     {
       sortBy: "none",
+      colDisplay: FactionsColDisplay.FAIR_FIGHT,
       activity: { online: true, idle: true, offline: false },
       status: {
         okay: true,
@@ -252,6 +253,7 @@ test("apply_filters_and_sort filters and sorts member rows correctly", () => {
     container.querySelector(".members-list") as HTMLElement,
     {
       sortBy: "none",
+      colDisplay: FactionsColDisplay.FAIR_FIGHT,
       activity: { online: true, idle: true, offline: true },
       status: {
         okay: false,
@@ -280,6 +282,7 @@ test("apply_filters_and_sort filters and sorts member rows correctly", () => {
     container.querySelector(".members-list") as HTMLElement,
     {
       sortBy: "none",
+      colDisplay: FactionsColDisplay.FAIR_FIGHT,
       activity: { online: true, idle: true, offline: true },
       status: {
         okay: true,
@@ -308,6 +311,7 @@ test("apply_filters_and_sort filters and sorts member rows correctly", () => {
     container.querySelector(".members-list") as HTMLElement,
     {
       sortBy: "none",
+      colDisplay: FactionsColDisplay.FAIR_FIGHT,
       activity: { online: true, idle: true, offline: true },
       status: {
         okay: true,
@@ -336,6 +340,7 @@ test("apply_filters_and_sort filters and sorts member rows correctly", () => {
     container.querySelector(".members-list") as HTMLElement,
     {
       sortBy: "ff-desc",
+      colDisplay: FactionsColDisplay.FAIR_FIGHT,
       activity: { online: true, idle: true, offline: true },
       status: {
         okay: true,
@@ -361,6 +366,7 @@ test("apply_filters_and_sort filters and sorts member rows correctly", () => {
     container.querySelector(".members-list") as HTMLElement,
     {
       sortBy: "ff-asc",
+      colDisplay: FactionsColDisplay.FAIR_FIGHT,
       activity: { online: true, idle: true, offline: true },
       status: {
         okay: true,
@@ -386,6 +392,7 @@ test("apply_filters_and_sort filters and sorts member rows correctly", () => {
     container.querySelector(".members-list") as HTMLElement,
     {
       sortBy: "none",
+      colDisplay: FactionsColDisplay.FAIR_FIGHT,
       activity: { online: true, idle: true, offline: true },
       status: {
         okay: true,
@@ -416,6 +423,7 @@ test("apply_filters_and_sort filters and sorts member rows correctly", () => {
     container.querySelector(".members-list") as HTMLElement,
     {
       sortBy: "none",
+      colDisplay: FactionsColDisplay.FAIR_FIGHT,
       activity: { online: false, idle: false, offline: false },
       status: {
         okay: false,
@@ -436,11 +444,11 @@ test("apply_filters_and_sort filters and sorts member rows correctly", () => {
   expect((tbody.querySelector("#row-3") as HTMLElement).hasAttribute("data-ffscouter-hidden")).toBe(false);
 
   // Test 9: Sort by BS Estimate Descending when configured to BATTLE_STATS (Row 2 [5M], then Row 1 [1M], then Row 3 [500k])
-  ffconfig.factions_col_display = FactionsColDisplay.BATTLE_STATS;
   apply_filters_and_sort(
     container.querySelector(".members-list") as HTMLElement,
     {
       sortBy: "ff-desc",
+      colDisplay: FactionsColDisplay.BATTLE_STATS,
       activity: { online: true, idle: true, offline: true },
       status: {
         okay: true,
@@ -466,6 +474,7 @@ test("apply_filters_and_sort filters and sorts member rows correctly", () => {
     container.querySelector(".members-list") as HTMLElement,
     {
       sortBy: "ff-asc",
+      colDisplay: FactionsColDisplay.BATTLE_STATS,
       activity: { online: true, idle: true, offline: true },
       status: {
         okay: true,
@@ -691,6 +700,7 @@ test("apply_filters_and_sort sets and removes data-ffscouter-active-filter attri
 
   const defaultFilters = {
     sortBy: "none" as const,
+    colDisplay: FactionsColDisplay.FAIR_FIGHT,
     activity: { online: true, idle: true, offline: true },
     status: {
       okay: true,
@@ -751,6 +761,7 @@ test("apply_filters_and_sort bypasses filtering but still sorts when filterEnabl
   const filters = {
     sortBy: "ff-desc" as const,
     filterEnabled: false,
+    colDisplay: FactionsColDisplay.FAIR_FIGHT,
     activity: { online: true, idle: false, offline: false },
     status: {
       okay: true,
@@ -956,8 +967,8 @@ test("initialize_features MutationObserver reacts to status class changes and fi
   const statusCell = row.querySelector(".status") as HTMLElement;
   statusCell.className = "status okay";
 
-  // Wait for MutationObserver to run
-  await new Promise((resolve) => setTimeout(resolve, 10));
+  // Wait for MutationObserver and rAF debounce to run (jsdom rAF fires at ~16ms)
+  await new Promise((resolve) => setTimeout(resolve, 50));
 
   // Row should now be visible!
   expect(row.hasAttribute("data-ffscouter-hidden")).toBe(false);
@@ -1016,8 +1027,8 @@ test("setup_war_features MutationObserver in Ranked War reacts to status changes
   const statusCell = row.querySelector(".status") as HTMLElement;
   statusCell.className = "status okay";
 
-  // Wait for MutationObserver to run
-  await new Promise((resolve) => setTimeout(resolve, 10));
+  // Wait for MutationObserver and rAF debounce to run (jsdom rAF fires at ~16ms)
+  await new Promise((resolve) => setTimeout(resolve, 50));
 
   // Row should now be hidden!
   expect(row.hasAttribute("data-ffscouter-hidden")).toBe(true);

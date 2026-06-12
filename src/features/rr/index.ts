@@ -61,16 +61,4 @@ export default {
     );
     rows_monitor.start();
   },
-
-  httpIntercept: {
-    before(_url, _init) {
-      // something
-      return undefined;
-    },
-
-    after(_bodyText, _response, _ctx) {
-      // even more things
-      return undefined;
-    },
-  },
 } satisfies Feature;

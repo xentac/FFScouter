@@ -616,8 +616,8 @@ const SORT_ICON_CLASS_SETS: Record<
   },
 };
 
-export function detect_sort_icon_classes(): SortIconClasses | null {
-  const existing = document.querySelector(
+export function detect_sort_icon_classes(root: HTMLElement): SortIconClasses | null {
+  const existing = root.querySelector(
     "[class*='sortIcon___']:not(.ffscouter-sort-icon)",
   );
   if (!existing) return null;
