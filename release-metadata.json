@@ -1,7 +1,7 @@
 {
   "edition": "v3",
-  "version": "3.0-alpha31",
-  "buildDate": "2026-06-12T03:08:51.857Z",
-  "sourceCommit": "41a3d46ffc45a03ce544fb2396df42175011d232",
+  "version": "3.0-alpha32",
+  "buildDate": "2026-06-12T04:10:41.121Z",
+  "sourceCommit": "b6c913f1f1c60768017d0c95890b877fd26b4e76",
   "sourceBranch": "modernize"
 }
