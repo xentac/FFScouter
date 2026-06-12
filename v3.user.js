@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FF Scouter V3
 // @namespace    xentac-v3
-// @version      3.0-alpha30
+// @version      3.0-alpha31
 // @author       xentac [3354782], MAVRI [2402357], rDacted [2670953], Weav3r [1853324], Glasnost [1844049]
 // @description  Shows the expected Fair Fight score against targets and faction war status
 // @license      GPLv3
@@ -2787,8 +2787,8 @@ queryString.charCodeAt(pos - 1) === 63) {
       asc: "asc___Q3bz5"
     }
   };
-  function detect_sort_icon_classes() {
-    const existing = document.querySelector(
+  function detect_sort_icon_classes(root) {
+    const existing = root.querySelector(
       "[class*='sortIcon___']:not(.ffscouter-sort-icon)"
     );
     if (!existing) return null;
@@ -4165,10 +4165,10 @@ status: DEFAULT_HIDDEN_COLUMNS.status,
   ], FFFactionFilterBox);
   const log$a = logger.child("feature:faction");
   const FEATURE_NAME$4 = "faction";
-  let isApplying = false;
+  const isApplying = new WeakMap();
   function apply_filters_and_sort(membersList, filters) {
-    if (isApplying) return;
-    isApplying = true;
+    if (isApplying.get(membersList)) return;
+    isApplying.set(membersList, true);
     try {
       const tbody = membersList.querySelector(".table-body") || membersList.querySelector(".members-list") || membersList;
       const rows = Array.from(
@@ -4238,7 +4238,7 @@ Number.parseInt(row.dataset["estValue"], 10)
         }
       }
       if (filters.sortBy !== "none") {
-        const isEst = ffconfig.factions_col_display === FactionsColDisplay.BATTLE_STATS;
+        const isEst = filters.colDisplay === FactionsColDisplay.BATTLE_STATS;
         const valKey = isEst ? "estValue" : "ffValue";
         rows.sort((a2, b2) => {
           const getVal = (row) => {
@@ -4255,7 +4255,7 @@ Number.parseInt(row.dataset["estValue"], 10)
         for (const row of rows) {
           const extra_tt_rows = [];
           let next_sibling = row.nextElementSibling;
-          while (next_sibling && !next_sibling?.classList.contains("table-row") && !next_sibling?.classList.contains("enemy") && !next_sibling?.classList.contains("enemy")) {
+          while (next_sibling && !next_sibling?.classList.contains("table-row") && !next_sibling?.classList.contains("enemy") && !next_sibling?.classList.contains("your")) {
             if (next_sibling.classList.contains("tt-last-action") || next_sibling.classList.contains("tt-stats-estimate")) {
               extra_tt_rows.push(next_sibling);
             }
@@ -4273,7 +4273,7 @@ Number.parseInt(row.dataset["estValue"], 10)
         tbody.removeAttribute("data-ffscouter-active-filter");
       }
     } finally {
-      isApplying = false;
+      isApplying.set(membersList, false);
     }
   }
   function update_header_sort_indicator(list, sortBy) {
@@ -4288,7 +4288,7 @@ Number.parseInt(row.dataset["estValue"], 10)
       "data-ffscouter-sort",
       sortBy === "ff-asc" ? "asc" : "desc"
     );
-    const classes = detect_sort_icon_classes();
+    const classes = detect_sort_icon_classes(list);
     if (!classes) return;
     if (classes.tab) header.classList.add(classes.tab);
     let icon = header.querySelector(".ffscouter-sort-icon");
@@ -4527,6 +4527,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       apply_filters_and_sort(membersList, {
         sortBy: filterBox.sortBy ?? "none",
         filterEnabled: filterBox.filterEnabled,
+        colDisplay,
         activity: filterBox.activity,
         status: filterBox.status,
         levelMin: filterBox.levelMin ?? null,
@@ -4549,7 +4550,10 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     if (!filterBox) {
       filterBox = document.createElement("ff-faction-filter-box");
       filterBox.addEventListener("filter-change", (e2) => {
-        apply_filters_and_sort(membersList, e2.detail);
+        apply_filters_and_sort(membersList, {
+          ...e2.detail,
+          colDisplay: ffconfig.factions_col_display
+        });
         update_header_sort_indicator(membersList, e2.detail.sortBy);
       });
       parent.insertBefore(filterBox, membersList);
@@ -4560,8 +4564,9 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     setup_header_click(membersList, ".table-header", "[role='button']");
     apply_ff_columns(membersList);
     const target = membersList.querySelector(".table-body") || membersList;
+    let rafPending = false;
     const attributeObserver = new MutationObserver((mutations) => {
-      if (isApplying) return;
+      if (isApplying.get(membersList)) return;
       let shouldReapply = false;
       for (const m2 of mutations) {
         if (m2.type === "attributes") {
@@ -4575,22 +4580,27 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
           }
         }
       }
-      if (shouldReapply) {
-        const filterBox = (membersList.closest(".faction-war") || membersList.parentNode)?.querySelector("ff-faction-filter-box");
-        if (filterBox?.activity) {
-          apply_filters_and_sort(membersList, {
-            sortBy: filterBox.sortBy ?? "none",
-            filterEnabled: filterBox.filterEnabled,
-            activity: filterBox.activity,
-            status: filterBox.status,
-            levelMin: filterBox.levelMin ?? null,
-            levelMax: filterBox.levelMax ?? null,
-            ffMin: filterBox.ffMin ?? null,
-            ffMax: filterBox.ffMax ?? null,
-            statsMin: filterBox.statsMin ? parse_suffix_number(filterBox.statsMin) : null,
-            statsMax: filterBox.statsMax ? parse_suffix_number(filterBox.statsMax) : null
-          });
-        }
+      if (shouldReapply && !rafPending) {
+        rafPending = true;
+        requestAnimationFrame(() => {
+          rafPending = false;
+          const filterBox = (membersList.closest(".faction-war") || membersList.parentNode)?.querySelector("ff-faction-filter-box");
+          if (filterBox?.activity) {
+            apply_filters_and_sort(membersList, {
+              sortBy: filterBox.sortBy ?? "none",
+              filterEnabled: filterBox.filterEnabled,
+              colDisplay: ffconfig.factions_col_display,
+              activity: filterBox.activity,
+              status: filterBox.status,
+              levelMin: filterBox.levelMin ?? null,
+              levelMax: filterBox.levelMax ?? null,
+              ffMin: filterBox.ffMin ?? null,
+              ffMax: filterBox.ffMax ?? null,
+              statsMin: filterBox.statsMin ? parse_suffix_number(filterBox.statsMin) : null,
+              statsMax: filterBox.statsMax ? parse_suffix_number(filterBox.statsMax) : null
+            });
+          }
+        });
       }
     });
     attributeObserver.observe(target, {
@@ -4752,8 +4762,9 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       const currentLists = Array.from(
         factionWar.querySelectorAll(".enemy-faction, .your-faction")
       );
+      const colDisplay = ffconfig.war_col_display;
       for (const list of currentLists) {
-        apply_filters_and_sort(list, e2.detail);
+        apply_filters_and_sort(list, { ...e2.detail, colDisplay });
         update_header_sort_indicator(list, e2.detail.sortBy);
       }
     };
@@ -4788,8 +4799,9 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     setup_header_click(list, ".white-grad", "[class*='tab___']");
     apply_ff_columns(list);
     const target = list;
+    let rafPending = false;
     const attributeObserver = new MutationObserver((mutations) => {
-      if (isApplying) return;
+      if (isApplying.get(list)) return;
       let shouldReapply = false;
       for (const m2 of mutations) {
         if (m2.type === "attributes") {
@@ -4803,22 +4815,27 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
           }
         }
       }
-      if (shouldReapply) {
-        const filterBox = list.closest(".faction-war")?.querySelector("ff-faction-filter-box");
-        if (filterBox?.activity) {
-          apply_filters_and_sort(list, {
-            sortBy: filterBox.sortBy ?? "none",
-            filterEnabled: filterBox.filterEnabled,
-            activity: filterBox.activity,
-            status: filterBox.status,
-            levelMin: filterBox.levelMin ?? null,
-            levelMax: filterBox.levelMax ?? null,
-            ffMin: filterBox.ffMin ?? null,
-            ffMax: filterBox.ffMax ?? null,
-            statsMin: filterBox.statsMin ? parse_suffix_number(filterBox.statsMin) : null,
-            statsMax: filterBox.statsMax ? parse_suffix_number(filterBox.statsMax) : null
-          });
-        }
+      if (shouldReapply && !rafPending) {
+        rafPending = true;
+        requestAnimationFrame(() => {
+          rafPending = false;
+          const filterBox = list.closest(".faction-war")?.querySelector("ff-faction-filter-box");
+          if (filterBox?.activity) {
+            apply_filters_and_sort(list, {
+              sortBy: filterBox.sortBy ?? "none",
+              filterEnabled: filterBox.filterEnabled,
+              colDisplay: ffconfig.war_col_display,
+              activity: filterBox.activity,
+              status: filterBox.status,
+              levelMin: filterBox.levelMin ?? null,
+              levelMax: filterBox.levelMax ?? null,
+              ffMin: filterBox.ffMin ?? null,
+              ffMax: filterBox.ffMax ?? null,
+              statsMin: filterBox.statsMin ? parse_suffix_number(filterBox.statsMin) : null,
+              statsMax: filterBox.statsMax ? parse_suffix_number(filterBox.statsMax) : null
+            });
+          }
+        });
       }
     });
     attributeObserver.observe(target, {
@@ -4924,14 +4941,6 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       });
       if (should_run_faction()) {
         process_page();
-      }
-    },
-    httpIntercept: {
-      before(_url, _init) {
-        return void 0;
-      },
-      after(_bodyText, _response, _ctx) {
-        return void 0;
       }
     }
   };
@@ -6177,14 +6186,6 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
         0
       );
       rows_monitor.start();
-    },
-    httpIntercept: {
-      before(_url, _init) {
-        return void 0;
-      },
-      after(_bodyText, _response, _ctx) {
-        return void 0;
-      }
     }
   };
   const __vite_glob_0_10 = Object.freeze( Object.defineProperty({
@@ -7395,6 +7396,12 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     (feat) => !!feat && "name" in feat && feat.name !== "Test Feature!"
   );
   const log$1 = logger.child("network");
+  let _interceptionEnabled = ffconfig.network_interception_enabled;
+  if (typeof window !== "undefined") {
+    window.addEventListener("ff-config-updated", () => {
+      _interceptionEnabled = ffconfig.network_interception_enabled;
+    });
+  }
   const pageWindow = typeof unsafeWindow !== "undefined" ? unsafeWindow : typeof globalThis !== "undefined" ? globalThis : typeof window !== "undefined" ? window : void 0;
   const httpInterceptors = [];
   const wsInterceptors = [];
@@ -7430,6 +7437,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
   }
   function initNetworkInterception(force = false) {
     if (!pageWindow) return;
+    _interceptionEnabled = ffconfig.network_interception_enabled;
     const currentFetch = pageWindow.fetch;
     if (currentFetch && (force || !currentFetch.__isPatched)) {
       patchFetch();
@@ -7448,7 +7456,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       const originalFetch = pageWindow.fetch;
       if (!originalFetch || originalFetch.__isPatched) return;
       const patched = async function patchedFetch(input, init) {
-        if (!ffconfig.network_interception_enabled || httpInterceptors.length === 0) {
+        if (!_interceptionEnabled || httpInterceptors.length === 0) {
           return originalFetch(input, init);
         }
         const requestIsObj = input instanceof Request;
@@ -7681,7 +7689,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
           this._method = method;
           this._url = url.toString();
           this._async = async;
-          if (!ffconfig.network_interception_enabled) {
+          if (!_interceptionEnabled) {
             if (username !== void 0) {
               this._xhr.open(method, url, async, username, password);
             } else {
@@ -7920,7 +7928,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
           });
         }
         async _handleCompletion() {
-          if (!this._async || !ffconfig.network_interception_enabled) {
+          if (!this._async || !_interceptionEnabled) {
             this.dispatchEvent(new Event("readystatechange"));
             this.dispatchEvent(new Event("load"));
             this.dispatchEvent(new Event("loadend"));
@@ -8119,7 +8127,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
         const socketInstance = socket;
         const wrapped = function(event) {
           const msgEvent = event;
-          if (!ffconfig.network_interception_enabled) {
+          if (!_interceptionEnabled) {
             if (typeof listener === "function") {
               listener.call(this || socketInstance, msgEvent);
             } else {
@@ -8203,7 +8211,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       }
       const originalSend = OriginalWS.prototype.send;
       WrappedWS.prototype.send = function(data) {
-        if (!ffconfig.network_interception_enabled) {
+        if (!_interceptionEnabled) {
           originalSend.call(this, data);
           return;
         }
@@ -8298,7 +8306,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       return;
     }
     w[INJECTION_KEY] = true;
-    log.info("Initializing", "3.0-alpha30");
+    log.info("Initializing", "3.0-alpha31");
     if (ffscouter.analytics_enabled) {
       unsafeWindow.ffscouter = ffscouter;
       window.ffscouter = ffscouter;
