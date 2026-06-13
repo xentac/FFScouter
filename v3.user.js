@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FF Scouter V3
 // @namespace    xentac-v3
-// @version      3.0-alpha32
+// @version      3.0-alpha33
 // @author       xentac [3354782], MAVRI [2402357], rDacted [2670953], Weav3r [1853324], Glasnost [1844049]
 // @description  Shows the expected Fair Fight score against targets and faction war status
 // @license      GPLv3
@@ -7017,6 +7017,91 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
   FFSettingsPanel = __decorateClass([
     t("ff-settings-panel")
   ], FFSettingsPanel);
+  const V2_PREFIX = "ffscouterv2-";
+  const V3_PREFIX = "ffsv3-config";
+  const V2_IDB_NAME = "ffscouter-cache";
+  function v2_get(key) {
+    return localStorage.getItem(V2_PREFIX + key);
+  }
+  function v3_has(key) {
+    return localStorage.getItem(V3_PREFIX + key) !== null;
+  }
+  function v3_set(key, value) {
+    localStorage.setItem(
+      V3_PREFIX + key,
+      JSON.stringify({ value, expiration: null })
+    );
+  }
+  function migrate_bool(old_key, new_key) {
+    if (v3_has(new_key)) return;
+    const v2 = v2_get(old_key);
+    if (v2 !== null) v3_set(new_key, v2 === "true");
+  }
+  function migrate_string(old_key, new_key, valid) {
+    if (v3_has(new_key)) return;
+    const v2 = v2_get(old_key);
+    if (v2 !== null && valid.includes(v2)) v3_set(new_key, v2);
+  }
+  function migrate_float(old_key, new_key) {
+    if (v3_has(new_key)) return;
+    const v2 = v2_get(old_key);
+    if (v2 !== null) {
+      const n3 = parseFloat(v2);
+      if (!isNaN(n3)) v3_set(new_key, n3);
+    }
+  }
+  function run_migration() {
+    if (!v3_has("key")) {
+      const old_key = localStorage.getItem("limited_key");
+      if (old_key) v3_set("key", old_key);
+    }
+    migrate_bool("debug-logs", "debug_logs");
+    migrate_bool("ff-history-enabled", "ff_history_enabled");
+    migrate_bool("chain-button-enabled", "chain_button_enabled");
+    migrate_string("factions-col-display", "factions_col_display", [
+      "fair_fight",
+      "battle_stats",
+      "none"
+    ]);
+    migrate_string("chain-link-type", "chain_link_type", ["attack", "profile"]);
+    migrate_string("chain-tab-type", "chain_tab_type", ["newtab", "sametab"]);
+    migrate_float("chain-ff-target", "chain_ff_target");
+    if (!v3_has("low_ff_range") && !v3_has("high_ff_range") && !v3_has("max_ff_range")) {
+      const raw = localStorage.getItem("ffscouterv2-ranges");
+      if (raw) {
+        try {
+          const { low, high, max } = JSON.parse(raw);
+          if (typeof low === "number") v3_set("low_ff_range", low);
+          if (typeof high === "number") v3_set("high_ff_range", high);
+          if (typeof max === "number") v3_set("max_ff_range", max);
+        } catch {
+        }
+      }
+    }
+    if (!v3_has("faction_filter_state")) {
+      const col_display = v2_get("factions-col-display") ?? "battle_stats";
+      const sort_key = col_display === "fair_fight" ? "factions-ff-sort-order" : "factions-est-sort-order";
+      const sort_order = v2_get(sort_key);
+      if (sort_order === "asc" || sort_order === "desc") {
+        v3_set("faction_filter_state", {
+          sortBy: sort_order === "asc" ? "ff-asc" : "ff-desc"
+        });
+      }
+    }
+  }
+  function clear_v2_data() {
+    localStorage.removeItem("limited_key");
+    const to_delete = Object.keys(localStorage).filter(
+      (k2) => k2.startsWith(V2_PREFIX)
+    );
+    for (const key of to_delete) {
+      localStorage.removeItem(key);
+    }
+    try {
+      indexedDB.deleteDatabase(V2_IDB_NAME);
+    } catch {
+    }
+  }
   const index$2 = {
     name: "FF Scouter settings panel",
     description: "Give users a FF Scouter settings box injected on the profile page",
@@ -7115,6 +7200,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       panel.addEventListener("ff-clear-cache", async () => {
         try {
           ffscouter.clear_cache();
+          clear_v2_data();
           toast("FF Scouter cache cleared successfully!");
         } catch (err) {
           console.error("Failed to delete IndexedDB cache", err);
@@ -7411,7 +7497,8 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       return;
     }
     w[INJECTION_KEY] = true;
-    log.info("Initializing", "3.0-alpha32");
+    log.info("Initializing", "3.0-alpha33");
+    run_migration();
     if (ffscouter.analytics_enabled) {
       unsafeWindow.ffscouter = ffscouter;
       window.ffscouter = ffscouter;
