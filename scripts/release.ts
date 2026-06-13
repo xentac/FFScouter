@@ -16,6 +16,12 @@ const EDITIONS = {
     branch: "release-standard",
     tagPrefix: "v",
   },
+  beta: {
+    name: "FF Scouter V2 beta",
+    fileName: "beta.user.js",
+    branch: "release-beta",
+    tagPrefix: "v",
+  },
   xentac: {
     name: "FF Scouter V2 xentac edition",
     fileName: "xentac.user.js",

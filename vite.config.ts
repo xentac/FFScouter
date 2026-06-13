@@ -10,6 +10,11 @@ const EDITIONS = {
     fileName: "base.user.js",
     namespace: "xentac",
   },
+  beta: {
+    name: "FF Scouter V2 beta",
+    fileName: "beta.user.js",
+    namespace: "xentac-beta",
+  },
   xentac: {
     name: "FF Scouter V2 xentac edition",
     fileName: "xentac.user.js",
@@ -54,8 +59,27 @@ export default defineConfig(({ mode }) => {
     process.env["BUILD_NAME"] ||
     (isDev ? `${edition.name} - DEV` : edition.name);
 
+  const isDeprecatedEdition = editionKey === "xentac" || editionKey === "v3";
+
   return {
     plugins: [
+      // For non-deprecated editions, stub out the deprecation-notice feature so
+      // it is not bundled at all. The glob in src/features/index.ts discovers it,
+      // but this plugin intercepts the resolution and returns a null export instead.
+      !isDeprecatedEdition && {
+        name: "stub-deprecation-notice",
+        enforce: "pre" as const,
+        resolveId(source: string) {
+          if (source.includes("deprecation-notice")) {
+            return "\0deprecated-stub";
+          }
+        },
+        load(id: string) {
+          if (id === "\0deprecated-stub") {
+            return "export default null;";
+          }
+        },
+      },
       vitePluginVersionMark({
         version: version,
         ifGlobal: true,
@@ -96,6 +120,9 @@ export default defineConfig(({ mode }) => {
         "@utils": path.resolve(__dirname, "src/utils"),
         "@features": path.resolve(__dirname, "src/features"),
       },
+    },
+    define: {
+      __FF_SCOUTER_EDITION__: JSON.stringify(editionKey),
     },
     build: {
       minify: false,
