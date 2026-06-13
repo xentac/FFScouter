@@ -1,7 +1,8 @@
-import { StartTime, type Feature } from "@features/feature";
+import { type Feature, StartTime } from "@features/feature";
 
 // TODO: Replace with the actual Greasyfork install URL once the script is created
-const BETA_INSTALL_URL = "https://greasyfork.org/en/scripts/PLACEHOLDER-ff-scouter-v2-beta";
+const BETA_INSTALL_URL =
+  "https://greasyfork.org/en/scripts/582442-ff-scouter-v2-beta";
 
 function show_banner() {
   const wrapper = document.querySelector(".content-wrapper");
@@ -53,11 +54,14 @@ function show_banner() {
 
 const deprecation_notice: Feature = {
   name: "Deprecation Notice",
-  description: "Notifies users of retired editions to install FF Scouter V2 beta",
+  description:
+    "Notifies users of retired editions to install FF Scouter V2 beta",
   executionTime: StartTime.DocumentBody,
 
   async shouldRun() {
-    return __FF_SCOUTER_EDITION__ === "xentac" || __FF_SCOUTER_EDITION__ === "v3";
+    return (
+      __FF_SCOUTER_EDITION__ === "xentac" || __FF_SCOUTER_EDITION__ === "v3"
+    );
   },
 
   async run() {
