@@ -127,17 +127,27 @@ export class FFFlightProfileStatus extends LitElement {
     if (!this.playerId) return;
     const fetchId = this.playerId;
 
+    let is_premium: boolean;
     try {
-      const is_premium = await check_key_status.is_premium();
-      if (this.playerId !== fetchId) return;
-
-      this.is_premium = is_premium;
-
-      if (!is_premium) {
+      is_premium = await check_key_status.is_premium();
+    } catch (err) {
+      // Network/API error checking key — don't treat as non-premium
+      log.error("Failed to check premium status", err);
+      if (this.playerId === fetchId) {
         this.loading = false;
-        return;
       }
+      return;
+    }
 
+    if (this.playerId !== fetchId) return;
+    this.is_premium = is_premium;
+
+    if (!is_premium) {
+      this.loading = false;
+      return;
+    }
+
+    try {
       const result = await ffscouter.get_flights(this.playerId);
       if (this.playerId !== fetchId) return;
       this.data = result;

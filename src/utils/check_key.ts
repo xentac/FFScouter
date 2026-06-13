@@ -36,7 +36,7 @@ export class CheckKeyStatus {
         "Received error response querying ffscouter check-key api:",
         err,
       );
-      result = { blank: true };
+      throw err;
     }
 
     if (result.blank) {

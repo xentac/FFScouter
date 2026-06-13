@@ -80,17 +80,17 @@ test("check_key_status bypasses cache when force is true", async () => {
   expect(check_key).toHaveBeenCalledTimes(2);
 });
 
-test("check_key_status handles blank or API error gracefully", async () => {
-  // Mock API throwing an error
+test("check_key_status propagates API errors", async () => {
   vi.mocked(check_key).mockRejectedValue(new Error("API failure"));
+  await expect(checkKeyStatusHelper.check_key_status()).rejects.toThrow(
+    "API failure",
+  );
+});
 
+test("check_key_status returns null for blank response", async () => {
+  vi.mocked(check_key).mockResolvedValue({ blank: true });
   const result = await checkKeyStatusHelper.check_key_status();
   expect(result).toBeNull();
-
-  // Mock API returning blank
-  vi.mocked(check_key).mockResolvedValue({ blank: true });
-  const resultBlank = await checkKeyStatusHelper.check_key_status(true);
-  expect(resultBlank).toBeNull();
 });
 
 test("check_key_status cache expires after 5 minutes", async () => {
