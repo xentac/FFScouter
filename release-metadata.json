@@ -1,7 +1,7 @@
 {
   "edition": "xentac",
-  "version": "3.0-xentac1",
-  "buildDate": "2026-06-13T00:21:54.746Z",
-  "sourceCommit": "ddefb9e9d715ca460519bc2e2014dd3668439011",
-  "sourceBranch": "alternative_torn_pda"
+  "version": "3.0-xentac2",
+  "buildDate": "2026-06-13T01:38:11.697Z",
+  "sourceCommit": "7acec52a336adc359b366e6452d0a2b48dd524d9",
+  "sourceBranch": "modernize"
 }

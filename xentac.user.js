@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FF Scouter V2 xentac edition
 // @namespace    xentac-edition
-// @version      3.0-xentac1
+// @version      3.0-xentac2
 // @author       xentac [3354782], MAVRI [2402357], rDacted [2670953], Weav3r [1853324], Glasnost [1844049]
 // @description  Shows the expected Fair Fight score against targets and faction war status
 // @license      GPLv3
@@ -3473,6 +3473,61 @@ willUpdate(changedProperties) {
     __proto__: null,
     default: index$d
   }, Symbol.toStringTag, { value: "Module" }));
+  const BETA_INSTALL_URL = "https://greasyfork.org/en/scripts/582442-ff-scouter-v2-beta";
+  async function show_banner() {
+    const wrapper = await wait_for_element(".content-wrapper", 1e4);
+    if (!wrapper) return;
+    const banner = document.createElement("div");
+    banner.id = "ffscouter-deprecation-banner";
+    banner.style.cssText = [
+      "background: #e65100",
+      "color: #fff",
+      "padding: 10px 16px",
+      "font-size: 14px",
+      "display: flex",
+      "align-items: center",
+      "justify-content: space-between",
+      "gap: 12px",
+      "z-index: 9999",
+      "box-sizing: border-box",
+      "width: 100%"
+    ].join(";");
+    const msg = document.createElement("span");
+    msg.innerHTML = `This version of FF Scouter is no longer maintained. <a href="${BETA_INSTALL_URL}" target="_blank" rel="noopener noreferrer" style="color: #fff; font-weight: bold; text-decoration: underline;">Install FF Scouter V2 beta</a> to keep receiving updates.`;
+    const closeBtn = document.createElement("button");
+    closeBtn.textContent = "×";
+    closeBtn.setAttribute("aria-label", "Dismiss");
+    closeBtn.style.cssText = [
+      "background: none",
+      "border: none",
+      "color: #fff",
+      "font-size: 20px",
+      "font-weight: bold",
+      "cursor: pointer",
+      "padding: 0",
+      "line-height: 1",
+      "flex-shrink: 0"
+    ].join(";");
+    closeBtn.onclick = () => banner.remove();
+    banner.appendChild(msg);
+    banner.appendChild(closeBtn);
+    wrapper.prepend(banner);
+  }
+  const deprecation_notice = {
+    name: "Deprecation Notice",
+    description: "Notifies users of retired editions to install FF Scouter V2 beta",
+    executionTime: StartTime.DocumentBody,
+    async shouldRun() {
+      return true;
+    },
+    async run() {
+      await show_banner();
+    }
+  };
+  const __vite_glob_0_1 = Object.freeze( Object.defineProperty({
+    __proto__: null,
+    default: deprecation_notice
+  }, Symbol.toStringTag, { value: "Module" }));
   var __defProp$2 = Object.defineProperty;
   var __getOwnPropDesc$2 = Object.getOwnPropertyDescriptor;
   var __decorateClass$2 = (decorators, target, key, kind) => {
@@ -4944,7 +4999,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       }
     }
   };
-  const __vite_glob_0_1 = Object.freeze( Object.defineProperty({
+  const __vite_glob_0_2 = Object.freeze( Object.defineProperty({
     __proto__: null,
     apply_ff_columns,
     apply_filters_and_sort,
@@ -5181,7 +5236,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       }
     }
   };
-  const __vite_glob_0_2 = Object.freeze( Object.defineProperty({
+  const __vite_glob_0_3 = Object.freeze( Object.defineProperty({
     __proto__: null,
     default: index$b
   }, Symbol.toStringTag, { value: "Module" }));
@@ -5463,7 +5518,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       });
     }
   };
-  const __vite_glob_0_3 = Object.freeze( Object.defineProperty({
+  const __vite_glob_0_4 = Object.freeze( Object.defineProperty({
     __proto__: null,
     CACHE_LIFETIME_MS,
     POLL_INTERVAL_MS,
@@ -5531,7 +5586,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       }
     }
   };
-  const __vite_glob_0_4 = Object.freeze( Object.defineProperty({
+  const __vite_glob_0_5 = Object.freeze( Object.defineProperty({
     __proto__: null,
     default: index$9
   }, Symbol.toStringTag, { value: "Module" }));
@@ -5869,7 +5924,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       }
     }
   };
-  const __vite_glob_0_5 = Object.freeze( Object.defineProperty({
+  const __vite_glob_0_6 = Object.freeze( Object.defineProperty({
     __proto__: null,
     default: index$8
   }, Symbol.toStringTag, { value: "Module" }));
@@ -5967,7 +6022,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       }
     }
   };
-  const __vite_glob_0_6 = Object.freeze( Object.defineProperty({
+  const __vite_glob_0_7 = Object.freeze( Object.defineProperty({
     __proto__: null,
     default: index$7
   }, Symbol.toStringTag, { value: "Module" }));
@@ -6023,7 +6078,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       }
     }
   };
-  const __vite_glob_0_7 = Object.freeze( Object.defineProperty({
+  const __vite_glob_0_8 = Object.freeze( Object.defineProperty({
     __proto__: null,
     default: index$6
   }, Symbol.toStringTag, { value: "Module" }));
@@ -6081,7 +6136,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       }
     }
   };
-  const __vite_glob_0_8 = Object.freeze( Object.defineProperty({
+  const __vite_glob_0_9 = Object.freeze( Object.defineProperty({
     __proto__: null,
     default: index$5
   }, Symbol.toStringTag, { value: "Module" }));
@@ -6134,7 +6189,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       }
     }
   };
-  const __vite_glob_0_9 = Object.freeze( Object.defineProperty({
+  const __vite_glob_0_10 = Object.freeze( Object.defineProperty({
     __proto__: null,
     default: index$4
   }, Symbol.toStringTag, { value: "Module" }));
@@ -6188,7 +6243,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       rows_monitor.start();
     }
   };
-  const __vite_glob_0_10 = Object.freeze( Object.defineProperty({
+  const __vite_glob_0_11 = Object.freeze( Object.defineProperty({
     __proto__: null,
     default: index$3
   }, Symbol.toStringTag, { value: "Module" }));
@@ -7260,7 +7315,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       }
     }
   };
-  const __vite_glob_0_11 = Object.freeze( Object.defineProperty({
+  const __vite_glob_0_12 = Object.freeze( Object.defineProperty({
     __proto__: null,
     default: index$2
   }, Symbol.toStringTag, { value: "Module" }));
@@ -7434,7 +7489,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       log$2.debug("Online Status Attack Links feature installed successfully.");
     }
   };
-  const __vite_glob_0_12 = Object.freeze( Object.defineProperty({
+  const __vite_glob_0_13 = Object.freeze( Object.defineProperty({
     __proto__: null,
     default: index$1
   }, Symbol.toStringTag, { value: "Module" }));
@@ -7458,25 +7513,26 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       }
     }
   };
-  const __vite_glob_0_13 = Object.freeze( Object.defineProperty({
+  const __vite_glob_0_14 = Object.freeze( Object.defineProperty({
     __proto__: null,
     default: index
   }, Symbol.toStringTag, { value: "Module" }));
   const modules = Object.assign({
     "./attack/index.ts": __vite_glob_0_0,
-    "./faction/index.ts": __vite_glob_0_1,
-    "./fallback/index.ts": __vite_glob_0_2,
-    "./ff-button/index.ts": __vite_glob_0_3,
-    "./item_market/index.ts": __vite_glob_0_4,
-    "./mini-profile-flights/index.ts": __vite_glob_0_5,
-    "./mini-profile/index.ts": __vite_glob_0_6,
-    "./profile-flights/index.ts": __vite_glob_0_7,
-    "./profile-history/index.ts": __vite_glob_0_8,
-    "./profile/index.ts": __vite_glob_0_9,
-    "./rr/index.ts": __vite_glob_0_10,
-    "./settings/index.ts": __vite_glob_0_11,
-    "./status-attack/index.ts": __vite_glob_0_12,
-    "./test-feature/index.ts": __vite_glob_0_13
+    "./deprecation-notice/index.ts": __vite_glob_0_1,
+    "./faction/index.ts": __vite_glob_0_2,
+    "./fallback/index.ts": __vite_glob_0_3,
+    "./ff-button/index.ts": __vite_glob_0_4,
+    "./item_market/index.ts": __vite_glob_0_5,
+    "./mini-profile-flights/index.ts": __vite_glob_0_6,
+    "./mini-profile/index.ts": __vite_glob_0_7,
+    "./profile-flights/index.ts": __vite_glob_0_8,
+    "./profile-history/index.ts": __vite_glob_0_9,
+    "./profile/index.ts": __vite_glob_0_10,
+    "./rr/index.ts": __vite_glob_0_11,
+    "./settings/index.ts": __vite_glob_0_12,
+    "./status-attack/index.ts": __vite_glob_0_13,
+    "./test-feature/index.ts": __vite_glob_0_14
   });
   const Features = Object.values(modules).map((mod) => mod.default).filter(
     (feat) => !!feat && "name" in feat && feat.name !== "Test Feature!"
@@ -7497,7 +7553,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       return;
     }
     w[INJECTION_KEY] = true;
-    log.info("Initializing", "3.0-xentac1");
+    log.info("Initializing", "3.0-xentac2");
     run_migration();
     if (ffscouter.analytics_enabled) {
       unsafeWindow.ffscouter = ffscouter;
