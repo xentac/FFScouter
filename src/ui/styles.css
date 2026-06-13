@@ -623,3 +623,12 @@ body[data-ff-status-attack-enabled="true"]
   li[id^="icon"][id*="___"].iconShow.ffscouter-forum-status {
   cursor: crosshair !important;
 }
+
+/* Override Torn's shitty layout to make director links clickable if they don't have an estimate */
+.d .job-lists-wrap .item > li.company,
+.d .job-lists-wrap .item > li.director,
+.d .job-lists-wrap .item > li.salary,
+.d .job-lists-wrap .item > li.ranks {
+  margin-bottom: 0 !important;
+  padding-bottom: 0 !important;
+}
