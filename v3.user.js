@@ -3474,8 +3474,8 @@ willUpdate(changedProperties) {
     default: index$d
   }, Symbol.toStringTag, { value: "Module" }));
   const BETA_INSTALL_URL = "https://greasyfork.org/en/scripts/582442-ff-scouter-v2-beta";
-  function show_banner() {
-    const wrapper = document.querySelector(".content-wrapper");
+  async function show_banner() {
+    const wrapper = await wait_for_element(".content-wrapper", 1e4);
     if (!wrapper) return;
     const banner = document.createElement("div");
     banner.id = "ffscouter-deprecation-banner";
@@ -3521,7 +3521,7 @@ willUpdate(changedProperties) {
       return true;
     },
     async run() {
-      show_banner();
+      await show_banner();
     }
   };
   const __vite_glob_0_1 = Object.freeze( Object.defineProperty({
