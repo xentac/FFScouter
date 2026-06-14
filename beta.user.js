@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FF Scouter V2 beta
 // @namespace    xentac-beta
-// @version      3.0-beta4
+// @version      3.0-beta5
 // @author       xentac [3354782], MAVRI [2402357], rDacted [2670953], Weav3r [1853324], Glasnost [1844049]
 // @description  Shows the expected Fair Fight score against targets and faction war status
 // @license      GPLv3
@@ -139,7 +139,7 @@ formatArgs(args) {
       return args.map((arg) => {
         if (typeof arg === "object" && arg !== null) {
           try {
-            return JSON.stringify(arg, null, 2);
+            return JSON.stringify(arg, Object.getOwnPropertyNames(arg), 2);
           } catch {
             return String(arg);
           }
@@ -259,7 +259,8 @@ clearAll() {
     gauge_marker_type: "arrow",
     war_quick_attack_action: "new_tab",
     network_interception_enabled: false,
-    status_attack_links_enabled: true
+    status_attack_links_enabled: true,
+    debug_disable_pda_http: false
   };
   class FFConfig {
     constructor(name) {
@@ -465,6 +466,14 @@ clearAll() {
     set status_attack_links_enabled(val) {
       this.storage.set("status_attack_links_enabled", val);
     }
+    get debug_disable_pda_http() {
+      return this.storage.get(
+        "debug_disable_pda_http"
+) ?? CONFIG_DEFAULTS.debug_disable_pda_http;
+    }
+    set debug_disable_pda_http(val) {
+      this.storage.set("debug_disable_pda_http", val);
+    }
     get gauge_marker_type() {
       return this.storage.get(
         "gauge_marker_type"
@@ -611,6 +620,9 @@ clearAll() {
 );
       this.storage.remove(
         "status_attack_links_enabled"
+);
+      this.storage.remove(
+        "debug_disable_pda_http"
 );
     }
   }
@@ -775,7 +787,7 @@ clearAll() {
     defaultTimeout: 30
 });
   async function gmRequest(options) {
-    if (isInPDA()) {
+    if (isInPDA() && !ffconfig.debug_disable_pda_http) {
       const url = options.url;
       const headers = options.headers ?? {};
       const method = (options.method ?? "GET").toUpperCase();
@@ -6252,6 +6264,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       this.gaugeMarkerType = CONFIG_DEFAULTS.gauge_marker_type;
       this.warQuickAttackAction = CONFIG_DEFAULTS.war_quick_attack_action;
       this.statusAttackLinksEnabled = CONFIG_DEFAULTS.status_attack_links_enabled;
+      this.debugDisablePdaHttp = CONFIG_DEFAULTS.debug_disable_pda_http;
       this.isPremium = null;
       this.draftApiKey = "";
       this.draftLowRange = CONFIG_DEFAULTS.low_ff_range;
@@ -6276,6 +6289,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       this.draftGaugeMarkerType = CONFIG_DEFAULTS.gauge_marker_type;
       this.draftWarQuickAttackAction = CONFIG_DEFAULTS.war_quick_attack_action;
       this.draftStatusAttackLinksEnabled = CONFIG_DEFAULTS.status_attack_links_enabled;
+      this.draftDebugDisablePdaHttp = CONFIG_DEFAULTS.debug_disable_pda_http;
       this.rangeError = "";
       this.showSavedMessage = false;
     }
@@ -6330,6 +6344,8 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
         this.draftWarQuickAttackAction = this.warQuickAttackAction;
       if (changedProperties.has("statusAttackLinksEnabled"))
         this.draftStatusAttackLinksEnabled = this.statusAttackLinksEnabled;
+      if (changedProperties.has("debugDisablePdaHttp"))
+        this.draftDebugDisablePdaHttp = this.debugDisablePdaHttp;
     }
     resetDrafts() {
       this.draftApiKey = this.apiKey;
@@ -6355,6 +6371,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       this.draftGaugeMarkerType = this.gaugeMarkerType;
       this.draftWarQuickAttackAction = this.warQuickAttackAction;
       this.draftStatusAttackLinksEnabled = this.statusAttackLinksEnabled;
+      this.draftDebugDisablePdaHttp = this.debugDisablePdaHttp;
     }
     handleSave() {
       const low = this.draftLowRange;
@@ -6402,7 +6419,8 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
             networkInterceptionEnabled: this.draftNetworkInterceptionEnabled,
             gaugeMarkerType: this.draftGaugeMarkerType,
             warQuickAttackAction: this.draftWarQuickAttackAction,
-            statusAttackLinksEnabled: this.draftStatusAttackLinksEnabled
+            statusAttackLinksEnabled: this.draftStatusAttackLinksEnabled,
+            debugDisablePdaHttp: this.draftDebugDisablePdaHttp
           },
           bubbles: true,
           composed: true
@@ -6539,6 +6557,10 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     }
     onStatusAttackLinksEnabledChange(e2) {
       this.draftStatusAttackLinksEnabled = e2.target.checked;
+      this.showSavedMessage = false;
+    }
+    onDebugDisablePdaHttpChange(e2) {
+      this.draftDebugDisablePdaHttp = e2.target.checked;
       this.showSavedMessage = false;
     }
     onGaugeMarkerTypeChange(e2) {
@@ -6868,6 +6890,19 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
             >
           </div>
 
+          <!-- PDA HTTP Toggle -->
+          <div class="input-row-inline">
+            <input
+              id="debug-disable-pda-http"
+              type="checkbox"
+              .checked=${this.draftDebugDisablePdaHttp}
+              @change=${this.onDebugDisablePdaHttpChange}
+            />
+            <label for="debug-disable-pda-http"
+              >Disable PDA native HTTP (use GM_xmlhttpRequest instead)</label
+            >
+          </div>
+
           <!-- Action Buttons Area -->
           <div
             style="display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px; margin-top: 20px;"
@@ -6961,6 +6996,9 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     n2({ type: Boolean })
   ], FFSettingsPanel.prototype, "statusAttackLinksEnabled", 2);
   __decorateClass([
+    n2({ type: Boolean })
+  ], FFSettingsPanel.prototype, "debugDisablePdaHttp", 2);
+  __decorateClass([
     n2({ attribute: false })
   ], FFSettingsPanel.prototype, "isPremium", 2);
   __decorateClass([
@@ -7032,6 +7070,9 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
   __decorateClass([
     r()
   ], FFSettingsPanel.prototype, "draftStatusAttackLinksEnabled", 2);
+  __decorateClass([
+    r()
+  ], FFSettingsPanel.prototype, "draftDebugDisablePdaHttp", 2);
   __decorateClass([
     r()
   ], FFSettingsPanel.prototype, "rangeError", 2);
@@ -7158,6 +7199,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       panel.gaugeMarkerType = ffconfig.gauge_marker_type;
       panel.warQuickAttackAction = ffconfig.war_quick_attack_action;
       panel.statusAttackLinksEnabled = ffconfig.status_attack_links_enabled;
+      panel.debugDisablePdaHttp = ffconfig.debug_disable_pda_http;
       panel.addEventListener("ff-save", async (e2) => {
         const detail = e2.detail;
         ffconfig.key = detail.apiKey;
@@ -7188,6 +7230,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
         ffconfig.gauge_marker_type = detail.gaugeMarkerType;
         ffconfig.war_quick_attack_action = detail.warQuickAttackAction;
         ffconfig.status_attack_links_enabled = detail.statusAttackLinksEnabled;
+        ffconfig.debug_disable_pda_http = detail.debugDisablePdaHttp;
         panel.isPremium = await check_key_status.is_premium(true);
         toast("Settings saved successfully!");
         window.dispatchEvent(new CustomEvent("ff-config-updated"));
@@ -7217,6 +7260,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
         panel.gaugeMarkerType = ffconfig.gauge_marker_type;
         panel.warQuickAttackAction = ffconfig.war_quick_attack_action;
         panel.statusAttackLinksEnabled = ffconfig.status_attack_links_enabled;
+        panel.debugDisablePdaHttp = ffconfig.debug_disable_pda_http;
         toast("Settings reset to defaults!");
         window.dispatchEvent(new CustomEvent("ff-config-updated"));
       });
@@ -7522,7 +7566,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       return;
     }
     w[INJECTION_KEY] = true;
-    log.info("Initializing", "3.0-beta4");
+    log.info("Initializing", "3.0-beta5");
     run_migration();
     if (ffscouter.analytics_enabled) {
       unsafeWindow.ffscouter = ffscouter;
