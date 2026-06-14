@@ -224,6 +224,17 @@ ff-settings-panel .is_premium_disabled {
   vertical-align: middle;
 }
 
+ff-settings-panel .is_premium_unknown {
+  display: inline-block;
+  background: #f39c12;
+  color: #fff;
+  font-size: 11px;
+  font-weight: bold;
+  padding: 2px 8px;
+  border-radius: 4px;
+  vertical-align: middle;
+}
+
 .profile-status {
   position: relative;
 }

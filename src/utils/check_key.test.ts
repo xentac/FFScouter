@@ -128,9 +128,9 @@ test("is_premium returns correct premium state", async () => {
   });
   expect(await checkKeyStatusHelper.is_premium(true)).toBe(false);
 
-  // Case 3: API fails (returns null)
+  // Case 3: API fails (returns blank) — premium status is unknown
   vi.mocked(check_key).mockResolvedValue({ blank: true });
-  expect(await checkKeyStatusHelper.is_premium(true)).toBe(false);
+  expect(await checkKeyStatusHelper.is_premium(true)).toBe(null);
 });
 
 test("clear removes cached status", async () => {

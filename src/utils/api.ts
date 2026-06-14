@@ -155,6 +155,7 @@ export const query_stats = async (
   try {
     ff_response = JSON.parse(resp.responseText);
   } catch {
+    logger.warn(`query_stats: unparseable response. status=${resp.status}, body=${resp.responseText?.substring(0, 200)}, url=${url}`);
     throw new FFApiError(
       `API request failed. Couldn't parse response. HTTP status code: ${resp.status}`,
       { ff_api_limits: limits },
@@ -162,6 +163,7 @@ export const query_stats = async (
   }
   if (ff_response == null) {
     // Shouldn't happen
+    logger.warn(`query_stats: null response after parse. status=${resp.status}, url=${url}`);
     throw new FFApiError(
       `API request failed. Response not set. HTTP status code: ${resp.status}`,
       { ff_api_limits: limits },
@@ -176,6 +178,7 @@ export const query_stats = async (
   }
 
   if (resp.status !== 200) {
+    logger.warn(`query_stats: unexpected HTTP status. status=${resp.status}, body=${resp.responseText?.substring(0, 200)}, url=${url}`);
     throw new FFApiError(
       `API request failed. HTTP status code: ${resp.status}`,
       { ff_api_limits: limits },
@@ -290,6 +293,7 @@ export const check_key = async (
   try {
     ff_response = JSON.parse(resp.responseText);
   } catch {
+    logger.warn(`check_key: unparseable response. status=${resp.status}, body=${resp.responseText?.substring(0, 200)}, url=${url}`);
     throw new FFApiError(
       `API request failed. Couldn't parse response. HTTP status code: ${resp.status}`,
       { ff_api_limits: limits },
@@ -297,6 +301,7 @@ export const check_key = async (
   }
   if (ff_response == null) {
     // Shouldn't happen
+    logger.warn(`check_key: null response after parse. status=${resp.status}, url=${url}`);
     throw new FFApiError(
       `API request failed. Response not set. HTTP status code: ${resp.status}`,
       { ff_api_limits: limits },
@@ -311,6 +316,7 @@ export const check_key = async (
   }
 
   if (resp.status !== 200) {
+    logger.warn(`check_key: unexpected HTTP status. status=${resp.status}, body=${resp.responseText?.substring(0, 200)}, url=${url}`);
     throw new FFApiError(
       `API request failed. HTTP status code: ${resp.status}`,
       { ff_api_limits: limits },
@@ -366,12 +372,14 @@ export const query_flights = async (
   try {
     ff_response = JSON.parse(resp.responseText);
   } catch {
+    logger.warn(`query_flights: unparseable response. status=${resp.status}, body=${resp.responseText?.substring(0, 200)}, url=${url}`);
     throw new FFApiError(
       `API request failed. Couldn't parse response. HTTP status code: ${resp.status}`,
       { ff_api_limits: limits },
     );
   }
   if (ff_response == null) {
+    logger.warn(`query_flights: null response after parse. status=${resp.status}, url=${url}`);
     throw new FFApiError(
       `API request failed. Response not set. HTTP status code: ${resp.status}`,
       { ff_api_limits: limits },
@@ -386,6 +394,7 @@ export const query_flights = async (
   }
 
   if (resp.status !== 200) {
+    logger.warn(`query_flights: unexpected HTTP status. status=${resp.status}, body=${resp.responseText?.substring(0, 200)}, url=${url}`);
     throw new FFApiError(
       `API request failed. HTTP status code: ${resp.status}`,
       { ff_api_limits: limits },

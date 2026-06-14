@@ -51,13 +51,15 @@ export class CheckKeyStatus {
     return result.result;
   };
 
-  is_premium = async (force: boolean = false) => {
-    const status = await this.check_key_status(force);
-    if (!status) {
-      return false;
+  is_premium = async (force: boolean = false): Promise<boolean | null> => {
+    try {
+      const status = await this.check_key_status(force);
+      if (!status) return null;
+      return status.is_premium;
+    } catch (err) {
+      log.warn("Failed to check premium status:", err);
+      return null;
     }
-
-    return status.is_premium;
   };
 
   clear = (): void => {

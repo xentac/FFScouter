@@ -56,7 +56,7 @@ export class FFSettingsPanel extends LitElement {
     CONFIG_DEFAULTS.war_quick_attack_action;
   @property({ type: Boolean }) statusAttackLinksEnabled: boolean =
     CONFIG_DEFAULTS.status_attack_links_enabled;
-  @property({ type: Boolean }) isPremium: boolean = false;
+  @property({ attribute: false }) isPremium: boolean | null = null;
 
   // Draft States
   @state() private draftApiKey = "";
@@ -447,8 +447,8 @@ export class FFSettingsPanel extends LitElement {
             <label for="ff-premium-badge">FF Scouter Premium:</label>
             <span
               id="ff-premium-badge"
-              class="is_premium_${this.isPremium ? "enabled" : "disabled"}"
-              >${this.isPremium ? "Enabled" : "Disabled"}</span
+              class="is_premium_${this.isPremium === null ? "unknown" : this.isPremium ? "enabled" : "disabled"}"
+              >${this.isPremium === null ? "Unknown" : this.isPremium ? "Enabled" : "Disabled"}</span
             >
           </div>
           <div class="input-row-inline">

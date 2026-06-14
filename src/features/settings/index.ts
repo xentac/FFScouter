@@ -48,7 +48,7 @@ export default {
     panel.gaugeMarkerType = ffconfig.gauge_marker_type;
     panel.warQuickAttackAction = ffconfig.war_quick_attack_action;
     panel.statusAttackLinksEnabled = ffconfig.status_attack_links_enabled;
-    panel.isPremium = await check_key_status.is_premium(true);
+    // isPremium starts as null (Unknown) and is resolved asynchronously after injection
 
     // Listen for the custom save event
     panel.addEventListener("ff-save", async (e: Event) => {
@@ -82,7 +82,6 @@ export default {
       ffconfig.war_quick_attack_action = detail.warQuickAttackAction;
       ffconfig.status_attack_links_enabled = detail.statusAttackLinksEnabled;
       panel.isPremium = await check_key_status.is_premium(true);
-
       toast("Settings saved successfully!");
       window.dispatchEvent(new CustomEvent("ff-config-updated"));
     });
@@ -167,7 +166,7 @@ export default {
         level = TOAST_LEVEL.INFO;
 
         if (detail.apiKey === ffconfig.key) {
-          await check_key_status.is_premium(true);
+          panel.isPremium = await check_key_status.is_premium(true);
         }
       }
       toast(message, level);
@@ -176,13 +175,16 @@ export default {
     // Wait for profile wrapper to be available
     const profileWrapper = await wait_for_element(".profile-wrapper", 15_000);
     if (!profileWrapper) {
-      console.error(
-        "[FF Scouter V2] Could not find profile wrapper for settings panel",
-      );
+      logger.error("Could not find profile wrapper for settings panel");
       return;
     }
 
     profileWrapper.parentNode?.insertBefore(panel, profileWrapper.nextSibling);
+
+    // Check premium status in the background so it never blocks panel injection
+    check_key_status.is_premium(true).then((result) => {
+      panel.isPremium = result;
+    });
   },
 
   httpIntercept: {
