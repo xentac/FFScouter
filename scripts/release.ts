@@ -15,24 +15,28 @@ const EDITIONS = {
     fileName: "base.user.js",
     branch: "release-standard",
     tagPrefix: "v",
+    tagSuffix: null,
   },
   beta: {
     name: "FF Scouter V2 beta",
     fileName: "beta.user.js",
     branch: "release-beta",
     tagPrefix: "v",
+    tagSuffix: "-beta",
   },
   xentac: {
     name: "FF Scouter V2 xentac edition",
     fileName: "xentac.user.js",
     branch: "release-xentac",
     tagPrefix: "v",
+    tagSuffix: "-xentac",
   },
   v3: {
     name: "FF Scouter V3",
     fileName: "v3.user.js",
     branch: "release-v3",
     tagPrefix: "v",
+    tagSuffix: "-alpha",
   },
 } as const;
 
@@ -56,51 +60,55 @@ function runCmd(
   return result.stdout?.trim();
 }
 
-// Helper to get recent tags for a specific edition
-function getRecentTagsForEdition(editionKey: EditionKey, count = 5): string[] {
+function getAllTagsSorted(): string[] {
   try {
-    const output = execSync("git tag --sort=-creatordate", {
-      stdio: "pipe",
-    })
+    const raw = execSync("git tag --sort=-creatordate", { stdio: "pipe" })
       .toString()
       .trim();
-
-    if (output) {
-      const allTags = output
+    if (raw)
+      return raw
         .split("\n")
         .map((t) => t.trim())
         .filter(Boolean);
-
-      if (editionKey === "xentac") {
-        return allTags
-          .filter((t) => t.toLowerCase().includes("xentac"))
-          .slice(0, count);
-      } else if (editionKey === "v3") {
-        return allTags
-          .filter(
-            (t) =>
-              t.toLowerCase().includes("v3") ||
-              t.startsWith("v3") ||
-              t.startsWith("3."),
-          )
-          .slice(0, count);
-      } else {
-        // Standard tags do not contain xentac or v3 or 3.
-        return allTags
-          .filter(
-            (t) =>
-              !t.toLowerCase().includes("xentac") &&
-              !t.toLowerCase().includes("v3") &&
-              !t.startsWith("v3") &&
-              !t.startsWith("3."),
-          )
-          .slice(0, count);
-      }
-    }
   } catch (_e) {
-    // Ignore error
+    // Ignore
   }
   return [];
+}
+
+// Helper to get recent tags for a specific edition
+function getRecentTagsForEdition(editionKey: EditionKey, count = 5): string[] {
+  const edition = EDITIONS[editionKey];
+  const allSuffixes = (
+    Object.values(EDITIONS) as Array<{ tagSuffix: string | null }>
+  )
+    .map((e) => e.tagSuffix)
+    .filter((s): s is string => s !== null);
+
+  const allTags = getAllTagsSorted();
+  if (edition.tagSuffix !== null) {
+    const suffix = edition.tagSuffix.toLowerCase();
+    return allTags
+      .filter((t) => t.toLowerCase().includes(suffix))
+      .slice(0, count);
+  } else {
+    return allTags
+      .filter(
+        (t) =>
+          !allSuffixes.some((s) => t.toLowerCase().includes(s.toLowerCase())),
+      )
+      .slice(0, count);
+  }
+}
+
+function printAllEditionsSummary(): void {
+  console.log("\x1b[1mRecent tags by edition:\x1b[0m");
+  for (const key of Object.keys(EDITIONS) as EditionKey[]) {
+    const recent = getRecentTagsForEdition(key, 1);
+    const latest = recent[0] ?? "\x1b[90m(no releases yet)\x1b[0m";
+    console.log(`  \x1b[36m${key.padEnd(10)}\x1b[0m ${latest}`);
+  }
+  console.log("");
 }
 
 function getNextLogicalVersion(version: string): string {
@@ -288,6 +296,8 @@ async function main() {
       "DETACHED_HEAD";
     const sourceCommit = execSync("git rev-parse HEAD").toString().trim();
 
+    printAllEditionsSummary();
+
     const cleanArgs = args.filter(
       (arg) => !["--diff", "diff", "-d", "status", "--status"].includes(arg),
     );
@@ -367,19 +377,6 @@ async function main() {
       if (lastTag) {
         suggestion = lastTag.startsWith("v") ? lastTag.slice(1) : lastTag;
         suggestion = getNextLogicalVersion(suggestion);
-      } else {
-        // Fallback to git describe --tags --abbrev=0 for general suggestion
-        try {
-          const lastTag = execSync("git describe --tags --abbrev=0")
-            .toString()
-            .trim();
-          if (lastTag) {
-            suggestion = lastTag.startsWith("v") ? lastTag.slice(1) : lastTag;
-            suggestion = getNextLogicalVersion(suggestion);
-          }
-        } catch (_e) {
-          // No tags yet
-        }
       }
 
       console.log(""); // newline spacing
