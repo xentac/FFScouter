@@ -56,6 +56,8 @@ export class FFSettingsPanel extends LitElement {
     CONFIG_DEFAULTS.war_quick_attack_action;
   @property({ type: Boolean }) statusAttackLinksEnabled: boolean =
     CONFIG_DEFAULTS.status_attack_links_enabled;
+  @property({ type: Boolean }) debugDisablePdaHttp: boolean =
+    CONFIG_DEFAULTS.debug_disable_pda_http;
   @property({ attribute: false }) isPremium: boolean | null = null;
 
   // Draft States
@@ -97,6 +99,8 @@ export class FFSettingsPanel extends LitElement {
     CONFIG_DEFAULTS.war_quick_attack_action;
   @state() private draftStatusAttackLinksEnabled: boolean =
     CONFIG_DEFAULTS.status_attack_links_enabled;
+  @state() private draftDebugDisablePdaHttp: boolean =
+    CONFIG_DEFAULTS.debug_disable_pda_http;
 
   @state() private rangeError = "";
   @state() private showSavedMessage = false;
@@ -150,6 +154,8 @@ export class FFSettingsPanel extends LitElement {
       this.draftWarQuickAttackAction = this.warQuickAttackAction;
     if (changedProperties.has("statusAttackLinksEnabled"))
       this.draftStatusAttackLinksEnabled = this.statusAttackLinksEnabled;
+    if (changedProperties.has("debugDisablePdaHttp"))
+      this.draftDebugDisablePdaHttp = this.debugDisablePdaHttp;
   }
 
   private resetDrafts() {
@@ -176,6 +182,7 @@ export class FFSettingsPanel extends LitElement {
     this.draftGaugeMarkerType = this.gaugeMarkerType;
     this.draftWarQuickAttackAction = this.warQuickAttackAction;
     this.draftStatusAttackLinksEnabled = this.statusAttackLinksEnabled;
+    this.draftDebugDisablePdaHttp = this.debugDisablePdaHttp;
   }
 
   private handleSave() {
@@ -230,6 +237,7 @@ export class FFSettingsPanel extends LitElement {
           gaugeMarkerType: this.draftGaugeMarkerType,
           warQuickAttackAction: this.draftWarQuickAttackAction,
           statusAttackLinksEnabled: this.draftStatusAttackLinksEnabled,
+          debugDisablePdaHttp: this.draftDebugDisablePdaHttp,
         },
         bubbles: true,
         composed: true,
@@ -398,6 +406,11 @@ export class FFSettingsPanel extends LitElement {
 
   private onStatusAttackLinksEnabledChange(e: Event) {
     this.draftStatusAttackLinksEnabled = (e.target as HTMLInputElement).checked;
+    this.showSavedMessage = false;
+  }
+
+  private onDebugDisablePdaHttpChange(e: Event) {
+    this.draftDebugDisablePdaHttp = (e.target as HTMLInputElement).checked;
     this.showSavedMessage = false;
   }
 
@@ -747,6 +760,19 @@ export class FFSettingsPanel extends LitElement {
             />
             <label for="network-interception-toggle"
               >Enable network request interception (Fetch/XHR/WS)</label
+            >
+          </div>
+
+          <!-- PDA HTTP Toggle -->
+          <div class="input-row-inline">
+            <input
+              id="debug-disable-pda-http"
+              type="checkbox"
+              .checked=${this.draftDebugDisablePdaHttp}
+              @change=${this.onDebugDisablePdaHttpChange}
+            />
+            <label for="debug-disable-pda-http"
+              >Disable PDA native HTTP (use GM_xmlhttpRequest instead)</label
             >
           </div>
 

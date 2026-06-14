@@ -1,5 +1,6 @@
 import { TornApiClient } from "tornapi-typescript";
 import logger from "./logger";
+import { ffconfig } from "./ffconfig";
 import { isInPDA } from "./pda";
 import type {
   FFData,
@@ -25,7 +26,7 @@ export const client = new TornApiClient({
 export async function gmRequest<T = object>(
   options: Tampermonkey.Request<T>,
 ): Promise<Tampermonkey.Response<T>> {
-  if (isInPDA()) {
+  if (isInPDA() && !ffconfig.debug_disable_pda_http) {
     const url = options.url as string;
     const headers = (options.headers as Record<string, string>) ?? {};
     const method = (options.method ?? "GET").toUpperCase();

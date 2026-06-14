@@ -67,6 +67,7 @@ export const CONFIG_DEFAULTS = {
   war_quick_attack_action: WarQuickAttackAction.NEW_TAB,
   network_interception_enabled: false,
   status_attack_links_enabled: true,
+  debug_disable_pda_http: false,
 } as const;
 
 enum CONFIG {
@@ -99,6 +100,7 @@ enum CONFIG {
   WAR_QUICK_ATTACK_ACTION = "war_quick_attack_action",
   NETWORK_INTERCEPTION_ENABLED = "network_interception_enabled",
   STATUS_ATTACK_LINKS_ENABLED = "status_attack_links_enabled",
+  DEBUG_DISABLE_PDA_HTTP = "debug_disable_pda_http",
 }
 
 export class FFConfig {
@@ -357,6 +359,17 @@ export class FFConfig {
     this.storage.set(CONFIG.STATUS_ATTACK_LINKS_ENABLED, val);
   }
 
+  get debug_disable_pda_http(): boolean {
+    return (
+      this.storage.get(CONFIG.DEBUG_DISABLE_PDA_HTTP) ??
+      CONFIG_DEFAULTS.debug_disable_pda_http
+    );
+  }
+
+  set debug_disable_pda_http(val: boolean) {
+    this.storage.set(CONFIG.DEBUG_DISABLE_PDA_HTTP, val);
+  }
+
   get gauge_marker_type(): GaugeMarkerType {
     return (
       this.storage.get(CONFIG.GAUGE_MARKER_TYPE) ??
@@ -449,6 +462,7 @@ export class FFConfig {
     this.storage.remove(CONFIG.GAUGE_MARKER_TYPE);
     this.storage.remove(CONFIG.WAR_QUICK_ATTACK_ACTION);
     this.storage.remove(CONFIG.STATUS_ATTACK_LINKS_ENABLED);
+    this.storage.remove(CONFIG.DEBUG_DISABLE_PDA_HTTP);
   }
 }
 

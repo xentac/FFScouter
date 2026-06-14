@@ -48,6 +48,7 @@ export default {
     panel.gaugeMarkerType = ffconfig.gauge_marker_type;
     panel.warQuickAttackAction = ffconfig.war_quick_attack_action;
     panel.statusAttackLinksEnabled = ffconfig.status_attack_links_enabled;
+    panel.debugDisablePdaHttp = ffconfig.debug_disable_pda_http;
     // isPremium starts as null (Unknown) and is resolved asynchronously after injection
 
     // Listen for the custom save event
@@ -81,6 +82,7 @@ export default {
       ffconfig.gauge_marker_type = detail.gaugeMarkerType;
       ffconfig.war_quick_attack_action = detail.warQuickAttackAction;
       ffconfig.status_attack_links_enabled = detail.statusAttackLinksEnabled;
+      ffconfig.debug_disable_pda_http = detail.debugDisablePdaHttp;
       panel.isPremium = await check_key_status.is_premium(true);
       toast("Settings saved successfully!");
       window.dispatchEvent(new CustomEvent("ff-config-updated"));
@@ -114,6 +116,7 @@ export default {
       panel.gaugeMarkerType = ffconfig.gauge_marker_type;
       panel.warQuickAttackAction = ffconfig.war_quick_attack_action;
       panel.statusAttackLinksEnabled = ffconfig.status_attack_links_enabled;
+      panel.debugDisablePdaHttp = ffconfig.debug_disable_pda_http;
 
       toast("Settings reset to defaults!");
       window.dispatchEvent(new CustomEvent("ff-config-updated"));
