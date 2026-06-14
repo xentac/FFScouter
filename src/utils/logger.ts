@@ -9,6 +9,8 @@ export enum LogLevel {
   NONE = 4,
 }
 
+import { isInPDA } from "./pda";
+
 /**
  * Logger class providing various logging methods with level filtering and formatting
  */
@@ -50,28 +52,8 @@ class Logger {
     this.detectPDA();
   }
 
-  /**
-   * Detects the Torn PDA environment using the official Flutter handlers and event listeners
-   */
   private detectPDA(): void {
-    if (typeof window !== "undefined") {
-      // Synchronous best-effort check
-      if ((window as any).flutter_inappwebview) {
-        this.isPDA = true;
-      }
-
-      // Official platform readiness event listener
-      window.addEventListener("flutterInAppWebViewPlatformReady", () => {
-        (window as any).flutter_inappwebview
-          .callHandler("isTornPDA")
-          .then((response: any) => {
-            if (response?.isTornPDA) {
-              this.isPDA = true;
-            }
-          })
-          .catch(() => {});
-      });
-    }
+    this.isPDA = isInPDA();
   }
 
   /**
