@@ -45,6 +45,7 @@ export default {
       info_line.innerHTML =
         "[FF Scouter V2]: Limited API key needed - enter in FF Scouter Settings below";
       inject_info_line(info_line);
+      return;
     }
     // Extract the player id from the URL
     const player_id = extract_id_from_url(window.location.href);
