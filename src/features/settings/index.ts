@@ -147,6 +147,10 @@ export default {
 
     panel.addEventListener("ff-verify", async (e: Event) => {
       const detail = (e as CustomEvent).detail;
+      if (!detail.apiKey) {
+        toast("Please enter an API key.", TOAST_LEVEL.ERROR);
+        return;
+      }
       let result: FFApiCheckResponse | null = null;
       try {
         result = await check_key(detail.apiKey);

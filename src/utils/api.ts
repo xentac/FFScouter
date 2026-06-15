@@ -291,6 +291,10 @@ export const check_key = async (
   key: TornApiKey,
   requester: typeof gmRequest = gmRequest,
 ): Promise<FFApiCheckResponse> => {
+  if (!key) {
+    return { blank: true };
+  }
+
   const query = new URLSearchParams([["key", key]]);
   const url = `${FF_SCOUTER_BASE_URL}/check-key?${query.toString()}`;
 
