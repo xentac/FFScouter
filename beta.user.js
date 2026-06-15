@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FF Scouter V2 beta
 // @namespace    xentac-beta
-// @version      3.0-beta5
+// @version      3.0-beta6
 // @author       xentac [3354782], MAVRI [2402357], rDacted [2670953], Weav3r [1853324], Glasnost [1844049]
 // @description  Shows the expected Fair Fight score against targets and faction war status
 // @license      GPLv3
@@ -937,6 +937,9 @@ clearAll() {
     }
   };
   const check_key = async (key, requester = gmRequest) => {
+    if (!key) {
+      return { blank: true };
+    }
     const query = new URLSearchParams([["key", key]]);
     const url = `${FF_SCOUTER_BASE_URL}/check-key?${query.toString()}`;
     const resp = await requester({
@@ -6148,6 +6151,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       if (!ffconfig.key) {
         info_line.innerHTML = "[FF Scouter V2]: Limited API key needed - enter in FF Scouter Settings below";
         inject_info_line(info_line);
+        return;
       }
       const player_id = extract_id_from_url(window.location.href);
       if (!player_id) {
@@ -7284,6 +7288,10 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       });
       panel.addEventListener("ff-verify", async (e2) => {
         const detail = e2.detail;
+        if (!detail.apiKey) {
+          toast("Please enter an API key.", TOAST_LEVEL.ERROR);
+          return;
+        }
         let result = null;
         try {
           result = await check_key(detail.apiKey);
@@ -7566,7 +7574,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       return;
     }
     w[INJECTION_KEY] = true;
-    log.info("Initializing", "3.0-beta5");
+    log.info("Initializing", "3.0-beta6");
     run_migration();
     if (ffscouter.analytics_enabled) {
       unsafeWindow.ffscouter = ffscouter;
