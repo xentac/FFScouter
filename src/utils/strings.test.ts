@@ -172,6 +172,15 @@ test("get_ff_arrow_colour switches palette based on ffconfig.color_scheme", () =
   ffconfig.color_scheme = ColorScheme.NEON;
   expect(get_ff_arrow_colour(data)).toEqual("#0c50ff");
 
+  ffconfig.color_scheme = ColorScheme.GREEN_YELLOW_RED;
+  expect(get_ff_arrow_colour(data)).toEqual("#73bf69");
+
+  ffconfig.color_scheme = ColorScheme.BLUE_YELLOW_RED;
+  expect(get_ff_arrow_colour(data)).toEqual("#1f60c4");
+
+  ffconfig.color_scheme = ColorScheme.PLASMA;
+  expect(get_ff_arrow_colour(data)).toEqual("#0d0887");
+
   // no_data still bypasses the palette entirely, regardless of scheme
   expect(get_ff_arrow_colour({ player_id: 1, no_data: true } as any)).toEqual(
     "#000000",

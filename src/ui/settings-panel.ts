@@ -7,6 +7,11 @@ import {
   type GaugeMarkerType,
   type WarQuickAttackAction,
 } from "@utils/ffconfig";
+import {
+  FF_ARROW_PATH_D,
+  FF_ARROW_VIEWBOX,
+  get_palette_for_scheme,
+} from "@utils/strings";
 import { html, LitElement } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 
@@ -698,7 +703,27 @@ export class FFSettingsPanel extends LitElement {
               <option value="neon">Neon</option>
               <option value="colorblind_safe">Colorblind-Safe</option>
               <option value="grayscale">Grayscale</option>
+              <option value="green_yellow_red">Green-Yellow-Red</option>
+              <option value="blue_yellow_red">Blue-Yellow-Red</option>
+              <option value="plasma">Plasma</option>
             </select>
+            <div class="ffsv3-swatch-row">
+              ${get_palette_for_scheme(this.draftColorScheme).map(
+                (color) =>
+                  html`<svg
+                    class="ffsv3-swatch"
+                    viewBox="${FF_ARROW_VIEWBOX}"
+                  >
+                    <path
+                      fill-rule="evenodd"
+                      fill="${color}"
+                      stroke="#000000"
+                      stroke-width="1.5"
+                      d="${FF_ARROW_PATH_D}"
+                    ></path>
+                  </svg>`,
+              )}
+            </div>
           </div>
 
           <!-- Factions Column Display -->

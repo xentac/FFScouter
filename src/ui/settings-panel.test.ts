@@ -115,6 +115,42 @@ test("ff-settings-panel dispatches ff-save event with correct statusAttackLinksE
   expect(saveEvents[0]?.detail?.statusAttackLinksEnabled).toBe(false);
 });
 
+test("ff-settings-panel renders a live swatch preview that updates with the color scheme dropdown", async () => {
+  const el = document.createElement("ff-settings-panel") as FFSettingsPanel;
+  document.body.appendChild(el);
+  await el.updateComplete;
+
+  const select = el.querySelector("#color-scheme") as HTMLSelectElement;
+  expect(select).not.toBeNull();
+  expect(select.querySelectorAll("option").length).toBe(8);
+
+  const classicSwatches = el.querySelectorAll(".ffsv3-swatch");
+  expect(classicSwatches.length).toBe(11);
+  expect(classicSwatches[0]?.querySelector("path")?.getAttribute("fill")).toBe(
+    "#1734e8",
+  );
+
+  select.value = "grayscale";
+  select.dispatchEvent(new Event("change"));
+  await el.updateComplete;
+
+  const grayscaleSwatches = el.querySelectorAll(".ffsv3-swatch");
+  expect(grayscaleSwatches.length).toBe(11);
+  expect(
+    grayscaleSwatches[0]?.querySelector("path")?.getAttribute("fill"),
+  ).toBe("#f0f0f0");
+
+  select.value = "plasma";
+  select.dispatchEvent(new Event("change"));
+  await el.updateComplete;
+
+  const plasmaSwatches = el.querySelectorAll(".ffsv3-swatch");
+  expect(plasmaSwatches.length).toBe(11);
+  expect(plasmaSwatches[0]?.querySelector("path")?.getAttribute("fill")).toBe(
+    "#0d0887",
+  );
+});
+
 test("ff-settings-panel retains unsaved draft changes for other properties when a single property is updated externally", async () => {
   const el = document.createElement("ff-settings-panel") as FFSettingsPanel;
   document.body.appendChild(el);

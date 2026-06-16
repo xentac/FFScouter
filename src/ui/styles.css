@@ -57,6 +57,17 @@
   padding: 0 5px;
 }
 
+.ffsv3-swatch-row {
+  display: inline-flex;
+  gap: 3px;
+}
+
+.ffsv3-swatch {
+  display: inline-block;
+  width: 20px;
+  height: 13px;
+}
+
 body {
   --ffsv3-bg-color: #f0f0f0;
   --ffsv3-alt-bg-color: #fff;

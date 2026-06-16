@@ -50,6 +50,9 @@ export enum ColorScheme {
   NEON = "neon",
   COLORBLIND_SAFE = "colorblind_safe",
   GRAYSCALE = "grayscale",
+  GREEN_YELLOW_RED = "green_yellow_red",
+  BLUE_YELLOW_RED = "blue_yellow_red",
+  PLASMA = "plasma",
   // Reserved for a future color-editing UI. Not offered in the settings
   // dropdown yet; falls back to CLASSIC if selected without valid custom_colors.
   CUSTOM = "custom",

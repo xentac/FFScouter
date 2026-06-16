@@ -2,6 +2,8 @@ import { ffconfig, GaugeMarkerType } from "./ffconfig";
 import { ffscouter } from "./ffscouter";
 import logger from "./logger";
 import {
+  FF_ARROW_PATH_D,
+  FF_ARROW_VIEWBOX,
   ff_to_percent,
   get_contrast_color,
   get_ff_arrow_colour,
@@ -91,8 +93,8 @@ export function torn_page(
 function make_arrow(d: FFDataComplete): SVGElement {
   const fill = get_ff_arrow_colour(d);
   const div = document.createElement("div");
-  div.innerHTML = `<svg version="1.2" id="Layer_1" x="0px" y="0px" width="20" height="13" viewBox="0 0 20 13" xml:space="preserve" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg">
-	<path fill-rule="evenodd" fill="${fill}" stroke="#000000" d="M 0,0 H 13 20 L 10,12 Z" id="path1" style="display:inline;stroke-width:1.50;"/>
+  div.innerHTML = `<svg version="1.2" id="Layer_1" x="0px" y="0px" width="20" height="13" viewBox="${FF_ARROW_VIEWBOX}" xml:space="preserve" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg">
+	<path fill-rule="evenodd" fill="${fill}" stroke="#000000" d="${FF_ARROW_PATH_D}" id="path1" style="display:inline;stroke-width:1.50;"/>
 </svg>`;
 
   if (!div.firstChild || !(div.firstChild instanceof SVGElement)) {

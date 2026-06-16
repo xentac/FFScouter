@@ -66,6 +66,12 @@ export function get_ff_colour(d: FFDataComplete) {
   return get_ff_arrow_colour(d);
 }
 
+// Single source of truth for the arrow shape rendered both live (dom.ts'
+// make_arrow) and as a settings preview swatch (settings-panel.ts), so the
+// two can't visually drift apart.
+export const FF_ARROW_VIEWBOX = "0 0 20 13";
+export const FF_ARROW_PATH_D = "M 0,0 H 13 20 L 10,12 Z";
+
 const NO_DATA_COLOR = "#000000";
 
 // Each palette is 11 discrete colors (one per gradient bucket, see get_ff_arrow_colour)
@@ -147,6 +153,55 @@ const BUILTIN_PALETTES: Record<
     "#1a1a1a",
     "#000000",
   ],
+  // Grafana's default by-value gauge/stat gradient: the dark-theme "green",
+  // "yellow", "red" viz colors from grafana/packages/grafana-data/src/themes/
+  // createVisualizationColors.ts, linearly interpolated the same way Grafana
+  // resolves its "Green-Yellow-Red" field color scheme.
+  [ColorScheme.GREEN_YELLOW_RED]: [
+    "#73bf69",
+    "#8ec55c",
+    "#a9cb50",
+    "#c4d243",
+    "#dfd837",
+    "#fade2a",
+    "#f8c034",
+    "#f7a23e",
+    "#f58548",
+    "#f46752",
+    "#f2495c",
+  ],
+  // Grafana's "Blue-Yellow-Red" field color scheme: dark-theme "dark-blue",
+  // "super-light-yellow", "dark-red" stops, linearly interpolated. The muted
+  // middle is inherent to interpolating blue and yellow in plain RGB — Grafana's
+  // own rendering has the same characteristic.
+  [ColorScheme.BLUE_YELLOW_RED]: [
+    "#1f60c4",
+    "#4c7ebb",
+    "#799db3",
+    "#a5bbaa",
+    "#d2daa2",
+    "#fff899",
+    "#f3cb83",
+    "#e79e6d",
+    "#dc7056",
+    "#d04340",
+    "#c4162a",
+  ],
+  // Grafana's "Plasma" continuous color scheme (d3-scale-chromatic's
+  // interpolatePlasma), sampled at the same 11 points used for our gradient.
+  [ColorScheme.PLASMA]: [
+    "#0d0887",
+    "#41049d",
+    "#6a00a8",
+    "#8f0da4",
+    "#b12a90",
+    "#cc4778",
+    "#e16462",
+    "#f2844b",
+    "#fca636",
+    "#fcce25",
+    "#f0f921",
+  ],
 };
 
 function is_valid_custom_palette(colors: string[] | null): colors is string[] {
@@ -157,16 +212,23 @@ function is_valid_custom_palette(colors: string[] | null): colors is string[] {
   );
 }
 
-function get_active_palette(): string[] {
-  const scheme = ffconfig.color_scheme;
+// Exported so settings UI can render a swatch preview for a scheme without
+// duplicating the custom-palette fallback rule.
+export function get_palette_for_scheme(
+  scheme: ColorScheme,
+  customColors: string[] | null = null,
+): string[] {
   if (scheme === ColorScheme.CUSTOM) {
-    const custom = ffconfig.custom_colors;
-    if (is_valid_custom_palette(custom)) {
-      return custom;
+    if (is_valid_custom_palette(customColors)) {
+      return customColors;
     }
     return BUILTIN_PALETTES[ColorScheme.CLASSIC];
   }
   return BUILTIN_PALETTES[scheme];
+}
+
+function get_active_palette(): string[] {
+  return get_palette_for_scheme(ffconfig.color_scheme, ffconfig.custom_colors);
 }
 
 export function get_ff_arrow_colour(d: FFData) {
