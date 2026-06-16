@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FF Scouter V2 beta
 // @namespace    xentac-beta
-// @version      3.0-beta6
+// @version      3.0-beta7
 // @author       xentac [3354782], MAVRI [2402357], rDacted [2670953], Weav3r [1853324], Glasnost [1844049]
 // @description  Shows the expected Fair Fight score against targets and faction war status
 // @license      GPLv3
@@ -237,6 +237,18 @@ clearAll() {
     GaugeMarkerType2["BUBBLE_ESTIMATE"] = "bubble_estimate";
     return GaugeMarkerType2;
   })(GaugeMarkerType || {});
+  var ColorScheme = ((ColorScheme2) => {
+    ColorScheme2["CLASSIC"] = "classic";
+    ColorScheme2["COOL_DIVERGING"] = "cool_diverging";
+    ColorScheme2["NEON"] = "neon";
+    ColorScheme2["COLORBLIND_SAFE"] = "colorblind_safe";
+    ColorScheme2["GRAYSCALE"] = "grayscale";
+    ColorScheme2["GREEN_YELLOW_RED"] = "green_yellow_red";
+    ColorScheme2["BLUE_YELLOW_RED"] = "blue_yellow_red";
+    ColorScheme2["PLASMA"] = "plasma";
+    ColorScheme2["CUSTOM"] = "custom";
+    return ColorScheme2;
+  })(ColorScheme || {});
   const CONFIG_DEFAULTS = {
     low_ff_range: 2,
     high_ff_range: 4,
@@ -257,10 +269,13 @@ clearAll() {
     chain_max_ff: 2.5,
     chain_factionless: false,
     gauge_marker_type: "arrow",
+    gauge_marker_scale: 100,
     war_quick_attack_action: "new_tab",
     network_interception_enabled: false,
     status_attack_links_enabled: true,
-    debug_disable_pda_http: false
+    debug_disable_pda_http: false,
+    color_scheme: "classic",
+    custom_colors: null
   };
   class FFConfig {
     constructor(name) {
@@ -482,6 +497,36 @@ clearAll() {
     set gauge_marker_type(val) {
       this.storage.set("gauge_marker_type", val);
     }
+    get gauge_marker_scale() {
+      return this.storage.get(
+        "gauge_marker_scale"
+) ?? CONFIG_DEFAULTS.gauge_marker_scale;
+    }
+    set gauge_marker_scale(val) {
+      this.storage.set("gauge_marker_scale", val);
+    }
+    get color_scheme() {
+      return this.storage.get(
+        "color_scheme"
+) ?? CONFIG_DEFAULTS.color_scheme;
+    }
+    set color_scheme(val) {
+      this.storage.set("color_scheme", val);
+    }
+    get custom_colors() {
+      return this.storage.get(
+        "custom_colors"
+) ?? CONFIG_DEFAULTS.custom_colors;
+    }
+    set custom_colors(val) {
+      if (val === null) {
+        this.storage.remove(
+          "custom_colors"
+);
+      } else {
+        this.storage.set("custom_colors", val);
+      }
+    }
     get faction_filter_state() {
       return this.storage.get(
         "faction_filter_state"
@@ -616,6 +661,9 @@ clearAll() {
         "gauge_marker_type"
 );
       this.storage.remove(
+        "gauge_marker_scale"
+);
+      this.storage.remove(
         "war_quick_attack_action"
 );
       this.storage.remove(
@@ -623,6 +671,12 @@ clearAll() {
 );
       this.storage.remove(
         "debug_disable_pda_http"
+);
+      this.storage.remove(
+        "color_scheme"
+);
+      this.storage.remove(
+        "custom_colors"
 );
     }
   }
@@ -838,14 +892,18 @@ clearAll() {
     try {
       ff_response = JSON.parse(resp.responseText);
     } catch {
-      logger.warn(`query_stats: unparseable response. status=${resp.status}, body=${resp.responseText?.substring(0, 200)}, url=${url}`);
+      logger.warn(
+        `query_stats: unparseable response. status=${resp.status}, body=${resp.responseText?.substring(0, 200)}, url=${url}`
+      );
       throw new FFApiError(
         `API request failed. Couldn't parse response. HTTP status code: ${resp.status}`,
         { ff_api_limits: limits }
       );
     }
     if (ff_response == null) {
-      logger.warn(`query_stats: null response after parse. status=${resp.status}, url=${url}`);
+      logger.warn(
+        `query_stats: null response after parse. status=${resp.status}, url=${url}`
+      );
       throw new FFApiError(
         `API request failed. Response not set. HTTP status code: ${resp.status}`,
         { ff_api_limits: limits }
@@ -858,7 +916,9 @@ clearAll() {
       );
     }
     if (resp.status !== 200) {
-      logger.warn(`query_stats: unexpected HTTP status. status=${resp.status}, body=${resp.responseText?.substring(0, 200)}, url=${url}`);
+      logger.warn(
+        `query_stats: unexpected HTTP status. status=${resp.status}, body=${resp.responseText?.substring(0, 200)}, url=${url}`
+      );
       throw new FFApiError(
         `API request failed. HTTP status code: ${resp.status}`,
         { ff_api_limits: limits }
@@ -954,14 +1014,18 @@ clearAll() {
     try {
       ff_response = JSON.parse(resp.responseText);
     } catch {
-      logger.warn(`check_key: unparseable response. status=${resp.status}, body=${resp.responseText?.substring(0, 200)}, url=${url}`);
+      logger.warn(
+        `check_key: unparseable response. status=${resp.status}, body=${resp.responseText?.substring(0, 200)}, url=${url}`
+      );
       throw new FFApiError(
         `API request failed. Couldn't parse response. HTTP status code: ${resp.status}`,
         { ff_api_limits: limits }
       );
     }
     if (ff_response == null) {
-      logger.warn(`check_key: null response after parse. status=${resp.status}, url=${url}`);
+      logger.warn(
+        `check_key: null response after parse. status=${resp.status}, url=${url}`
+      );
       throw new FFApiError(
         `API request failed. Response not set. HTTP status code: ${resp.status}`,
         { ff_api_limits: limits }
@@ -974,7 +1038,9 @@ clearAll() {
       );
     }
     if (resp.status !== 200) {
-      logger.warn(`check_key: unexpected HTTP status. status=${resp.status}, body=${resp.responseText?.substring(0, 200)}, url=${url}`);
+      logger.warn(
+        `check_key: unexpected HTTP status. status=${resp.status}, body=${resp.responseText?.substring(0, 200)}, url=${url}`
+      );
       throw new FFApiError(
         `API request failed. HTTP status code: ${resp.status}`,
         { ff_api_limits: limits }
@@ -1007,14 +1073,18 @@ clearAll() {
     try {
       ff_response = JSON.parse(resp.responseText);
     } catch {
-      logger.warn(`query_flights: unparseable response. status=${resp.status}, body=${resp.responseText?.substring(0, 200)}, url=${url}`);
+      logger.warn(
+        `query_flights: unparseable response. status=${resp.status}, body=${resp.responseText?.substring(0, 200)}, url=${url}`
+      );
       throw new FFApiError(
         `API request failed. Couldn't parse response. HTTP status code: ${resp.status}`,
         { ff_api_limits: limits }
       );
     }
     if (ff_response == null) {
-      logger.warn(`query_flights: null response after parse. status=${resp.status}, url=${url}`);
+      logger.warn(
+        `query_flights: null response after parse. status=${resp.status}, url=${url}`
+      );
       throw new FFApiError(
         `API request failed. Response not set. HTTP status code: ${resp.status}`,
         { ff_api_limits: limits }
@@ -1027,7 +1097,9 @@ clearAll() {
       );
     }
     if (resp.status !== 200) {
-      logger.warn(`query_flights: unexpected HTTP status. status=${resp.status}, body=${resp.responseText?.substring(0, 200)}, url=${url}`);
+      logger.warn(
+        `query_flights: unexpected HTTP status. status=${resp.status}, body=${resp.responseText?.substring(0, 200)}, url=${url}`
+      );
       throw new FFApiError(
         `API request failed. HTTP status code: ${resp.status}`,
         { ff_api_limits: limits }
@@ -2363,22 +2435,143 @@ queryString.charCodeAt(pos - 1) === 63) {
   function get_ff_colour(d2) {
     return get_ff_arrow_colour(d2);
   }
-  const arrow_gradient3 = [
-    "#1734e8",
-    "#1788e8",
-    "#17dbe8",
-    "#17e8a1",
-    "#17e84e",
-    "#34e817",
-    "#88e817",
-    "#dbe817",
-    "#e8a117",
-    "#e84e17",
-    "#e81734"
-  ];
+  const FF_ARROW_VIEWBOX = "0 0 20 13";
+  const FF_ARROW_PATH_D = "M 0,0 H 13 20 L 10,12 Z";
+  const NO_DATA_COLOR = "#000000";
+  const BUILTIN_PALETTES = {
+
+[ColorScheme.CLASSIC]: [
+      "#1734e8",
+      "#1788e8",
+      "#17dbe8",
+      "#17e8a1",
+      "#17e84e",
+      "#34e817",
+      "#88e817",
+      "#dbe817",
+      "#e8a117",
+      "#e84e17",
+      "#e81734"
+    ],
+
+[ColorScheme.COOL_DIVERGING]: [
+      "#2166ac",
+      "#2080a2",
+      "#1f9497",
+      "#1e8d75",
+      "#1c8254",
+      "#1b7837",
+      "#2e8b1e",
+      "#6c9e21",
+      "#b1aa23",
+      "#c47525",
+      "#d73027"
+    ],
+[ColorScheme.NEON]: [
+      "#0c50ff",
+      "#0cb1ff",
+      "#0cffec",
+      "#0cff8a",
+      "#0cff29",
+      "#50ff0c",
+      "#b1ff0c",
+      "#ffec0c",
+      "#ff8a0c",
+      "#ff290c",
+      "#ff0c50"
+    ],
+
+[ColorScheme.COLORBLIND_SAFE]: [
+      "#440154",
+      "#481a6c",
+      "#472f7d",
+      "#414487",
+      "#39568c",
+      "#2a788e",
+      "#21908d",
+      "#22a884",
+      "#42be71",
+      "#a8db34",
+      "#fde725"
+    ],
+[ColorScheme.GRAYSCALE]: [
+      "#f0f0f0",
+      "#e0e0e0",
+      "#cccccc",
+      "#b3b3b3",
+      "#999999",
+      "#808080",
+      "#666666",
+      "#4d4d4d",
+      "#333333",
+      "#1a1a1a",
+      "#000000"
+    ],
+
+
+
+[ColorScheme.GREEN_YELLOW_RED]: [
+      "#73bf69",
+      "#8ec55c",
+      "#a9cb50",
+      "#c4d243",
+      "#dfd837",
+      "#fade2a",
+      "#f8c034",
+      "#f7a23e",
+      "#f58548",
+      "#f46752",
+      "#f2495c"
+    ],
+
+
+
+[ColorScheme.BLUE_YELLOW_RED]: [
+      "#1f60c4",
+      "#4c7ebb",
+      "#799db3",
+      "#a5bbaa",
+      "#d2daa2",
+      "#fff899",
+      "#f3cb83",
+      "#e79e6d",
+      "#dc7056",
+      "#d04340",
+      "#c4162a"
+    ],
+
+[ColorScheme.PLASMA]: [
+      "#0d0887",
+      "#41049d",
+      "#6a00a8",
+      "#8f0da4",
+      "#b12a90",
+      "#cc4778",
+      "#e16462",
+      "#f2844b",
+      "#fca636",
+      "#fcce25",
+      "#f0f921"
+    ]
+  };
+  function is_valid_custom_palette(colors) {
+    return colors !== null && colors.length === 11 && colors.every((c2) => typeof c2 === "string");
+  }
+  function get_palette_for_scheme(scheme, customColors = null) {
+    if (scheme === ColorScheme.CUSTOM) {
+      if (is_valid_custom_palette(customColors)) {
+        return customColors;
+      }
+      return BUILTIN_PALETTES[ColorScheme.CLASSIC];
+    }
+    return BUILTIN_PALETTES[scheme];
+  }
+  function get_active_palette() {
+    return get_palette_for_scheme(ffconfig.color_scheme, ffconfig.custom_colors);
+  }
   function get_ff_arrow_colour(d2) {
     if (d2.no_data) {
-      return "#000000";
+      return NO_DATA_COLOR;
     }
     let ff = d2.fair_fight;
     if (ff < 1) {
@@ -2387,8 +2580,8 @@ queryString.charCodeAt(pos - 1) === 63) {
       ff = 5;
     }
     const ratio = Math.floor((ff - 1) / 4 * 10);
-    const r2 = arrow_gradient3[ratio];
-    return r2 ?? "#000000";
+    const r2 = get_active_palette()[ratio];
+    return r2 ?? NO_DATA_COLOR;
   }
   function get_contrast_color(hex) {
     const r2 = parseInt(hex.slice(1, 3), 16);
@@ -2500,8 +2693,8 @@ queryString.charCodeAt(pos - 1) === 63) {
   function make_arrow(d2) {
     const fill = get_ff_arrow_colour(d2);
     const div = document.createElement("div");
-    div.innerHTML = `<svg version="1.2" id="Layer_1" x="0px" y="0px" width="20" height="13" viewBox="0 0 20 13" xml:space="preserve" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg">
-	<path fill-rule="evenodd" fill="${fill}" stroke="#000000" d="M 0,0 H 13 20 L 10,12 Z" id="path1" style="display:inline;stroke-width:1.50;"/>
+    div.innerHTML = `<svg version="1.2" id="Layer_1" x="0px" y="0px" width="20" height="13" viewBox="${FF_ARROW_VIEWBOX}" xml:space="preserve" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg">
+	<path fill-rule="evenodd" fill="${fill}" stroke="#000000" d="${FF_ARROW_PATH_D}" id="path1" style="display:inline;stroke-width:1.50;"/>
 </svg>`;
     if (!div.firstChild || !(div.firstChild instanceof SVGElement)) {
       throw new Error(
@@ -2550,6 +2743,10 @@ queryString.charCodeAt(pos - 1) === 63) {
       const percent = ff_to_percent(d2);
       element.classList.add("ffsv3-gauge");
       element.style.setProperty("--band-percent", `${percent}`);
+      document.body.style.setProperty(
+        "--ffsv3-marker-scale",
+        `${ffconfig.gauge_marker_scale / 100}`
+      );
       const a2 = element.querySelector(".ffsv3-arrow, .ffsv3-bubble");
       if (a2) {
         a2.remove();
@@ -6266,6 +6463,8 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       this.analyticsEnabled = CONFIG_DEFAULTS.analytics_enabled;
       this.networkInterceptionEnabled = CONFIG_DEFAULTS.network_interception_enabled;
       this.gaugeMarkerType = CONFIG_DEFAULTS.gauge_marker_type;
+      this.gaugeMarkerScale = CONFIG_DEFAULTS.gauge_marker_scale;
+      this.colorScheme = CONFIG_DEFAULTS.color_scheme;
       this.warQuickAttackAction = CONFIG_DEFAULTS.war_quick_attack_action;
       this.statusAttackLinksEnabled = CONFIG_DEFAULTS.status_attack_links_enabled;
       this.debugDisablePdaHttp = CONFIG_DEFAULTS.debug_disable_pda_http;
@@ -6291,6 +6490,8 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       this.draftAnalyticsEnabled = CONFIG_DEFAULTS.analytics_enabled;
       this.draftNetworkInterceptionEnabled = CONFIG_DEFAULTS.network_interception_enabled;
       this.draftGaugeMarkerType = CONFIG_DEFAULTS.gauge_marker_type;
+      this.draftGaugeMarkerScale = CONFIG_DEFAULTS.gauge_marker_scale;
+      this.draftColorScheme = CONFIG_DEFAULTS.color_scheme;
       this.draftWarQuickAttackAction = CONFIG_DEFAULTS.war_quick_attack_action;
       this.draftStatusAttackLinksEnabled = CONFIG_DEFAULTS.status_attack_links_enabled;
       this.draftDebugDisablePdaHttp = CONFIG_DEFAULTS.debug_disable_pda_http;
@@ -6344,6 +6545,10 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
         this.draftNetworkInterceptionEnabled = this.networkInterceptionEnabled;
       if (changedProperties.has("gaugeMarkerType"))
         this.draftGaugeMarkerType = this.gaugeMarkerType;
+      if (changedProperties.has("gaugeMarkerScale"))
+        this.draftGaugeMarkerScale = this.gaugeMarkerScale;
+      if (changedProperties.has("colorScheme"))
+        this.draftColorScheme = this.colorScheme;
       if (changedProperties.has("warQuickAttackAction"))
         this.draftWarQuickAttackAction = this.warQuickAttackAction;
       if (changedProperties.has("statusAttackLinksEnabled"))
@@ -6373,6 +6578,8 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       this.draftAnalyticsEnabled = this.analyticsEnabled;
       this.draftNetworkInterceptionEnabled = this.networkInterceptionEnabled;
       this.draftGaugeMarkerType = this.gaugeMarkerType;
+      this.draftGaugeMarkerScale = this.gaugeMarkerScale;
+      this.draftColorScheme = this.colorScheme;
       this.draftWarQuickAttackAction = this.warQuickAttackAction;
       this.draftStatusAttackLinksEnabled = this.statusAttackLinksEnabled;
       this.draftDebugDisablePdaHttp = this.debugDisablePdaHttp;
@@ -6422,6 +6629,8 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
             analyticsEnabled: this.draftAnalyticsEnabled,
             networkInterceptionEnabled: this.draftNetworkInterceptionEnabled,
             gaugeMarkerType: this.draftGaugeMarkerType,
+            gaugeMarkerScale: this.draftGaugeMarkerScale,
+            colorScheme: this.draftColorScheme,
             warQuickAttackAction: this.draftWarQuickAttackAction,
             statusAttackLinksEnabled: this.draftStatusAttackLinksEnabled,
             debugDisablePdaHttp: this.draftDebugDisablePdaHttp
@@ -6571,6 +6780,21 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       this.draftGaugeMarkerType = e2.target.value;
       this.showSavedMessage = false;
     }
+    onGaugeMarkerScaleInput(e2) {
+      const raw = Number(e2.target.value);
+      if (Number.isNaN(raw)) {
+        return;
+      }
+      this.draftGaugeMarkerScale = Math.min(200, Math.max(50, raw));
+      this.showSavedMessage = false;
+    }
+    onColorSchemeChange(e2) {
+      this.draftColorScheme = e2.target.value;
+      this.showSavedMessage = false;
+    }
+    get previewColor() {
+      return get_palette_for_scheme(this.draftColorScheme)[5] ?? "#888888";
+    }
     render() {
       return b`
       <details
@@ -6581,330 +6805,429 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
         </summary>
 
         <div style="margin-top: 15px;">
-          <div class="ff-api-explanation">
-            <strong>Important:</strong> You must use the SAME exact API key that
-            you use on
-            <a href="https://ffscouter.com/" target="_blank">ffscouter.com</a>.
-            <br /><br />
-            If you're not sure which API key you used, go to
-            <a
-              href="https://www.torn.com/preferences.php#tab=api"
-              target="_blank"
-              >your API preferences</a
-            >
-            and look for "FFScouter3" in your API key history comments.
-          </div>
-          <!-- API Key Input -->
-          <div class="input-row">
-            <label for="api-key">API Key:</label>
-            <input
-              id="api-key"
-              type="text"
-              class="${this.apiKey ? "blur-mode" : ""}"
-              placeholder="Paste your key here..."
-              .value=${this.draftApiKey}
-              @input=${this.onKeyInput}
-              @change=${this.onKeyChange}
-            />
-          </div>
-          <div class="input-row-inline">
-            <label for="ff-premium-badge">FF Scouter Premium:</label>
-            <span
-              id="ff-premium-badge"
-              class="is_premium_${this.isPremium === null ? "unknown" : this.isPremium ? "enabled" : "disabled"}"
-              >${this.isPremium === null ? "Unknown" : this.isPremium ? "Enabled" : "Disabled"}</span
-            >
-          </div>
-          <div class="input-row-inline">
-            <button class="torn-btn btn-save" @click=${this.handleVerify}>
-              Verify
-            </button>
-          </div>
-
-          <!-- Ranges Input -->
-          <div class="input-row">
-            <label>FF Ranges (Low, High, Max):</label>
-            <div style="display: flex; gap: 10px; align-items: center;">
-              <input
-                id="ff-range-low"
-                type="number"
-                step="0.1"
-                class="ff-number"
-                .value=${this.draftLowRange.toString()}
-                @input=${this.onLowRangeInput}
-              />
-              <span>&lt;</span>
-              <input
-                id="ff-range-high"
-                type="number"
-                step="0.1"
-                class="ff-number"
-                .value=${this.draftHighRange.toString()}
-                @input=${this.onHighRangeInput}
-              />
-              <span>&lt;</span>
-              <input
-                id="ff-range-max"
-                type="number"
-                step="0.1"
-                class="ff-number"
-                .value=${this.draftMaxRange.toString()}
-                @input=${this.onMaxRangeInput}
-              />
+          <!-- Section: API key & ranges (all full-width bundles) -->
+          <div class="ff-settings-section">
+            <div class="ff-api-explanation ff-settings-span">
+              <strong>Important:</strong> You must use the SAME exact API key
+              that you use on
+              <a href="https://ffscouter.com/" target="_blank">ffscouter.com</a
+              >. <br /><br />
+              If you're not sure which API key you used, go to
+              <a
+                href="https://www.torn.com/preferences.php#tab=api"
+                target="_blank"
+                >your API preferences</a
+              >
+              and look for "FFScouter3" in your API key history comments.
             </div>
-            ${this.rangeError ? b`<div class="error-msg">${this.rangeError}</div>` : ""}
+
+            <!-- API Key bundle: key input + premium status + verify -->
+            <div class="ff-settings-span ff-api-block">
+              <div class="ff-settings-cell">
+                <label for="api-key">API Key:</label>
+                <input
+                  id="api-key"
+                  type="text"
+                  class="${this.apiKey ? "blur-mode" : ""}"
+                  placeholder="Paste your key here..."
+                  .value=${this.draftApiKey}
+                  @input=${this.onKeyInput}
+                  @change=${this.onKeyChange}
+                />
+              </div>
+              <div class="ff-api-status-row">
+                <label for="ff-premium-badge">FF Scouter Premium:</label>
+                <span
+                  id="ff-premium-badge"
+                  class="is_premium_${this.isPremium === null ? "unknown" : this.isPremium ? "enabled" : "disabled"}"
+                  >${this.isPremium === null ? "Unknown" : this.isPremium ? "Enabled" : "Disabled"}</span
+                >
+                <button class="torn-btn btn-save" @click=${this.handleVerify}>
+                  Verify
+                </button>
+              </div>
+            </div>
+
+            <!-- Full-width appearance bundles -->
+            <!-- Marker Size -->
+            <div class="ff-settings-span ff-marker-size">
+              <label for="gauge-marker-scale">Marker Size:</label>
+              <div class="ff-marker-size-controls">
+                <input
+                  id="gauge-marker-scale"
+                  type="range"
+                  min="50"
+                  max="200"
+                  step="5"
+                  .value=${this.draftGaugeMarkerScale.toString()}
+                  @input=${this.onGaugeMarkerScaleInput}
+                />
+                <input
+                  id="gauge-marker-scale-number"
+                  type="number"
+                  min="50"
+                  max="200"
+                  step="5"
+                  class="ff-number"
+                  .value=${this.draftGaugeMarkerScale.toString()}
+                  @input=${this.onGaugeMarkerScaleInput}
+                />
+                <span>%</span>
+                <div
+                  class="ffsv3-marker-preview"
+                  style="--ffsv3-marker-scale: ${this.draftGaugeMarkerScale / 100};"
+                >
+                  <svg
+                    class="ffsv3-preview-arrow"
+                    viewBox="${FF_ARROW_VIEWBOX}"
+                  >
+                    <path
+                      fill-rule="evenodd"
+                      fill="${this.previewColor}"
+                      stroke="#000000"
+                      stroke-width="1.5"
+                      d="${FF_ARROW_PATH_D}"
+                    ></path>
+                  </svg>
+                  <div
+                    class="ffsv3-preview-bubble"
+                    style="background-color: ${this.previewColor}; color: ${get_contrast_color(this.previewColor)};"
+                  >
+                    2.34
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Color Scheme -->
+            <div class="ff-settings-span ff-color-scheme">
+              <label for="color-scheme">Color Scheme:</label>
+              <div class="ff-color-scheme-controls">
+                <select
+                  id="color-scheme"
+                  .value=${this.draftColorScheme}
+                  @change=${this.onColorSchemeChange}
+                >
+                  <option value="classic">Classic (Default)</option>
+                  <option value="cool_diverging">Cool Diverging</option>
+                  <option value="neon">Neon</option>
+                  <option value="colorblind_safe">Colorblind-Safe</option>
+                  <option value="grayscale">Grayscale</option>
+                  <option value="green_yellow_red">Green-Yellow-Red</option>
+                  <option value="blue_yellow_red">Blue-Yellow-Red</option>
+                  <option value="plasma">Plasma</option>
+                </select>
+                <div class="ffsv3-swatch-row">
+                  ${get_palette_for_scheme(this.draftColorScheme).map(
+      (color) => b`<svg
+                        class="ffsv3-swatch"
+                        viewBox="${FF_ARROW_VIEWBOX}"
+                      >
+                        <path
+                          fill-rule="evenodd"
+                          fill="${color}"
+                          stroke="#000000"
+                          stroke-width="1.5"
+                          d="${FF_ARROW_PATH_D}"
+                        ></path>
+                      </svg>`
+    )}
+                </div>
+              </div>
+            </div>
+
+            <!-- Ranges Input -->
+            <div class="input-row ff-settings-span">
+              <label>FF Ranges (Low, High, Max):</label>
+              <div style="display: flex; gap: 10px; align-items: center;">
+                <input
+                  id="ff-range-low"
+                  type="number"
+                  step="0.1"
+                  class="ff-number"
+                  .value=${this.draftLowRange.toString()}
+                  @input=${this.onLowRangeInput}
+                />
+                <span>&lt;</span>
+                <input
+                  id="ff-range-high"
+                  type="number"
+                  step="0.1"
+                  class="ff-number"
+                  .value=${this.draftHighRange.toString()}
+                  @input=${this.onHighRangeInput}
+                />
+                <span>&lt;</span>
+                <input
+                  id="ff-range-max"
+                  type="number"
+                  step="0.1"
+                  class="ff-number"
+                  .value=${this.draftMaxRange.toString()}
+                  @input=${this.onMaxRangeInput}
+                />
+              </div>
+              ${this.rangeError ? b`<div class="error-msg">${this.rangeError}</div>` : ""}
+            </div>
           </div>
 
           <!-- Feature Toggles -->
           <h3>Feature Toggles:</h3>
 
-          <!-- Chain Button Toggle -->
-          <div class="input-row-inline">
-            <input
-              id="chain-button-toggle"
-              type="checkbox"
-              .checked=${this.draftChainButtonEnabled}
-              @change=${this.onChainButtonChange}
-            />
-            <label for="chain-button-toggle"
-              >Enable Chain Button (Green FF Button)</label
-            >
-          </div>
+          <div class="ff-settings-section">
+            <!-- Chain block: toggle + (conditional) nested sub-options grid -->
+            <div class="ff-settings-span ff-chain-block">
+              <div class="ff-settings-cell checkbox-cell">
+                <input
+                  id="chain-button-toggle"
+                  type="checkbox"
+                  .checked=${this.draftChainButtonEnabled}
+                  @change=${this.onChainButtonChange}
+                />
+                <label for="chain-button-toggle"
+                  >Enable Chain Button (Green FF Button)</label
+                >
+              </div>
 
-          ${this.draftChainButtonEnabled ? b`
-                  <div class="chain-options-flex-container">
-                    <div class="input-row-inline">
-                      <label for="chain-link-type">Chain button opens:</label>
-                      <select
-                        id="chain-link-type"
-                        .value=${this.draftChainLinkType}
-                        @change=${this.onChainLinkTypeChange}
-                      >
-                        <option value="attack">Attack page</option>
-                        <option value="profile">Profile page</option>
-                      </select>
+              ${this.draftChainButtonEnabled ? b`
+                    <div class="ff-settings-section ff-chain-suboptions">
+                      <div class="ff-settings-cell ff-chain-wide">
+                        <label for="chain-link-type">Chain button opens:</label>
+                        <select
+                          id="chain-link-type"
+                          .value=${this.draftChainLinkType}
+                          @change=${this.onChainLinkTypeChange}
+                        >
+                          <option value="attack">Attack page</option>
+                          <option value="profile">Profile page</option>
+                        </select>
+                      </div>
+
+                      <div class="ff-settings-cell ff-chain-wide">
+                        <label for="chain-tab-type">Open in:</label>
+                        <select
+                          id="chain-tab-type"
+                          .value=${this.draftChainTabType}
+                          @change=${this.onChainTabTypeChange}
+                        >
+                          <option value="newtab">New tab</option>
+                          <option value="sametab">Same tab</option>
+                        </select>
+                      </div>
+
+                      <div class="ff-settings-cell">
+                        <label for="chain-min-level">Min Level:</label>
+                        <input
+                          id="chain-min-level"
+                          type="number"
+                          class="ff-number"
+                          placeholder="No min"
+                          .value=${this.draftChainMinLevel === null ? "" : this.draftChainMinLevel.toString()}
+                          @input=${this.onChainMinLevelInput}
+                        />
+                      </div>
+
+                      <div class="ff-settings-cell">
+                        <label for="chain-max-level">Max Level:</label>
+                        <input
+                          id="chain-max-level"
+                          type="number"
+                          class="ff-number"
+                          placeholder="No max"
+                          .value=${this.draftChainMaxLevel === null ? "" : this.draftChainMaxLevel.toString()}
+                          @input=${this.onChainMaxLevelInput}
+                        />
+                      </div>
+
+                      <div class="ff-settings-cell">
+                        <label for="chain-min-ff">Min FF:</label>
+                        <input
+                          id="chain-min-ff"
+                          type="number"
+                          step="0.1"
+                          class="ff-number"
+                          placeholder="No min"
+                          .value=${this.draftChainMinFF === null ? "" : this.draftChainMinFF.toString()}
+                          @input=${this.onChainMinFFInput}
+                        />
+                      </div>
+
+                      <div class="ff-settings-cell">
+                        <label for="chain-max-ff">Max FF:</label>
+                        <input
+                          id="chain-max-ff"
+                          type="number"
+                          step="0.1"
+                          class="ff-number"
+                          placeholder="No max"
+                          .value=${this.draftChainMaxFF.toString()}
+                          @input=${this.onChainMaxFFInput}
+                        />
+                      </div>
+
+                      <div class="ff-settings-cell checkbox-cell ff-chain-wide">
+                        <input
+                          id="chain-inactive"
+                          type="checkbox"
+                          .checked=${this.draftChainInactive}
+                          @change=${this.onChainInactiveChange}
+                        />
+                        <label for="chain-inactive"
+                          >Inactive Only (14+ days offline)</label
+                        >
+                      </div>
+
+                      <div class="ff-settings-cell checkbox-cell ff-chain-wide">
+                        <input
+                          id="chain-factionless"
+                          type="checkbox"
+                          .checked=${this.draftChainFactionless}
+                          @change=${this.onChainFactionlessChange}
+                        />
+                        <label for="chain-factionless">Factionless Only</label>
+                      </div>
                     </div>
+                  ` : ""}
+            </div>
 
-                    <div class="input-row-inline">
-                      <label for="chain-tab-type">Open in:</label>
-                      <select
-                        id="chain-tab-type"
-                        .value=${this.draftChainTabType}
-                        @change=${this.onChainTabTypeChange}
-                      >
-                        <option value="newtab">New tab</option>
-                        <option value="sametab">Same tab</option>
-                      </select>
-                    </div>
+            <!-- Single-cell selects & checkboxes (cluster into clean rows) -->
+            <div class="ff-settings-cell">
+              <label for="gauge-marker-type">Gauge Marker Style:</label>
+              <select
+                id="gauge-marker-type"
+                .value=${this.draftGaugeMarkerType}
+                @change=${this.onGaugeMarkerTypeChange}
+              >
+                <option value="arrow">Arrow (Default)</option>
+                <option value="bubble_ff">Bubble (FF Score)</option>
+                <option value="bubble_estimate">Bubble (BS Estimate)</option>
+              </select>
+            </div>
 
-                    <div class="input-row-inline">
-                      <label for="chain-min-level">Min Level:</label>
-                      <input
-                        id="chain-min-level"
-                        type="number"
-                        class="ff-number"
-                        placeholder="No min"
-                        .value=${this.draftChainMinLevel === null ? "" : this.draftChainMinLevel.toString()}
-                        @input=${this.onChainMinLevelInput}
-                      />
-                    </div>
+            <div class="ff-settings-cell">
+              <label for="factions-col-display">Faction Page Shows:</label>
+              <select
+                id="factions-col-display"
+                .value=${this.draftFactionsColDisplay}
+                @change=${this.onFactionsColDisplayChange}
+              >
+                <option value="fair_fight">FF Score</option>
+                <option value="battle_stats">BS Estimate</option>
+                <option value="none">None (Hide Column)</option>
+              </select>
+            </div>
 
-                    <div class="input-row-inline">
-                      <label for="chain-max-level">Max Level:</label>
-                      <input
-                        id="chain-max-level"
-                        type="number"
-                        class="ff-number"
-                        placeholder="No max"
-                        .value=${this.draftChainMaxLevel === null ? "" : this.draftChainMaxLevel.toString()}
-                        @input=${this.onChainMaxLevelInput}
-                      />
-                    </div>
+            <div class="ff-settings-cell">
+              <label for="war-col-display">War Page Shows:</label>
+              <select
+                id="war-col-display"
+                .value=${this.draftWarColDisplay}
+                @change=${this.onWarColDisplayChange}
+              >
+                <option value="fair_fight">FF Score</option>
+                <option value="battle_stats">BS Estimate</option>
+                <option value="none">None (Hide Column)</option>
+              </select>
+            </div>
 
-                    <div class="input-row-inline">
-                      <label for="chain-min-ff">Min FF:</label>
-                      <input
-                        id="chain-min-ff"
-                        type="number"
-                        step="0.1"
-                        class="ff-number"
-                        placeholder="No min"
-                        .value=${this.draftChainMinFF === null ? "" : this.draftChainMinFF.toString()}
-                        @input=${this.onChainMinFFInput}
-                      />
-                    </div>
+            <div class="ff-settings-cell checkbox-cell">
+              <input
+                id="status-attack-links-toggle"
+                type="checkbox"
+                .checked=${this.draftStatusAttackLinksEnabled}
+                @change=${this.onStatusAttackLinksEnabledChange}
+              />
+              <label for="status-attack-links-toggle"
+                >Enable online status indicator quick attack links</label
+              >
+            </div>
 
-                    <div class="input-row-inline">
-                      <label for="chain-max-ff">Max FF:</label>
-                      <input
-                        id="chain-max-ff"
-                        type="number"
-                        step="0.1"
-                        class="ff-number"
-                        placeholder="No max"
-                        .value=${this.draftChainMaxFF.toString()}
-                        @input=${this.onChainMaxFFInput}
-                      />
-                    </div>
+            <div class="ff-settings-cell">
+              <label for="war-quick-attack-action">Quick Attack Action:</label>
+              <select
+                id="war-quick-attack-action"
+                .value=${this.draftWarQuickAttackAction}
+                @change=${this.onWarQuickAttackActionChange}
+              >
+                <option value="new_tab">New Tab</option>
+                <option value="current">Same Tab</option>
+              </select>
+            </div>
 
-                    <div class="input-row-inline">
-                      <input
-                        id="chain-inactive"
-                        type="checkbox"
-                        .checked=${this.draftChainInactive}
-                        @change=${this.onChainInactiveChange}
-                      />
-                      <label for="chain-inactive"
-                        >Inactive Only (14+ days offline)</label
-                      >
-                    </div>
+            <div class="ff-settings-cell checkbox-cell">
+              <input
+                id="ff-history-toggle"
+                type="checkbox"
+                .checked=${this.draftFFHistoryEnabled}
+                @change=${this.onFFHistoryChange}
+              />
+              <label for="ff-history-toggle"
+                >Enable FF History button on profile pages</label
+              >
+            </div>
 
-                    <div class="input-row-inline">
-                      <input
-                        id="chain-factionless"
-                        type="checkbox"
-                        .checked=${this.draftChainFactionless}
-                        @change=${this.onChainFactionlessChange}
-                      />
-                      <label for="chain-factionless">Factionless Only</label>
-                    </div>
-                  </div>
-                ` : ""}
-
-          <!-- FF History Toggle -->
-          <div class="input-row-inline">
-            <input
-              id="ff-history-toggle"
-              type="checkbox"
-              .checked=${this.draftFFHistoryEnabled}
-              @change=${this.onFFHistoryChange}
-            />
-            <label for="ff-history-toggle"
-              >Enable FF History button on profile pages</label
-            >
-          </div>
-          <div class="input-row-inline">
-            <label>War Monitor is no longer supported. Use <a target="_blank" href="https://greasyfork.org/en/scripts/529238-torn-war-stuff-enhanced">Torn War Stuff Enhanced</a> instead.</a></label
-            >
-          </div>
-
-          <!-- Gauge Marker Display Style -->
-          <div class="input-row-inline">
-            <label for="gauge-marker-type">Gauge Marker Style:</label>
-            <select
-              id="gauge-marker-type"
-              .value=${this.draftGaugeMarkerType}
-              @change=${this.onGaugeMarkerTypeChange}
-            >
-              <option value="arrow">Arrow (Default)</option>
-              <option value="bubble_ff">Bubble (FF Score)</option>
-              <option value="bubble_estimate">Bubble (BS Estimate)</option>
-            </select>
-          </div>
-
-          <!-- Factions Column Display -->
-          <div class="input-row-inline">
-            <label for="factions-col-display">Faction Page Shows:</label>
-            <select
-              id="factions-col-display"
-              .value=${this.draftFactionsColDisplay}
-              @change=${this.onFactionsColDisplayChange}
-            >
-              <option value="fair_fight">FF Score</option>
-              <option value="battle_stats">BS Estimate</option>
-              <option value="none">None (Hide Column)</option>
-            </select>
-          </div>
-
-          <!-- War Column Display -->
-          <div class="input-row-inline">
-            <label for="war-col-display">War Page Shows:</label>
-            <select
-              id="war-col-display"
-              .value=${this.draftWarColDisplay}
-              @change=${this.onWarColDisplayChange}
-            >
-              <option value="fair_fight">FF Score</option>
-              <option value="battle_stats">BS Estimate</option>
-              <option value="none">None (Hide Column)</option>
-            </select>
-          </div>
-
-          <!-- Status Attack Links Toggle -->
-          <div class="input-row-inline">
-            <input
-              id="status-attack-links-toggle"
-              type="checkbox"
-              .checked=${this.draftStatusAttackLinksEnabled}
-              @change=${this.onStatusAttackLinksEnabledChange}
-            />
-            <label for="status-attack-links-toggle"
-              >Enable online status indicator quick attack links</label
-            >
-          </div>
-
-          <!-- War Quick Attack Action -->
-          <div class="input-row-inline">
-            <label for="war-quick-attack-action">Quick Attack Action:</label>
-            <select
-              id="war-quick-attack-action"
-              .value=${this.draftWarQuickAttackAction}
-              @change=${this.onWarQuickAttackActionChange}
-            >
-              <option value="new_tab">New Tab</option>
-              <option value="current">Same Tab</option>
-            </select>
+            <!-- War Monitor deprecation note -->
+            <div class="ff-settings-span ff-deprecation-note">
+              <label
+                >War Monitor is no longer supported. Use
+                <a
+                  target="_blank"
+                  href="https://greasyfork.org/en/scripts/529238-torn-war-stuff-enhanced"
+                  >Torn War Stuff Enhanced</a
+                >
+                instead.</label
+              >
+            </div>
           </div>
 
           <!-- Debug Settings -->
           <h3>Debug Settings:</h3>
-          <div class="input-row-inline">
-            <input
-              id="debug-logs"
-              type="checkbox"
-              .checked=${this.draftDebugLogs}
-              @change=${this.onDebugLogsChange}
-            />
-            <label for="debug-logs">Enable debug logging</label>
-          </div>
+          <div class="ff-settings-section">
+            <div class="ff-settings-cell checkbox-cell">
+              <input
+                id="debug-logs"
+                type="checkbox"
+                .checked=${this.draftDebugLogs}
+                @change=${this.onDebugLogsChange}
+              />
+              <label for="debug-logs">Enable debug logging</label>
+            </div>
 
-          <!-- Analytics Toggle -->
-          <div class="input-row-inline">
-            <input
-              id="analytics-toggle"
-              type="checkbox"
-              .checked=${this.draftAnalyticsEnabled}
-              @change=${this.onAnalyticsEnabledChange}
-            />
-            <label for="analytics-toggle"
-              >Enable local analytics logging (last 30 days)</label
-            >
-          </div>
+            <div class="ff-settings-cell checkbox-cell">
+              <input
+                id="analytics-toggle"
+                type="checkbox"
+                .checked=${this.draftAnalyticsEnabled}
+                @change=${this.onAnalyticsEnabledChange}
+              />
+              <label for="analytics-toggle"
+                >Enable local analytics logging (last 30 days)</label
+              >
+            </div>
 
-          <!-- Network Interception Toggle -->
-          <div class="input-row-inline">
-            <input
-              id="network-interception-toggle"
-              type="checkbox"
-              .checked=${this.draftNetworkInterceptionEnabled}
-              @change=${this.onNetworkInterceptionEnabledChange}
-            />
-            <label for="network-interception-toggle"
-              >Enable network request interception (Fetch/XHR/WS)</label
-            >
-          </div>
+            <div class="ff-settings-cell checkbox-cell">
+              <input
+                id="network-interception-toggle"
+                type="checkbox"
+                .checked=${this.draftNetworkInterceptionEnabled}
+                @change=${this.onNetworkInterceptionEnabledChange}
+              />
+              <label for="network-interception-toggle"
+                >Enable network request interception (Fetch/XHR/WS)</label
+              >
+            </div>
 
-          <!-- PDA HTTP Toggle -->
-          <div class="input-row-inline">
-            <input
-              id="debug-disable-pda-http"
-              type="checkbox"
-              .checked=${this.draftDebugDisablePdaHttp}
-              @change=${this.onDebugDisablePdaHttpChange}
-            />
-            <label for="debug-disable-pda-http"
-              >Disable PDA native HTTP (use GM_xmlhttpRequest instead)</label
-            >
+            <div class="ff-settings-cell checkbox-cell">
+              <input
+                id="debug-disable-pda-http"
+                type="checkbox"
+                .checked=${this.draftDebugDisablePdaHttp}
+                @change=${this.onDebugDisablePdaHttpChange}
+              />
+              <label for="debug-disable-pda-http"
+                >Disable PDA native HTTP (use GM_xmlhttpRequest instead)</label
+              >
+            </div>
           </div>
 
           <!-- Action Buttons Area -->
@@ -6994,6 +7317,12 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     n2({ type: String })
   ], FFSettingsPanel.prototype, "gaugeMarkerType", 2);
   __decorateClass([
+    n2({ type: Number })
+  ], FFSettingsPanel.prototype, "gaugeMarkerScale", 2);
+  __decorateClass([
+    n2({ type: String })
+  ], FFSettingsPanel.prototype, "colorScheme", 2);
+  __decorateClass([
     n2({ type: String })
   ], FFSettingsPanel.prototype, "warQuickAttackAction", 2);
   __decorateClass([
@@ -7070,6 +7399,12 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
   ], FFSettingsPanel.prototype, "draftGaugeMarkerType", 2);
   __decorateClass([
     r()
+  ], FFSettingsPanel.prototype, "draftGaugeMarkerScale", 2);
+  __decorateClass([
+    r()
+  ], FFSettingsPanel.prototype, "draftColorScheme", 2);
+  __decorateClass([
+    r()
   ], FFSettingsPanel.prototype, "draftWarQuickAttackAction", 2);
   __decorateClass([
     r()
@@ -7116,7 +7451,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     const v2 = v2_get(old_key);
     if (v2 !== null) {
       const n3 = parseFloat(v2);
-      if (!isNaN(n3)) v3_set(new_key, n3);
+      if (!Number.isNaN(n3)) v3_set(new_key, n3);
     }
   }
   function run_migration() {
@@ -7201,6 +7536,8 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       panel.analyticsEnabled = ffconfig.analytics_enabled;
       panel.networkInterceptionEnabled = ffconfig.network_interception_enabled;
       panel.gaugeMarkerType = ffconfig.gauge_marker_type;
+      panel.gaugeMarkerScale = ffconfig.gauge_marker_scale;
+      panel.colorScheme = ffconfig.color_scheme;
       panel.warQuickAttackAction = ffconfig.war_quick_attack_action;
       panel.statusAttackLinksEnabled = ffconfig.status_attack_links_enabled;
       panel.debugDisablePdaHttp = ffconfig.debug_disable_pda_http;
@@ -7232,6 +7569,12 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
         ffconfig.analytics_enabled = detail.analyticsEnabled;
         ffconfig.network_interception_enabled = detail.networkInterceptionEnabled;
         ffconfig.gauge_marker_type = detail.gaugeMarkerType;
+        ffconfig.gauge_marker_scale = detail.gaugeMarkerScale;
+        document.body.style.setProperty(
+          "--ffsv3-marker-scale",
+          `${detail.gaugeMarkerScale / 100}`
+        );
+        ffconfig.color_scheme = detail.colorScheme;
         ffconfig.war_quick_attack_action = detail.warQuickAttackAction;
         ffconfig.status_attack_links_enabled = detail.statusAttackLinksEnabled;
         ffconfig.debug_disable_pda_http = detail.debugDisablePdaHttp;
@@ -7262,6 +7605,12 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
         panel.analyticsEnabled = ffconfig.analytics_enabled;
         panel.networkInterceptionEnabled = ffconfig.network_interception_enabled;
         panel.gaugeMarkerType = ffconfig.gauge_marker_type;
+        panel.gaugeMarkerScale = ffconfig.gauge_marker_scale;
+        document.body.style.setProperty(
+          "--ffsv3-marker-scale",
+          `${ffconfig.gauge_marker_scale / 100}`
+        );
+        panel.colorScheme = ffconfig.color_scheme;
         panel.warQuickAttackAction = ffconfig.war_quick_attack_action;
         panel.statusAttackLinksEnabled = ffconfig.status_attack_links_enabled;
         panel.debugDisablePdaHttp = ffconfig.debug_disable_pda_http;
@@ -7563,7 +7912,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     httpInterceptors.push(interceptor);
     httpInterceptors.sort((a2, b2) => (b2.priority ?? 0) - (a2.priority ?? 0));
   }
-  const stylesCss = ".ffsv3-gauge{position:relative;display:block;padding:0}.ffsv3-arrow{position:absolute;transform:translate(-50%,-30%);padding:0;top:0;left:calc(var(--ffsv3-arrow-width) / 2 + var(--band-percent) * (100% - var(--ffsv3-arrow-width)) / 100);width:var(--ffsv3-arrow-width);object-fit:cover;pointer-events:none}.ffsv3-bubble{position:absolute;transform:translate(-50%,-30%);top:0;left:calc(var(--ffsv3-arrow-width) / 2 + var(--band-percent) * (100% - var(--ffsv3-arrow-width)) / 100);min-width:22px;height:14px;line-height:12px;border:1px solid rgba(0,0,0,.4);border-radius:8px;font-size:8.5px;font-weight:700;font-family:Geneva,Arial,sans-serif;text-align:center;padding:0 4px;box-sizing:border-box;pointer-events:none;white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;text-shadow:0 1px 1px rgba(0,0,0,.5);box-shadow:0 1px 2px #0000004d;z-index:10}.ffsv3-mini-desc{padding:0 5px}body{--ffsv3-bg-color: #f0f0f0;--ffsv3-alt-bg-color: #fff;--ffsv3-border-color: #ccc;--ffsv3-input-color: #ccc;--ffsv3-text-color: #000;--ffsv3-hover-color: #ddd;--ffsv3-glow-color: #4caf50;--ffsv3-success-color: #4caf50;--ffsv3-arrow-width: 20px}body.dark-mode{--ffsv3-bg-color: #333;--ffsv3-alt-bg-color: #383838;--ffsv3-border-color: #444;--ffsv3-input-color: #504f4f;--ffsv3-text-color: #ccc;--ffsv3-hover-color: #555;--ffsv3-glow-color: #4caf50;--ffsv3-success-color: #4caf50}.ff-premium-upgrade-line{display:block;margin-top:4px;line-height:1.3;white-space:nowrap;font-size:12px;font-style:normal}@media(max-width:768px){.ff-premium-upgrade-line{margin-top:6px;line-height:1.35;white-space:normal;overflow-wrap:anywhere}}ff-settings-panel{display:block}ff-settings-panel .accordion{margin:10px 0;padding:15px;background-color:var(--ffsv3-bg-color);border:1px solid var(--ffsv3-border-color);border-radius:5px;color:var(--ffsv3-text-color)}ff-settings-panel .accordion.glow{border-color:var(--ffsv3-glow-color);box-shadow:0 0 8px #4caf5080}ff-settings-panel .input-row{display:flex;flex-direction:column;gap:5px;margin-bottom:15px}ff-settings-panel .input-row-inline{display:flex;align-items:center;gap:10px;margin-bottom:15px}ff-settings-panel .blur-mode{filter:blur(4px);transition:filter .2s ease}ff-settings-panel .blur-mode:hover,ff-settings-panel .blur-mode:focus{filter:blur(0)}ff-settings-panel .error-msg{color:#f33;font-size:13px;margin-top:5px}ff-settings-panel input[type=text],ff-settings-panel input[type=number]{box-sizing:border-box!important;text-align:left;vertical-align:top;width:178px;height:34px!important;margin-right:8px;padding:9px 10px;line-height:14px;display:inline-block}ff-settings-panel input[type=number].ff-number{width:80px}ff-settings-panel select{box-sizing:border-box;text-align:left;vertical-align:top;width:178px;height:34px;margin-right:8px;padding:8px 10px;line-height:14px;display:inline-block;border:var(--input-border-color, 1px solid var(--ffsv3-border-color));border-radius:5px;font-family:Arial,serif;color:var(--input-color, var(--ffsv3-text-color));background:var(--input-background-color, var(--ffsv3-alt-bg-color))}:root .dark-mode ff-settings-panel select option{background-color:#000;color:var(--input-color)}ff-settings-panel .ff-api-explanation{background-color:var(--ffsv3-alt-bg-color);border:1px solid var(--ffsv3-border-color);border-radius:8px;color:var(--ffsv3-text-color);margin-bottom:20px;padding:12px 16px;font-size:13px;line-height:1.5}ff-settings-panel a{color:var(--ffsv3-success-color);text-decoration:underline}ff-settings-panel .is_premium_enabled{display:inline-block;background:#4caf50;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;vertical-align:middle}ff-settings-panel .is_premium_disabled{display:inline-block;background:#c62828;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;vertical-align:middle}ff-settings-panel .is_premium_unknown{display:inline-block;background:#f39c12;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;vertical-align:middle}.profile-status{position:relative}ff-flight-profile-status{position:absolute;right:10px;bottom:2px;z-index:2}.ff-scouter-profile-flight-info{display:inline-block;text-align:right;font-size:11px;line-height:1.25;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.85)}.profile-status .ff-scouter-profile-flight-info a{color:#fff;text-decoration:underline}ff-faction-filter-box{display:block}.ff-filter-box,.ff-filter-box *,.ff-filter-box *:before,.ff-filter-box *:after{box-sizing:border-box!important}.ff-filter-box{background-color:var(--ffsv3-bg-color);border:1px solid var(--ffsv3-border-color);border-radius:8px;padding:12px 16px;margin-bottom:16px;color:var(--ffsv3-text-color);font-family:Arial,sans-serif;box-shadow:0 2px 5px #0000000d}.ff-filter-box.no-borders{background-color:var(--default-bg-panel-color);border-top:1px solid var(--ffsv3-border-color);border-bottom:1px solid var(--ffsv3-border-color);border-left:none;border-right:none;border-radius:0;box-shadow:none;padding:12px 10px;margin:0}.ff-filter-box summary{cursor:pointer;font-size:14px;font-weight:700;outline:none;-webkit-user-select:none;user-select:none}.ff-filter-box[open] summary{border-bottom:1px solid var(--ffsv3-border-color);padding-bottom:6px;margin-bottom:12px}.ff-filter-header-actions{display:flex;gap:6px;align-items:center}.ff-filter-box .ff-action-icon-btn{background:var(--ffsv3-alt-bg-color);border:1px solid var(--ffsv3-border-color);border-radius:4px;color:var(--ffsv3-text-color);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;padding:0;transition:background-color .2s,color .2s,opacity .2s}.ff-filter-box .ff-action-icon-btn:hover{background-color:var(--ffsv3-hover-color)}.ff-filter-box .ff-action-icon-btn.active{color:var(--ffsv3-text-color);opacity:1}.ff-filter-box .ff-action-icon-btn.inactive{color:var(--ffsv3-text-color);opacity:.4}.ff-filter-box .ff-action-icon-btn svg{width:14px;height:14px;fill:currentColor}.ff-filter-box .ff-action-icon-btn.reset-btn svg{transition:transform .25s ease-in-out}.ff-filter-box .ff-action-icon-btn.reset-btn:hover svg{transform:rotate(-180deg)}.ff-filter-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.grp-sort{order:1}.grp-level{order:2}.grp-activity{order:3}.grp-status{order:4}.grp-ff{order:5}.grp-stats{order:6}.grp-columns{order:7}@media(min-width:784px){.ff-filter-grid{grid-template-columns:repeat(3,1fr)}.ff-filter-grid>*{order:0}}.ff-filter-group{display:flex;flex-direction:column;gap:2px}.ff-filter-options{display:flex;flex-direction:column}.ff-filter-options label{display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer}.ff-filter-range-inputs{display:flex;align-items:center;gap:4px}.ff-filter-range-inputs input{flex:1;width:0;min-width:30px;max-width:80px;padding:4px;border:1px solid var(--ffsv3-border-color);border-radius:4px;background:var(--ffsv3-alt-bg-color);color:var(--ffsv3-text-color);font-size:11px;text-align:center}.ff-filter-box button{padding:6px 10px;border:1px solid var(--ffsv3-border-color);border-radius:4px;background:var(--ffsv3-alt-bg-color);color:var(--ffsv3-text-color);font-size:12px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;transition:background-color .2s}.ff-filter-box button:hover{background-color:var(--ffsv3-hover-color)}.chain-options-flex-container{display:flex;flex-wrap:wrap;gap:10px 20px;align-items:center;justify-content:flex-start;margin-left:20px;margin-top:10px;margin-bottom:15px}.chain-options-flex-container .input-row-inline{margin-bottom:0}.faction-war .ffscouter-cell{float:left!important;width:32px!important;height:20px!important;font-size:11px!important;font-weight:700!important;border-radius:3px!important;box-sizing:border-box!important;margin:7px 4px!important;padding:0!important;text-align:center!important;line-height:20px!important;z-index:10!important}.ffscouter-cell{cursor:pointer!important}.faction-war .ffscouter-header,.table-header .ffscouter-header{float:left!important;width:38px!important;font-size:12px!important;font-weight:700!important;padding:0!important;text-align:center!important;background-color:transparent!important;cursor:pointer!important}.faction-war:has(.ffscouter-header[data-ffscouter-sort]) [class*=sortIcon___]:not(.ffscouter-sort-icon),.members-list:has(.ffscouter-header[data-ffscouter-sort]) [class*=sortIcon___]:not(.ffscouter-sort-icon){visibility:hidden!important}[data-ffscouter-hidden]{display:none!important}.faction-war[data-ffscouter-hide-level=true] .level:not(.ffscouter-cell):not(.ffscouter-header){display:none!important}.faction-war[data-ffscouter-hide-status=true] .status,.faction-war[data-ffscouter-hide-score=true] .points{display:none!important}.faction-war[data-ffscouter-col-display=fair_fight]:not([data-ffscouter-hide-level=true]) .level:not(.ffscouter-cell):not(.ffscouter-header),.faction-war[data-ffscouter-col-display=battle_stats]:not([data-ffscouter-hide-level=true]) .level:not(.ffscouter-cell):not(.ffscouter-header){width:29px!important}.faction-war[data-ffscouter-col-display=fair_fight]:not([data-ffscouter-hide-level=true]) .status,.faction-war[data-ffscouter-col-display=battle_stats]:not([data-ffscouter-hide-level=true]) .status{width:50px!important}.faction-war[data-ffscouter-col-display=fair_fight]:not([data-ffscouter-hide-level=true]) .points,.faction-war[data-ffscouter-col-display=battle_stats]:not([data-ffscouter-hide-level=true]) .points{width:38px!important}.members-list li.enemy:has(>.tt-stats-estimate),.members-list li.your:has(>.tt-stats-estimate),.members-list li.enemy:has(>div.clear~*),.members-list li.your:has(>div.clear~*){padding-bottom:22px!important;position:relative!important}.members-list li.enemy>.tt-stats-estimate,.members-list li.your>.tt-stats-estimate,.members-list li.enemy>div.clear~*,.members-list li.your>div.clear~*{position:absolute!important;bottom:2px!important;left:10px!important;height:18px!important;line-height:18px!important;font-size:11px!important;width:calc(100% - 20px)!important;display:block!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ff-filter-box summary:focus-visible{outline:2px solid var(--ffsv3-glow-color);outline-offset:2px}body[data-ff-status-attack-enabled=true] [class*=userStatusWrap__],body[data-ff-status-attack-enabled=true] li[id^=icon][id*=-profile-].user-status-16-Online,body[data-ff-status-attack-enabled=true] li[id^=icon][id*=-profile-].user-status-16-Away,body[data-ff-status-attack-enabled=true] li[id^=icon][id*=-profile-].user-status-16-Offline,body[data-ff-status-attack-enabled=true] #profile-mini-root li[id^=icon][id*=-mini-profile-].user-status-16-Online,body[data-ff-status-attack-enabled=true] #profile-mini-root li[id^=icon][id*=-mini-profile-].user-status-16-Away,body[data-ff-status-attack-enabled=true] #profile-mini-root li[id^=icon][id*=-mini-profile-].user-status-16-Offline,body[data-ff-status-attack-enabled=true] li[id^=icon][id*=___].iconShow.ffscouter-forum-status{cursor:crosshair!important}.d .job-lists-wrap .item>li.company,.d .job-lists-wrap .item>li.director,.d .job-lists-wrap .item>li.salary,.d .job-lists-wrap .item>li.ranks{margin-bottom:0!important;padding-bottom:0!important}";
+  const stylesCss = ".ffsv3-gauge{position:relative;display:block;padding:0}.ffsv3-arrow,.ffsv3-preview-arrow{width:var(--ffsv3-arrow-width);object-fit:cover;pointer-events:none}.ffsv3-arrow{position:absolute;transform:translate(-50%,-30%);padding:0;top:0;left:calc(var(--ffsv3-arrow-width) / 2 + var(--band-percent) * (100% - var(--ffsv3-arrow-width)) / 100)}.ffsv3-preview-arrow{display:inline-block;vertical-align:middle}.ffsv3-bubble,.ffsv3-preview-bubble{min-width:2.5882em;height:1.6471em;line-height:1.4118;border:1px solid rgba(0,0,0,.4);border-radius:999px;font-size:var(--ffsv3-bubble-font-size);font-weight:700;font-family:Geneva,Arial,sans-serif;text-align:center;padding:0 .4706em;box-sizing:border-box;white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;text-shadow:0 1px 1px rgba(0,0,0,.5);box-shadow:0 1px 2px #0000004d}.ffsv3-bubble{position:absolute;transform:translate(-50%,-30%);top:0;left:calc(var(--ffsv3-arrow-width) / 2 + var(--band-percent) * (100% - var(--ffsv3-arrow-width)) / 100);pointer-events:none;z-index:10}.ffsv3-preview-bubble{vertical-align:middle}.ffsv3-marker-preview{display:inline-flex;align-items:center;gap:10px;--ffsv3-arrow-width: calc(20px * var(--ffsv3-marker-scale));--ffsv3-bubble-font-size: calc(8.5px * var(--ffsv3-marker-scale))}.ffsv3-mini-desc{padding:0 5px}.ffsv3-swatch-row{display:inline-flex;gap:3px}.ffsv3-swatch{display:inline-block;width:20px;height:13px}body{--ffsv3-bg-color: #f0f0f0;--ffsv3-alt-bg-color: #fff;--ffsv3-border-color: #ccc;--ffsv3-input-color: #ccc;--ffsv3-text-color: #000;--ffsv3-hover-color: #ddd;--ffsv3-glow-color: #4caf50;--ffsv3-success-color: #4caf50;--ffsv3-marker-scale: 1;--ffsv3-arrow-width: calc(20px * var(--ffsv3-marker-scale));--ffsv3-bubble-font-size: calc(8.5px * var(--ffsv3-marker-scale))}body.dark-mode{--ffsv3-bg-color: #333;--ffsv3-alt-bg-color: #383838;--ffsv3-border-color: #444;--ffsv3-input-color: #504f4f;--ffsv3-text-color: #ccc;--ffsv3-hover-color: #555;--ffsv3-glow-color: #4caf50;--ffsv3-success-color: #4caf50}.ff-premium-upgrade-line{display:block;margin-top:4px;line-height:1.3;white-space:nowrap;font-size:12px;font-style:normal}@media(max-width:768px){.ff-premium-upgrade-line{margin-top:6px;line-height:1.35;white-space:normal;overflow-wrap:anywhere}}ff-settings-panel{display:block}ff-settings-panel .accordion{margin:10px 0;padding:15px;background-color:var(--ffsv3-bg-color);border:1px solid var(--ffsv3-border-color);border-radius:5px;color:var(--ffsv3-text-color)}ff-settings-panel .accordion.glow{border-color:var(--ffsv3-glow-color);box-shadow:0 0 8px #4caf5080}ff-settings-panel .input-row{display:flex;flex-direction:column;gap:5px;margin-bottom:15px}ff-settings-panel .input-row-inline{display:flex;align-items:center;gap:10px;margin-bottom:15px}ff-settings-panel .blur-mode{filter:blur(4px);transition:filter .2s ease}ff-settings-panel .blur-mode:hover,ff-settings-panel .blur-mode:focus{filter:blur(0)}ff-settings-panel .error-msg{color:#f33;font-size:13px;margin-top:5px}ff-settings-panel input[type=text],ff-settings-panel input[type=number]{box-sizing:border-box!important;text-align:left;vertical-align:top;width:178px;height:34px!important;margin-right:8px;padding:9px 10px;line-height:14px;display:inline-block}ff-settings-panel input[type=number].ff-number{width:80px}ff-settings-panel select{box-sizing:border-box;text-align:left;vertical-align:top;width:178px;height:34px;margin-right:8px;padding:8px 10px;line-height:14px;display:inline-block;border:var(--input-border-color, 1px solid var(--ffsv3-border-color));border-radius:5px;font-family:Arial,serif;color:var(--input-color, var(--ffsv3-text-color));background:var(--input-background-color, var(--ffsv3-alt-bg-color))}:root .dark-mode ff-settings-panel select option{background-color:#000;color:var(--input-color)}ff-settings-panel .ff-api-explanation{background-color:var(--ffsv3-alt-bg-color);border:1px solid var(--ffsv3-border-color);border-radius:8px;color:var(--ffsv3-text-color);margin-bottom:20px;padding:12px 16px;font-size:13px;line-height:1.5}ff-settings-panel a{color:var(--ffsv3-success-color);text-decoration:underline}ff-settings-panel .is_premium_enabled{display:inline-block;background:#4caf50;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;vertical-align:middle}ff-settings-panel .is_premium_disabled{display:inline-block;background:#c62828;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;vertical-align:middle}ff-settings-panel .is_premium_unknown{display:inline-block;background:#f39c12;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;vertical-align:middle}.profile-status{position:relative}ff-flight-profile-status{position:absolute;right:10px;bottom:2px;z-index:2}.ff-scouter-profile-flight-info{display:inline-block;text-align:right;font-size:11px;line-height:1.25;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.85)}.profile-status .ff-scouter-profile-flight-info a{color:#fff;text-decoration:underline}ff-faction-filter-box{display:block}.ff-filter-box,.ff-filter-box *,.ff-filter-box *:before,.ff-filter-box *:after{box-sizing:border-box!important}.ff-filter-box{background-color:var(--ffsv3-bg-color);border:1px solid var(--ffsv3-border-color);border-radius:8px;padding:12px 16px;margin-bottom:16px;color:var(--ffsv3-text-color);font-family:Arial,sans-serif;box-shadow:0 2px 5px #0000000d}.ff-filter-box.no-borders{background-color:var(--default-bg-panel-color);border-top:1px solid var(--ffsv3-border-color);border-bottom:1px solid var(--ffsv3-border-color);border-left:none;border-right:none;border-radius:0;box-shadow:none;padding:12px 10px;margin:0}.ff-filter-box summary{cursor:pointer;font-size:14px;font-weight:700;outline:none;-webkit-user-select:none;user-select:none}.ff-filter-box[open] summary{border-bottom:1px solid var(--ffsv3-border-color);padding-bottom:6px;margin-bottom:12px}.ff-filter-header-actions{display:flex;gap:6px;align-items:center}.ff-filter-box .ff-action-icon-btn{background:var(--ffsv3-alt-bg-color);border:1px solid var(--ffsv3-border-color);border-radius:4px;color:var(--ffsv3-text-color);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;padding:0;transition:background-color .2s,color .2s,opacity .2s}.ff-filter-box .ff-action-icon-btn:hover{background-color:var(--ffsv3-hover-color)}.ff-filter-box .ff-action-icon-btn.active{color:var(--ffsv3-text-color);opacity:1}.ff-filter-box .ff-action-icon-btn.inactive{color:var(--ffsv3-text-color);opacity:.4}.ff-filter-box .ff-action-icon-btn svg{width:14px;height:14px;fill:currentColor}.ff-filter-box .ff-action-icon-btn.reset-btn svg{transition:transform .25s ease-in-out}.ff-filter-box .ff-action-icon-btn.reset-btn:hover svg{transform:rotate(-180deg)}.ff-filter-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.grp-sort{order:1}.grp-level{order:2}.grp-activity{order:3}.grp-status{order:4}.grp-ff{order:5}.grp-stats{order:6}.grp-columns{order:7}@media(min-width:784px){.ff-filter-grid{grid-template-columns:repeat(3,1fr)}.ff-filter-grid>*{order:0}}.ff-filter-group{display:flex;flex-direction:column;gap:2px}.ff-filter-options{display:flex;flex-direction:column}.ff-filter-options label{display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer}.ff-filter-range-inputs{display:flex;align-items:center;gap:4px}.ff-filter-range-inputs input{flex:1;width:0;min-width:30px;max-width:80px;padding:4px;border:1px solid var(--ffsv3-border-color);border-radius:4px;background:var(--ffsv3-alt-bg-color);color:var(--ffsv3-text-color);font-size:11px;text-align:center}.ff-filter-box button{padding:6px 10px;border:1px solid var(--ffsv3-border-color);border-radius:4px;background:var(--ffsv3-alt-bg-color);color:var(--ffsv3-text-color);font-size:12px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;transition:background-color .2s}.ff-filter-box button:hover{background-color:var(--ffsv3-hover-color)}ff-settings-panel .ff-settings-section{display:grid;grid-template-columns:1fr;gap:12px;margin-bottom:15px}@media(min-width:784px){ff-settings-panel .ff-settings-section{grid-template-columns:repeat(3,1fr)}}ff-settings-panel .ff-settings-span{grid-column:1 / -1;margin-bottom:0}ff-settings-panel .ff-settings-cell{display:flex;flex-direction:column;gap:5px;min-width:0;margin-bottom:0}ff-settings-panel .ff-settings-cell.checkbox-cell{flex-direction:row;align-items:flex-start;gap:10px}ff-settings-panel .ff-settings-cell input[type=text]{width:100%;margin-right:0}ff-settings-panel .ff-settings-cell select{width:auto;max-width:100%;margin-right:0}ff-settings-panel .ff-api-block{display:flex;flex-direction:column;gap:10px}ff-settings-panel .ff-api-block .ff-settings-cell input[type=text]{max-width:360px}ff-settings-panel .ff-api-status-row{display:flex;flex-wrap:wrap;align-items:center;gap:10px}ff-settings-panel .ff-chain-suboptions{border-left:2px solid var(--ffsv3-border-color);padding-left:8px;margin-top:10px;grid-template-columns:repeat(2,1fr)}ff-settings-panel .ff-chain-suboptions .ff-chain-wide{grid-column:1 / -1}@media(min-width:784px){ff-settings-panel .ff-chain-suboptions{padding-left:16px;grid-template-columns:repeat(3,1fr)}ff-settings-panel .ff-chain-suboptions .ff-chain-wide{grid-column:auto}}ff-settings-panel .ff-marker-size{display:flex;flex-direction:column;gap:5px}ff-settings-panel .ff-marker-size-controls{display:flex;flex-wrap:wrap;align-items:center;gap:10px}ff-settings-panel .ff-marker-size-controls input[type=range]{flex:1 1 120px;min-width:120px}ff-settings-panel .ff-color-scheme{display:flex;flex-direction:column;gap:5px}ff-settings-panel .ff-color-scheme-controls{display:flex;flex-wrap:wrap;align-items:center;gap:10px}ff-settings-panel .ffsv3-swatch-row{flex-wrap:wrap}.faction-war .ffscouter-cell{float:left!important;width:32px!important;height:20px!important;font-size:11px!important;font-weight:700!important;border-radius:3px!important;box-sizing:border-box!important;margin:7px 4px!important;padding:0!important;text-align:center!important;line-height:20px!important;z-index:10!important}.ffscouter-cell{cursor:pointer!important}.faction-war .ffscouter-header,.table-header .ffscouter-header{float:left!important;width:38px!important;font-size:12px!important;font-weight:700!important;padding:0!important;text-align:center!important;background-color:transparent!important;cursor:pointer!important}.faction-war:has(.ffscouter-header[data-ffscouter-sort]) [class*=sortIcon___]:not(.ffscouter-sort-icon),.members-list:has(.ffscouter-header[data-ffscouter-sort]) [class*=sortIcon___]:not(.ffscouter-sort-icon){visibility:hidden!important}[data-ffscouter-hidden]{display:none!important}.faction-war[data-ffscouter-hide-level=true] .level:not(.ffscouter-cell):not(.ffscouter-header){display:none!important}.faction-war[data-ffscouter-hide-status=true] .status,.faction-war[data-ffscouter-hide-score=true] .points{display:none!important}.faction-war[data-ffscouter-col-display=fair_fight]:not([data-ffscouter-hide-level=true]) .level:not(.ffscouter-cell):not(.ffscouter-header),.faction-war[data-ffscouter-col-display=battle_stats]:not([data-ffscouter-hide-level=true]) .level:not(.ffscouter-cell):not(.ffscouter-header){width:29px!important}.faction-war[data-ffscouter-col-display=fair_fight]:not([data-ffscouter-hide-level=true]) .status,.faction-war[data-ffscouter-col-display=battle_stats]:not([data-ffscouter-hide-level=true]) .status{width:50px!important}.faction-war[data-ffscouter-col-display=fair_fight]:not([data-ffscouter-hide-level=true]) .points,.faction-war[data-ffscouter-col-display=battle_stats]:not([data-ffscouter-hide-level=true]) .points{width:38px!important}.members-list li.enemy:has(>.tt-stats-estimate),.members-list li.your:has(>.tt-stats-estimate),.members-list li.enemy:has(>div.clear~*),.members-list li.your:has(>div.clear~*){padding-bottom:22px!important;position:relative!important}.members-list li.enemy>.tt-stats-estimate,.members-list li.your>.tt-stats-estimate,.members-list li.enemy>div.clear~*,.members-list li.your>div.clear~*{position:absolute!important;bottom:2px!important;left:10px!important;height:18px!important;line-height:18px!important;font-size:11px!important;width:calc(100% - 20px)!important;display:block!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ff-filter-box summary:focus-visible{outline:2px solid var(--ffsv3-glow-color);outline-offset:2px}body[data-ff-status-attack-enabled=true] [class*=userStatusWrap__],body[data-ff-status-attack-enabled=true] li[id^=icon][id*=-profile-].user-status-16-Online,body[data-ff-status-attack-enabled=true] li[id^=icon][id*=-profile-].user-status-16-Away,body[data-ff-status-attack-enabled=true] li[id^=icon][id*=-profile-].user-status-16-Offline,body[data-ff-status-attack-enabled=true] #profile-mini-root li[id^=icon][id*=-mini-profile-].user-status-16-Online,body[data-ff-status-attack-enabled=true] #profile-mini-root li[id^=icon][id*=-mini-profile-].user-status-16-Away,body[data-ff-status-attack-enabled=true] #profile-mini-root li[id^=icon][id*=-mini-profile-].user-status-16-Offline,body[data-ff-status-attack-enabled=true] li[id^=icon][id*=___].iconShow.ffscouter-forum-status{cursor:crosshair!important}.d .job-lists-wrap .item>li.company,.d .job-lists-wrap .item>li.director,.d .job-lists-wrap .item>li.salary,.d .job-lists-wrap .item>li.ranks{margin-bottom:0!important;padding-bottom:0!important}";
   importCSS(stylesCss);
   const log = logger.child("boot");
   const INJECTION_KEY = "__FF_SCOUTER_V3_INJECTED__";
@@ -7574,7 +7923,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       return;
     }
     w[INJECTION_KEY] = true;
-    log.info("Initializing", "3.0-beta6");
+    log.info("Initializing", "3.0-beta7");
     run_migration();
     if (ffscouter.analytics_enabled) {
       unsafeWindow.ffscouter = ffscouter;
