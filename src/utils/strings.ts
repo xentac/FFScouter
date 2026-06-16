@@ -1,4 +1,4 @@
-import { ffconfig } from "./ffconfig";
+import { ColorScheme, ffconfig } from "./ffconfig";
 import type { FFData, FFDataComplete, TimestampSec } from "./types";
 
 const HOUR = 60 * 60;
@@ -66,56 +66,112 @@ export function get_ff_colour(d: FFDataComplete) {
   return get_ff_arrow_colour(d);
 }
 
-// // Source: https://mistic100.github.io/tinygradient/
-// // Inputs: rgb(33, 102, 172), rgb(27, 120, 55), rgb(215, 48, 39)
-// // Steps: 11
-// const _arrow_gradient = [
-//   "#2166ac",
-//   "#2080a2",
-//   "#1f9497",
-//   "#1e8d75",
-//   "#1c8254",
-//   "#1b7837",
-//   "#2e8b1e",
-//   "#6c9e21",
-//   "#b1aa23",
-//   "#c47525",
-//   "#d73027",
-// ];
-//
-// // Alternative variants, triplet generated using https://www.canva.com/colors/color-wheel/
-// // Just enter any of the three extreme values
-// const _arrow_gradient2 = [
-//   "#0c50ff",
-//   "#0cb1ff",
-//   "#0cffec",
-//   "#0cff8a",
-//   "#0cff29",
-//   "#50ff0c",
-//   "#b1ff0c",
-//   "#ffec0c",
-//   "#ff8a0c",
-//   "#ff290c",
-//   "#ff0c50",
-// ];
-//
-const arrow_gradient3 = [
-  "#1734e8",
-  "#1788e8",
-  "#17dbe8",
-  "#17e8a1",
-  "#17e84e",
-  "#34e817",
-  "#88e817",
-  "#dbe817",
-  "#e8a117",
-  "#e84e17",
-  "#e81734",
-];
+const NO_DATA_COLOR = "#000000";
+
+// Each palette is 11 discrete colors (one per gradient bucket, see get_ff_arrow_colour)
+// rather than interpolated stops — see ADR 0002 for why.
+const BUILTIN_PALETTES: Record<
+  Exclude<ColorScheme, ColorScheme.CUSTOM>,
+  string[]
+> = {
+  // Unchanged from the original hardcoded gradient — must stay byte-for-byte
+  // identical so existing users see no visual change.
+  [ColorScheme.CLASSIC]: [
+    "#1734e8",
+    "#1788e8",
+    "#17dbe8",
+    "#17e8a1",
+    "#17e84e",
+    "#34e817",
+    "#88e817",
+    "#dbe817",
+    "#e8a117",
+    "#e84e17",
+    "#e81734",
+  ],
+  // Source: https://mistic100.github.io/tinygradient/
+  // Inputs: rgb(33, 102, 172), rgb(27, 120, 55), rgb(215, 48, 39)
+  [ColorScheme.COOL_DIVERGING]: [
+    "#2166ac",
+    "#2080a2",
+    "#1f9497",
+    "#1e8d75",
+    "#1c8254",
+    "#1b7837",
+    "#2e8b1e",
+    "#6c9e21",
+    "#b1aa23",
+    "#c47525",
+    "#d73027",
+  ],
+  // Triplet generated using https://www.canva.com/colors/color-wheel/
+  [ColorScheme.NEON]: [
+    "#0c50ff",
+    "#0cb1ff",
+    "#0cffec",
+    "#0cff8a",
+    "#0cff29",
+    "#50ff0c",
+    "#b1ff0c",
+    "#ffec0c",
+    "#ff8a0c",
+    "#ff290c",
+    "#ff0c50",
+  ],
+  // Viridis-style: perceptually uniform and monotonically increasing in
+  // brightness, so the signal doesn't depend on red/green hue discrimination.
+  [ColorScheme.COLORBLIND_SAFE]: [
+    "#440154",
+    "#481a6c",
+    "#472f7d",
+    "#414487",
+    "#39568c",
+    "#2a788e",
+    "#21908d",
+    "#22a884",
+    "#42be71",
+    "#a8db34",
+    "#fde725",
+  ],
+  // Light to dark — carries the signal through brightness alone, no color needed.
+  [ColorScheme.GRAYSCALE]: [
+    "#f0f0f0",
+    "#e0e0e0",
+    "#cccccc",
+    "#b3b3b3",
+    "#999999",
+    "#808080",
+    "#666666",
+    "#4d4d4d",
+    "#333333",
+    "#1a1a1a",
+    "#000000",
+  ],
+};
+
+function is_valid_custom_palette(colors: string[] | null): colors is string[] {
+  return (
+    colors !== null &&
+    colors.length === 11 &&
+    colors.every((c) => typeof c === "string")
+  );
+}
+
+function get_active_palette(): string[] {
+  const scheme = ffconfig.color_scheme;
+  if (scheme === ColorScheme.CUSTOM) {
+    const custom = ffconfig.custom_colors;
+    if (is_valid_custom_palette(custom)) {
+      return custom;
+    }
+    return BUILTIN_PALETTES[ColorScheme.CLASSIC];
+  }
+  return BUILTIN_PALETTES[scheme];
+}
 
 export function get_ff_arrow_colour(d: FFData) {
   if (d.no_data) {
-    return "#000000";
+    return NO_DATA_COLOR;
   }
 
   // Calculate where on the 11 step gradient we are from 1.0 - 5.0
@@ -127,9 +183,9 @@ export function get_ff_arrow_colour(d: FFData) {
   }
 
   const ratio = Math.floor(((ff - 1) / 4) * 10);
-  const r = arrow_gradient3[ratio];
+  const r = get_active_palette()[ratio];
 
-  return r ?? "#000000";
+  return r ?? NO_DATA_COLOR;
 }
 
 export function get_contrast_color(hex: string) {

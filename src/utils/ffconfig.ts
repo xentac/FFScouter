@@ -44,6 +44,17 @@ export enum GaugeMarkerType {
   BUBBLE_ESTIMATE = "bubble_estimate",
 }
 
+export enum ColorScheme {
+  CLASSIC = "classic",
+  COOL_DIVERGING = "cool_diverging",
+  NEON = "neon",
+  COLORBLIND_SAFE = "colorblind_safe",
+  GRAYSCALE = "grayscale",
+  // Reserved for a future color-editing UI. Not offered in the settings
+  // dropdown yet; falls back to CLASSIC if selected without valid custom_colors.
+  CUSTOM = "custom",
+}
+
 export const CONFIG_DEFAULTS = {
   low_ff_range: 2,
   high_ff_range: 4,
@@ -68,6 +79,8 @@ export const CONFIG_DEFAULTS = {
   network_interception_enabled: false,
   status_attack_links_enabled: true,
   debug_disable_pda_http: false,
+  color_scheme: ColorScheme.CLASSIC,
+  custom_colors: null as string[] | null,
 } as const;
 
 enum CONFIG {
@@ -101,6 +114,8 @@ enum CONFIG {
   NETWORK_INTERCEPTION_ENABLED = "network_interception_enabled",
   STATUS_ATTACK_LINKS_ENABLED = "status_attack_links_enabled",
   DEBUG_DISABLE_PDA_HTTP = "debug_disable_pda_http",
+  COLOR_SCHEME = "color_scheme",
+  CUSTOM_COLORS = "custom_colors",
 }
 
 export class FFConfig {
@@ -381,6 +396,30 @@ export class FFConfig {
     this.storage.set(CONFIG.GAUGE_MARKER_TYPE, val);
   }
 
+  get color_scheme(): ColorScheme {
+    return (
+      this.storage.get(CONFIG.COLOR_SCHEME) ?? CONFIG_DEFAULTS.color_scheme
+    );
+  }
+
+  set color_scheme(val: ColorScheme) {
+    this.storage.set(CONFIG.COLOR_SCHEME, val);
+  }
+
+  get custom_colors(): string[] | null {
+    return (
+      this.storage.get(CONFIG.CUSTOM_COLORS) ?? CONFIG_DEFAULTS.custom_colors
+    );
+  }
+
+  set custom_colors(val: string[] | null) {
+    if (val === null) {
+      this.storage.remove(CONFIG.CUSTOM_COLORS);
+    } else {
+      this.storage.set(CONFIG.CUSTOM_COLORS, val);
+    }
+  }
+
   get faction_filter_state(): any | null {
     return this.storage.get(CONFIG.FACTION_FILTER_STATE) ?? null;
   }
@@ -463,6 +502,8 @@ export class FFConfig {
     this.storage.remove(CONFIG.WAR_QUICK_ATTACK_ACTION);
     this.storage.remove(CONFIG.STATUS_ATTACK_LINKS_ENABLED);
     this.storage.remove(CONFIG.DEBUG_DISABLE_PDA_HTTP);
+    this.storage.remove(CONFIG.COLOR_SCHEME);
+    this.storage.remove(CONFIG.CUSTOM_COLORS);
   }
 }
 

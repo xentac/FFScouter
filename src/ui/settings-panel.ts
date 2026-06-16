@@ -2,6 +2,7 @@ import {
   type ChainLinkType,
   type ChainTabType,
   CONFIG_DEFAULTS,
+  type ColorScheme,
   type FactionsColDisplay,
   type GaugeMarkerType,
   type WarQuickAttackAction,
@@ -52,6 +53,8 @@ export class FFSettingsPanel extends LitElement {
     CONFIG_DEFAULTS.network_interception_enabled;
   @property({ type: String }) gaugeMarkerType: GaugeMarkerType =
     CONFIG_DEFAULTS.gauge_marker_type;
+  @property({ type: String }) colorScheme: ColorScheme =
+    CONFIG_DEFAULTS.color_scheme;
   @property({ type: String }) warQuickAttackAction: WarQuickAttackAction =
     CONFIG_DEFAULTS.war_quick_attack_action;
   @property({ type: Boolean }) statusAttackLinksEnabled: boolean =
@@ -95,6 +98,7 @@ export class FFSettingsPanel extends LitElement {
     CONFIG_DEFAULTS.network_interception_enabled;
   @state() private draftGaugeMarkerType: GaugeMarkerType =
     CONFIG_DEFAULTS.gauge_marker_type;
+  @state() private draftColorScheme: ColorScheme = CONFIG_DEFAULTS.color_scheme;
   @state() private draftWarQuickAttackAction: WarQuickAttackAction =
     CONFIG_DEFAULTS.war_quick_attack_action;
   @state() private draftStatusAttackLinksEnabled: boolean =
@@ -150,6 +154,8 @@ export class FFSettingsPanel extends LitElement {
       this.draftNetworkInterceptionEnabled = this.networkInterceptionEnabled;
     if (changedProperties.has("gaugeMarkerType"))
       this.draftGaugeMarkerType = this.gaugeMarkerType;
+    if (changedProperties.has("colorScheme"))
+      this.draftColorScheme = this.colorScheme;
     if (changedProperties.has("warQuickAttackAction"))
       this.draftWarQuickAttackAction = this.warQuickAttackAction;
     if (changedProperties.has("statusAttackLinksEnabled"))
@@ -180,6 +186,7 @@ export class FFSettingsPanel extends LitElement {
     this.draftAnalyticsEnabled = this.analyticsEnabled;
     this.draftNetworkInterceptionEnabled = this.networkInterceptionEnabled;
     this.draftGaugeMarkerType = this.gaugeMarkerType;
+    this.draftColorScheme = this.colorScheme;
     this.draftWarQuickAttackAction = this.warQuickAttackAction;
     this.draftStatusAttackLinksEnabled = this.statusAttackLinksEnabled;
     this.draftDebugDisablePdaHttp = this.debugDisablePdaHttp;
@@ -235,6 +242,7 @@ export class FFSettingsPanel extends LitElement {
           analyticsEnabled: this.draftAnalyticsEnabled,
           networkInterceptionEnabled: this.draftNetworkInterceptionEnabled,
           gaugeMarkerType: this.draftGaugeMarkerType,
+          colorScheme: this.draftColorScheme,
           warQuickAttackAction: this.draftWarQuickAttackAction,
           statusAttackLinksEnabled: this.draftStatusAttackLinksEnabled,
           debugDisablePdaHttp: this.draftDebugDisablePdaHttp,
@@ -417,6 +425,12 @@ export class FFSettingsPanel extends LitElement {
   private onGaugeMarkerTypeChange(e: Event) {
     this.draftGaugeMarkerType = (e.target as HTMLSelectElement)
       .value as GaugeMarkerType;
+    this.showSavedMessage = false;
+  }
+
+  private onColorSchemeChange(e: Event) {
+    this.draftColorScheme = (e.target as HTMLSelectElement)
+      .value as ColorScheme;
     this.showSavedMessage = false;
   }
 
@@ -668,6 +682,22 @@ export class FFSettingsPanel extends LitElement {
               <option value="arrow">Arrow (Default)</option>
               <option value="bubble_ff">Bubble (FF Score)</option>
               <option value="bubble_estimate">Bubble (BS Estimate)</option>
+            </select>
+          </div>
+
+          <!-- Color Scheme -->
+          <div class="input-row-inline">
+            <label for="color-scheme">Color Scheme:</label>
+            <select
+              id="color-scheme"
+              .value=${this.draftColorScheme}
+              @change=${this.onColorSchemeChange}
+            >
+              <option value="classic">Classic (Default)</option>
+              <option value="cool_diverging">Cool Diverging</option>
+              <option value="neon">Neon</option>
+              <option value="colorblind_safe">Colorblind-Safe</option>
+              <option value="grayscale">Grayscale</option>
             </select>
           </div>
 

@@ -35,3 +35,12 @@ Torn's own JavaScript reorders faction member rows in response to the same state
 
 ### Cleanup Interval
 A `setInterval` (10 s period) attached to each active observer setup that checks `!element.isConnected` and tears down its associated `MutationObserver` and flight-poll interval when the element leaves the DOM. Preferred over a document-level `childList`+`subtree` `MutationObserver` because the Torn SPA produces many DOM mutations per second and a subtree observer would impose constant allocation and callback overhead.
+
+### FF Color Scale
+The single FF-value-to-hex-color mapping (`get_ff_arrow_colour` / `get_ff_colour` in `src/utils/strings.ts`) applied uniformly across every place an FF/BS value is color-coded: the gauge arrow marker, the gauge bubble marker, the profile mini [[Info Line]] background, and the faction/war page FF column cell background. One scale, one preset choice — never configured per-consumer. See [[Color Scheme]] for how the scale's 11 colors are chosen, and ADR 0002 for why it stays a single shared scale.
+
+### Color Scheme
+`ffconfig.color_scheme` — selects which 11-hex-color palette the [[FF Color Scale]] indexes into. Five named presets ship in the settings panel (`classic` is the default and matches the scale's original hardcoded colors exactly): `classic`, `cool_diverging`, `neon`, `colorblind_safe`, `grayscale`. A sixth value, `custom`, is reserved in the type/storage layer (`ffconfig.custom_colors: string[] | null`, 11 hex strings) but intentionally hidden from the settings dropdown until a color-editing UI exists. The no-data indicator color (black) does not vary by scheme — it isn't a point on the gradient.
+
+### Info Line
+The `ff-header-line` LitElement component (`src/ui/info-line.ts`) rendering the FF/BS summary line on profile pages, including a background colored via the [[FF Color Scale]].

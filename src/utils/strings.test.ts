@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
+import { ColorScheme, ffconfig } from "./ffconfig";
 import {
   ff_to_percent,
   format_difficulty_text,
@@ -25,6 +26,8 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.useRealTimers();
+  ffconfig.color_scheme = ColorScheme.CLASSIC;
+  ffconfig.custom_colors = null;
 });
 
 test("format_ff_score formats scores with age check", () => {
@@ -158,6 +161,36 @@ test("get_ff_arrow_colour returns correct hex colors with clamping", () => {
     premium_insights_available: false,
   };
   expect(get_ff_colour(comp)).toEqual("#34e817");
+});
+
+test("get_ff_arrow_colour switches palette based on ffconfig.color_scheme", () => {
+  const data = { player_id: 1, no_data: false, fair_fight: 1.0 } as any;
+
+  ffconfig.color_scheme = ColorScheme.GRAYSCALE;
+  expect(get_ff_arrow_colour(data)).toEqual("#f0f0f0");
+
+  ffconfig.color_scheme = ColorScheme.NEON;
+  expect(get_ff_arrow_colour(data)).toEqual("#0c50ff");
+
+  // no_data still bypasses the palette entirely, regardless of scheme
+  expect(get_ff_arrow_colour({ player_id: 1, no_data: true } as any)).toEqual(
+    "#000000",
+  );
+});
+
+test("get_ff_arrow_colour falls back to classic when custom scheme has no valid custom_colors", () => {
+  const data = { player_id: 1, no_data: false, fair_fight: 1.0 } as any;
+
+  ffconfig.color_scheme = ColorScheme.CUSTOM;
+  ffconfig.custom_colors = null;
+  expect(get_ff_arrow_colour(data)).toEqual("#1734e8"); // classic bucket 0
+
+  ffconfig.custom_colors = ["#fff", "#000"]; // wrong length, still invalid
+  expect(get_ff_arrow_colour(data)).toEqual("#1734e8");
+
+  const elevenColors = Array.from({ length: 11 }, (_, i) => `#${i}${i}${i}`);
+  ffconfig.custom_colors = elevenColors;
+  expect(get_ff_arrow_colour(data)).toEqual(elevenColors[0]);
 });
 
 test("get_contrast_color determines black or white based on background brightness", () => {

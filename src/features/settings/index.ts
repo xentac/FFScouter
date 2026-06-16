@@ -46,6 +46,7 @@ export default {
     panel.analyticsEnabled = ffconfig.analytics_enabled;
     panel.networkInterceptionEnabled = ffconfig.network_interception_enabled;
     panel.gaugeMarkerType = ffconfig.gauge_marker_type;
+    panel.colorScheme = ffconfig.color_scheme;
     panel.warQuickAttackAction = ffconfig.war_quick_attack_action;
     panel.statusAttackLinksEnabled = ffconfig.status_attack_links_enabled;
     panel.debugDisablePdaHttp = ffconfig.debug_disable_pda_http;
@@ -80,6 +81,7 @@ export default {
       ffconfig.analytics_enabled = detail.analyticsEnabled;
       ffconfig.network_interception_enabled = detail.networkInterceptionEnabled;
       ffconfig.gauge_marker_type = detail.gaugeMarkerType;
+      ffconfig.color_scheme = detail.colorScheme;
       ffconfig.war_quick_attack_action = detail.warQuickAttackAction;
       ffconfig.status_attack_links_enabled = detail.statusAttackLinksEnabled;
       ffconfig.debug_disable_pda_http = detail.debugDisablePdaHttp;
@@ -114,6 +116,7 @@ export default {
       panel.analyticsEnabled = ffconfig.analytics_enabled;
       panel.networkInterceptionEnabled = ffconfig.network_interception_enabled;
       panel.gaugeMarkerType = ffconfig.gauge_marker_type;
+      panel.colorScheme = ffconfig.color_scheme;
       panel.warQuickAttackAction = ffconfig.war_quick_attack_action;
       panel.statusAttackLinksEnabled = ffconfig.status_attack_links_enabled;
       panel.debugDisablePdaHttp = ffconfig.debug_disable_pda_http;
