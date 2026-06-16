@@ -1,5 +1,15 @@
 ## Glossary
 
+### Content Wrapper Width
+The width budget our injected UI must lay out within, derived from Torn's `.content-wrapper` (the outer page container the [[Settings Panel]] attaches beside). Torn drives it from two viewport thresholds, giving three discrete widths:
+- viewport ≥ **784px** → 784px (desktop)
+- **386px** ≤ viewport < 784px → 386px (the "600px" figure sometimes quoted is inside this same bucket, not a separate threshold)
+- viewport < **386px** → 320px (narrowest)
+Only **784px** becomes an actual CSS breakpoint in our code (matching the existing `@media (min-width: 784px)` used by `.ff-filter-grid`); 386px and 320px both fall in the single "narrow" bucket where our grids collapse to one column. These are reference facts about Torn's layout, not values we set.
+
+### Settings Panel
+The `ff-settings-panel` LitElement (`src/ui/settings-panel.ts`) injected beside `.profile-wrapper` on profile pages. Laid out as a per-section CSS grid (one grid per `<h3>` section) that reflows safely within the [[Content Wrapper Width]]: plain selects and checkboxes are single grid cells (3-up at ≥784px, 1-up when narrow), while multi-control bundles (API key row, FF ranges, marker size + preview, color scheme + swatches, chain sub-options, prose notices, footer buttons) span the full grid width as their own rows. Selects stack their label above a cell-filling control; checkboxes stay inline control-first; nothing overflows the container at any of the three widths.
+
 ### War Box
 The `.faction-war` element containing the side-by-side enemy/your faction lists on the Ranked War page.
 

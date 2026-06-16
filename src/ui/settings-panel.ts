@@ -471,431 +471,466 @@ export class FFSettingsPanel extends LitElement {
         </summary>
 
         <div style="margin-top: 15px;">
-          <div class="ff-api-explanation">
-            <strong>Important:</strong> You must use the SAME exact API key that
-            you use on
-            <a href="https://ffscouter.com/" target="_blank">ffscouter.com</a>.
-            <br /><br />
-            If you're not sure which API key you used, go to
-            <a
-              href="https://www.torn.com/preferences.php#tab=api"
-              target="_blank"
-              >your API preferences</a
-            >
-            and look for "FFScouter3" in your API key history comments.
-          </div>
-          <!-- API Key Input -->
-          <div class="input-row">
-            <label for="api-key">API Key:</label>
-            <input
-              id="api-key"
-              type="text"
-              class="${this.apiKey ? "blur-mode" : ""}"
-              placeholder="Paste your key here..."
-              .value=${this.draftApiKey}
-              @input=${this.onKeyInput}
-              @change=${this.onKeyChange}
-            />
-          </div>
-          <div class="input-row-inline">
-            <label for="ff-premium-badge">FF Scouter Premium:</label>
-            <span
-              id="ff-premium-badge"
-              class="is_premium_${this.isPremium === null ? "unknown" : this.isPremium ? "enabled" : "disabled"}"
-              >${this.isPremium === null ? "Unknown" : this.isPremium ? "Enabled" : "Disabled"}</span
-            >
-          </div>
-          <div class="input-row-inline">
-            <button class="torn-btn btn-save" @click=${this.handleVerify}>
-              Verify
-            </button>
-          </div>
-
-          <!-- Ranges Input -->
-          <div class="input-row">
-            <label>FF Ranges (Low, High, Max):</label>
-            <div style="display: flex; gap: 10px; align-items: center;">
-              <input
-                id="ff-range-low"
-                type="number"
-                step="0.1"
-                class="ff-number"
-                .value=${this.draftLowRange.toString()}
-                @input=${this.onLowRangeInput}
-              />
-              <span>&lt;</span>
-              <input
-                id="ff-range-high"
-                type="number"
-                step="0.1"
-                class="ff-number"
-                .value=${this.draftHighRange.toString()}
-                @input=${this.onHighRangeInput}
-              />
-              <span>&lt;</span>
-              <input
-                id="ff-range-max"
-                type="number"
-                step="0.1"
-                class="ff-number"
-                .value=${this.draftMaxRange.toString()}
-                @input=${this.onMaxRangeInput}
-              />
+          <!-- Section: API key & ranges (all full-width bundles) -->
+          <div class="ff-settings-section">
+            <div class="ff-api-explanation ff-settings-span">
+              <strong>Important:</strong> You must use the SAME exact API key
+              that you use on
+              <a href="https://ffscouter.com/" target="_blank">ffscouter.com</a
+              >. <br /><br />
+              If you're not sure which API key you used, go to
+              <a
+                href="https://www.torn.com/preferences.php#tab=api"
+                target="_blank"
+                >your API preferences</a
+              >
+              and look for "FFScouter3" in your API key history comments.
             </div>
-            ${
-              this.rangeError
-                ? html`<div class="error-msg">${this.rangeError}</div>`
-                : ""
-            }
+
+            <!-- API Key bundle: key input + premium status + verify -->
+            <div class="ff-settings-span ff-api-block">
+              <div class="ff-settings-cell">
+                <label for="api-key">API Key:</label>
+                <input
+                  id="api-key"
+                  type="text"
+                  class="${this.apiKey ? "blur-mode" : ""}"
+                  placeholder="Paste your key here..."
+                  .value=${this.draftApiKey}
+                  @input=${this.onKeyInput}
+                  @change=${this.onKeyChange}
+                />
+              </div>
+              <div class="ff-api-status-row">
+                <label for="ff-premium-badge">FF Scouter Premium:</label>
+                <span
+                  id="ff-premium-badge"
+                  class="is_premium_${
+                    this.isPremium === null
+                      ? "unknown"
+                      : this.isPremium
+                        ? "enabled"
+                        : "disabled"
+                  }"
+                  >${
+                    this.isPremium === null
+                      ? "Unknown"
+                      : this.isPremium
+                        ? "Enabled"
+                        : "Disabled"
+                  }</span
+                >
+                <button class="torn-btn btn-save" @click=${this.handleVerify}>
+                  Verify
+                </button>
+              </div>
+            </div>
+
+            <!-- Full-width appearance bundles -->
+            <!-- Marker Size -->
+            <div class="ff-settings-span ff-marker-size">
+              <label for="gauge-marker-scale">Marker Size:</label>
+              <div class="ff-marker-size-controls">
+                <input
+                  id="gauge-marker-scale"
+                  type="range"
+                  min="50"
+                  max="200"
+                  step="5"
+                  .value=${this.draftGaugeMarkerScale.toString()}
+                  @input=${this.onGaugeMarkerScaleInput}
+                />
+                <input
+                  id="gauge-marker-scale-number"
+                  type="number"
+                  min="50"
+                  max="200"
+                  step="5"
+                  class="ff-number"
+                  .value=${this.draftGaugeMarkerScale.toString()}
+                  @input=${this.onGaugeMarkerScaleInput}
+                />
+                <span>%</span>
+                <div
+                  class="ffsv3-marker-preview"
+                  style="--ffsv3-marker-scale: ${
+                    this.draftGaugeMarkerScale / 100
+                  };"
+                >
+                  <svg
+                    class="ffsv3-preview-arrow"
+                    viewBox="${FF_ARROW_VIEWBOX}"
+                  >
+                    <path
+                      fill-rule="evenodd"
+                      fill="${this.previewColor}"
+                      stroke="#000000"
+                      stroke-width="1.5"
+                      d="${FF_ARROW_PATH_D}"
+                    ></path>
+                  </svg>
+                  <div
+                    class="ffsv3-preview-bubble"
+                    style="background-color: ${
+                      this.previewColor
+                    }; color: ${get_contrast_color(this.previewColor)};"
+                  >
+                    2.34
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Color Scheme -->
+            <div class="ff-settings-span ff-color-scheme">
+              <label for="color-scheme">Color Scheme:</label>
+              <div class="ff-color-scheme-controls">
+                <select
+                  id="color-scheme"
+                  .value=${this.draftColorScheme}
+                  @change=${this.onColorSchemeChange}
+                >
+                  <option value="classic">Classic (Default)</option>
+                  <option value="cool_diverging">Cool Diverging</option>
+                  <option value="neon">Neon</option>
+                  <option value="colorblind_safe">Colorblind-Safe</option>
+                  <option value="grayscale">Grayscale</option>
+                  <option value="green_yellow_red">Green-Yellow-Red</option>
+                  <option value="blue_yellow_red">Blue-Yellow-Red</option>
+                  <option value="plasma">Plasma</option>
+                </select>
+                <div class="ffsv3-swatch-row">
+                  ${get_palette_for_scheme(this.draftColorScheme).map(
+                    (color) =>
+                      html`<svg
+                        class="ffsv3-swatch"
+                        viewBox="${FF_ARROW_VIEWBOX}"
+                      >
+                        <path
+                          fill-rule="evenodd"
+                          fill="${color}"
+                          stroke="#000000"
+                          stroke-width="1.5"
+                          d="${FF_ARROW_PATH_D}"
+                        ></path>
+                      </svg>`,
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <!-- Ranges Input -->
+            <div class="input-row ff-settings-span">
+              <label>FF Ranges (Low, High, Max):</label>
+              <div style="display: flex; gap: 10px; align-items: center;">
+                <input
+                  id="ff-range-low"
+                  type="number"
+                  step="0.1"
+                  class="ff-number"
+                  .value=${this.draftLowRange.toString()}
+                  @input=${this.onLowRangeInput}
+                />
+                <span>&lt;</span>
+                <input
+                  id="ff-range-high"
+                  type="number"
+                  step="0.1"
+                  class="ff-number"
+                  .value=${this.draftHighRange.toString()}
+                  @input=${this.onHighRangeInput}
+                />
+                <span>&lt;</span>
+                <input
+                  id="ff-range-max"
+                  type="number"
+                  step="0.1"
+                  class="ff-number"
+                  .value=${this.draftMaxRange.toString()}
+                  @input=${this.onMaxRangeInput}
+                />
+              </div>
+              ${
+                this.rangeError
+                  ? html`<div class="error-msg">${this.rangeError}</div>`
+                  : ""
+              }
+            </div>
           </div>
 
           <!-- Feature Toggles -->
           <h3>Feature Toggles:</h3>
 
-          <!-- Chain Button Toggle -->
-          <div class="input-row-inline">
-            <input
-              id="chain-button-toggle"
-              type="checkbox"
-              .checked=${this.draftChainButtonEnabled}
-              @change=${this.onChainButtonChange}
-            />
-            <label for="chain-button-toggle"
-              >Enable Chain Button (Green FF Button)</label
-            >
-          </div>
-
-          ${
-            this.draftChainButtonEnabled
-              ? html`
-                  <div class="chain-options-flex-container">
-                    <div class="input-row-inline">
-                      <label for="chain-link-type">Chain button opens:</label>
-                      <select
-                        id="chain-link-type"
-                        .value=${this.draftChainLinkType}
-                        @change=${this.onChainLinkTypeChange}
-                      >
-                        <option value="attack">Attack page</option>
-                        <option value="profile">Profile page</option>
-                      </select>
-                    </div>
-
-                    <div class="input-row-inline">
-                      <label for="chain-tab-type">Open in:</label>
-                      <select
-                        id="chain-tab-type"
-                        .value=${this.draftChainTabType}
-                        @change=${this.onChainTabTypeChange}
-                      >
-                        <option value="newtab">New tab</option>
-                        <option value="sametab">Same tab</option>
-                      </select>
-                    </div>
-
-                    <div class="input-row-inline">
-                      <label for="chain-min-level">Min Level:</label>
-                      <input
-                        id="chain-min-level"
-                        type="number"
-                        class="ff-number"
-                        placeholder="No min"
-                        .value=${
-                          this.draftChainMinLevel === null
-                            ? ""
-                            : this.draftChainMinLevel.toString()
-                        }
-                        @input=${this.onChainMinLevelInput}
-                      />
-                    </div>
-
-                    <div class="input-row-inline">
-                      <label for="chain-max-level">Max Level:</label>
-                      <input
-                        id="chain-max-level"
-                        type="number"
-                        class="ff-number"
-                        placeholder="No max"
-                        .value=${
-                          this.draftChainMaxLevel === null
-                            ? ""
-                            : this.draftChainMaxLevel.toString()
-                        }
-                        @input=${this.onChainMaxLevelInput}
-                      />
-                    </div>
-
-                    <div class="input-row-inline">
-                      <label for="chain-min-ff">Min FF:</label>
-                      <input
-                        id="chain-min-ff"
-                        type="number"
-                        step="0.1"
-                        class="ff-number"
-                        placeholder="No min"
-                        .value=${
-                          this.draftChainMinFF === null
-                            ? ""
-                            : this.draftChainMinFF.toString()
-                        }
-                        @input=${this.onChainMinFFInput}
-                      />
-                    </div>
-
-                    <div class="input-row-inline">
-                      <label for="chain-max-ff">Max FF:</label>
-                      <input
-                        id="chain-max-ff"
-                        type="number"
-                        step="0.1"
-                        class="ff-number"
-                        placeholder="No max"
-                        .value=${this.draftChainMaxFF.toString()}
-                        @input=${this.onChainMaxFFInput}
-                      />
-                    </div>
-
-                    <div class="input-row-inline">
-                      <input
-                        id="chain-inactive"
-                        type="checkbox"
-                        .checked=${this.draftChainInactive}
-                        @change=${this.onChainInactiveChange}
-                      />
-                      <label for="chain-inactive"
-                        >Inactive Only (14+ days offline)</label
-                      >
-                    </div>
-
-                    <div class="input-row-inline">
-                      <input
-                        id="chain-factionless"
-                        type="checkbox"
-                        .checked=${this.draftChainFactionless}
-                        @change=${this.onChainFactionlessChange}
-                      />
-                      <label for="chain-factionless">Factionless Only</label>
-                    </div>
-                  </div>
-                `
-              : ""
-          }
-
-          <!-- FF History Toggle -->
-          <div class="input-row-inline">
-            <input
-              id="ff-history-toggle"
-              type="checkbox"
-              .checked=${this.draftFFHistoryEnabled}
-              @change=${this.onFFHistoryChange}
-            />
-            <label for="ff-history-toggle"
-              >Enable FF History button on profile pages</label
-            >
-          </div>
-          <div class="input-row-inline">
-            <label>War Monitor is no longer supported. Use <a target="_blank" href="https://greasyfork.org/en/scripts/529238-torn-war-stuff-enhanced">Torn War Stuff Enhanced</a> instead.</a></label
-            >
-          </div>
-
-          <!-- Gauge Marker Display Style -->
-          <div class="input-row-inline">
-            <label for="gauge-marker-type">Gauge Marker Style:</label>
-            <select
-              id="gauge-marker-type"
-              .value=${this.draftGaugeMarkerType}
-              @change=${this.onGaugeMarkerTypeChange}
-            >
-              <option value="arrow">Arrow (Default)</option>
-              <option value="bubble_ff">Bubble (FF Score)</option>
-              <option value="bubble_estimate">Bubble (BS Estimate)</option>
-            </select>
-          </div>
-
-          <!-- Marker Size -->
-          <div class="input-row-inline">
-            <label for="gauge-marker-scale">Marker Size:</label>
-            <input
-              id="gauge-marker-scale"
-              type="range"
-              min="50"
-              max="200"
-              step="5"
-              .value=${this.draftGaugeMarkerScale.toString()}
-              @input=${this.onGaugeMarkerScaleInput}
-            />
-            <input
-              id="gauge-marker-scale-number"
-              type="number"
-              min="50"
-              max="200"
-              step="5"
-              class="ff-number"
-              .value=${this.draftGaugeMarkerScale.toString()}
-              @input=${this.onGaugeMarkerScaleInput}
-            />
-            <span>%</span>
-            <div
-              class="ffsv3-marker-preview"
-              style="--ffsv3-marker-scale: ${this.draftGaugeMarkerScale / 100};"
-            >
-              <svg class="ffsv3-preview-arrow" viewBox="${FF_ARROW_VIEWBOX}">
-                <path
-                  fill-rule="evenodd"
-                  fill="${this.previewColor}"
-                  stroke="#000000"
-                  stroke-width="1.5"
-                  d="${FF_ARROW_PATH_D}"
-                ></path>
-              </svg>
-              <div
-                class="ffsv3-preview-bubble"
-                style="background-color: ${this.previewColor}; color: ${get_contrast_color(this.previewColor)};"
-              >
-                2.34
+          <div class="ff-settings-section">
+            <!-- Chain block: toggle + (conditional) nested sub-options grid -->
+            <div class="ff-settings-span ff-chain-block">
+              <div class="ff-settings-cell checkbox-cell">
+                <input
+                  id="chain-button-toggle"
+                  type="checkbox"
+                  .checked=${this.draftChainButtonEnabled}
+                  @change=${this.onChainButtonChange}
+                />
+                <label for="chain-button-toggle"
+                  >Enable Chain Button (Green FF Button)</label
+                >
               </div>
+
+              ${
+                this.draftChainButtonEnabled
+                  ? html`
+                    <div class="ff-settings-section ff-chain-suboptions">
+                      <div class="ff-settings-cell ff-chain-wide">
+                        <label for="chain-link-type">Chain button opens:</label>
+                        <select
+                          id="chain-link-type"
+                          .value=${this.draftChainLinkType}
+                          @change=${this.onChainLinkTypeChange}
+                        >
+                          <option value="attack">Attack page</option>
+                          <option value="profile">Profile page</option>
+                        </select>
+                      </div>
+
+                      <div class="ff-settings-cell ff-chain-wide">
+                        <label for="chain-tab-type">Open in:</label>
+                        <select
+                          id="chain-tab-type"
+                          .value=${this.draftChainTabType}
+                          @change=${this.onChainTabTypeChange}
+                        >
+                          <option value="newtab">New tab</option>
+                          <option value="sametab">Same tab</option>
+                        </select>
+                      </div>
+
+                      <div class="ff-settings-cell">
+                        <label for="chain-min-level">Min Level:</label>
+                        <input
+                          id="chain-min-level"
+                          type="number"
+                          class="ff-number"
+                          placeholder="No min"
+                          .value=${
+                            this.draftChainMinLevel === null
+                              ? ""
+                              : this.draftChainMinLevel.toString()
+                          }
+                          @input=${this.onChainMinLevelInput}
+                        />
+                      </div>
+
+                      <div class="ff-settings-cell">
+                        <label for="chain-max-level">Max Level:</label>
+                        <input
+                          id="chain-max-level"
+                          type="number"
+                          class="ff-number"
+                          placeholder="No max"
+                          .value=${
+                            this.draftChainMaxLevel === null
+                              ? ""
+                              : this.draftChainMaxLevel.toString()
+                          }
+                          @input=${this.onChainMaxLevelInput}
+                        />
+                      </div>
+
+                      <div class="ff-settings-cell">
+                        <label for="chain-min-ff">Min FF:</label>
+                        <input
+                          id="chain-min-ff"
+                          type="number"
+                          step="0.1"
+                          class="ff-number"
+                          placeholder="No min"
+                          .value=${
+                            this.draftChainMinFF === null
+                              ? ""
+                              : this.draftChainMinFF.toString()
+                          }
+                          @input=${this.onChainMinFFInput}
+                        />
+                      </div>
+
+                      <div class="ff-settings-cell">
+                        <label for="chain-max-ff">Max FF:</label>
+                        <input
+                          id="chain-max-ff"
+                          type="number"
+                          step="0.1"
+                          class="ff-number"
+                          placeholder="No max"
+                          .value=${this.draftChainMaxFF.toString()}
+                          @input=${this.onChainMaxFFInput}
+                        />
+                      </div>
+
+                      <div class="ff-settings-cell checkbox-cell ff-chain-wide">
+                        <input
+                          id="chain-inactive"
+                          type="checkbox"
+                          .checked=${this.draftChainInactive}
+                          @change=${this.onChainInactiveChange}
+                        />
+                        <label for="chain-inactive"
+                          >Inactive Only (14+ days offline)</label
+                        >
+                      </div>
+
+                      <div class="ff-settings-cell checkbox-cell ff-chain-wide">
+                        <input
+                          id="chain-factionless"
+                          type="checkbox"
+                          .checked=${this.draftChainFactionless}
+                          @change=${this.onChainFactionlessChange}
+                        />
+                        <label for="chain-factionless">Factionless Only</label>
+                      </div>
+                    </div>
+                  `
+                  : ""
+              }
             </div>
-          </div>
 
-          <!-- Color Scheme -->
-          <div class="input-row-inline">
-            <label for="color-scheme">Color Scheme:</label>
-            <select
-              id="color-scheme"
-              .value=${this.draftColorScheme}
-              @change=${this.onColorSchemeChange}
-            >
-              <option value="classic">Classic (Default)</option>
-              <option value="cool_diverging">Cool Diverging</option>
-              <option value="neon">Neon</option>
-              <option value="colorblind_safe">Colorblind-Safe</option>
-              <option value="grayscale">Grayscale</option>
-              <option value="green_yellow_red">Green-Yellow-Red</option>
-              <option value="blue_yellow_red">Blue-Yellow-Red</option>
-              <option value="plasma">Plasma</option>
-            </select>
-            <div class="ffsv3-swatch-row">
-              ${get_palette_for_scheme(this.draftColorScheme).map(
-                (color) =>
-                  html`<svg
-                    class="ffsv3-swatch"
-                    viewBox="${FF_ARROW_VIEWBOX}"
-                  >
-                    <path
-                      fill-rule="evenodd"
-                      fill="${color}"
-                      stroke="#000000"
-                      stroke-width="1.5"
-                      d="${FF_ARROW_PATH_D}"
-                    ></path>
-                  </svg>`,
-              )}
+            <!-- Single-cell selects & checkboxes (cluster into clean rows) -->
+            <div class="ff-settings-cell">
+              <label for="gauge-marker-type">Gauge Marker Style:</label>
+              <select
+                id="gauge-marker-type"
+                .value=${this.draftGaugeMarkerType}
+                @change=${this.onGaugeMarkerTypeChange}
+              >
+                <option value="arrow">Arrow (Default)</option>
+                <option value="bubble_ff">Bubble (FF Score)</option>
+                <option value="bubble_estimate">Bubble (BS Estimate)</option>
+              </select>
             </div>
-          </div>
 
-          <!-- Factions Column Display -->
-          <div class="input-row-inline">
-            <label for="factions-col-display">Faction Page Shows:</label>
-            <select
-              id="factions-col-display"
-              .value=${this.draftFactionsColDisplay}
-              @change=${this.onFactionsColDisplayChange}
-            >
-              <option value="fair_fight">FF Score</option>
-              <option value="battle_stats">BS Estimate</option>
-              <option value="none">None (Hide Column)</option>
-            </select>
-          </div>
+            <div class="ff-settings-cell">
+              <label for="factions-col-display">Faction Page Shows:</label>
+              <select
+                id="factions-col-display"
+                .value=${this.draftFactionsColDisplay}
+                @change=${this.onFactionsColDisplayChange}
+              >
+                <option value="fair_fight">FF Score</option>
+                <option value="battle_stats">BS Estimate</option>
+                <option value="none">None (Hide Column)</option>
+              </select>
+            </div>
 
-          <!-- War Column Display -->
-          <div class="input-row-inline">
-            <label for="war-col-display">War Page Shows:</label>
-            <select
-              id="war-col-display"
-              .value=${this.draftWarColDisplay}
-              @change=${this.onWarColDisplayChange}
-            >
-              <option value="fair_fight">FF Score</option>
-              <option value="battle_stats">BS Estimate</option>
-              <option value="none">None (Hide Column)</option>
-            </select>
-          </div>
+            <div class="ff-settings-cell">
+              <label for="war-col-display">War Page Shows:</label>
+              <select
+                id="war-col-display"
+                .value=${this.draftWarColDisplay}
+                @change=${this.onWarColDisplayChange}
+              >
+                <option value="fair_fight">FF Score</option>
+                <option value="battle_stats">BS Estimate</option>
+                <option value="none">None (Hide Column)</option>
+              </select>
+            </div>
 
-          <!-- Status Attack Links Toggle -->
-          <div class="input-row-inline">
-            <input
-              id="status-attack-links-toggle"
-              type="checkbox"
-              .checked=${this.draftStatusAttackLinksEnabled}
-              @change=${this.onStatusAttackLinksEnabledChange}
-            />
-            <label for="status-attack-links-toggle"
-              >Enable online status indicator quick attack links</label
-            >
-          </div>
+            <div class="ff-settings-cell checkbox-cell">
+              <input
+                id="status-attack-links-toggle"
+                type="checkbox"
+                .checked=${this.draftStatusAttackLinksEnabled}
+                @change=${this.onStatusAttackLinksEnabledChange}
+              />
+              <label for="status-attack-links-toggle"
+                >Enable online status indicator quick attack links</label
+              >
+            </div>
 
-          <!-- War Quick Attack Action -->
-          <div class="input-row-inline">
-            <label for="war-quick-attack-action">Quick Attack Action:</label>
-            <select
-              id="war-quick-attack-action"
-              .value=${this.draftWarQuickAttackAction}
-              @change=${this.onWarQuickAttackActionChange}
-            >
-              <option value="new_tab">New Tab</option>
-              <option value="current">Same Tab</option>
-            </select>
+            <div class="ff-settings-cell">
+              <label for="war-quick-attack-action">Quick Attack Action:</label>
+              <select
+                id="war-quick-attack-action"
+                .value=${this.draftWarQuickAttackAction}
+                @change=${this.onWarQuickAttackActionChange}
+              >
+                <option value="new_tab">New Tab</option>
+                <option value="current">Same Tab</option>
+              </select>
+            </div>
+
+            <div class="ff-settings-cell checkbox-cell">
+              <input
+                id="ff-history-toggle"
+                type="checkbox"
+                .checked=${this.draftFFHistoryEnabled}
+                @change=${this.onFFHistoryChange}
+              />
+              <label for="ff-history-toggle"
+                >Enable FF History button on profile pages</label
+              >
+            </div>
+
+            <!-- War Monitor deprecation note -->
+            <div class="ff-settings-span ff-deprecation-note">
+              <label
+                >War Monitor is no longer supported. Use
+                <a
+                  target="_blank"
+                  href="https://greasyfork.org/en/scripts/529238-torn-war-stuff-enhanced"
+                  >Torn War Stuff Enhanced</a
+                >
+                instead.</label
+              >
+            </div>
           </div>
 
           <!-- Debug Settings -->
           <h3>Debug Settings:</h3>
-          <div class="input-row-inline">
-            <input
-              id="debug-logs"
-              type="checkbox"
-              .checked=${this.draftDebugLogs}
-              @change=${this.onDebugLogsChange}
-            />
-            <label for="debug-logs">Enable debug logging</label>
-          </div>
+          <div class="ff-settings-section">
+            <div class="ff-settings-cell checkbox-cell">
+              <input
+                id="debug-logs"
+                type="checkbox"
+                .checked=${this.draftDebugLogs}
+                @change=${this.onDebugLogsChange}
+              />
+              <label for="debug-logs">Enable debug logging</label>
+            </div>
 
-          <!-- Analytics Toggle -->
-          <div class="input-row-inline">
-            <input
-              id="analytics-toggle"
-              type="checkbox"
-              .checked=${this.draftAnalyticsEnabled}
-              @change=${this.onAnalyticsEnabledChange}
-            />
-            <label for="analytics-toggle"
-              >Enable local analytics logging (last 30 days)</label
-            >
-          </div>
+            <div class="ff-settings-cell checkbox-cell">
+              <input
+                id="analytics-toggle"
+                type="checkbox"
+                .checked=${this.draftAnalyticsEnabled}
+                @change=${this.onAnalyticsEnabledChange}
+              />
+              <label for="analytics-toggle"
+                >Enable local analytics logging (last 30 days)</label
+              >
+            </div>
 
-          <!-- Network Interception Toggle -->
-          <div class="input-row-inline">
-            <input
-              id="network-interception-toggle"
-              type="checkbox"
-              .checked=${this.draftNetworkInterceptionEnabled}
-              @change=${this.onNetworkInterceptionEnabledChange}
-            />
-            <label for="network-interception-toggle"
-              >Enable network request interception (Fetch/XHR/WS)</label
-            >
-          </div>
+            <div class="ff-settings-cell checkbox-cell">
+              <input
+                id="network-interception-toggle"
+                type="checkbox"
+                .checked=${this.draftNetworkInterceptionEnabled}
+                @change=${this.onNetworkInterceptionEnabledChange}
+              />
+              <label for="network-interception-toggle"
+                >Enable network request interception (Fetch/XHR/WS)</label
+              >
+            </div>
 
-          <!-- PDA HTTP Toggle -->
-          <div class="input-row-inline">
-            <input
-              id="debug-disable-pda-http"
-              type="checkbox"
-              .checked=${this.draftDebugDisablePdaHttp}
-              @change=${this.onDebugDisablePdaHttpChange}
-            />
-            <label for="debug-disable-pda-http"
-              >Disable PDA native HTTP (use GM_xmlhttpRequest instead)</label
-            >
+            <div class="ff-settings-cell checkbox-cell">
+              <input
+                id="debug-disable-pda-http"
+                type="checkbox"
+                .checked=${this.draftDebugDisablePdaHttp}
+                @change=${this.onDebugDisablePdaHttpChange}
+              />
+              <label for="debug-disable-pda-http"
+                >Disable PDA native HTTP (use GM_xmlhttpRequest instead)</label
+              >
+            </div>
           </div>
 
           <!-- Action Buttons Area -->

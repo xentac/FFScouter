@@ -224,6 +224,82 @@ test("ff-settings-panel renders a live swatch preview that updates with the colo
   );
 });
 
+test("ff-settings-panel lays each section out as a grid with full-width bundles spanning all columns", async () => {
+  const el = document.createElement("ff-settings-panel") as FFSettingsPanel;
+  // Disable the chain button so the nested chain sub-options grid (itself a
+  // .ff-settings-section) doesn't count toward the top-level section total.
+  el.chainButtonEnabled = false;
+  document.body.appendChild(el);
+  await el.updateComplete;
+
+  // One grid per <h3> section: top (api/ranges), Feature Toggles, Debug Settings
+  const sections = el.querySelectorAll(".ff-settings-section");
+  expect(sections.length).toBe(3);
+
+  // Plain selects/checkboxes are single grid cells
+  const gaugeStyleCell = el
+    .querySelector("#gauge-marker-type")
+    ?.closest(".ff-settings-cell");
+  expect(gaugeStyleCell).not.toBeNull();
+  expect(gaugeStyleCell?.classList.contains("ff-settings-span")).toBe(false);
+
+  const debugLogsCell = el
+    .querySelector("#debug-logs")
+    ?.closest(".ff-settings-cell");
+  expect(debugLogsCell?.classList.contains("checkbox-cell")).toBe(true);
+
+  // Multi-control bundles span the full grid width
+  expect(
+    el.querySelector("#color-scheme")?.closest(".ff-settings-span"),
+  ).not.toBeNull();
+  expect(
+    el.querySelector("#gauge-marker-scale")?.closest(".ff-settings-span"),
+  ).not.toBeNull();
+  expect(
+    el.querySelector("#ff-range-low")?.closest(".ff-settings-span"),
+  ).not.toBeNull();
+  expect(
+    el.querySelector("#api-key")?.closest(".ff-settings-span"),
+  ).not.toBeNull();
+});
+
+test("ff-settings-panel renders chain sub-options as a nested grid only when enabled", async () => {
+  const el = document.createElement("ff-settings-panel") as FFSettingsPanel;
+  el.chainButtonEnabled = false;
+  document.body.appendChild(el);
+  await el.updateComplete;
+
+  expect(el.querySelector(".ff-chain-suboptions")).toBeNull();
+
+  // Enabling the chain button reveals the nested sub-options grid
+  const toggle = el.querySelector("#chain-button-toggle") as HTMLInputElement;
+  toggle.checked = true;
+  toggle.dispatchEvent(new Event("change"));
+  await el.updateComplete;
+
+  const suboptions = el.querySelector(".ff-chain-suboptions");
+  expect(suboptions).not.toBeNull();
+  expect(suboptions?.classList.contains("ff-settings-section")).toBe(true);
+  // Sub-options live inside the chain bundle's full-width span
+  expect(suboptions?.closest(".ff-chain-block")).not.toBeNull();
+  // The compact min/max level inputs are cells within that nested grid
+  expect(
+    el.querySelector("#chain-min-level")?.closest(".ff-settings-cell"),
+  ).not.toBeNull();
+
+  // Number fields pair 2-up when narrow (not full-row), while the selects and
+  // checkboxes span the full nested row via .ff-chain-wide.
+  const numberCell = el
+    .querySelector("#chain-min-level")
+    ?.closest(".ff-settings-cell");
+  expect(numberCell?.classList.contains("ff-chain-wide")).toBe(false);
+
+  for (const id of ["#chain-link-type", "#chain-tab-type", "#chain-inactive"]) {
+    const wideCell = el.querySelector(id)?.closest(".ff-settings-cell");
+    expect(wideCell?.classList.contains("ff-chain-wide")).toBe(true);
+  }
+});
+
 test("ff-settings-panel retains unsaved draft changes for other properties when a single property is updated externally", async () => {
   const el = document.createElement("ff-settings-panel") as FFSettingsPanel;
   document.body.appendChild(el);
