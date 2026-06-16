@@ -12,6 +12,13 @@ interface PDAHttpResponse {
 
 interface Window {
   navigation?: any;
-  PDA_httpGet?: (url: string, headers?: Record<string, string>) => Promise<PDAHttpResponse>;
-  PDA_httpPost?: (url: string, headers?: Record<string, string>, body?: unknown) => Promise<PDAHttpResponse>;
+  PDA_httpGet?: (
+    url: string,
+    headers?: Record<string, string>,
+  ) => Promise<PDAHttpResponse>;
+  PDA_httpPost?: (
+    url: string,
+    headers?: Record<string, string>,
+    body?: unknown,
+  ) => Promise<PDAHttpResponse>;
 }

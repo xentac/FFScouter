@@ -29,7 +29,7 @@ describe("run_migration", () => {
   test("does not overwrite existing v3 API key", () => {
     localStorage.setItem("limited_key", "old-key");
     localStorage.setItem(
-      V3 + "key",
+      `${V3}key`,
       JSON.stringify({ value: "new-key", expiration: null }),
     );
     run_migration();
@@ -87,7 +87,7 @@ describe("run_migration", () => {
       JSON.stringify({ low: 1, high: 3, max: 6 }),
     );
     localStorage.setItem(
-      V3 + "low_ff_range",
+      `${V3}low_ff_range`,
       JSON.stringify({ value: 99, expiration: null }),
     );
     run_migration();
@@ -122,7 +122,7 @@ describe("run_migration", () => {
     v2_set("factions-col-display", "battle_stats");
     v2_set("factions-est-sort-order", "asc");
     localStorage.setItem(
-      V3 + "faction_filter_state",
+      `${V3}faction_filter_state`,
       JSON.stringify({ value: { sortBy: "ff-desc" }, expiration: null }),
     );
     run_migration();
@@ -170,7 +170,7 @@ describe("clear_v2_data", () => {
 
   test("does not touch v3 keys", () => {
     localStorage.setItem(
-      V3 + "key",
+      `${V3}key`,
       JSON.stringify({ value: "v3-key", expiration: null }),
     );
     clear_v2_data();
