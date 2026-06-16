@@ -46,6 +46,7 @@ export default {
     panel.analyticsEnabled = ffconfig.analytics_enabled;
     panel.networkInterceptionEnabled = ffconfig.network_interception_enabled;
     panel.gaugeMarkerType = ffconfig.gauge_marker_type;
+    panel.gaugeMarkerScale = ffconfig.gauge_marker_scale;
     panel.colorScheme = ffconfig.color_scheme;
     panel.warQuickAttackAction = ffconfig.war_quick_attack_action;
     panel.statusAttackLinksEnabled = ffconfig.status_attack_links_enabled;
@@ -81,6 +82,11 @@ export default {
       ffconfig.analytics_enabled = detail.analyticsEnabled;
       ffconfig.network_interception_enabled = detail.networkInterceptionEnabled;
       ffconfig.gauge_marker_type = detail.gaugeMarkerType;
+      ffconfig.gauge_marker_scale = detail.gaugeMarkerScale;
+      document.body.style.setProperty(
+        "--ffsv3-marker-scale",
+        `${detail.gaugeMarkerScale / 100}`,
+      );
       ffconfig.color_scheme = detail.colorScheme;
       ffconfig.war_quick_attack_action = detail.warQuickAttackAction;
       ffconfig.status_attack_links_enabled = detail.statusAttackLinksEnabled;
@@ -116,6 +122,11 @@ export default {
       panel.analyticsEnabled = ffconfig.analytics_enabled;
       panel.networkInterceptionEnabled = ffconfig.network_interception_enabled;
       panel.gaugeMarkerType = ffconfig.gauge_marker_type;
+      panel.gaugeMarkerScale = ffconfig.gauge_marker_scale;
+      document.body.style.setProperty(
+        "--ffsv3-marker-scale",
+        `${ffconfig.gauge_marker_scale / 100}`,
+      );
       panel.colorScheme = ffconfig.color_scheme;
       panel.warQuickAttackAction = ffconfig.war_quick_attack_action;
       panel.statusAttackLinksEnabled = ffconfig.status_attack_links_enabled;

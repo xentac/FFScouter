@@ -10,6 +10,7 @@ import {
 import {
   FF_ARROW_PATH_D,
   FF_ARROW_VIEWBOX,
+  get_contrast_color,
   get_palette_for_scheme,
 } from "@utils/strings";
 import { html, LitElement } from "lit";
@@ -58,6 +59,8 @@ export class FFSettingsPanel extends LitElement {
     CONFIG_DEFAULTS.network_interception_enabled;
   @property({ type: String }) gaugeMarkerType: GaugeMarkerType =
     CONFIG_DEFAULTS.gauge_marker_type;
+  @property({ type: Number }) gaugeMarkerScale: number =
+    CONFIG_DEFAULTS.gauge_marker_scale;
   @property({ type: String }) colorScheme: ColorScheme =
     CONFIG_DEFAULTS.color_scheme;
   @property({ type: String }) warQuickAttackAction: WarQuickAttackAction =
@@ -103,6 +106,8 @@ export class FFSettingsPanel extends LitElement {
     CONFIG_DEFAULTS.network_interception_enabled;
   @state() private draftGaugeMarkerType: GaugeMarkerType =
     CONFIG_DEFAULTS.gauge_marker_type;
+  @state() private draftGaugeMarkerScale: number =
+    CONFIG_DEFAULTS.gauge_marker_scale;
   @state() private draftColorScheme: ColorScheme = CONFIG_DEFAULTS.color_scheme;
   @state() private draftWarQuickAttackAction: WarQuickAttackAction =
     CONFIG_DEFAULTS.war_quick_attack_action;
@@ -159,6 +164,8 @@ export class FFSettingsPanel extends LitElement {
       this.draftNetworkInterceptionEnabled = this.networkInterceptionEnabled;
     if (changedProperties.has("gaugeMarkerType"))
       this.draftGaugeMarkerType = this.gaugeMarkerType;
+    if (changedProperties.has("gaugeMarkerScale"))
+      this.draftGaugeMarkerScale = this.gaugeMarkerScale;
     if (changedProperties.has("colorScheme"))
       this.draftColorScheme = this.colorScheme;
     if (changedProperties.has("warQuickAttackAction"))
@@ -191,6 +198,7 @@ export class FFSettingsPanel extends LitElement {
     this.draftAnalyticsEnabled = this.analyticsEnabled;
     this.draftNetworkInterceptionEnabled = this.networkInterceptionEnabled;
     this.draftGaugeMarkerType = this.gaugeMarkerType;
+    this.draftGaugeMarkerScale = this.gaugeMarkerScale;
     this.draftColorScheme = this.colorScheme;
     this.draftWarQuickAttackAction = this.warQuickAttackAction;
     this.draftStatusAttackLinksEnabled = this.statusAttackLinksEnabled;
@@ -247,6 +255,7 @@ export class FFSettingsPanel extends LitElement {
           analyticsEnabled: this.draftAnalyticsEnabled,
           networkInterceptionEnabled: this.draftNetworkInterceptionEnabled,
           gaugeMarkerType: this.draftGaugeMarkerType,
+          gaugeMarkerScale: this.draftGaugeMarkerScale,
           colorScheme: this.draftColorScheme,
           warQuickAttackAction: this.draftWarQuickAttackAction,
           statusAttackLinksEnabled: this.draftStatusAttackLinksEnabled,
@@ -433,10 +442,23 @@ export class FFSettingsPanel extends LitElement {
     this.showSavedMessage = false;
   }
 
+  private onGaugeMarkerScaleInput(e: Event) {
+    const raw = Number((e.target as HTMLInputElement).value);
+    if (Number.isNaN(raw)) {
+      return;
+    }
+    this.draftGaugeMarkerScale = Math.min(200, Math.max(50, raw));
+    this.showSavedMessage = false;
+  }
+
   private onColorSchemeChange(e: Event) {
     this.draftColorScheme = (e.target as HTMLSelectElement)
       .value as ColorScheme;
     this.showSavedMessage = false;
+  }
+
+  private get previewColor(): string {
+    return get_palette_for_scheme(this.draftColorScheme)[5] ?? "#888888";
   }
 
   override render() {
@@ -688,6 +710,51 @@ export class FFSettingsPanel extends LitElement {
               <option value="bubble_ff">Bubble (FF Score)</option>
               <option value="bubble_estimate">Bubble (BS Estimate)</option>
             </select>
+          </div>
+
+          <!-- Marker Size -->
+          <div class="input-row-inline">
+            <label for="gauge-marker-scale">Marker Size:</label>
+            <input
+              id="gauge-marker-scale"
+              type="range"
+              min="50"
+              max="200"
+              step="5"
+              .value=${this.draftGaugeMarkerScale.toString()}
+              @input=${this.onGaugeMarkerScaleInput}
+            />
+            <input
+              id="gauge-marker-scale-number"
+              type="number"
+              min="50"
+              max="200"
+              step="5"
+              class="ff-number"
+              .value=${this.draftGaugeMarkerScale.toString()}
+              @input=${this.onGaugeMarkerScaleInput}
+            />
+            <span>%</span>
+            <div
+              class="ffsv3-marker-preview"
+              style="--ffsv3-marker-scale: ${this.draftGaugeMarkerScale / 100};"
+            >
+              <svg class="ffsv3-preview-arrow" viewBox="${FF_ARROW_VIEWBOX}">
+                <path
+                  fill-rule="evenodd"
+                  fill="${this.previewColor}"
+                  stroke="#000000"
+                  stroke-width="1.5"
+                  d="${FF_ARROW_PATH_D}"
+                ></path>
+              </svg>
+              <div
+                class="ffsv3-preview-bubble"
+                style="background-color: ${this.previewColor}; color: ${get_contrast_color(this.previewColor)};"
+              >
+                2.34
+              </div>
+            </div>
           </div>
 
           <!-- Color Scheme -->

@@ -115,6 +115,79 @@ test("ff-settings-panel dispatches ff-save event with correct statusAttackLinksE
   expect(saveEvents[0]?.detail?.statusAttackLinksEnabled).toBe(false);
 });
 
+test("ff-settings-panel syncs the marker-size slider and number input, clamps out-of-range values, and dispatches gaugeMarkerScale on save", async () => {
+  const el = document.createElement("ff-settings-panel") as FFSettingsPanel;
+  document.body.appendChild(el);
+  await el.updateComplete;
+
+  const saveEvents: CustomEvent[] = [];
+  el.addEventListener("ff-save", (e: Event) => {
+    saveEvents.push(e as CustomEvent);
+  });
+
+  const range = el.querySelector("#gauge-marker-scale") as HTMLInputElement;
+  const number = el.querySelector(
+    "#gauge-marker-scale-number",
+  ) as HTMLInputElement;
+  expect(range).not.toBeNull();
+  expect(number).not.toBeNull();
+  expect(range.value).toBe("100");
+  expect(number.value).toBe("100");
+
+  // Moving the slider updates the synced number input
+  range.value = "150";
+  range.dispatchEvent(new Event("input"));
+  await el.updateComplete;
+  expect(number.value).toBe("150");
+
+  // Typing an out-of-range value into the number input clamps to the max
+  number.value = "999";
+  number.dispatchEvent(new Event("input"));
+  await el.updateComplete;
+  expect(range.value).toBe("200");
+  expect(number.value).toBe("200");
+
+  // Typing below the minimum clamps to the min
+  number.value = "10";
+  number.dispatchEvent(new Event("input"));
+  await el.updateComplete;
+  expect(range.value).toBe("50");
+  expect(number.value).toBe("50");
+
+  const saveBtn = Array.from(el.querySelectorAll("button")).find(
+    (btn) => btn.textContent?.trim() === "Save Settings",
+  ) as HTMLButtonElement;
+  saveBtn.click();
+
+  expect(saveEvents.length).toBe(1);
+  expect(saveEvents[0]?.detail?.gaugeMarkerScale).toBe(50);
+});
+
+test("ff-settings-panel renders a live marker-size preview that updates with the color scheme dropdown", async () => {
+  const el = document.createElement("ff-settings-panel") as FFSettingsPanel;
+  document.body.appendChild(el);
+  await el.updateComplete;
+
+  const previewArrow = el.querySelector(".ffsv3-preview-arrow path");
+  const previewBubble = el.querySelector(
+    ".ffsv3-preview-bubble",
+  ) as HTMLElement;
+  expect(previewArrow).not.toBeNull();
+  expect(previewBubble).not.toBeNull();
+  expect(previewBubble.textContent?.trim()).toBe("2.34");
+  expect(previewArrow?.getAttribute("fill")).toBe("#34e817");
+  const classicBubbleColor = previewBubble.style.backgroundColor;
+  expect(classicBubbleColor).not.toBe("");
+
+  const select = el.querySelector("#color-scheme") as HTMLSelectElement;
+  select.value = "grayscale";
+  select.dispatchEvent(new Event("change"));
+  await el.updateComplete;
+
+  expect(previewArrow?.getAttribute("fill")).toBe("#808080");
+  expect(previewBubble.style.backgroundColor).not.toBe(classicBubbleColor);
+});
+
 test("ff-settings-panel renders a live swatch preview that updates with the color scheme dropdown", async () => {
   const el = document.createElement("ff-settings-panel") as FFSettingsPanel;
   document.body.appendChild(el);

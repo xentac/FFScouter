@@ -44,6 +44,7 @@ test("FFConfig gets default values when storage is empty", () => {
   expect(config.chain_factionless).toEqual(CONFIG_DEFAULTS.chain_factionless);
   expect(config.chain_targets).toBeNull();
   expect(config.chain_target_index).toEqual(0);
+  expect(config.gauge_marker_scale).toEqual(CONFIG_DEFAULTS.gauge_marker_scale);
 });
 
 test("FFConfig sets and gets custom configuration values", () => {
@@ -67,6 +68,7 @@ test("FFConfig sets and gets custom configuration values", () => {
   config.chain_min_ff = 1.2;
   config.chain_max_ff = 2.8;
   config.chain_factionless = true;
+  config.gauge_marker_scale = 150;
 
   expect(config.key).toEqual("myapi-key");
   expect(config.low_ff_range).toEqual(1.5);
@@ -88,6 +90,7 @@ test("FFConfig sets and gets custom configuration values", () => {
   expect(config.chain_inactive).toBe(false);
   expect(config.chain_min_ff).toEqual(1.2);
   expect(config.chain_factionless).toBe(true);
+  expect(config.gauge_marker_scale).toEqual(150);
 
   const mockTargets = {
     targets: [{ player_id: 1, name: "p1" } as any],
@@ -126,6 +129,7 @@ test("FFConfig.reset resets values to their default states except the api key", 
     filters: {} as any,
   };
   config.chain_target_index = 2;
+  config.gauge_marker_scale = 150;
 
   config.reset();
 
@@ -151,4 +155,5 @@ test("FFConfig.reset resets values to their default states except the api key", 
   expect(config.chain_factionless).toEqual(CONFIG_DEFAULTS.chain_factionless);
   expect(config.chain_targets).toBeNull();
   expect(config.chain_target_index).toEqual(0);
+  expect(config.gauge_marker_scale).toEqual(CONFIG_DEFAULTS.gauge_marker_scale);
 });

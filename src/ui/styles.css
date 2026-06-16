@@ -4,6 +4,13 @@
   padding: 0;
 }
 
+.ffsv3-arrow,
+.ffsv3-preview-arrow {
+  width: var(--ffsv3-arrow-width);
+  object-fit: cover;
+  pointer-events: none;
+}
+
 .ffsv3-arrow {
   position: absolute;
   transform: translate(-50%, -30%);
@@ -16,9 +23,32 @@
     (100% - var(--ffsv3-arrow-width)) /
     100
   );
-  width: var(--ffsv3-arrow-width);
-  object-fit: cover;
-  pointer-events: none;
+}
+
+.ffsv3-preview-arrow {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.ffsv3-bubble,
+.ffsv3-preview-bubble {
+  min-width: 2.5882em;
+  height: 1.6471em;
+  line-height: 1.4118;
+  border: 1px solid rgba(0, 0, 0, 0.4);
+  border-radius: 999px;
+  font-size: var(--ffsv3-bubble-font-size);
+  font-weight: bold;
+  font-family: Geneva, Arial, sans-serif;
+  text-align: center;
+  padding: 0 0.4706em;
+  box-sizing: border-box;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
 .ffsv3-bubble {
@@ -32,25 +62,24 @@
     (100% - var(--ffsv3-arrow-width)) /
     100
   );
-  min-width: 22px;
-  height: 14px;
-  line-height: 12px;
-  border: 1px solid rgba(0, 0, 0, 0.4);
-  border-radius: 8px;
-  font-size: 8.5px;
-  font-weight: bold;
-  font-family: Geneva, Arial, sans-serif;
-  text-align: center;
-  padding: 0 4px;
-  box-sizing: border-box;
   pointer-events: none;
-  white-space: nowrap;
+  z-index: 10;
+}
+
+.ffsv3-preview-bubble {
+  vertical-align: middle;
+}
+
+.ffsv3-marker-preview {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.5);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-  z-index: 10;
+  gap: 10px;
+  /* --ffsv3-marker-scale is overridden inline per the draft (unsaved) value;
+     --ffsv3-arrow-width/--ffsv3-bubble-font-size must be recomputed here too,
+     since custom properties inherit their already-resolved value from body,
+     not the calc() formula itself. */
+  --ffsv3-arrow-width: calc(20px * var(--ffsv3-marker-scale));
+  --ffsv3-bubble-font-size: calc(8.5px * var(--ffsv3-marker-scale));
 }
 
 .ffsv3-mini-desc {
@@ -77,7 +106,9 @@ body {
   --ffsv3-hover-color: #ddd;
   --ffsv3-glow-color: #4caf50;
   --ffsv3-success-color: #4caf50;
-  --ffsv3-arrow-width: 20px;
+  --ffsv3-marker-scale: 1;
+  --ffsv3-arrow-width: calc(20px * var(--ffsv3-marker-scale));
+  --ffsv3-bubble-font-size: calc(8.5px * var(--ffsv3-marker-scale));
 }
 
 body.dark-mode {

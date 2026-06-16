@@ -162,6 +162,10 @@ export function add_ff_arrow(element: HTMLElement, featureName = "Unknown") {
     const percent = ff_to_percent(d);
     element.classList.add("ffsv3-gauge");
     element.style.setProperty("--band-percent", `${percent}`);
+    document.body.style.setProperty(
+      "--ffsv3-marker-scale",
+      `${ffconfig.gauge_marker_scale / 100}`,
+    );
 
     const a = element.querySelector(".ffsv3-arrow, .ffsv3-bubble");
     if (a) {
