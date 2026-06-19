@@ -1,3 +1,4 @@
+import type { Feature } from "@features/feature";
 import { StartTime } from "@features/feature";
 import { Features } from "@features/index";
 import { wait_for_body } from "@utils/dom";
@@ -9,15 +10,39 @@ import { init_ui } from "./ui";
 
 const log = logger.child("boot");
 
+// Anchored to the DOM rather than `window` because some delivery mechanisms
+// (e.g. Firefox's native userScripts API, or simply duplicate script
+// registrations) inject this script into more than one isolated JS realm per
+// page. Each realm gets its own `window`, so a window-based flag never
+// actually deduplicates. The document is the one thing every realm shares.
 const INJECTION_KEY = "__FF_SCOUTER_V3_INJECTED__";
 
+// Runs `shouldRun()`/`run()` without letting one feature's bug take down or
+// hide the rest. `shouldRun()` is awaited directly in the loop below, so an
+// unguarded throw there would abort the whole loop and silently skip every
+// feature after it; `run()` is fire-and-forget, so an unguarded rejection
+// would just be an invisible unhandled rejection.
+async function safeShouldRun(feat: Feature): Promise<boolean> {
+  try {
+    return await feat.shouldRun();
+  } catch (err) {
+    log.error(`shouldRun() threw for feature "${feat.name}"`, err);
+    return false;
+  }
+}
+
+function safeRun(feat: Feature): void {
+  feat.run().catch((err) => {
+    log.error(`run() threw for feature "${feat.name}"`, err);
+  });
+}
+
 async function main() {
-  const w = window as unknown as Record<string, boolean>;
-  if (w[INJECTION_KEY]) {
+  if (document.documentElement.hasAttribute(INJECTION_KEY)) {
     log.info("Script already injected");
     return;
   }
-  w[INJECTION_KEY] = true;
+  document.documentElement.setAttribute(INJECTION_KEY, "1");
 
   log.info("Initializing", __FF_SCOUTER_V2_VERSION__);
 
@@ -25,7 +50,11 @@ async function main() {
   init_ui();
 
   if (ffscouter.analytics_enabled) {
-    (unsafeWindow as any).ffscouter = ffscouter;
+    // unsafeWindow is a userscript-manager convention; bare injection
+    // environments (e.g. Torn PDA's WebView) don't define it at all.
+    if (typeof unsafeWindow !== "undefined") {
+      (unsafeWindow as any).ffscouter = ffscouter;
+    }
     (window as any).ffscouter = ffscouter;
   }
 
@@ -35,13 +64,13 @@ async function main() {
     // + check if feature is toggled
     if (
       feat.executionTime === StartTime.DocumentStart &&
-      (await feat.shouldRun())
+      (await safeShouldRun(feat))
     ) {
       if (feat.httpIntercept) {
         feat.httpIntercept.name = feat.name;
         registerHttpInterceptor(feat.httpIntercept);
       }
-      feat.run();
+      safeRun(feat);
     }
   }
 
@@ -51,13 +80,13 @@ async function main() {
     // + check if feature is toggled
     if (
       feat.executionTime === StartTime.DocumentBody &&
-      (await feat.shouldRun())
+      (await safeShouldRun(feat))
     ) {
       if (feat.httpIntercept) {
         feat.httpIntercept.name = feat.name;
         registerHttpInterceptor(feat.httpIntercept);
       }
-      feat.run();
+      safeRun(feat);
     }
   }
 }
