@@ -36,6 +36,22 @@ export interface FactionFilterState {
   };
 }
 
+// The shape consumed by apply_filters_and_sort: same as FactionFilterState,
+// minus the storage-only hiddenColumns fields, with statsMin/statsMax already
+// parsed from their stored suffix-number strings (e.g. "1.5m") into numbers.
+export interface FactionFilterSnapshot {
+  sortBy: FactionFilterState["sortBy"];
+  filterEnabled?: boolean;
+  activity: FactionFilterState["activity"];
+  status: FactionFilterState["status"];
+  levelMin: number | null;
+  levelMax: number | null;
+  ffMin: number | null;
+  ffMax: number | null;
+  statsMin: number | null;
+  statsMax: number | null;
+}
+
 const DEFAULT_HIDDEN_COLUMNS = {
   level: false,
   status: false,
@@ -292,21 +308,29 @@ export class FFFactionFilterBox extends LitElement {
     this.dispatchChange();
   }
 
+  // Public so callers that need a one-off read of the current filter state
+  // (rather than waiting for the next "filter-change" event) don't have to
+  // reach past this element's properties and re-implement the marshaling
+  // themselves (notably parsing statsMin/statsMax out of their stored strings).
+  public getFilterSnapshot(): FactionFilterSnapshot {
+    return {
+      sortBy: this.sortBy,
+      filterEnabled: this.filterEnabled,
+      activity: this.activity,
+      status: this.status,
+      levelMin: this.levelMin,
+      levelMax: this.levelMax,
+      ffMin: this.ffMin,
+      ffMax: this.ffMax,
+      statsMin: this.statsMin ? parse_suffix_number(this.statsMin) : null,
+      statsMax: this.statsMax ? parse_suffix_number(this.statsMax) : null,
+    };
+  }
+
   private dispatchChange() {
     this.dispatchEvent(
       new CustomEvent("filter-change", {
-        detail: {
-          sortBy: this.sortBy,
-          filterEnabled: this.filterEnabled,
-          activity: this.activity,
-          status: this.status,
-          levelMin: this.levelMin,
-          levelMax: this.levelMax,
-          ffMin: this.ffMin,
-          ffMax: this.ffMax,
-          statsMin: this.statsMin ? parse_suffix_number(this.statsMin) : null,
-          statsMax: this.statsMax ? parse_suffix_number(this.statsMax) : null,
-        },
+        detail: this.getFilterSnapshot(),
         bubbles: true,
         composed: true,
       }),

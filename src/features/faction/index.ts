@@ -17,7 +17,6 @@ import {
   format_relative_time,
   get_contrast_color,
   get_ff_colour,
-  parse_suffix_number,
 } from "@utils/strings";
 import type { PlayerId } from "@utils/types";
 import { type Feature, StartTime } from "../feature";
@@ -608,24 +607,11 @@ export async function apply_ff_columns(membersList: HTMLElement) {
   // Trigger filtering and sorting if filter box is connected
   const filterBox = (
     membersList.closest(".faction-war") || membersList.parentNode
-  )?.querySelector("ff-faction-filter-box") as any;
+  )?.querySelector("ff-faction-filter-box");
   if (filterBox?.activity) {
     apply_filters_and_sort(membersList, {
-      sortBy: filterBox.sortBy ?? "none",
-      filterEnabled: filterBox.filterEnabled,
+      ...filterBox.getFilterSnapshot(),
       colDisplay,
-      activity: filterBox.activity,
-      status: filterBox.status,
-      levelMin: filterBox.levelMin ?? null,
-      levelMax: filterBox.levelMax ?? null,
-      ffMin: filterBox.ffMin ?? null,
-      ffMax: filterBox.ffMax ?? null,
-      statsMin: filterBox.statsMin
-        ? parse_suffix_number(filterBox.statsMin)
-        : null,
-      statsMax: filterBox.statsMax
-        ? parse_suffix_number(filterBox.statsMax)
-        : null,
     });
   }
 
@@ -633,6 +619,113 @@ export async function apply_ff_columns(membersList: HTMLElement) {
 
   // Concurrently scan flights for traveling players
   poll_traveling_flights(membersList);
+}
+
+// ============================================================================
+// SHARED ELEMENT-LIFECYCLE HELPERS
+// Generic "wait for a condition inside a root, then run setup" and "run cleanup
+// once a previously-connected element leaves the DOM" helpers. Both the standard
+// members/chain-attack flow (SECTION 3) and the Ranked War flow (SECTION 4)
+// otherwise wire up the same MutationObserver + isConnected-poll boilerplate
+// independently per list shape.
+// ============================================================================
+function cleanup_when_detached(el: HTMLElement, dispose: () => void) {
+  const cleanupInterval = setInterval(() => {
+    if (!el.isConnected) {
+      clearInterval(cleanupInterval);
+      dispose();
+    }
+  }, 10_000);
+}
+
+function run_when_ready(
+  root: HTMLElement,
+  isReady: () => boolean,
+  onReady: () => void,
+) {
+  if (isReady()) {
+    onReady();
+    return;
+  }
+
+  const loadObserver = new MutationObserver((_mutations, obs) => {
+    if (isReady()) {
+      obs.disconnect();
+      onReady();
+    }
+  });
+  loadObserver.observe(root, { childList: true, subtree: true });
+  cleanup_when_detached(root, () => loadObserver.disconnect());
+}
+
+// Watches a list for the status/activity attribute changes Torn's own JS makes
+// in response to state-change events, debounces via rAF, and reapplies the
+// current filter/sort state on top of Torn's reordering. Also polls traveling
+// flights on the same list every 30s. Used by both the standard members flow
+// (observeTarget is the .table-body, since standard lists have one) and the
+// Ranked War flow (observeTarget is the list itself).
+function setup_reapply_watcher(
+  list: HTMLElement,
+  observeTarget: Element,
+  getColDisplay: () => FactionsColDisplay,
+) {
+  let rafPending = false;
+  const attributeObserver = new MutationObserver((mutations) => {
+    if (isApplying.get(list)) return;
+
+    let shouldReapply = false;
+    for (const m of mutations) {
+      if (m.type === "attributes") {
+        if (
+          m.attributeName === "alt" &&
+          m.target instanceof HTMLImageElement &&
+          m.target.closest(".icons")
+        ) {
+          shouldReapply = true;
+          break;
+        }
+        if (
+          m.attributeName === "class" &&
+          m.target instanceof HTMLElement &&
+          m.target.closest(".status")
+        ) {
+          shouldReapply = true;
+          break;
+        }
+      }
+    }
+
+    if (shouldReapply && !rafPending) {
+      rafPending = true;
+      requestAnimationFrame(() => {
+        rafPending = false;
+        const filterBox = (
+          list.closest(".faction-war") || list.parentNode
+        )?.querySelector("ff-faction-filter-box");
+        if (filterBox?.activity) {
+          apply_filters_and_sort(list, {
+            ...filterBox.getFilterSnapshot(),
+            colDisplay: getColDisplay(),
+          });
+        }
+      });
+    }
+  });
+
+  attributeObserver.observe(observeTarget, {
+    attributes: true,
+    attributeFilter: ["class", "alt"],
+    subtree: true,
+  });
+
+  const flightInterval = setInterval(() => {
+    poll_traveling_flights(list);
+  }, 30000);
+
+  cleanup_when_detached(list, () => {
+    clearInterval(flightInterval);
+    attributeObserver.disconnect();
+  });
 }
 
 // ============================================================================
@@ -662,109 +755,31 @@ async function inject_filter_box(membersList: HTMLElement) {
 }
 
 export function initialize_features(membersList: HTMLElement) {
+  // Guards against re-entry (e.g. repeated SPA navigation events re-finding an
+  // already-initialized list), which would otherwise race inject_filter_box's
+  // check-then-await-then-insert and inject a second filter box.
+  if (membersList.hasAttribute("data-ffscouter-initialized")) return;
+  membersList.setAttribute("data-ffscouter-initialized", "true");
+
   inject_filter_box(membersList);
   setup_header_click(membersList, ".table-header", "[role='button']");
   apply_ff_columns(membersList);
 
   const target = membersList.querySelector(".table-body") || membersList;
-  let rafPending = false;
-  const attributeObserver = new MutationObserver((mutations) => {
-    if (isApplying.get(membersList)) return;
-
-    let shouldReapply = false;
-    for (const m of mutations) {
-      if (m.type === "attributes") {
-        if (
-          m.attributeName === "alt" &&
-          m.target instanceof HTMLImageElement &&
-          m.target.closest(".icons")
-        ) {
-          shouldReapply = true;
-          break;
-        }
-        if (
-          m.attributeName === "class" &&
-          m.target instanceof HTMLElement &&
-          m.target.closest(".status")
-        ) {
-          shouldReapply = true;
-          break;
-        }
-      }
-    }
-
-    if (shouldReapply && !rafPending) {
-      rafPending = true;
-      requestAnimationFrame(() => {
-        rafPending = false;
-        const filterBox = (
-          membersList.closest(".faction-war") || membersList.parentNode
-        )?.querySelector("ff-faction-filter-box") as any;
-        if (filterBox?.activity) {
-          apply_filters_and_sort(membersList, {
-            sortBy: filterBox.sortBy ?? "none",
-            filterEnabled: filterBox.filterEnabled,
-            colDisplay: ffconfig.factions_col_display,
-            activity: filterBox.activity,
-            status: filterBox.status,
-            levelMin: filterBox.levelMin ?? null,
-            levelMax: filterBox.levelMax ?? null,
-            ffMin: filterBox.ffMin ?? null,
-            ffMax: filterBox.ffMax ?? null,
-            statsMin: filterBox.statsMin
-              ? parse_suffix_number(filterBox.statsMin)
-              : null,
-            statsMax: filterBox.statsMax
-              ? parse_suffix_number(filterBox.statsMax)
-              : null,
-          });
-        }
-      });
-    }
-  });
-
-  attributeObserver.observe(target, {
-    attributes: true,
-    attributeFilter: ["class", "alt"],
-    subtree: true,
-  });
-
-  const flightInterval = setInterval(() => {
-    poll_traveling_flights(membersList);
-  }, 30000);
-
-  const cleanupInterval = setInterval(() => {
-    if (!membersList.isConnected) {
-      clearInterval(cleanupInterval);
-      clearInterval(flightInterval);
-      attributeObserver.disconnect();
-    }
-  }, 10_000);
+  setup_reapply_watcher(
+    membersList,
+    target,
+    () => ffconfig.factions_col_display,
+  );
 }
 
 function setup_faction_features(membersList: HTMLElement) {
-  const tbody = membersList.querySelector(".table-body");
-  const hasRows = tbody?.querySelector(".table-row");
-
-  if (hasRows) {
-    initialize_features(membersList);
-  } else {
-    const loadObserver = new MutationObserver((_mutations, obs) => {
-      const currentTbody = membersList.querySelector(".table-body");
-      if (currentTbody?.querySelector(".table-row")) {
-        obs.disconnect();
-        initialize_features(membersList);
-      }
-    });
-    loadObserver.observe(membersList, { childList: true, subtree: true });
-
-    const cleanupInterval = setInterval(() => {
-      if (!membersList.isConnected) {
-        clearInterval(cleanupInterval);
-        loadObserver.disconnect();
-      }
-    }, 10_000);
-  }
+  run_when_ready(
+    membersList,
+    () =>
+      !!membersList.querySelector(".table-body")?.querySelector(".table-row"),
+    () => initialize_features(membersList),
+  );
 }
 
 const monitor_member_list = (
@@ -810,13 +825,7 @@ const monitor_member_list = (
     });
 
     loadObserver.observe(root, { childList: true, subtree: true });
-
-    const cleanupInterval = setInterval(() => {
-      if (!root.isConnected) {
-        clearInterval(cleanupInterval);
-        loadObserver.disconnect();
-      }
-    }, 10_000);
+    cleanup_when_detached(root, () => loadObserver.disconnect());
   }
 };
 
@@ -883,37 +892,30 @@ function setup_header_click(
 }
 
 export function setup_war_features(factionWar: HTMLElement) {
-  const lists = Array.from(
-    factionWar.querySelectorAll(".enemy-faction, .your-faction"),
-  ) as HTMLElement[];
-
-  if (lists.length > 0) {
-    initialize_war_features(factionWar, lists);
-  } else {
-    const loadObserver = new MutationObserver((_mutations, obs) => {
-      const currentLists = Array.from(
-        factionWar.querySelectorAll(".enemy-faction, .your-faction"),
-      ) as HTMLElement[];
-      if (currentLists.length > 0) {
-        obs.disconnect();
-        initialize_war_features(factionWar, currentLists);
-      }
-    });
-    loadObserver.observe(factionWar, { childList: true, subtree: true });
-
-    const cleanupInterval = setInterval(() => {
-      if (!factionWar.isConnected) {
-        clearInterval(cleanupInterval);
-        loadObserver.disconnect();
-      }
-    }, 10_000);
-  }
+  run_when_ready(
+    factionWar,
+    () =>
+      factionWar.querySelectorAll(".enemy-faction, .your-faction").length > 0,
+    () =>
+      initialize_war_features(
+        factionWar,
+        Array.from(
+          factionWar.querySelectorAll(".enemy-faction, .your-faction"),
+        ) as HTMLElement[],
+      ),
+  );
 }
 
 async function initialize_war_features(
   factionWar: HTMLElement,
   lists: HTMLElement[],
 ) {
+  // Guards against re-entry (e.g. the descriptions-mutation observer and the
+  // existing_descriptions check in process_page both firing for one page load),
+  // which would otherwise race the filter-box check-then-await-then-insert below.
+  if (factionWar.hasAttribute("data-ffscouter-initialized")) return;
+  factionWar.setAttribute("data-ffscouter-initialized", "true");
+
   // Inject single filter box at the top of the war box (factionWar)
   let filterBox = factionWar.querySelector(
     "ff-faction-filter-box[mode='war']",
@@ -925,11 +927,7 @@ async function initialize_war_features(
     factionWar.insertBefore(filterBox, factionWar.firstChild);
   }
 
-  // Update or attach the filter-change event listener with fresh closure context
-  if (filterBox._onFilterChange) {
-    filterBox.removeEventListener("filter-change", filterBox._onFilterChange);
-  }
-  filterBox._onFilterChange = (e: any) => {
+  filterBox.addEventListener("filter-change", (e: any) => {
     const currentLists = Array.from(
       factionWar.querySelectorAll(".enemy-faction, .your-faction"),
     ) as HTMLElement[];
@@ -938,8 +936,7 @@ async function initialize_war_features(
       apply_filters_and_sort(list, { ...e.detail, colDisplay });
       update_header_sort_indicator(list, e.detail.sortBy);
     }
-  };
-  filterBox.addEventListener("filter-change", filterBox._onFilterChange);
+  });
 
   for (const list of lists) {
     setup_war_list(list);
@@ -947,108 +944,18 @@ async function initialize_war_features(
 }
 
 function setup_war_list(list: HTMLElement) {
-  const tbody = list;
-  const hasRows = tbody.querySelector(".enemy, .your");
-
-  if (hasRows) {
-    initialize_war_list(list);
-  } else {
-    const loadObserver = new MutationObserver((_mutations, obs) => {
-      const currentTbody = list;
-      if (currentTbody.querySelector(".enemy, .your")) {
-        obs.disconnect();
-        initialize_war_list(list);
-      }
-    });
-    loadObserver.observe(list, { childList: true, subtree: true });
-
-    const cleanupInterval = setInterval(() => {
-      if (!list.isConnected) {
-        clearInterval(cleanupInterval);
-        loadObserver.disconnect();
-      }
-    }, 10_000);
-  }
+  run_when_ready(
+    list,
+    () => !!list.querySelector(".enemy, .your"),
+    () => initialize_war_list(list),
+  );
 }
 
 function initialize_war_list(list: HTMLElement) {
   setup_header_click(list, ".white-grad", "[class*='tab___']");
   apply_ff_columns(list);
 
-  const target = list;
-  let rafPending = false;
-  const attributeObserver = new MutationObserver((mutations) => {
-    if (isApplying.get(list)) return;
-
-    let shouldReapply = false;
-    for (const m of mutations) {
-      if (m.type === "attributes") {
-        if (
-          m.attributeName === "alt" &&
-          m.target instanceof HTMLImageElement &&
-          m.target.closest(".icons")
-        ) {
-          shouldReapply = true;
-          break;
-        }
-        if (
-          m.attributeName === "class" &&
-          m.target instanceof HTMLElement &&
-          m.target.closest(".status")
-        ) {
-          shouldReapply = true;
-          break;
-        }
-      }
-    }
-
-    if (shouldReapply && !rafPending) {
-      rafPending = true;
-      requestAnimationFrame(() => {
-        rafPending = false;
-        const filterBox = list
-          .closest(".faction-war")
-          ?.querySelector("ff-faction-filter-box") as any;
-        if (filterBox?.activity) {
-          apply_filters_and_sort(list, {
-            sortBy: filterBox.sortBy ?? "none",
-            filterEnabled: filterBox.filterEnabled,
-            colDisplay: ffconfig.war_col_display,
-            activity: filterBox.activity,
-            status: filterBox.status,
-            levelMin: filterBox.levelMin ?? null,
-            levelMax: filterBox.levelMax ?? null,
-            ffMin: filterBox.ffMin ?? null,
-            ffMax: filterBox.ffMax ?? null,
-            statsMin: filterBox.statsMin
-              ? parse_suffix_number(filterBox.statsMin)
-              : null,
-            statsMax: filterBox.statsMax
-              ? parse_suffix_number(filterBox.statsMax)
-              : null,
-          });
-        }
-      });
-    }
-  });
-
-  attributeObserver.observe(target, {
-    attributes: true,
-    attributeFilter: ["class", "alt"],
-    subtree: true,
-  });
-
-  const flightInterval = setInterval(() => {
-    poll_traveling_flights(list);
-  }, 30000);
-
-  const cleanupInterval = setInterval(() => {
-    if (!list.isConnected) {
-      clearInterval(cleanupInterval);
-      clearInterval(flightInterval);
-      attributeObserver.disconnect();
-    }
-  }, 10_000);
+  setup_reapply_watcher(list, list, () => ffconfig.war_col_display);
 }
 
 // ============================================================================
