@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FF Scouter V2 beta
 // @namespace    xentac-beta
-// @version      3.0-beta7
+// @version      3.0-beta8
 // @author       xentac [3354782], MAVRI [2402357], rDacted [2670953], Weav3r [1853324], Glasnost [1844049]
 // @description  Shows the expected Fair Fight score against targets and faction war status
 // @license      GPLv3
@@ -2867,6 +2867,24 @@ queryString.charCodeAt(pos - 1) === 63) {
     );
     return body !== null;
   }
+  const CREATE_ELEMENT_RETRY_DELAYS_MS = [0, 50, 150];
+  async function create_ff_element(tagName) {
+    const ctor = customElements.get(tagName);
+    for (const delay of CREATE_ELEMENT_RETRY_DELAYS_MS) {
+      if (delay > 0) {
+        await new Promise((resolve) => setTimeout(resolve, delay));
+      }
+      const element = document.createElement(tagName);
+      if (!ctor || element instanceof ctor) {
+        return element;
+      }
+      log$c.warn(`<${tagName}> construction produced a fallback element; retrying`);
+    }
+    log$c.error(
+      `Failed to construct a working <${tagName}> after multiple attempts`
+    );
+    return null;
+  }
   class MonitorElements {
     constructor(node_matcher, handler, root, continuous, options, _timeout) {
       this.options = {
@@ -3675,7 +3693,8 @@ willUpdate(changedProperties) {
       log$a.debug("On the attack page, found player_id", player_id);
       const info_line = create_info_line();
       ffscouter.get(player_id).then(async (data) => {
-        const line = document.createElement("ff-header-line");
+        const line = await create_ff_element("ff-header-line");
+        if (!line) return;
         line.data = data;
         info_line.appendChild(line);
         inject_info_line$1(info_line);
@@ -4768,14 +4787,15 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     update_header_sort_indicator(membersList, filterBox?.sortBy ?? "none");
     poll_traveling_flights(membersList);
   }
-  function inject_filter_box(membersList) {
+  async function inject_filter_box(membersList) {
     const parent = membersList.parentNode;
     if (!parent) return;
     let filterBox = parent.querySelector(
       "ff-faction-filter-box"
     );
     if (!filterBox) {
-      filterBox = document.createElement("ff-faction-filter-box");
+      filterBox = await create_ff_element("ff-faction-filter-box");
+      if (!filterBox) return;
       filterBox.addEventListener("filter-change", (e2) => {
         apply_filters_and_sort(membersList, {
           ...e2.detail,
@@ -4973,12 +4993,13 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       }, 1e4);
     }
   }
-  function initialize_war_features(factionWar, lists) {
+  async function initialize_war_features(factionWar, lists) {
     let filterBox = factionWar.querySelector(
       "ff-faction-filter-box[mode='war']"
     );
     if (!filterBox) {
-      filterBox = document.createElement("ff-faction-filter-box");
+      filterBox = await create_ff_element("ff-faction-filter-box");
+      if (!filterBox) return;
       filterBox.setAttribute("mode", "war");
       factionWar.insertBefore(filterBox, factionWar.firstChild);
     }
@@ -6029,12 +6050,15 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     });
     mini_body_observer.observe(document.body, { childList: true });
   };
-  const setup_mini_flight_observer = () => {
+  const setup_mini_flight_observer = async () => {
     const miniroot = document.querySelector("#profile-mini-root");
     if (!miniroot) {
       return;
     }
-    const flight_element = document.createElement("ff-flight-profile-status");
+    const flight_element = await create_ff_element("ff-flight-profile-status");
+    if (!flight_element) {
+      return;
+    }
     flight_element.compact = true;
     let lastPlayerId = null;
     const mp_observer = new MutationObserver((mutations) => {
@@ -6226,7 +6250,8 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       if (!status) {
         return;
       }
-      const element = document.createElement("ff-flight-profile-status");
+      const element = await create_ff_element("ff-flight-profile-status");
+      if (!element) return;
       element.playerId = player_id;
       const check_and_update = () => {
         if (is_flying(status)) {
@@ -6355,7 +6380,8 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
         return;
       }
       ffscouter.get(player_id).then(async (data) => {
-        const line = document.createElement("ff-header-line");
+        const line = await create_ff_element("ff-header-line");
+        if (!line) return;
         line.data = data;
         info_line.appendChild(line);
         inject_info_line(info_line);
@@ -7514,7 +7540,14 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       return torn_page("profiles");
     },
     async run() {
-      const panel = document.createElement("ff-settings-panel");
+      const panel = await create_ff_element("ff-settings-panel");
+      if (!panel) {
+        toast(
+          "FF Scouter settings failed to load. This may be caused by a conflicting browser extension (e.g. AdBlocker Ultimate).",
+          TOAST_LEVEL.ERROR
+        );
+        return;
+      }
       panel.apiKey = ffconfig.key || "";
       panel.lowRange = ffconfig.low_ff_range;
       panel.highRange = ffconfig.high_ff_range;
@@ -7916,36 +7949,50 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
   importCSS(stylesCss);
   const log = logger.child("boot");
   const INJECTION_KEY = "__FF_SCOUTER_V3_INJECTED__";
+  async function safeShouldRun(feat) {
+    try {
+      return await feat.shouldRun();
+    } catch (err) {
+      log.error(`shouldRun() threw for feature "${feat.name}"`, err);
+      return false;
+    }
+  }
+  function safeRun(feat) {
+    feat.run().catch((err) => {
+      log.error(`run() threw for feature "${feat.name}"`, err);
+    });
+  }
   async function main() {
-    const w = window;
-    if (w[INJECTION_KEY]) {
+    if (document.documentElement.hasAttribute(INJECTION_KEY)) {
       log.info("Script already injected");
       return;
     }
-    w[INJECTION_KEY] = true;
-    log.info("Initializing", "3.0-beta7");
+    document.documentElement.setAttribute(INJECTION_KEY, "1");
+    log.info("Initializing", "3.0-beta8");
     run_migration();
     if (ffscouter.analytics_enabled) {
-      unsafeWindow.ffscouter = ffscouter;
+      if (typeof unsafeWindow !== "undefined") {
+        unsafeWindow.ffscouter = ffscouter;
+      }
       window.ffscouter = ffscouter;
     }
     for (const feat of Features) {
-      if (feat.executionTime === StartTime.DocumentStart && await feat.shouldRun()) {
+      if (feat.executionTime === StartTime.DocumentStart && await safeShouldRun(feat)) {
         if (feat.httpIntercept) {
           feat.httpIntercept.name = feat.name;
           registerHttpInterceptor(feat.httpIntercept);
         }
-        feat.run();
+        safeRun(feat);
       }
     }
     await wait_for_body(1e4);
     for (const feat of Features) {
-      if (feat.executionTime === StartTime.DocumentBody && await feat.shouldRun()) {
+      if (feat.executionTime === StartTime.DocumentBody && await safeShouldRun(feat)) {
         if (feat.httpIntercept) {
           feat.httpIntercept.name = feat.name;
           registerHttpInterceptor(feat.httpIntercept);
         }
-        feat.run();
+        safeRun(feat);
       }
     }
   }
