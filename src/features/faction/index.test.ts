@@ -881,6 +881,7 @@ test("setup_war_features detects enemy-faction and your-faction lists and setup 
   document.body.appendChild(factionWar);
 
   setup_war_features(factionWar);
+  await new Promise((resolve) => setTimeout(resolve, 0));
 
   // Filter box should be injected at the top of the war box container
   const filterBox = factionWar.querySelector(

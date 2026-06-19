@@ -1,6 +1,7 @@
 import { check_key_status } from "@utils/check_key";
 import {
   apply_ff_gauge_selector,
+  create_ff_element,
   detect_sort_icon_classes,
   get_player_id_in_element,
   on_navigation,
@@ -639,7 +640,7 @@ export async function apply_ff_columns(membersList: HTMLElement) {
 // Setup, observation, and initialization functions for standard faction member list
 // pages. Monitors additions and status updates to dynamically keep columns and filters updated.
 // ============================================================================
-function inject_filter_box(membersList: HTMLElement) {
+async function inject_filter_box(membersList: HTMLElement) {
   const parent = membersList.parentNode;
   if (!parent) return;
 
@@ -647,7 +648,8 @@ function inject_filter_box(membersList: HTMLElement) {
     "ff-faction-filter-box",
   ) as HTMLElement | null;
   if (!filterBox) {
-    filterBox = document.createElement("ff-faction-filter-box");
+    filterBox = await create_ff_element("ff-faction-filter-box");
+    if (!filterBox) return;
     filterBox.addEventListener("filter-change", (e: any) => {
       apply_filters_and_sort(membersList, {
         ...e.detail,
@@ -908,7 +910,7 @@ export function setup_war_features(factionWar: HTMLElement) {
   }
 }
 
-function initialize_war_features(
+async function initialize_war_features(
   factionWar: HTMLElement,
   lists: HTMLElement[],
 ) {
@@ -917,7 +919,8 @@ function initialize_war_features(
     "ff-faction-filter-box[mode='war']",
   ) as any;
   if (!filterBox) {
-    filterBox = document.createElement("ff-faction-filter-box");
+    filterBox = await create_ff_element("ff-faction-filter-box");
+    if (!filterBox) return;
     filterBox.setAttribute("mode", "war");
     factionWar.insertBefore(filterBox, factionWar.firstChild);
   }

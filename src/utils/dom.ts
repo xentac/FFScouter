@@ -332,6 +332,39 @@ export async function wait_for_body(timeout: number): Promise<boolean> {
   return body !== null;
 }
 
+const CREATE_ELEMENT_RETRY_DELAYS_MS = [0, 50, 150];
+
+// Per the HTML spec, if a custom element's constructor throws, `create an
+// element` (used by document.createElement) reports the exception to the
+// console and substitutes a generic fallback element instead of rethrowing —
+// so a try/catch around createElement never sees anything to catch. Some
+// browser extensions interfere with custom element upgrade in a way that
+// makes the very first construction attempt fail this way (observed with
+// Adblocker Ultimate breaking Lit's ReactiveElement constructor), so we have
+// to check the *result* (is it actually an instance of our class?) rather
+// than catching an exception, and retry if it isn't. Returns null if every
+// attempt fails, so callers can degrade gracefully instead of leaving the
+// page in a broken, half-initialized state.
+export async function create_ff_element<K extends keyof HTMLElementTagNameMap>(
+  tagName: K,
+): Promise<HTMLElementTagNameMap[K] | null> {
+  const ctor = customElements.get(tagName);
+  for (const delay of CREATE_ELEMENT_RETRY_DELAYS_MS) {
+    if (delay > 0) {
+      await new Promise((resolve) => setTimeout(resolve, delay));
+    }
+    const element = document.createElement(tagName);
+    if (!ctor || element instanceof ctor) {
+      return element;
+    }
+    log.warn(`<${tagName}> construction produced a fallback element; retrying`);
+  }
+  log.error(
+    `Failed to construct a working <${tagName}> after multiple attempts`,
+  );
+  return null;
+}
+
 export type HandlerFnOptions = {
   target?: HTMLElement;
   added?: HTMLElement;

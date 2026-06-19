@@ -3,6 +3,7 @@ import { beforeEach, expect, test, vi } from "vitest";
 import {
   add_ff_arrow,
   apply_ff_gauge,
+  create_ff_element,
   create_info_line,
   extract_id_from_url,
   get_attack_url,
@@ -440,4 +441,54 @@ test("open_attack_link respects ffconfig quick attack action when openInNewTab i
     "_blank",
   );
   expect(mockLocation.href).toEqual("");
+});
+
+// Per the HTML spec, a throwing custom element constructor doesn't make
+// document.createElement throw — it makes it silently return a generic
+// fallback element instead, which is the failure mode create_ff_element
+// actually has to detect. A real registered class is needed here so we can
+// assert on `instanceof` the way the implementation does.
+class TestFFElement extends HTMLElement {}
+if (!customElements.get("ff-test-element")) {
+  customElements.define("ff-test-element", TestFFElement);
+}
+
+test("create_ff_element returns a real instance on the first successful attempt", async () => {
+  const createSpy = vi.spyOn(document, "createElement");
+
+  const element = await create_ff_element("ff-test-element" as any);
+
+  expect(element).toBeInstanceOf(TestFFElement);
+  expect(createSpy).toHaveBeenCalledTimes(1);
+});
+
+test("create_ff_element retries when createElement returns a fallback element and returns the real instance", async () => {
+  const real = document.createElement.bind(document);
+  const createSpy = vi
+    .spyOn(document, "createElement")
+    .mockImplementationOnce(() => real("div"))
+    .mockImplementationOnce((tag: string) => real(tag));
+
+  const element = await create_ff_element("ff-test-element" as any);
+
+  expect(element).toBeInstanceOf(TestFFElement);
+  expect(createSpy).toHaveBeenCalledTimes(2);
+});
+
+test("create_ff_element returns null if every attempt produces a fallback element", async () => {
+  const real = document.createElement.bind(document);
+  const createSpy = vi
+    .spyOn(document, "createElement")
+    .mockImplementation(() => real("div"));
+
+  const element = await create_ff_element("ff-test-element" as any);
+
+  expect(element).toBeNull();
+  expect(createSpy).toHaveBeenCalledTimes(3);
+});
+
+test("create_ff_element accepts any element for tags that aren't registered custom elements", async () => {
+  const element = await create_ff_element("span" as any);
+
+  expect(element?.tagName.toLowerCase()).toBe("span");
 });

@@ -1,4 +1,5 @@
 import {
+  create_ff_element,
   create_info_line,
   extract_id_from_url,
   torn_page,
@@ -55,7 +56,8 @@ export default {
 
     // Query ff scouter for FFData
     ffscouter.get(player_id).then(async (data: FFData) => {
-      const line = document.createElement("ff-header-line");
+      const line = await create_ff_element("ff-header-line");
+      if (!line) return;
       line.data = data;
       info_line.appendChild(line);
       inject_info_line(info_line);

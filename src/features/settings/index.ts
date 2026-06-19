@@ -4,7 +4,7 @@ import "@ui/settings-panel";
 import { TOAST_LEVEL, toast } from "@ui/toast";
 import { check_key, type FFApiCheckResponse } from "@utils/api";
 import { check_key_status } from "@utils/check_key";
-import { torn_page, wait_for_element } from "@utils/dom";
+import { create_ff_element, torn_page, wait_for_element } from "@utils/dom";
 import { ffscouter } from "@utils/ffscouter";
 import logger, { LogLevel } from "@utils/logger";
 import { clear_v2_data } from "@utils/migrate";
@@ -22,7 +22,14 @@ export default {
   },
 
   async run() {
-    const panel = document.createElement("ff-settings-panel");
+    const panel = await create_ff_element("ff-settings-panel");
+    if (!panel) {
+      toast(
+        "FF Scouter settings failed to load. This may be caused by a conflicting browser extension (e.g. AdBlocker Ultimate).",
+        TOAST_LEVEL.ERROR,
+      );
+      return;
+    }
 
     // Inject data
     panel.apiKey = ffconfig.key || "";

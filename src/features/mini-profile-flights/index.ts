@@ -1,4 +1,4 @@
-import { get_player_id_in_element } from "@utils/dom";
+import { create_ff_element, get_player_id_in_element } from "@utils/dom";
 import { ffscouter } from "@utils/ffscouter";
 import logger from "@utils/logger";
 import "@ui/flight-status";
@@ -32,13 +32,16 @@ const monitor_mini_profile_root = () => {
   mini_body_observer.observe(document.body, { childList: true });
 };
 
-const setup_mini_flight_observer = () => {
+const setup_mini_flight_observer = async () => {
   const miniroot = document.querySelector("#profile-mini-root");
   if (!miniroot) {
     return;
   }
 
-  const flight_element = document.createElement("ff-flight-profile-status");
+  const flight_element = await create_ff_element("ff-flight-profile-status");
+  if (!flight_element) {
+    return;
+  }
   flight_element.compact = true;
 
   let lastPlayerId: number | null = null;

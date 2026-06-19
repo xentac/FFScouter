@@ -1,4 +1,9 @@
-import { extract_id_from_url, torn_page, wait_for_element } from "@utils/dom";
+import {
+  create_ff_element,
+  extract_id_from_url,
+  torn_page,
+  wait_for_element,
+} from "@utils/dom";
 import { ffscouter } from "@utils/ffscouter";
 import "@ui/flight-status";
 import { type Feature, StartTime } from "../feature";
@@ -29,7 +34,8 @@ export default {
       return;
     }
 
-    const element = document.createElement("ff-flight-profile-status");
+    const element = await create_ff_element("ff-flight-profile-status");
+    if (!element) return;
     element.playerId = player_id;
 
     const check_and_update = () => {
