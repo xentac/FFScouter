@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FF Scouter V2 beta
 // @namespace    xentac-beta
-// @version      3.0-beta8
+// @version      3.0-beta9
 // @author       xentac [3354782], MAVRI [2402357], rDacted [2670953], Weav3r [1853324], Glasnost [1844049]
 // @description  Shows the expected Fair Fight score against targets and faction war status
 // @license      GPLv3
@@ -152,7 +152,7 @@ formatArgs(args) {
     "FFSV3",
     0
 );
-  const log$g = logger.child("storage");
+  const log$h = logger.child("storage");
   var Time = ((Time2) => {
     Time2[Time2["Seconds"] = 1e3] = "Seconds";
     Time2[Time2["Minutes"] = 6e4] = "Minutes";
@@ -174,7 +174,7 @@ set(key, value, expireConfig) {
         };
         localStorage.setItem(this.prefix + key, JSON.stringify(item));
       } catch (error) {
-        log$g.error(`Error storing item '${key}':`, error);
+        log$h.error(`Error storing item '${key}':`, error);
       }
     }
 get(key) {
@@ -190,18 +190,18 @@ get(key) {
           item = null;
         }
         if (!item) {
-          log$g.warn(`Key '${key}' has invalid JSON in it.`);
+          log$h.warn(`Key '${key}' has invalid JSON in it.`);
           this.remove(key);
           return null;
         }
         if (item.expiration && Date.now() > item.expiration) {
           this.remove(key);
-          log$g.debug(`Key ${key} has expired.`);
+          log$h.debug(`Key ${key} has expired.`);
           return null;
         }
         return item.value;
       } catch (error) {
-        log$g.error(`Error retrieving item '${key}':`, error);
+        log$h.error(`Error retrieving item '${key}':`, error);
         return null;
       }
     }
@@ -209,7 +209,7 @@ remove(key) {
       try {
         localStorage.removeItem(this.prefix + key);
       } catch (error) {
-        log$g.error(`Error removing item [${key}]:`, error);
+        log$h.error(`Error removing item [${key}]:`, error);
       }
     }
 has(key) {
@@ -221,7 +221,7 @@ clearAll() {
           localStorage.removeItem(key);
         });
       } catch (error) {
-        log$g.error("Error clearing storage:", error);
+        log$h.error("Error clearing storage:", error);
       }
     }
   }
@@ -1156,7 +1156,7 @@ clearAll() {
     }
     return parsed;
   };
-  const log$f = logger.child("api");
+  const log$g = logger.child("api");
   const CHECK_KEY = "check-key-status";
   class CheckKeyStatus {
     constructor(config, storage) {
@@ -1171,7 +1171,7 @@ clearAll() {
         try {
           result = await check_key(this.config.key);
         } catch (err) {
-          log$f.error(
+          log$g.error(
             "Received error response querying ffscouter check-key api:",
             err
           );
@@ -1192,7 +1192,7 @@ clearAll() {
           if (!status) return null;
           return status.is_premium;
         } catch (err) {
-          log$f.warn("Failed to check premium status:", err);
+          log$g.warn("Failed to check premium status:", err);
           return null;
         }
       };
@@ -1448,7 +1448,7 @@ event.oldVersion,
       return isIteratorProp(target, prop) || oldTraps.has(target, prop);
     }
   }));
-  const log$e = logger.child("storage");
+  const log$f = logger.child("storage");
   const STORES = {
     CACHE: "cache",
     FLIGHTS: "flights",
@@ -1524,20 +1524,20 @@ event.oldVersion,
           try {
             const db = await openDB(this.db_name, this.db_version, {
               upgrade(db2, oldVersion, newVersion, transaction, _event) {
-                log$e.info("Need to upgrade from", oldVersion, "to", newVersion);
+                log$f.info("Need to upgrade from", oldVersion, "to", newVersion);
                 for (let i2 = (oldVersion ?? 0) + 1; i2 <= cache.db_version; i2++) {
-                  log$e.debug(`Migration: ${i2}`);
+                  log$f.debug(`Migration: ${i2}`);
                   const m2 = cache.migrations.get(i2);
                   if (m2) {
                     m2(db2, transaction);
                   } else {
-                    log$e.debug(`Migration not found: ${i2}`);
+                    log$f.debug(`Migration not found: ${i2}`);
                   }
-                  log$e.debug(`Migration complete: ${i2}`);
+                  log$f.debug(`Migration complete: ${i2}`);
                 }
               },
               blocking(currentVersion, blockedVersion, event) {
-                log$e.debug(
+                log$f.debug(
                   `Can't open ${blockedVersion} because ${currentVersion} is open. Closing.`
                 );
                 cache.close();
@@ -1597,10 +1597,10 @@ event.oldVersion,
         try {
           await deleteDB(this.db_name, {
             blocked: () => {
-              log$e.debug("deleteDB blocked callback called!");
+              log$f.debug("deleteDB blocked callback called!");
             }
           });
-          log$e.info(`Successfully deleted ${this.db_name} IndexedDB.`);
+          log$f.info(`Successfully deleted ${this.db_name} IndexedDB.`);
         } finally {
           this.channel?.postMessage({ type: "deleted" });
           this.state = "CLOSED";
@@ -1705,7 +1705,7 @@ event.oldVersion,
               const index2 = tx.store.index("expiry");
               const range = IDBKeyRange.upperBound(Date.now());
               const r2 = await index2.getAllKeys(range);
-              log$e.info(`Found ${r2.length} expired values to delete from cache.`);
+              log$f.info(`Found ${r2.length} expired values to delete from cache.`);
               await Promise.all(r2.map((id) => tx.store.delete(id)));
               await tx.done;
             }
@@ -1714,7 +1714,7 @@ event.oldVersion,
               const index2 = tx.store.index("expiry");
               const range = IDBKeyRange.upperBound(Date.now());
               const r2 = await index2.getAllKeys(range);
-              log$e.info(`Found ${r2.length} expired values to delete from flights.`);
+              log$f.info(`Found ${r2.length} expired values to delete from flights.`);
               await Promise.all(r2.map((id) => tx.store.delete(id)));
               await tx.done;
             }
@@ -1724,7 +1724,7 @@ event.oldVersion,
               const thirty_days_ago = Date.now() - 30 * 24 * 60 * 60 * 1e3;
               const range = IDBKeyRange.upperBound(thirty_days_ago);
               const r2 = await index2.getAllKeys(range);
-              log$e.info(
+              log$f.info(
                 `Found ${r2.length} expired values to delete from analytics.`
               );
               await Promise.all(r2.map((id) => tx.store.delete(id)));
@@ -1850,7 +1850,7 @@ event.oldVersion,
       }
     }
   }
-  const log$d = logger.child("api");
+  const log$e = logger.child("api");
   const DB_NAME = "FFSV3-cache";
   const RECHECK_RETRY_DELAY = 60 * 1e3;
   const RECHECK_WINDOW_DURATION = 3 * 60 * 1e3;
@@ -1936,7 +1936,7 @@ queryString.charCodeAt(pos - 1) === 63) {
         try {
           await this.cache.delete_flight(player_id);
         } catch (err) {
-          log$d.error("Failed to delete flight from cache", err);
+          log$e.error("Failed to delete flight from cache", err);
         }
       };
       this.calculate_flight_cache_ttl = (result) => {
@@ -1984,7 +1984,7 @@ queryString.charCodeAt(pos - 1) === 63) {
           return;
         }
         if (this.last_limits && this.last_limits.reset_time > new Date() && this.last_limits.remaining <= GLOBAL_BUDGET_RESERVE) {
-          log$d.warn(
+          log$e.warn(
             `Total API quota <= ${GLOBAL_BUDGET_RESERVE}. Deferring flight status checks to prioritize stats.`
           );
           this.schedule_flight_processor(5e3);
@@ -1999,7 +1999,7 @@ queryString.charCodeAt(pos - 1) === 63) {
           this.schedule_flight_processor(0);
           return;
         }
-        log$d.debug(`Querying paced flight API for player ${player_id}`);
+        log$e.debug(`Querying paced flight API for player ${player_id}`);
         try {
           const response = await query_flights(this.config.key, player_id);
           if (response.blank) {
@@ -2016,10 +2016,10 @@ queryString.charCodeAt(pos - 1) === 63) {
               const ttl = this.calculate_flight_cache_ttl(response.result);
               await this.cache.update_flight(response.result, ttl);
             } catch (err) {
-              log$d.error("Failed to update flight cache", err);
+              log$e.error("Failed to update flight cache", err);
             }
           } else {
-            log$d.debug(`Start rechecking cycle for player ${player_id}`);
+            log$e.debug(`Start rechecking cycle for player ${player_id}`);
             const now = Date.now();
             const next_retry_at = now + RECHECK_RETRY_DELAY;
             const existing_recheck_until = this.flight_recheck_until.get(player_id);
@@ -2036,7 +2036,7 @@ queryString.charCodeAt(pos - 1) === 63) {
               const remaining_ttl = Math.max(0, recheck_until - now);
               await this.cache.update_flight(rechecking_response, remaining_ttl);
             } catch (err) {
-              log$d.error("Failed to update flight cache during recheck", err);
+              log$e.error("Failed to update flight cache during recheck", err);
             }
             finalResult = rechecking_response;
           }
@@ -2044,7 +2044,7 @@ queryString.charCodeAt(pos - 1) === 63) {
             job.resolve(finalResult);
           }
         } catch (err) {
-          log$d.error(`Paced flight API query failed for ${player_id}:`, err);
+          log$e.error(`Paced flight API query failed for ${player_id}:`, err);
           const apiErr = err;
           if (apiErr?.ff_api_limits) {
             this.last_limits = apiErr.ff_api_limits;
@@ -2058,7 +2058,7 @@ queryString.charCodeAt(pos - 1) === 63) {
           try {
             await this.cache.clean_expired();
           } catch (err) {
-            log$d.error("Failed to clean expired cache entries", err);
+            log$e.error("Failed to clean expired cache entries", err);
           }
           if (this.flight_queue.length > 0) {
             this.schedule_flight_processor(FLIGHT_PACING_DELAY);
@@ -2066,7 +2066,7 @@ queryString.charCodeAt(pos - 1) === 63) {
         }
       };
       this.get_flights = async (player_id) => {
-        log$d.debug(`get_flights called for ${player_id}`);
+        log$e.debug(`get_flights called for ${player_id}`);
         if (!this.config.key) {
           return {
             player_id,
@@ -2078,14 +2078,14 @@ queryString.charCodeAt(pos - 1) === 63) {
         try {
           cached = await this.cache.get_flight(player_id);
         } catch (err) {
-          log$d.error("Failed to query flight cache", err);
+          log$e.error("Failed to query flight cache", err);
         }
         if (cached) {
-          log$d.debug(`Flight cache hit for player ${player_id}`);
+          log$e.debug(`Flight cache hit for player ${player_id}`);
           if (cached.rechecking) {
             const now = Date.now();
             if (cached.recheck_until && now >= cached.recheck_until) {
-              log$d.debug(
+              log$e.debug(
                 `Rechecking window expired for player ${player_id}. Finalizing no data.`
               );
               const final_response = {
@@ -2100,12 +2100,12 @@ queryString.charCodeAt(pos - 1) === 63) {
                   FINALIZED_NO_FLIGHT_TTL
                 );
               } catch (err) {
-                log$d.error("Failed to finalize flight cache", err);
+                log$e.error("Failed to finalize flight cache", err);
               }
               return final_response;
             }
             if (cached.next_retry_at && now >= cached.next_retry_at) {
-              log$d.debug(
+              log$e.debug(
                 `Retrying API call for player ${player_id} during recheck window`
               );
               const result2 = await this.enqueue_flight_api(
@@ -2129,7 +2129,7 @@ queryString.charCodeAt(pos - 1) === 63) {
             recent_flights: cached.recent_flights
           };
         }
-        log$d.debug(`Flight cache miss for player ${player_id}. Querying API paced.`);
+        log$e.debug(`Flight cache miss for player ${player_id}. Querying API paced.`);
         const result = await this.enqueue_flight_api(player_id);
         return result;
       };
@@ -2137,16 +2137,16 @@ queryString.charCodeAt(pos - 1) === 63) {
         this.process_cache();
       };
       this.enqueue_cache = (player_id) => {
-        log$d.debug(`Enqueuing cache ${player_id}`);
+        log$e.debug(`Enqueuing cache ${player_id}`);
         this.cache_queue.add(player_id);
         this.schedule_cache();
       };
       this.schedule_cache = () => {
         if (this.cache_timer) {
-          log$d.debug(`schedule_cache called but job already scheduled`);
+          log$e.debug(`schedule_cache called but job already scheduled`);
           return;
         }
-        log$d.debug(
+        log$e.debug(
           `schedule_cache called and job scheduled for ${this.cache_delay} ms`
         );
         this.cache_timer = this.schedule(this.process_cache, this.cache_delay);
@@ -2167,14 +2167,14 @@ queryString.charCodeAt(pos - 1) === 63) {
         } catch (_2) {
           results = new Map();
         }
-        log$d.debug("Received results", results);
+        log$e.debug("Received results", results);
         for (const id of ids) {
           const v2 = results.get(id);
           if (v2) {
-            log$d.debug("Id", id, "found in cache. Resolving value.");
+            log$e.debug("Id", id, "found in cache. Resolving value.");
             this.resolve(id, v2);
           } else {
-            log$d.debug("Id", id, "not found in cache. Scheduling api call.");
+            log$e.debug("Id", id, "not found in cache. Scheduling api call.");
             this.enqueue_api(id);
           }
         }
@@ -2184,20 +2184,20 @@ queryString.charCodeAt(pos - 1) === 63) {
         check_key_status.clear();
       };
       this.enqueue_api = (player_id) => {
-        log$d.debug(`Enqueuing api ${player_id}`);
+        log$e.debug(`Enqueuing api ${player_id}`);
         this.api_queue.add(player_id);
         this.schedule_api();
       };
       this.schedule_api = (delay = this.api_initial_delay) => {
         if (this.api_timer) {
-          log$d.debug(`schedule_api called but job already scheduled`);
+          log$e.debug(`schedule_api called but job already scheduled`);
           return;
         }
-        log$d.debug(`schedule_api called and job scheduled for ${delay} ms`);
+        log$e.debug(`schedule_api called and job scheduled for ${delay} ms`);
         this.api_timer = this.schedule(this.process_api, delay);
       };
       this.process_api = async () => {
-        log$d.debug("process_api called");
+        log$e.debug("process_api called");
         if (this.api_timer) {
           this.clear(this.api_timer);
           this.api_timer = null;
@@ -2209,18 +2209,18 @@ queryString.charCodeAt(pos - 1) === 63) {
         for (const id of ids) {
           this.api_queue.delete(id);
         }
-        log$d.debug(`Processing ${ids} api requests`);
+        log$e.debug(`Processing ${ids} api requests`);
         if (ids.length <= 0) {
-          log$d.debug("No ids found to query");
+          log$e.debug("No ids found to query");
           return;
         }
         let next_run = this.api_default_delay;
         let results;
         try {
-          log$d.debug("Calling query_stats with", this.config.key, ",", ids);
+          log$e.debug("Calling query_stats with", this.config.key, ",", ids);
           results = await query_stats(this.config.key, ids);
         } catch (err) {
-          log$d.error("Received error response querying ffscouter api:", err);
+          log$e.error("Received error response querying ffscouter api:", err);
           for (const id of ids) {
             this.reject(id, err);
           }
@@ -2231,7 +2231,7 @@ queryString.charCodeAt(pos - 1) === 63) {
             limits: ff_error.ff_api_limits
           };
         }
-        log$d.debug("Received results", results);
+        log$e.debug("Received results", results);
         if (results.blank) {
           for (const id of ids) {
             this.requeue_api(id);
@@ -2240,15 +2240,15 @@ queryString.charCodeAt(pos - 1) === 63) {
           try {
             await this.cache.update(Array.from(results.result.values()));
           } catch (err) {
-            log$d.error("Failed to update cache", err);
+            log$e.error("Failed to update cache", err);
           }
           for (const id of ids) {
             const v2 = results.result.get(id);
             if (v2) {
-              log$d.debug("Id", id, "found in results. Resolving value.");
+              log$e.debug("Id", id, "found in results. Resolving value.");
               this.resolve(id, v2);
             } else {
-              log$d.debug("Id", id, "not found in results. Resolving no_data.");
+              log$e.debug("Id", id, "not found in results. Resolving no_data.");
               this.resolve(id, { player_id: id, no_data: true });
             }
           }
@@ -2315,14 +2315,14 @@ queryString.charCodeAt(pos - 1) === 63) {
             hash
           });
         } catch (err) {
-          log$d.error("Failed to add analytics entry", err);
+          log$e.error("Failed to add analytics entry", err);
         }
       };
       this.get_analytics_entries = async () => {
         try {
           return await this.cache.get_analytics();
         } catch (err) {
-          log$d.error("Failed to get analytics entries", err);
+          log$e.error("Failed to get analytics entries", err);
           return [];
         }
       };
@@ -2366,7 +2366,7 @@ queryString.charCodeAt(pos - 1) === 63) {
         try {
           await this.cache.clear_analytics();
         } catch (err) {
-          log$d.error("Failed to clear analytics entries", err);
+          log$e.error("Failed to clear analytics entries", err);
         }
       };
       this.config = config;
@@ -2630,7 +2630,7 @@ queryString.charCodeAt(pos - 1) === 63) {
     };
     return num * (multiplier[suffix] ?? 1);
   }
-  const log$c = logger.child("dom");
+  const log$d = logger.child("dom");
   const ID_PARAMS = ["XID", "user2ID"];
   function extract_id_from_url(url) {
     const parsed = new URL(url);
@@ -2878,9 +2878,9 @@ queryString.charCodeAt(pos - 1) === 63) {
       if (!ctor || element instanceof ctor) {
         return element;
       }
-      log$c.warn(`<${tagName}> construction produced a fallback element; retrying`);
+      log$d.warn(`<${tagName}> construction produced a fallback element; retrying`);
     }
-    log$c.error(
+    log$d.error(
       `Failed to construct a working <${tagName}> after multiple attempts`
     );
     return null;
@@ -2958,14 +2958,14 @@ queryString.charCodeAt(pos - 1) === 63) {
       15e3
     );
     if (!name || !name.href) {
-      log$c.debug("Failed to find the XID element.");
+      log$d.debug("Failed to find the XID element.");
       return null;
     }
     try {
       const params = new URL(name.href).searchParams;
       return params.get("XID");
     } catch {
-      log$c.debug("User XID is malformed");
+      log$d.debug("User XID is malformed");
       return null;
     }
   }
@@ -3578,7 +3578,7 @@ queryString.charCodeAt(pos - 1) === 63) {
     if (kind && result) __defProp$3(target, key, result);
     return result;
   };
-  const log$b = logger.child("ui");
+  const log$c = logger.child("ui");
   const PREMIUM_UPGRADE_URL$1 = "https://ffscouter.com/premium";
   let FFHeaderLine = class extends i {
     constructor() {
@@ -3599,7 +3599,7 @@ willUpdate(changedProperties) {
             this.is_premium = premium;
           }
         }).catch((error) => {
-          log$b.error(error);
+          log$c.error(error);
         }).finally(() => {
           if (this.data === currentData) {
             this.loading = false;
@@ -3667,7 +3667,7 @@ willUpdate(changedProperties) {
   FFHeaderLine = __decorateClass$3([
     t("ff-header-line")
   ], FFHeaderLine);
-  const log$a = logger.child("feature:attack");
+  const log$b = logger.child("feature:attack");
   async function inject_info_line$1(info_line) {
     const h4 = await wait_for_element("h4", 1e4);
     if (!h4) {
@@ -3690,7 +3690,7 @@ willUpdate(changedProperties) {
       if (!player_id) {
         return;
       }
-      log$a.debug("On the attack page, found player_id", player_id);
+      log$b.debug("On the attack page, found player_id", player_id);
       const info_line = create_info_line();
       ffscouter.get(player_id).then(async (data) => {
         const line = await create_ff_element("ff-header-line");
@@ -3920,21 +3920,27 @@ status: DEFAULT_HIDDEN_COLUMNS.status,
       this.saveState();
       this.dispatchChange();
     }
+
+
+
+getFilterSnapshot() {
+      return {
+        sortBy: this.sortBy,
+        filterEnabled: this.filterEnabled,
+        activity: this.activity,
+        status: this.status,
+        levelMin: this.levelMin,
+        levelMax: this.levelMax,
+        ffMin: this.ffMin,
+        ffMax: this.ffMax,
+        statsMin: this.statsMin ? parse_suffix_number(this.statsMin) : null,
+        statsMax: this.statsMax ? parse_suffix_number(this.statsMax) : null
+      };
+    }
     dispatchChange() {
       this.dispatchEvent(
         new CustomEvent("filter-change", {
-          detail: {
-            sortBy: this.sortBy,
-            filterEnabled: this.filterEnabled,
-            activity: this.activity,
-            status: this.status,
-            levelMin: this.levelMin,
-            levelMax: this.levelMax,
-            ffMin: this.ffMin,
-            ffMax: this.ffMax,
-            statsMin: this.statsMin ? parse_suffix_number(this.statsMin) : null,
-            statsMax: this.statsMax ? parse_suffix_number(this.statsMax) : null
-          },
+          detail: this.getFilterSnapshot(),
           bubbles: true,
           composed: true
         })
@@ -4409,9 +4415,10 @@ status: DEFAULT_HIDDEN_COLUMNS.status,
   FFFactionFilterBox = __decorateClass$2([
     t("ff-faction-filter-box")
   ], FFFactionFilterBox);
-  const log$9 = logger.child("feature:faction");
-  const FEATURE_NAME$4 = "faction";
   const isApplying = new WeakMap();
+  function is_applying(list) {
+    return isApplying.get(list) ?? false;
+  }
   function apply_filters_and_sort(membersList, filters) {
     if (isApplying.get(membersList)) return;
     isApplying.set(membersList, true);
@@ -4575,6 +4582,7 @@ Number.parseInt(row.dataset["estValue"], 10)
     if (filters.sortBy !== "none") return true;
     return false;
   }
+  const log$a = logger.child("feature:faction");
   async function poll_traveling_flights(membersList) {
     const rows = Array.from(
       membersList.querySelectorAll(".enemy, .your")
@@ -4619,7 +4627,7 @@ Number.parseInt(row.dataset["estValue"], 10)
             p2.row.removeAttribute("data-latest-arrival");
           }
         } catch (err) {
-          log$9.error(`Failed to fetch flights for player ${p2.player_id}`, err);
+          log$a.error(`Failed to fetch flights for player ${p2.player_id}`, err);
         }
       })
     );
@@ -4771,21 +4779,80 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     const filterBox = (membersList.closest(".faction-war") || membersList.parentNode)?.querySelector("ff-faction-filter-box");
     if (filterBox?.activity) {
       apply_filters_and_sort(membersList, {
-        sortBy: filterBox.sortBy ?? "none",
-        filterEnabled: filterBox.filterEnabled,
-        colDisplay,
-        activity: filterBox.activity,
-        status: filterBox.status,
-        levelMin: filterBox.levelMin ?? null,
-        levelMax: filterBox.levelMax ?? null,
-        ffMin: filterBox.ffMin ?? null,
-        ffMax: filterBox.ffMax ?? null,
-        statsMin: filterBox.statsMin ? parse_suffix_number(filterBox.statsMin) : null,
-        statsMax: filterBox.statsMax ? parse_suffix_number(filterBox.statsMax) : null
+        ...filterBox.getFilterSnapshot(),
+        colDisplay
       });
     }
     update_header_sort_indicator(membersList, filterBox?.sortBy ?? "none");
     poll_traveling_flights(membersList);
+  }
+  const log$9 = logger.child("feature:faction");
+  const FEATURE_NAME$4 = "faction";
+  function cleanup_when_detached(el, dispose) {
+    const cleanupInterval = setInterval(() => {
+      if (!el.isConnected) {
+        clearInterval(cleanupInterval);
+        dispose();
+      }
+    }, 1e4);
+  }
+  function run_when_ready(root, isReady, onReady) {
+    if (isReady()) {
+      onReady();
+      return;
+    }
+    const loadObserver = new MutationObserver((_mutations, obs) => {
+      if (isReady()) {
+        obs.disconnect();
+        onReady();
+      }
+    });
+    loadObserver.observe(root, { childList: true, subtree: true });
+    cleanup_when_detached(root, () => loadObserver.disconnect());
+  }
+  function setup_reapply_watcher(list, observeTarget, getColDisplay) {
+    let rafPending = false;
+    const attributeObserver = new MutationObserver((mutations) => {
+      if (is_applying(list)) return;
+      let shouldReapply = false;
+      for (const m2 of mutations) {
+        if (m2.type === "attributes") {
+          if (m2.attributeName === "alt" && m2.target instanceof HTMLImageElement && m2.target.closest(".icons")) {
+            shouldReapply = true;
+            break;
+          }
+          if (m2.attributeName === "class" && m2.target instanceof HTMLElement && m2.target.closest(".status")) {
+            shouldReapply = true;
+            break;
+          }
+        }
+      }
+      if (shouldReapply && !rafPending) {
+        rafPending = true;
+        requestAnimationFrame(() => {
+          rafPending = false;
+          const filterBox = (list.closest(".faction-war") || list.parentNode)?.querySelector("ff-faction-filter-box");
+          if (filterBox?.activity) {
+            apply_filters_and_sort(list, {
+              ...filterBox.getFilterSnapshot(),
+              colDisplay: getColDisplay()
+            });
+          }
+        });
+      }
+    });
+    attributeObserver.observe(observeTarget, {
+      attributes: true,
+      attributeFilter: ["class", "alt"],
+      subtree: true
+    });
+    const flightInterval = setInterval(() => {
+      poll_traveling_flights(list);
+    }, 3e4);
+    cleanup_when_detached(list, () => {
+      clearInterval(flightInterval);
+      attributeObserver.disconnect();
+    });
   }
   async function inject_filter_box(membersList) {
     const parent = membersList.parentNode;
@@ -4807,86 +4874,24 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     }
   }
   function initialize_features(membersList) {
+    if (membersList.hasAttribute("data-ffscouter-initialized")) return;
+    membersList.setAttribute("data-ffscouter-initialized", "true");
     inject_filter_box(membersList);
     setup_header_click(membersList, ".table-header", "[role='button']");
     apply_ff_columns(membersList);
     const target = membersList.querySelector(".table-body") || membersList;
-    let rafPending = false;
-    const attributeObserver = new MutationObserver((mutations) => {
-      if (isApplying.get(membersList)) return;
-      let shouldReapply = false;
-      for (const m2 of mutations) {
-        if (m2.type === "attributes") {
-          if (m2.attributeName === "alt" && m2.target instanceof HTMLImageElement && m2.target.closest(".icons")) {
-            shouldReapply = true;
-            break;
-          }
-          if (m2.attributeName === "class" && m2.target instanceof HTMLElement && m2.target.closest(".status")) {
-            shouldReapply = true;
-            break;
-          }
-        }
-      }
-      if (shouldReapply && !rafPending) {
-        rafPending = true;
-        requestAnimationFrame(() => {
-          rafPending = false;
-          const filterBox = (membersList.closest(".faction-war") || membersList.parentNode)?.querySelector("ff-faction-filter-box");
-          if (filterBox?.activity) {
-            apply_filters_and_sort(membersList, {
-              sortBy: filterBox.sortBy ?? "none",
-              filterEnabled: filterBox.filterEnabled,
-              colDisplay: ffconfig.factions_col_display,
-              activity: filterBox.activity,
-              status: filterBox.status,
-              levelMin: filterBox.levelMin ?? null,
-              levelMax: filterBox.levelMax ?? null,
-              ffMin: filterBox.ffMin ?? null,
-              ffMax: filterBox.ffMax ?? null,
-              statsMin: filterBox.statsMin ? parse_suffix_number(filterBox.statsMin) : null,
-              statsMax: filterBox.statsMax ? parse_suffix_number(filterBox.statsMax) : null
-            });
-          }
-        });
-      }
-    });
-    attributeObserver.observe(target, {
-      attributes: true,
-      attributeFilter: ["class", "alt"],
-      subtree: true
-    });
-    const flightInterval = setInterval(() => {
-      poll_traveling_flights(membersList);
-    }, 3e4);
-    const cleanupInterval = setInterval(() => {
-      if (!membersList.isConnected) {
-        clearInterval(cleanupInterval);
-        clearInterval(flightInterval);
-        attributeObserver.disconnect();
-      }
-    }, 1e4);
+    setup_reapply_watcher(
+      membersList,
+      target,
+      () => ffconfig.factions_col_display
+    );
   }
   function setup_faction_features(membersList) {
-    const tbody = membersList.querySelector(".table-body");
-    const hasRows = tbody?.querySelector(".table-row");
-    if (hasRows) {
-      initialize_features(membersList);
-    } else {
-      const loadObserver = new MutationObserver((_mutations, obs) => {
-        const currentTbody = membersList.querySelector(".table-body");
-        if (currentTbody?.querySelector(".table-row")) {
-          obs.disconnect();
-          initialize_features(membersList);
-        }
-      });
-      loadObserver.observe(membersList, { childList: true, subtree: true });
-      const cleanupInterval = setInterval(() => {
-        if (!membersList.isConnected) {
-          clearInterval(cleanupInterval);
-          loadObserver.disconnect();
-        }
-      }, 1e4);
-    }
+    run_when_ready(
+      membersList,
+      () => !!membersList.querySelector(".table-body")?.querySelector(".table-row"),
+      () => initialize_features(membersList)
+    );
   }
   const monitor_member_list = (root = document.body, _dynamic = false) => {
     const membersList = root.classList.contains("members-list") ? root : root.querySelector(".members-list");
@@ -4916,12 +4921,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
         }
       });
       loadObserver.observe(root, { childList: true, subtree: true });
-      const cleanupInterval = setInterval(() => {
-        if (!root.isConnected) {
-          clearInterval(cleanupInterval);
-          loadObserver.disconnect();
-        }
-      }, 1e4);
+      cleanup_when_detached(root, () => loadObserver.disconnect());
     }
   };
   const apply_ff_members_list = (root = document.body) => {
@@ -4969,31 +4969,20 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     );
   }
   function setup_war_features(factionWar) {
-    const lists = Array.from(
-      factionWar.querySelectorAll(".enemy-faction, .your-faction")
-    );
-    if (lists.length > 0) {
-      initialize_war_features(factionWar, lists);
-    } else {
-      const loadObserver = new MutationObserver((_mutations, obs) => {
-        const currentLists = Array.from(
+    run_when_ready(
+      factionWar,
+      () => factionWar.querySelectorAll(".enemy-faction, .your-faction").length > 0,
+      () => initialize_war_features(
+        factionWar,
+        Array.from(
           factionWar.querySelectorAll(".enemy-faction, .your-faction")
-        );
-        if (currentLists.length > 0) {
-          obs.disconnect();
-          initialize_war_features(factionWar, currentLists);
-        }
-      });
-      loadObserver.observe(factionWar, { childList: true, subtree: true });
-      const cleanupInterval = setInterval(() => {
-        if (!factionWar.isConnected) {
-          clearInterval(cleanupInterval);
-          loadObserver.disconnect();
-        }
-      }, 1e4);
-    }
+        )
+      )
+    );
   }
   async function initialize_war_features(factionWar, lists) {
+    if (factionWar.hasAttribute("data-ffscouter-initialized")) return;
+    factionWar.setAttribute("data-ffscouter-initialized", "true");
     let filterBox = factionWar.querySelector(
       "ff-faction-filter-box[mode='war']"
     );
@@ -5003,10 +4992,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       filterBox.setAttribute("mode", "war");
       factionWar.insertBefore(filterBox, factionWar.firstChild);
     }
-    if (filterBox._onFilterChange) {
-      filterBox.removeEventListener("filter-change", filterBox._onFilterChange);
-    }
-    filterBox._onFilterChange = (e2) => {
+    filterBox.addEventListener("filter-change", (e2) => {
       const currentLists = Array.from(
         factionWar.querySelectorAll(".enemy-faction, .your-faction")
       );
@@ -5015,92 +5001,22 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
         apply_filters_and_sort(list, { ...e2.detail, colDisplay });
         update_header_sort_indicator(list, e2.detail.sortBy);
       }
-    };
-    filterBox.addEventListener("filter-change", filterBox._onFilterChange);
+    });
     for (const list of lists) {
       setup_war_list(list);
     }
   }
   function setup_war_list(list) {
-    const tbody = list;
-    const hasRows = tbody.querySelector(".enemy, .your");
-    if (hasRows) {
-      initialize_war_list(list);
-    } else {
-      const loadObserver = new MutationObserver((_mutations, obs) => {
-        const currentTbody = list;
-        if (currentTbody.querySelector(".enemy, .your")) {
-          obs.disconnect();
-          initialize_war_list(list);
-        }
-      });
-      loadObserver.observe(list, { childList: true, subtree: true });
-      const cleanupInterval = setInterval(() => {
-        if (!list.isConnected) {
-          clearInterval(cleanupInterval);
-          loadObserver.disconnect();
-        }
-      }, 1e4);
-    }
+    run_when_ready(
+      list,
+      () => !!list.querySelector(".enemy, .your"),
+      () => initialize_war_list(list)
+    );
   }
   function initialize_war_list(list) {
     setup_header_click(list, ".white-grad", "[class*='tab___']");
     apply_ff_columns(list);
-    const target = list;
-    let rafPending = false;
-    const attributeObserver = new MutationObserver((mutations) => {
-      if (isApplying.get(list)) return;
-      let shouldReapply = false;
-      for (const m2 of mutations) {
-        if (m2.type === "attributes") {
-          if (m2.attributeName === "alt" && m2.target instanceof HTMLImageElement && m2.target.closest(".icons")) {
-            shouldReapply = true;
-            break;
-          }
-          if (m2.attributeName === "class" && m2.target instanceof HTMLElement && m2.target.closest(".status")) {
-            shouldReapply = true;
-            break;
-          }
-        }
-      }
-      if (shouldReapply && !rafPending) {
-        rafPending = true;
-        requestAnimationFrame(() => {
-          rafPending = false;
-          const filterBox = list.closest(".faction-war")?.querySelector("ff-faction-filter-box");
-          if (filterBox?.activity) {
-            apply_filters_and_sort(list, {
-              sortBy: filterBox.sortBy ?? "none",
-              filterEnabled: filterBox.filterEnabled,
-              colDisplay: ffconfig.war_col_display,
-              activity: filterBox.activity,
-              status: filterBox.status,
-              levelMin: filterBox.levelMin ?? null,
-              levelMax: filterBox.levelMax ?? null,
-              ffMin: filterBox.ffMin ?? null,
-              ffMax: filterBox.ffMax ?? null,
-              statsMin: filterBox.statsMin ? parse_suffix_number(filterBox.statsMin) : null,
-              statsMax: filterBox.statsMax ? parse_suffix_number(filterBox.statsMax) : null
-            });
-          }
-        });
-      }
-    });
-    attributeObserver.observe(target, {
-      attributes: true,
-      attributeFilter: ["class", "alt"],
-      subtree: true
-    });
-    const flightInterval = setInterval(() => {
-      poll_traveling_flights(list);
-    }, 3e4);
-    const cleanupInterval = setInterval(() => {
-      if (!list.isConnected) {
-        clearInterval(cleanupInterval);
-        clearInterval(flightInterval);
-        attributeObserver.disconnect();
-      }
-    }, 1e4);
+    setup_reapply_watcher(list, list, () => ffconfig.war_col_display);
   }
   const process_page = () => {
     wait_for_element(".members-list", 1e4).then((node) => {
@@ -5194,11 +5110,8 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
   };
   const __vite_glob_0_2 = Object.freeze( Object.defineProperty({
     __proto__: null,
-    apply_ff_columns,
-    apply_filters_and_sort,
     default: index$c,
     initialize_features,
-    poll_traveling_flights,
     setup_war_features,
     should_run_faction
   }, Symbol.toStringTag, { value: "Module" }));
@@ -7968,7 +7881,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       return;
     }
     document.documentElement.setAttribute(INJECTION_KEY, "1");
-    log.info("Initializing", "3.0-beta8");
+    log.info("Initializing", "3.0-beta9");
     run_migration();
     if (ffscouter.analytics_enabled) {
       if (typeof unsafeWindow !== "undefined") {
