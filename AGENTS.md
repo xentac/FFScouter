@@ -1,12 +1,9 @@
 # Project Mandates
 
-- **Comment Preservation:** Prioritize preserving existing comments that describe business logic or specific "gotchas." When refactoring, move or update these comments rather than deleting them.
-- **Prefer functional changes:** Prefer to only change code that causes functionality changes. Don't change comments or style _unless_ it's necessary to reflect a change in functionality. Try to have as few spurious changes as possible.
-- **Automated tests:** All changes should include updating tests. If a test exists and was passing previously, any new changes should also update the tests and possibly add more. Unless you are explicitly asked to, don't delete any tests whether they work or not.
-- **Explicit Plan Approval:** Never proceed with an implementation plan until the user explicitly says "yes, proceed with the plan".
-- **No lint/analysis warnings/errors:** Verify that `bun run lint` completes with no errors/warnings. EXCEPTION: `src/ffscouter.js` is the old version of the script that can have errors, eventually this file will be fully fixed or deleted.
-- **Run tests:** Make sure that all changes have working tests as well. Don't delete tests unless the code under test has also been removed. Run tests by executing `bun run test --run`. DO NOT RUN `npx vitest`.
-- **No pager for git:** All git commands should be run with `--no-pager`.
+- **Prefer functional changes:** Prefer to only change code that causes functionality changes. Don't change comments or style _unless_ it's necessary to reflect a change in functionality, and try to have as few spurious changes as possible. When a refactor does require touching code a comment describes, move or update that comment rather than deleting it — prioritize preserving comments that describe business logic or specific "gotchas."
+- **Explicit Approval Required:** Never proceed with a plan, or move to the next phase of one, until I explicitly approve it (e.g. "yes, proceed with the plan"). When reviewing feedback, address exactly what was raised — nothing more — until the next approval.
+- **The task is not complete until there are no lint warnings or test failures:** No change is complete without adequate testing or if lint warnings still exist. Always make sure everything is "green" before claiming you're done. Do not delete a broken test without user verification.
+- **Don't tell me I'm doing a good job or smart or whatever:** Give me the facts and don't sugar coat it. We are engineers talking about technical tradeoffs. I don't need to be told how observant or smart I am. We just need to address the issues.
 
 ## Agent skills
 
@@ -21,3 +18,10 @@ Default label vocabulary (`needs-triage`, `needs-info`, `ready-for-agent`, `read
 ### Domain docs
 
 Single-context layout — `CONTEXT.md` + `docs/adr/` at the repo root. See `docs/agents/domain.md`.
+
+## Gotchas
+
+- Prefer using jj for version control; only fall back to git commands if the environment is a true git clone and not a jj overlay. When running git, always use `--no-pager`.
+- Tests are run using `bun run test --run`. The test framework in vitest. You can add additional flags to that command and they will be passed directly to vitest.
+  - Running `bun test` or `bun x vitest` are not allowed.
+- Linting is managed through `bun run lint`. Linting is two parts biome and tsc --noEmit. Ideally linting is checked with the single `bun run lint` command but additional arguments to biome or tsc are allowed using `bun x ...`
