@@ -44,7 +44,7 @@ export default {
 
     if (!ffconfig.key) {
       info_line.innerHTML =
-        "[FF Scouter V2]: Limited API key needed - enter in FF Scouter Settings below";
+        "[FF Scouter V2]: FF Scouter API key needed - enter in FF Scouter Settings below";
       inject_info_line(info_line);
       return;
     }
