@@ -48,7 +48,7 @@ const setup_mini_observer = () => {
     for (const mutation of mutations) {
       if (
         mutation.target instanceof HTMLElement &&
-        mutation.target.classList.contains("ffsv3-gauge")
+        mutation.target.classList.contains("ffscouter-gauge")
       ) {
         return;
       }
@@ -56,7 +56,7 @@ const setup_mini_observer = () => {
         Array.from(mutation.addedNodes).some(
           (node) =>
             node instanceof HTMLElement &&
-            node.classList.contains("ffsv3-mini-desc"),
+            node.classList.contains("ffscouter-mini-desc"),
         )
       ) {
         return;
@@ -93,7 +93,7 @@ const setup_mini_observer = () => {
       for (const bar of miniroot.querySelectorAll(".honor-text-wrap")) {
         apply_ff_gauge(bar, FEATURE_NAME);
       }
-      miniroot.querySelector(".ffsv3-mini-desc")?.remove();
+      miniroot.querySelector(".ffscouter-mini-desc")?.remove();
 
       // Minimal, text-only Fair Fight string for mini-profiles
       const ff_string = format_ff_score(d);
@@ -103,7 +103,7 @@ const setup_mini_observer = () => {
 
       const description = miniroot.querySelector(".description");
       const desc = document.createElement("span");
-      desc.classList.add("ffsv3-mini-desc");
+      desc.classList.add("ffscouter-mini-desc");
       desc.innerText = message;
       description?.appendChild(desc);
     });

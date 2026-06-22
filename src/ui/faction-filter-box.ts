@@ -646,7 +646,7 @@ export class FFFactionFilterBox extends LitElement {
                 id="${this.mode === "war" ? "war-col-display-filter" : "factions-col-display-filter"}"
                 .value=${this.colDisplay}
                 @change=${this.onDisplayChange}
-                style="padding: 4px; border: 1px solid var(--ffsv3-border-color); border-radius: 4px; background: var(--ffsv3-alt-bg-color); color: var(--ffsv3-text-color); font-size: 11px; cursor: pointer; height: 32px;"
+                style="padding: 4px; border: 1px solid var(--ffscouter-border-color); border-radius: 4px; background: var(--ffscouter-alt-bg-color); color: var(--ffscouter-text-color); font-size: 11px; cursor: pointer; height: 32px;"
               >
                 <option value="fair_fight">Show: FF Score</option>
                 <option value="battle_stats">Show: BS Estimate</option>

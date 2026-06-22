@@ -552,13 +552,13 @@ export class FFSettingsPanel extends LitElement {
                 />
                 <span>%</span>
                 <div
-                  class="ffsv3-marker-preview"
-                  style="--ffsv3-marker-scale: ${
+                  class="ffscouter-marker-preview"
+                  style="--ffscouter-marker-scale: ${
                     this.draftGaugeMarkerScale / 100
                   };"
                 >
                   <svg
-                    class="ffsv3-preview-arrow"
+                    class="ffscouter-preview-arrow"
                     viewBox="${FF_ARROW_VIEWBOX}"
                   >
                     <path
@@ -570,7 +570,7 @@ export class FFSettingsPanel extends LitElement {
                     ></path>
                   </svg>
                   <div
-                    class="ffsv3-preview-bubble"
+                    class="ffscouter-preview-bubble"
                     style="background-color: ${
                       this.previewColor
                     }; color: ${get_contrast_color(this.previewColor)};"
@@ -599,11 +599,11 @@ export class FFSettingsPanel extends LitElement {
                   <option value="blue_yellow_red">Blue-Yellow-Red</option>
                   <option value="plasma">Plasma</option>
                 </select>
-                <div class="ffsv3-swatch-row">
+                <div class="ffscouter-swatch-row">
                   ${get_palette_for_scheme(this.draftColorScheme).map(
                     (color) =>
                       html`<svg
-                        class="ffsv3-swatch"
+                        class="ffscouter-swatch"
                         viewBox="${FF_ARROW_VIEWBOX}"
                       >
                         <path

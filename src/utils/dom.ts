@@ -103,7 +103,7 @@ function make_arrow(d: FFDataComplete): SVGElement {
     );
   }
   const svg = div.firstChild;
-  svg.classList.add("ffsv3-arrow");
+  svg.classList.add("ffscouter-arrow");
   return svg;
 }
 
@@ -116,7 +116,7 @@ function make_marker(d: FFDataComplete): HTMLElement | SVGElement {
     const fill = get_ff_arrow_colour(d);
     const contrastColor = get_contrast_color(fill);
     const bubble = document.createElement("div");
-    bubble.classList.add("ffsv3-bubble");
+    bubble.classList.add("ffscouter-bubble");
     bubble.style.backgroundColor = fill;
     bubble.style.color = contrastColor;
 
@@ -139,8 +139,8 @@ export function add_ff_arrow(element: HTMLElement, featureName = "Unknown") {
   }
 
   if (
-    element.querySelector(".ffsv3-gauge") ||
-    element.classList.contains("ffsv3-gauge")
+    element.querySelector(".ffscouter-gauge") ||
+    element.classList.contains("ffscouter-gauge")
   ) {
     ffscouter.add_analytics_entry(featureName, player_id, "ignored");
     return;
@@ -152,22 +152,22 @@ export function add_ff_arrow(element: HTMLElement, featureName = "Unknown") {
     }
 
     if (
-      element.querySelector(".ffsv3-gauge") ||
-      element.classList.contains("ffsv3-gauge")
+      element.querySelector(".ffscouter-gauge") ||
+      element.classList.contains("ffscouter-gauge")
     ) {
       ffscouter.add_analytics_entry(featureName, player_id, "ignored");
       return;
     }
 
     const percent = ff_to_percent(d);
-    element.classList.add("ffsv3-gauge");
+    element.classList.add("ffscouter-gauge");
     element.style.setProperty("--band-percent", `${percent}`);
     document.body.style.setProperty(
-      "--ffsv3-marker-scale",
+      "--ffscouter-marker-scale",
       `${ffconfig.gauge_marker_scale / 100}`,
     );
 
-    const a = element.querySelector(".ffsv3-arrow, .ffsv3-bubble");
+    const a = element.querySelector(".ffscouter-arrow, .ffscouter-bubble");
     if (a) {
       a.remove();
     }
@@ -580,7 +580,7 @@ export async function getLocalUserId(): Promise<string | null> {
 }
 export function create_info_line() {
   const info_line = document.createElement("div");
-  info_line.className = "ffsv3-info-line";
+  info_line.className = "ffscouter-info-line";
   info_line.style.display = "block";
   info_line.style.clear = "both";
   info_line.style.margin = "5px 0";

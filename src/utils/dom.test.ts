@@ -175,10 +175,10 @@ test("add_ff_arrow fetches data and inserts gauge arrow SVG to elements", async 
   await new Promise((resolve) => setTimeout(resolve, 10));
 
   expect(mockGet).toHaveBeenCalledWith(123);
-  expect(anchor.classList.contains("ffsv3-gauge")).toBe(true);
+  expect(anchor.classList.contains("ffscouter-gauge")).toBe(true);
   expect(anchor.style.getPropertyValue("--band-percent")).toEqual("57.75");
 
-  const svg = anchor.querySelector(".ffsv3-arrow");
+  const svg = anchor.querySelector(".ffscouter-arrow");
   expect(svg).not.toBeNull();
   expect(svg?.tagName.toLowerCase()).toEqual("svg");
 });
@@ -204,7 +204,7 @@ test("add_ff_arrow sets the shared marker-scale CSS var from config", async () =
   add_ff_arrow(anchor);
   await new Promise((resolve) => setTimeout(resolve, 10));
 
-  expect(document.body.style.getPropertyValue("--ffsv3-marker-scale")).toBe(
+  expect(document.body.style.getPropertyValue("--ffscouter-marker-scale")).toBe(
     "1.5",
   );
 });
@@ -230,10 +230,10 @@ test("add_ff_arrow renders bubble with FF number when configured", async () => {
   add_ff_arrow(anchor);
   await new Promise((resolve) => setTimeout(resolve, 10));
 
-  const bubble = anchor.querySelector(".ffsv3-bubble");
+  const bubble = anchor.querySelector(".ffscouter-bubble");
   expect(bubble).not.toBeNull();
   expect(bubble?.textContent).toEqual("3.52");
-  expect(bubble?.classList.contains("ffsv3-bubble")).toBe(true);
+  expect(bubble?.classList.contains("ffscouter-bubble")).toBe(true);
 });
 
 test("add_ff_arrow renders bubble with stat estimate when configured", async () => {
@@ -257,7 +257,7 @@ test("add_ff_arrow renders bubble with stat estimate when configured", async () 
   add_ff_arrow(anchor);
   await new Promise((resolve) => setTimeout(resolve, 10));
 
-  const bubble = anchor.querySelector(".ffsv3-bubble");
+  const bubble = anchor.querySelector(".ffscouter-bubble");
   expect(bubble).not.toBeNull();
   expect(bubble?.textContent).toEqual("1.2b");
 });
@@ -400,7 +400,7 @@ test("getLocalUserId extracts user ID from burger dropdown setting menu link", a
 
 test("create_info_line creates a styled div container", () => {
   const div = create_info_line();
-  expect(div.className).toEqual("ffsv3-info-line");
+  expect(div.className).toEqual("ffscouter-info-line");
   expect(div.style.display).toEqual("block");
   expect(div.style.clear).toEqual("both");
 });

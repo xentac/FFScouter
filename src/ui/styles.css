@@ -1,43 +1,43 @@
-.ffsv3-gauge {
+.ffscouter-gauge {
   position: relative;
   display: block;
   padding: 0;
 }
 
-.ffsv3-arrow,
-.ffsv3-preview-arrow {
-  width: var(--ffsv3-arrow-width);
+.ffscouter-arrow,
+.ffscouter-preview-arrow {
+  width: var(--ffscouter-arrow-width);
   object-fit: cover;
   pointer-events: none;
 }
 
-.ffsv3-arrow {
+.ffscouter-arrow {
   position: absolute;
   transform: translate(-50%, -30%);
   padding: 0;
   top: 0;
   left: calc(
-    var(--ffsv3-arrow-width) /
+    var(--ffscouter-arrow-width) /
     2 +
     var(--band-percent) *
-    (100% - var(--ffsv3-arrow-width)) /
+    (100% - var(--ffscouter-arrow-width)) /
     100
   );
 }
 
-.ffsv3-preview-arrow {
+.ffscouter-preview-arrow {
   display: inline-block;
   vertical-align: middle;
 }
 
-.ffsv3-bubble,
-.ffsv3-preview-bubble {
+.ffscouter-bubble,
+.ffscouter-preview-bubble {
   min-width: 2.5882em;
   height: 1.6471em;
   line-height: 1.4118;
   border: 1px solid rgba(0, 0, 0, 0.4);
   border-radius: 999px;
-  font-size: var(--ffsv3-bubble-font-size);
+  font-size: var(--ffscouter-bubble-font-size);
   font-weight: bold;
   font-family: Geneva, Arial, sans-serif;
   text-align: center;
@@ -51,75 +51,75 @@
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
-.ffsv3-bubble {
+.ffscouter-bubble {
   position: absolute;
   transform: translate(-50%, -30%);
   top: 0;
   left: calc(
-    var(--ffsv3-arrow-width) /
+    var(--ffscouter-arrow-width) /
     2 +
     var(--band-percent) *
-    (100% - var(--ffsv3-arrow-width)) /
+    (100% - var(--ffscouter-arrow-width)) /
     100
   );
   pointer-events: none;
   z-index: 10;
 }
 
-.ffsv3-preview-bubble {
+.ffscouter-preview-bubble {
   vertical-align: middle;
 }
 
-.ffsv3-marker-preview {
+.ffscouter-marker-preview {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  /* --ffsv3-marker-scale is overridden inline per the draft (unsaved) value;
-     --ffsv3-arrow-width/--ffsv3-bubble-font-size must be recomputed here too,
+  /* --ffscouter-marker-scale is overridden inline per the draft (unsaved) value;
+     --ffscouter-arrow-width/--ffscouter-bubble-font-size must be recomputed here too,
      since custom properties inherit their already-resolved value from body,
      not the calc() formula itself. */
-  --ffsv3-arrow-width: calc(20px * var(--ffsv3-marker-scale));
-  --ffsv3-bubble-font-size: calc(8.5px * var(--ffsv3-marker-scale));
+  --ffscouter-arrow-width: calc(20px * var(--ffscouter-marker-scale));
+  --ffscouter-bubble-font-size: calc(8.5px * var(--ffscouter-marker-scale));
 }
 
-.ffsv3-mini-desc {
+.ffscouter-mini-desc {
   padding: 0 5px;
 }
 
-.ffsv3-swatch-row {
+.ffscouter-swatch-row {
   display: inline-flex;
   gap: 3px;
 }
 
-.ffsv3-swatch {
+.ffscouter-swatch {
   display: inline-block;
   width: 20px;
   height: 13px;
 }
 
 body {
-  --ffsv3-bg-color: #f0f0f0;
-  --ffsv3-alt-bg-color: #fff;
-  --ffsv3-border-color: #ccc;
-  --ffsv3-input-color: #ccc;
-  --ffsv3-text-color: #000;
-  --ffsv3-hover-color: #ddd;
-  --ffsv3-glow-color: #4caf50;
-  --ffsv3-success-color: #4caf50;
-  --ffsv3-marker-scale: 1;
-  --ffsv3-arrow-width: calc(20px * var(--ffsv3-marker-scale));
-  --ffsv3-bubble-font-size: calc(8.5px * var(--ffsv3-marker-scale));
+  --ffscouter-bg-color: #f0f0f0;
+  --ffscouter-alt-bg-color: #fff;
+  --ffscouter-border-color: #ccc;
+  --ffscouter-input-color: #ccc;
+  --ffscouter-text-color: #000;
+  --ffscouter-hover-color: #ddd;
+  --ffscouter-glow-color: #4caf50;
+  --ffscouter-success-color: #4caf50;
+  --ffscouter-marker-scale: 1;
+  --ffscouter-arrow-width: calc(20px * var(--ffscouter-marker-scale));
+  --ffscouter-bubble-font-size: calc(8.5px * var(--ffscouter-marker-scale));
 }
 
 body.dark-mode {
-  --ffsv3-bg-color: #333;
-  --ffsv3-alt-bg-color: #383838;
-  --ffsv3-border-color: #444;
-  --ffsv3-input-color: #504f4f;
-  --ffsv3-text-color: #ccc;
-  --ffsv3-hover-color: #555;
-  --ffsv3-glow-color: #4caf50;
-  --ffsv3-success-color: #4caf50;
+  --ffscouter-bg-color: #333;
+  --ffscouter-alt-bg-color: #383838;
+  --ffscouter-border-color: #444;
+  --ffscouter-input-color: #504f4f;
+  --ffscouter-text-color: #ccc;
+  --ffscouter-hover-color: #555;
+  --ffscouter-glow-color: #4caf50;
+  --ffscouter-success-color: #4caf50;
 }
 
 .ff-premium-upgrade-line {
@@ -147,14 +147,14 @@ ff-settings-panel {
 ff-settings-panel .accordion {
   margin: 10px 0;
   padding: 15px;
-  background-color: var(--ffsv3-bg-color);
-  border: 1px solid var(--ffsv3-border-color);
+  background-color: var(--ffscouter-bg-color);
+  border: 1px solid var(--ffscouter-border-color);
   border-radius: 5px;
-  color: var(--ffsv3-text-color);
+  color: var(--ffscouter-text-color);
 }
 
 ff-settings-panel .accordion.glow {
-  border-color: var(--ffsv3-glow-color);
+  border-color: var(--ffscouter-glow-color);
   box-shadow: 0 0 8px rgba(76, 175, 80, 0.5);
 }
 
@@ -216,11 +216,11 @@ ff-settings-panel select {
   line-height: 14px;
   display: inline-block;
 
-  border: var(--input-border-color, 1px solid var(--ffsv3-border-color));
+  border: var(--input-border-color, 1px solid var(--ffscouter-border-color));
   border-radius: 5px;
   font-family: Arial, serif;
-  color: var(--input-color, var(--ffsv3-text-color));
-  background: var(--input-background-color, var(--ffsv3-alt-bg-color));
+  color: var(--input-color, var(--ffscouter-text-color));
+  background: var(--input-background-color, var(--ffscouter-alt-bg-color));
 }
 
 :root .dark-mode ff-settings-panel select option {
@@ -229,10 +229,10 @@ ff-settings-panel select {
 }
 
 ff-settings-panel .ff-api-explanation {
-  background-color: var(--ffsv3-alt-bg-color);
-  border: 1px solid var(--ffsv3-border-color);
+  background-color: var(--ffscouter-alt-bg-color);
+  border: 1px solid var(--ffscouter-border-color);
   border-radius: 8px;
-  color: var(--ffsv3-text-color);
+  color: var(--ffscouter-text-color);
   margin-bottom: 20px;
   padding: 12px 16px;
   font-size: 13px;
@@ -240,7 +240,7 @@ ff-settings-panel .ff-api-explanation {
 }
 
 ff-settings-panel a {
-  color: var(--ffsv3-success-color);
+  color: var(--ffscouter-success-color);
   text-decoration: underline;
 }
 
@@ -314,20 +314,20 @@ ff-faction-filter-box {
 }
 
 .ff-filter-box {
-  background-color: var(--ffsv3-bg-color);
-  border: 1px solid var(--ffsv3-border-color);
+  background-color: var(--ffscouter-bg-color);
+  border: 1px solid var(--ffscouter-border-color);
   border-radius: 8px;
   padding: 12px 16px;
   margin-bottom: 16px;
-  color: var(--ffsv3-text-color);
+  color: var(--ffscouter-text-color);
   font-family: Arial, sans-serif;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
 }
 
 .ff-filter-box.no-borders {
   background-color: var(--default-bg-panel-color);
-  border-top: 1px solid var(--ffsv3-border-color);
-  border-bottom: 1px solid var(--ffsv3-border-color);
+  border-top: 1px solid var(--ffscouter-border-color);
+  border-bottom: 1px solid var(--ffscouter-border-color);
   border-left: none;
   border-right: none;
   border-radius: 0;
@@ -345,7 +345,7 @@ ff-faction-filter-box {
 }
 
 .ff-filter-box[open] summary {
-  border-bottom: 1px solid var(--ffsv3-border-color);
+  border-bottom: 1px solid var(--ffscouter-border-color);
   padding-bottom: 6px;
   margin-bottom: 12px;
 }
@@ -357,10 +357,10 @@ ff-faction-filter-box {
 }
 
 .ff-filter-box .ff-action-icon-btn {
-  background: var(--ffsv3-alt-bg-color);
-  border: 1px solid var(--ffsv3-border-color);
+  background: var(--ffscouter-alt-bg-color);
+  border: 1px solid var(--ffscouter-border-color);
   border-radius: 4px;
-  color: var(--ffsv3-text-color);
+  color: var(--ffscouter-text-color);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
@@ -375,16 +375,16 @@ ff-faction-filter-box {
 }
 
 .ff-filter-box .ff-action-icon-btn:hover {
-  background-color: var(--ffsv3-hover-color);
+  background-color: var(--ffscouter-hover-color);
 }
 
 .ff-filter-box .ff-action-icon-btn.active {
-  color: var(--ffsv3-text-color);
+  color: var(--ffscouter-text-color);
   opacity: 1;
 }
 
 .ff-filter-box .ff-action-icon-btn.inactive {
-  color: var(--ffsv3-text-color);
+  color: var(--ffscouter-text-color);
   opacity: 0.4;
 }
 
@@ -481,20 +481,20 @@ ff-faction-filter-box {
   min-width: 30px;
   max-width: 80px;
   padding: 4px;
-  border: 1px solid var(--ffsv3-border-color);
+  border: 1px solid var(--ffscouter-border-color);
   border-radius: 4px;
-  background: var(--ffsv3-alt-bg-color);
-  color: var(--ffsv3-text-color);
+  background: var(--ffscouter-alt-bg-color);
+  color: var(--ffscouter-text-color);
   font-size: 11px;
   text-align: center;
 }
 
 .ff-filter-box button {
   padding: 6px 10px;
-  border: 1px solid var(--ffsv3-border-color);
+  border: 1px solid var(--ffscouter-border-color);
   border-radius: 4px;
-  background: var(--ffsv3-alt-bg-color);
-  color: var(--ffsv3-text-color);
+  background: var(--ffscouter-alt-bg-color);
+  color: var(--ffscouter-text-color);
   font-size: 12px;
   cursor: pointer;
   display: inline-flex;
@@ -505,7 +505,7 @@ ff-faction-filter-box {
 }
 
 .ff-filter-box button:hover {
-  background-color: var(--ffsv3-hover-color);
+  background-color: var(--ffscouter-hover-color);
 }
 
 /* ============================================================================
@@ -593,7 +593,7 @@ ff-settings-panel .ff-api-status-row {
    when narrow and a touch wider on desktop, so inner controls keep full width at
    the 320/386 sizes. */
 ff-settings-panel .ff-chain-suboptions {
-  border-left: 2px solid var(--ffsv3-border-color);
+  border-left: 2px solid var(--ffscouter-border-color);
   padding-left: 8px;
   margin-top: 10px;
   /* Narrow: pack the compact min/max number fields 2-up. Selects and checkboxes
@@ -651,7 +651,7 @@ ff-settings-panel .ff-color-scheme-controls {
   gap: 10px;
 }
 
-ff-settings-panel .ffsv3-swatch-row {
+ff-settings-panel .ffscouter-swatch-row {
   flex-wrap: wrap;
 }
 
@@ -785,7 +785,7 @@ ff-settings-panel .ffsv3-swatch-row {
 }
 
 .ff-filter-box summary:focus-visible {
-  outline: 2px solid var(--ffsv3-glow-color);
+  outline: 2px solid var(--ffscouter-glow-color);
   outline-offset: 2px;
 }
 

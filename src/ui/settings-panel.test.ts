@@ -168,9 +168,9 @@ test("ff-settings-panel renders a live marker-size preview that updates with the
   document.body.appendChild(el);
   await el.updateComplete;
 
-  const previewArrow = el.querySelector(".ffsv3-preview-arrow path");
+  const previewArrow = el.querySelector(".ffscouter-preview-arrow path");
   const previewBubble = el.querySelector(
-    ".ffsv3-preview-bubble",
+    ".ffscouter-preview-bubble",
   ) as HTMLElement;
   expect(previewArrow).not.toBeNull();
   expect(previewBubble).not.toBeNull();
@@ -197,7 +197,7 @@ test("ff-settings-panel renders a live swatch preview that updates with the colo
   expect(select).not.toBeNull();
   expect(select.querySelectorAll("option").length).toBe(8);
 
-  const classicSwatches = el.querySelectorAll(".ffsv3-swatch");
+  const classicSwatches = el.querySelectorAll(".ffscouter-swatch");
   expect(classicSwatches.length).toBe(11);
   expect(classicSwatches[0]?.querySelector("path")?.getAttribute("fill")).toBe(
     "#1734e8",
@@ -207,7 +207,7 @@ test("ff-settings-panel renders a live swatch preview that updates with the colo
   select.dispatchEvent(new Event("change"));
   await el.updateComplete;
 
-  const grayscaleSwatches = el.querySelectorAll(".ffsv3-swatch");
+  const grayscaleSwatches = el.querySelectorAll(".ffscouter-swatch");
   expect(grayscaleSwatches.length).toBe(11);
   expect(
     grayscaleSwatches[0]?.querySelector("path")?.getAttribute("fill"),
@@ -217,7 +217,7 @@ test("ff-settings-panel renders a live swatch preview that updates with the colo
   select.dispatchEvent(new Event("change"));
   await el.updateComplete;
 
-  const plasmaSwatches = el.querySelectorAll(".ffsv3-swatch");
+  const plasmaSwatches = el.querySelectorAll(".ffscouter-swatch");
   expect(plasmaSwatches.length).toBe(11);
   expect(plasmaSwatches[0]?.querySelector("path")?.getAttribute("fill")).toBe(
     "#0d0887",

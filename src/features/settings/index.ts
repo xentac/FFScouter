@@ -91,7 +91,7 @@ export default {
       ffconfig.gauge_marker_type = detail.gaugeMarkerType;
       ffconfig.gauge_marker_scale = detail.gaugeMarkerScale;
       document.body.style.setProperty(
-        "--ffsv3-marker-scale",
+        "--ffscouter-marker-scale",
         `${detail.gaugeMarkerScale / 100}`,
       );
       ffconfig.color_scheme = detail.colorScheme;
@@ -131,7 +131,7 @@ export default {
       panel.gaugeMarkerType = ffconfig.gauge_marker_type;
       panel.gaugeMarkerScale = ffconfig.gauge_marker_scale;
       document.body.style.setProperty(
-        "--ffsv3-marker-scale",
+        "--ffscouter-marker-scale",
         `${ffconfig.gauge_marker_scale / 100}`,
       );
       panel.colorScheme = ffconfig.color_scheme;
