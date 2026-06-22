@@ -1,5 +1,9 @@
 ## Glossary
 
+### FFScouter Backend
+The service at `ffscouter.com/api/v1` (`FF_SCOUTER_BASE_URL` in `src/utils/api.ts`) that this userscript queries for Fair Fight / Battle Stat estimates, sending the user's Torn API key as a URL query param on every call (`get-stats`, `check-key`, `player-flights`, `get-targets`). Operated as a partnership between Glasnost and xentac — neither party solely controls it, so user-facing docs (e.g. the GreasyFork additional-info doc) should link to its own published data policy (`https://ffscouter.com/#data-policy`) rather than asserting first-party claims about server-side retention/sharing on xentac's authority alone. Distinct from the "volunteer data gathering service," an unrelated, separate effort that this userscript does not interact with and that the linked data policy explicitly does not cover.
+
+
 ### Content Wrapper Width
 The width budget our injected UI must lay out within, derived from Torn's `.content-wrapper` (the outer page container the [[Settings Panel]] attaches beside). Torn drives it from two viewport thresholds, giving three discrete widths:
 - viewport ≥ **784px** → 784px (desktop)
