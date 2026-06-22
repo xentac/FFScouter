@@ -10,6 +10,7 @@ import {
   get_contrast_color,
   get_ff_arrow_colour,
   get_ff_colour,
+  parse_duration_to_seconds,
   parse_suffix_number,
 } from "./strings";
 import type { FFDataComplete } from "./types";
@@ -276,4 +277,18 @@ test("parse_suffix_number parses numeric suffixes correctly", () => {
   expect(parse_suffix_number("1,000")).toEqual(1000);
   expect(parse_suffix_number("1,500k")).toEqual(1500000);
   expect(parse_suffix_number("1,000,000m")).toEqual(1000000000000);
+});
+
+test("parse_duration_to_seconds parses compound and word-form durations", () => {
+  expect(parse_duration_to_seconds("")).toBeNull();
+  expect(parse_duration_to_seconds("   ")).toBeNull();
+  expect(parse_duration_to_seconds("garbage")).toBeNull();
+
+  expect(parse_duration_to_seconds("10m")).toEqual(600);
+  expect(parse_duration_to_seconds("1h")).toEqual(3600);
+  expect(parse_duration_to_seconds("4h2m15s")).toEqual(4 * HOUR + 2 * 60 + 15);
+
+  expect(parse_duration_to_seconds("2 minutes")).toEqual(120);
+  expect(parse_duration_to_seconds("1 hour")).toEqual(3600);
+  expect(parse_duration_to_seconds("2 days")).toEqual(2 * DAY);
 });

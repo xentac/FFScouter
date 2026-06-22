@@ -1,5 +1,6 @@
 import { detect_sort_icon_classes, get_activity_status } from "@utils/dom";
 import { FactionsColDisplay } from "@utils/ffconfig";
+import { get_current_time_seconds } from "@utils/time";
 
 // Per-list re-entrancy guard to prevent layout loop on DOM mutation sorting
 const isApplying = new WeakMap<HTMLElement, boolean>();
@@ -33,6 +34,8 @@ export function apply_filters_and_sort(
     ffMax: number | null;
     statsMin?: number | null;
     statsMax?: number | null;
+    lastActionMinSec?: number | null;
+    lastActionMaxSec?: number | null;
   },
 ) {
   if (isApplying.get(membersList)) return;
@@ -171,12 +174,42 @@ export function apply_filters_and_sort(
         continue;
       }
 
+      // Last Action Range (war-only; TWSE-sourced, see CONTEXT.md's "Last
+      // Action Range Filter"). A missing attribute or the 0 sentinel TWSE
+      // uses for "unknown" always passes, same graceful fallback as FF/Stats.
+      // biome-ignore lint/complexity/useLiteralKeys: tsc requires index signature lookup
+      const lastActionRaw = row.dataset["twseLastActionTimestamp"];
+      const lastActionTs = lastActionRaw
+        ? Number.parseInt(lastActionRaw, 10)
+        : null;
+      const hasLastActionData =
+        lastActionTs !== null &&
+        !Number.isNaN(lastActionTs) &&
+        lastActionTs !== 0;
+      const lastActionAge = hasLastActionData
+        ? get_current_time_seconds() - (lastActionTs as number)
+        : null;
+      const matchesLastAction =
+        lastActionAge === null ||
+        ((filters.lastActionMinSec === undefined ||
+          filters.lastActionMinSec === null ||
+          lastActionAge >= filters.lastActionMinSec) &&
+          (filters.lastActionMaxSec === undefined ||
+            filters.lastActionMaxSec === null ||
+            lastActionAge <= filters.lastActionMaxSec));
+
+      if (!matchesLastAction) {
+        hide_row(row);
+        continue;
+      }
+
       if (
         matchesActivity &&
         matchesStatus &&
         matchesLevel &&
         matchesFF &&
-        matchesStats
+        matchesStats &&
+        matchesLastAction
       ) {
         show_row(row);
       } else {

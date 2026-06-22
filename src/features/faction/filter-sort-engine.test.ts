@@ -1,11 +1,17 @@
 // @vitest-environment jsdom
 
 import { FactionsColDisplay } from "@utils/ffconfig";
-import { beforeEach, expect, test } from "vitest";
+import { afterEach, beforeEach, expect, test } from "vitest";
 import { apply_filters_and_sort } from "./filter-sort-engine";
 
 beforeEach(() => {
   document.body.innerHTML = "";
+});
+
+const originalNow = Date.now;
+
+afterEach(() => {
+  Date.now = originalNow;
 });
 
 test("apply_filters_and_sort filters and sorts member rows correctly", () => {
@@ -477,6 +483,97 @@ test("apply_filters_and_sort bypasses filtering but still sorts when filterEnabl
   const rows = Array.from(container.querySelectorAll(".table-row"));
   expect(rows[0]?.id).toBe("row-2");
   expect(rows[1]?.id).toBe("row-1");
+
+  document.body.removeChild(container);
+});
+
+test("apply_filters_and_sort filters by Last Action Range, with 0/missing data always passing", () => {
+  const nowSec = 1_700_000_000;
+  Date.now = () => nowSec * 1000;
+
+  const container = document.createElement("div");
+  container.className = "members-list";
+  container.innerHTML = `
+    <div class="table-body">
+      <div class="table-row" id="row-too-recent" data-twse-last-action-timestamp="${nowSec - 60}">
+        <div class="member"><a href="/profiles.php?XID=111">Player 111</a></div>
+        <div class="lvl">50</div>
+        <div class="status okay">Okay</div>
+      </div>
+      <div class="table-row" id="row-in-range" data-twse-last-action-timestamp="${nowSec - 1800}">
+        <div class="member"><a href="/profiles.php?XID=222">Player 222</a></div>
+        <div class="lvl">50</div>
+        <div class="status okay">Okay</div>
+      </div>
+      <div class="table-row" id="row-too-stale" data-twse-last-action-timestamp="${nowSec - 7200}">
+        <div class="member"><a href="/profiles.php?XID=333">Player 333</a></div>
+        <div class="lvl">50</div>
+        <div class="status okay">Okay</div>
+      </div>
+      <div class="table-row" id="row-unknown" data-twse-last-action-timestamp="0">
+        <div class="member"><a href="/profiles.php?XID=444">Player 444</a></div>
+        <div class="lvl">50</div>
+        <div class="status okay">Okay</div>
+      </div>
+      <div class="table-row" id="row-no-attr">
+        <div class="member"><a href="/profiles.php?XID=555">Player 555</a></div>
+        <div class="lvl">50</div>
+        <div class="status okay">Okay</div>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(container);
+
+  const baseFilters = {
+    sortBy: "none" as const,
+    colDisplay: FactionsColDisplay.FAIR_FIGHT,
+    activity: { online: true, idle: true, offline: true },
+    status: {
+      okay: true,
+      hospital: true,
+      jail: true,
+      abroad: true,
+      traveling: true,
+    },
+    levelMin: null,
+    levelMax: null,
+    ffMin: null,
+    ffMax: null,
+  };
+
+  // 10m <= age <= 1h: only row-in-range (age 30m) is within range
+  apply_filters_and_sort(container, {
+    ...baseFilters,
+    lastActionMinSec: 600,
+    lastActionMaxSec: 3600,
+  });
+
+  expect(
+    container
+      .querySelector("#row-too-recent")
+      ?.hasAttribute("data-ffscouter-hidden"),
+  ).toBe(true);
+  expect(
+    container
+      .querySelector("#row-in-range")
+      ?.hasAttribute("data-ffscouter-hidden"),
+  ).toBe(false);
+  expect(
+    container
+      .querySelector("#row-too-stale")
+      ?.hasAttribute("data-ffscouter-hidden"),
+  ).toBe(true);
+  // 0 sentinel and missing attribute always pass, regardless of bounds
+  expect(
+    container
+      .querySelector("#row-unknown")
+      ?.hasAttribute("data-ffscouter-hidden"),
+  ).toBe(false);
+  expect(
+    container
+      .querySelector("#row-no-attr")
+      ?.hasAttribute("data-ffscouter-hidden"),
+  ).toBe(false);
 
   document.body.removeChild(container);
 });

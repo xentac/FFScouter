@@ -555,6 +555,7 @@ test("ff-faction-filter-box has correct mobile order for filter groups", async (
       "ff-faction-filter-box",
     ) as FFFactionFilterBox;
     el.mode = "war";
+    el.hasLastActionData = true;
     document.body.appendChild(el);
     await new Promise((resolve) => setTimeout(resolve, 0));
 
@@ -571,7 +572,8 @@ test("ff-faction-filter-box has correct mobile order for filter groups", async (
     expect(getOrder(".grp-status")).toBe("4");
     expect(getOrder(".grp-ff")).toBe("5");
     expect(getOrder(".grp-stats")).toBe("6");
-    expect(getOrder(".grp-columns")).toBe("7");
+    expect(getOrder(".grp-last-action")).toBe("7");
+    expect(getOrder(".grp-columns")).toBe("8");
   } finally {
     document.head.removeChild(styleEl);
   }
@@ -701,6 +703,102 @@ test("ff-faction-filter-box supports resetting filters to defaults while keeping
     expect(events[events.length - 1].sortBy).toBe("ff-desc");
     expect(events[events.length - 1].activity.online).toBe(true);
     expect(events[events.length - 1].levelMin).toBeNull();
+  } finally {
+    vi.useRealTimers();
+  }
+});
+
+test("ff-faction-filter-box only renders Last Action Range group in war mode with hasLastActionData", async () => {
+  const el = document.createElement(
+    "ff-faction-filter-box",
+  ) as FFFactionFilterBox;
+  document.body.appendChild(el);
+  await new Promise((resolve) => setTimeout(resolve, 0));
+
+  const findGroup = () =>
+    Array.from(el.querySelectorAll(".ff-filter-group")).find(
+      (g) => g.querySelector("strong")?.textContent === "Last Action Range",
+    );
+
+  // faction mode, no data: absent
+  expect(findGroup()).toBeUndefined();
+
+  // faction mode, data detected: still absent (war-only feature)
+  el.hasLastActionData = true;
+  await el.updateComplete;
+  expect(findGroup()).toBeUndefined();
+
+  // war mode, no data detected yet: absent
+  el.mode = "war";
+  el.hasLastActionData = false;
+  await el.updateComplete;
+  expect(findGroup()).toBeUndefined();
+
+  // war mode + data detected: present
+  el.hasLastActionData = true;
+  await el.updateComplete;
+  expect(findGroup()).not.toBeUndefined();
+});
+
+test("ff-faction-filter-box parses Last Action Range duration strings into seconds", async () => {
+  vi.useFakeTimers();
+  try {
+    const el = document.createElement(
+      "ff-faction-filter-box",
+    ) as FFFactionFilterBox;
+    el.mode = "war";
+    el.hasLastActionData = true;
+    document.body.appendChild(el);
+
+    const mountPromise = new Promise((resolve) => setTimeout(resolve, 0));
+    vi.advanceTimersByTime(10);
+    await mountPromise;
+    await el.updateComplete;
+
+    const events: any[] = [];
+    el.addEventListener("filter-change", (e: any) => {
+      events.push(e.detail);
+    });
+
+    const groups = Array.from(el.querySelectorAll(".ff-filter-group"));
+    const lastActionGroup = groups.find(
+      (g) => g.querySelector("strong")?.textContent === "Last Action Range",
+    );
+    expect(lastActionGroup).toBeDefined();
+    if (!lastActionGroup) return;
+
+    const minInput = lastActionGroup.querySelector(
+      'input[placeholder="Min"]',
+    ) as HTMLInputElement;
+    const maxInput = lastActionGroup.querySelector(
+      'input[placeholder="Max"]',
+    ) as HTMLInputElement;
+
+    minInput.value = "10m";
+    minInput.dispatchEvent(new Event("input"));
+    vi.advanceTimersByTime(250);
+    expect(events[events.length - 1].lastActionMinSec).toBe(600);
+
+    maxInput.value = "4h2m15s";
+    maxInput.dispatchEvent(new Event("input"));
+    vi.advanceTimersByTime(250);
+    expect(events[events.length - 1].lastActionMaxSec).toBe(
+      4 * 3600 + 2 * 60 + 15,
+    );
+
+    // Unparseable text resolves to "no bound" rather than corrupting the filter
+    minInput.value = "garbage";
+    minInput.dispatchEvent(new Event("input"));
+    vi.advanceTimersByTime(250);
+    expect(events[events.length - 1].lastActionMinSec).toBeNull();
+
+    // Reset clears both fields
+    const resetBtn = el.querySelector(".reset-btn") as HTMLButtonElement;
+    resetBtn.click();
+    expect(el.lastActionMin).toBeNull();
+    expect(el.lastActionMax).toBeNull();
+    expect(events[events.length - 1].lastActionMinSec).toBeNull();
+    expect(events[events.length - 1].lastActionMaxSec).toBeNull();
   } finally {
     vi.useRealTimers();
   }

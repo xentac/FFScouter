@@ -432,8 +432,12 @@ ff-faction-filter-box {
   order: 6;
 }
 
-.grp-columns {
+.grp-last-action {
   order: 7;
+}
+
+.grp-columns {
+  order: 8;
 }
 
 @media (min-width: 784px) {

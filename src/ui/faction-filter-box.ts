@@ -1,7 +1,10 @@
 import { html, LitElement } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { FactionsColDisplay, ffconfig } from "../utils/ffconfig";
-import { parse_suffix_number } from "../utils/strings";
+import {
+  parse_duration_to_seconds,
+  parse_suffix_number,
+} from "../utils/strings";
 
 export interface FactionFilterState {
   sortBy: "ff-asc" | "ff-desc" | "none";
@@ -24,6 +27,8 @@ export interface FactionFilterState {
   ffMax: number | null;
   statsMin: string | null;
   statsMax: string | null;
+  lastActionMin: string | null;
+  lastActionMax: string | null;
   hiddenColumns?: {
     level: boolean;
     status: boolean;
@@ -38,7 +43,9 @@ export interface FactionFilterState {
 
 // The shape consumed by apply_filters_and_sort: same as FactionFilterState,
 // minus the storage-only hiddenColumns fields, with statsMin/statsMax already
-// parsed from their stored suffix-number strings (e.g. "1.5m") into numbers.
+// parsed from their stored suffix-number strings (e.g. "1.5m") into numbers,
+// and lastActionMin/lastActionMax similarly parsed from duration strings
+// (e.g. "4h2m15s") into seconds.
 export interface FactionFilterSnapshot {
   sortBy: FactionFilterState["sortBy"];
   filterEnabled?: boolean;
@@ -50,6 +57,8 @@ export interface FactionFilterSnapshot {
   ffMax: number | null;
   statsMin: number | null;
   statsMax: number | null;
+  lastActionMinSec: number | null;
+  lastActionMaxSec: number | null;
 }
 
 const DEFAULT_HIDDEN_COLUMNS = {
@@ -79,6 +88,8 @@ const DEFAULT_STATE: FactionFilterState = {
   ffMax: null,
   statsMin: null,
   statsMax: null,
+  lastActionMin: null,
+  lastActionMax: null,
   hiddenColumns: DEFAULT_HIDDEN_COLUMNS,
 };
 
@@ -96,6 +107,9 @@ export class FFFactionFilterBox extends LitElement {
   }
 
   @property({ type: String }) mode: "faction" | "war" = "faction";
+  // Set externally (see setup_reapply_watcher in features/faction/index.ts) once
+  // TWSE's data-twse-last-action-timestamp attribute is detected on war rows.
+  @property({ type: Boolean }) hasLastActionData = false;
 
   @state() sortBy: FactionFilterState["sortBy"] = "none";
   @state() filterEnabled = true;
@@ -112,6 +126,8 @@ export class FFFactionFilterBox extends LitElement {
   @state() ffMax: number | null = null;
   @state() statsMin: string | null = null;
   @state() statsMax: string | null = null;
+  @state() lastActionMin: string | null = null;
+  @state() lastActionMax: string | null = null;
   @state() hiddenColumns = { ...DEFAULT_HIDDEN_COLUMNS };
   @state() private collapsed = false;
 
@@ -207,6 +223,8 @@ export class FFFactionFilterBox extends LitElement {
       this.ffMax = parsed.ffMax ?? null;
       this.statsMin = parsed.statsMin ?? null;
       this.statsMax = parsed.statsMax ?? null;
+      this.lastActionMin = parsed.lastActionMin ?? null;
+      this.lastActionMax = parsed.lastActionMax ?? null;
 
       if (isMobile) {
         this.hiddenColumns = {
@@ -278,6 +296,8 @@ export class FFFactionFilterBox extends LitElement {
       ffMax: this.ffMax,
       statsMin: this.statsMin,
       statsMax: this.statsMax,
+      lastActionMin: this.lastActionMin,
+      lastActionMax: this.lastActionMax,
       hiddenColumns: hiddenColumnsToSave,
       hiddenColumnsMobile: hiddenColumnsMobileToSave,
     };
@@ -324,6 +344,12 @@ export class FFFactionFilterBox extends LitElement {
       ffMax: this.ffMax,
       statsMin: this.statsMin ? parse_suffix_number(this.statsMin) : null,
       statsMax: this.statsMax ? parse_suffix_number(this.statsMax) : null,
+      lastActionMinSec: this.lastActionMin
+        ? parse_duration_to_seconds(this.lastActionMin)
+        : null,
+      lastActionMaxSec: this.lastActionMax
+        ? parse_duration_to_seconds(this.lastActionMax)
+        : null,
     };
   }
 
@@ -428,6 +454,16 @@ export class FFFactionFilterBox extends LitElement {
     this.queueChange();
   }
 
+  private onLastActionChange(type: "min" | "max", valStr: string) {
+    const val = valStr.trim() === "" ? null : valStr;
+    if (type === "min") {
+      this.lastActionMin = val;
+    } else {
+      this.lastActionMax = val;
+    }
+    this.queueChange();
+  }
+
   private onToggleFilter(e?: Event) {
     if (e) {
       e.preventDefault();
@@ -456,6 +492,8 @@ export class FFFactionFilterBox extends LitElement {
     this.ffMax = null;
     this.statsMin = null;
     this.statsMax = null;
+    this.lastActionMin = null;
+    this.lastActionMax = null;
     this.executeChangeImmediately();
   }
 
@@ -774,6 +812,35 @@ export class FFFactionFilterBox extends LitElement {
               />
             </div>
           </div>
+
+          ${
+            this.mode === "war" && this.hasLastActionData
+              ? html`
+                <div class="ff-filter-group grp-last-action">
+                  <strong>Last Action Range</strong>
+                  <div class="ff-filter-range-inputs">
+                    <input
+                      type="text"
+                      placeholder="Min"
+                      title='e.g. "10m", "1h", "4h2m15s"'
+                      .value="${this.lastActionMin !== null ? this.lastActionMin : ""}"
+                      @input="${(e: any) =>
+                        this.onLastActionChange("min", e.target.value)}"
+                    />
+                    <span>to</span>
+                    <input
+                      type="text"
+                      placeholder="Max"
+                      title='e.g. "10m", "1h", "4h2m15s"'
+                      .value="${this.lastActionMax !== null ? this.lastActionMax : ""}"
+                      @input="${(e: any) =>
+                        this.onLastActionChange("max", e.target.value)}"
+                    />
+                  </div>
+                </div>
+              `
+              : ""
+          }
 
           ${
             this.mode === "war"

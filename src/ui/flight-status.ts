@@ -2,6 +2,7 @@ import { FFApiError } from "@utils/api";
 import { check_key_status } from "@utils/check_key";
 import { ffscouter } from "@utils/ffscouter";
 import logger from "@utils/logger";
+import { get_current_time_seconds } from "@utils/time";
 import type { PlayerFlightsResponse } from "@utils/types";
 import { html, LitElement } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
@@ -17,13 +18,6 @@ const premium_action = html`<a
   style="font-weight: bold; text-decoration: underline;"
   >Upgrade to FFScouter Flight Tracking</a
 >`;
-
-function get_current_time_seconds(): number {
-  if (typeof (window as any).getCurrentTimestamp === "function") {
-    return (window as any).getCurrentTimestamp() / 1000;
-  }
-  return Date.now() / 1000;
-}
 
 function format_duration_human(totalSeconds: number, compact: boolean): string {
   const clampedSeconds = Math.max(0, Math.floor(totalSeconds));

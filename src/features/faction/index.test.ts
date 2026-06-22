@@ -103,6 +103,130 @@ test("setup_war_features detects enemy-faction and your-faction lists and setup 
   factionWar.remove();
 });
 
+test("setup_war_features detects TWSE last-action data and exposes it on the filter box", async () => {
+  vi.mocked(ffscouter.get).mockResolvedValue({
+    player_id: 111 as PlayerId,
+    no_data: true,
+  } as any);
+
+  const factionWar = document.createElement("div");
+  factionWar.className = "faction-war";
+
+  const enemyList = document.createElement("ul");
+  enemyList.className = "enemy-faction";
+  enemyList.innerHTML = `
+    <li class="table-header"><div class="lvl">Lvl</div></li>
+    <li class="enemy" id="enemy-1" data-twse-last-action-timestamp="1700000000">
+      <div class="member"><a href="/profiles.php?XID=111">Enemy 111</a></div>
+      <div class="lvl">50</div>
+    </li>
+  `;
+
+  const yourList = document.createElement("ul");
+  yourList.className = "your-faction";
+  yourList.innerHTML = `
+    <li class="table-header"><div class="lvl">Lvl</div></li>
+    <li class="your" id="your-2">
+      <div class="member"><a href="/profiles.php?XID=222">Your 222</a></div>
+      <div class="lvl">60</div>
+    </li>
+  `;
+
+  factionWar.appendChild(enemyList);
+  factionWar.appendChild(yourList);
+  document.body.appendChild(factionWar);
+
+  setup_war_features(factionWar);
+  await new Promise((resolve) => setTimeout(resolve, 0));
+
+  const filterBox = factionWar.querySelector(
+    "ff-faction-filter-box[mode='war']",
+  ) as any;
+  expect(filterBox).not.toBeNull();
+  expect(filterBox.hasLastActionData).toBe(true);
+
+  factionWar.remove();
+});
+
+test("setup_war_features picks up TWSE annotating a row after setup has already run", async () => {
+  vi.mocked(ffscouter.get).mockResolvedValue({
+    player_id: 111 as PlayerId,
+    no_data: true,
+  } as any);
+
+  const factionWar = document.createElement("div");
+  factionWar.className = "faction-war";
+
+  const enemyList = document.createElement("ul");
+  enemyList.className = "enemy-faction";
+  enemyList.innerHTML = `
+    <li class="table-header"><div class="lvl">Lvl</div></li>
+    <li class="enemy" id="enemy-1">
+      <div class="member"><a href="/profiles.php?XID=111">Enemy 111</a></div>
+      <div class="lvl">50</div>
+    </li>
+  `;
+
+  factionWar.appendChild(enemyList);
+  document.body.appendChild(factionWar);
+
+  setup_war_features(factionWar);
+  await new Promise((resolve) => setTimeout(resolve, 0));
+
+  const filterBox = factionWar.querySelector(
+    "ff-faction-filter-box[mode='war']",
+  ) as any;
+  expect(filterBox).not.toBeNull();
+  // TWSE hasn't run yet at the moment our watcher was set up
+  expect(filterBox.hasLastActionData).toBe(false);
+
+  // TWSE (an independent script) annotates the row some time later
+  const enemyRow = enemyList.querySelector("#enemy-1") as HTMLElement;
+  enemyRow.setAttribute("data-twse-last-action-timestamp", "1700000000");
+
+  // Wait for the attribute MutationObserver + rAF debounce to run (jsdom rAF
+  // fires at ~16ms), without needing the 30s poll fallback
+  await new Promise((resolve) => setTimeout(resolve, 50));
+
+  expect(filterBox.hasLastActionData).toBe(true);
+
+  factionWar.remove();
+});
+
+test("setup_war_features leaves the filter box's hasLastActionData false when TWSE isn't present", async () => {
+  vi.mocked(ffscouter.get).mockResolvedValue({
+    player_id: 111 as PlayerId,
+    no_data: true,
+  } as any);
+
+  const factionWar = document.createElement("div");
+  factionWar.className = "faction-war";
+
+  const enemyList = document.createElement("ul");
+  enemyList.className = "enemy-faction";
+  enemyList.innerHTML = `
+    <li class="table-header"><div class="lvl">Lvl</div></li>
+    <li class="enemy" id="enemy-1">
+      <div class="member"><a href="/profiles.php?XID=111">Enemy 111</a></div>
+      <div class="lvl">50</div>
+    </li>
+  `;
+
+  factionWar.appendChild(enemyList);
+  document.body.appendChild(factionWar);
+
+  setup_war_features(factionWar);
+  await new Promise((resolve) => setTimeout(resolve, 0));
+
+  const filterBox = factionWar.querySelector(
+    "ff-faction-filter-box[mode='war']",
+  ) as any;
+  expect(filterBox).not.toBeNull();
+  expect(filterBox.hasLastActionData).toBe(false);
+
+  factionWar.remove();
+});
+
 test("initialize_features MutationObserver reacts to status class changes and filters correctly", async () => {
   vi.mocked(ffscouter.get).mockResolvedValue({
     player_id: 111 as PlayerId,

@@ -2,9 +2,13 @@ export type TornApiKey = string;
 
 export type PlayerId = number;
 
-export type Timestamp = number; // ms
+export type Timestamp = number; // ms, relative to the browser's own clock (Date.now())
 
-export type TimestampSec = number; // seconds
+export type TimestampSec = number; // seconds, see Timestamp
+
+export type TornTimestamp = number; // ms, relative to Torn's server clock (window.getCurrentTimestamp()), not the browser clock
+
+export type TornTimestampSec = number; // seconds, see TornTimestamp
 
 export type FFDataDistribution = {
   last_updated: TimestampSec;
@@ -37,13 +41,13 @@ export type CachedFFData = FFData & { expiry: Timestamp };
 export type TravelMethod = "PI" | "Airline" | "WLT" | "BCT" | "Unknown" | null;
 
 export type Flight = {
-  takeoff_time: TimestampSec;
+  takeoff_time: TornTimestampSec;
   status_description: string;
-  earliest_arrival_time: TimestampSec;
-  latest_arrival_time: TimestampSec;
+  earliest_arrival_time: TornTimestampSec;
+  latest_arrival_time: TornTimestampSec;
   travel_method: TravelMethod;
   book_likely_being_used: boolean;
-  approx_landing_time?: TimestampSec;
+  approx_landing_time?: TornTimestampSec;
 };
 
 export type PlayerFlightsResponse = {

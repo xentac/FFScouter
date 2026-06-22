@@ -57,10 +57,35 @@ function run_when_ready(
   cleanup_when_detached(root, () => loadObserver.disconnect());
 }
 
+// Detects whether TWSE is present (see CONTEXT.md's "TWSE Presence Detection")
+// by scanning for at least one row carrying data-twse-last-action-timestamp,
+// and pushes the result onto the shared filter box as a property — mirroring
+// how `mode` is set today. War mode shares one filter box across both
+// .enemy-faction/.your-faction lists, so the scan covers the whole war box,
+// not just the one list passed in.
+function update_last_action_visibility(list: HTMLElement) {
+  const scope = list.closest(".faction-war") || list;
+  const filterBox = (
+    list.closest(".faction-war") || list.parentNode
+  )?.querySelector("ff-faction-filter-box") as any;
+  if (!filterBox) return;
+  filterBox.hasLastActionData = !!scope.querySelector(
+    "[data-twse-last-action-timestamp]",
+  );
+}
+
 // Watches a list for the status/activity attribute changes Torn's own JS makes
 // in response to state-change events, debounces via rAF, and reapplies the
-// current filter/sort state on top of Torn's reordering. Also polls traveling
-// flights on the same list every 30s. Used by both the standard members flow
+// current filter/sort state on top of Torn's reordering. Also watches for TWSE
+// setting data-twse-last-action-timestamp on a row (TWSE runs as an
+// independent script, so it may not have annotated rows yet by the time this
+// watcher is set up) and re-runs update_last_action_visibility on the same rAF
+// pass — safe to combine with our own row-reordering since that only performs
+// childList mutations (appendChild), never attribute changes, so it can't
+// retrigger this attributes-only observer. The 30s flight-poll tick below is
+// a fallback for the rarer case where TWSE adds the attribute via a brand new
+// row element (a childList mutation this observer doesn't watch) rather than
+// annotating an existing one. Used by both the standard members flow
 // (observeTarget is the .table-body, since standard lists have one) and the
 // Ranked War flow (observeTarget is the list itself).
 function setup_reapply_watcher(
@@ -68,6 +93,8 @@ function setup_reapply_watcher(
   observeTarget: Element,
   getColDisplay: () => FactionsColDisplay,
 ) {
+  update_last_action_visibility(list);
+
   let rafPending = false;
   const attributeObserver = new MutationObserver((mutations) => {
     if (is_applying(list)) return;
@@ -91,6 +118,10 @@ function setup_reapply_watcher(
           shouldReapply = true;
           break;
         }
+        if (m.attributeName === "data-twse-last-action-timestamp") {
+          shouldReapply = true;
+          break;
+        }
       }
     }
 
@@ -98,6 +129,7 @@ function setup_reapply_watcher(
       rafPending = true;
       requestAnimationFrame(() => {
         rafPending = false;
+        update_last_action_visibility(list);
         const filterBox = (
           list.closest(".faction-war") || list.parentNode
         )?.querySelector("ff-faction-filter-box");
@@ -113,12 +145,13 @@ function setup_reapply_watcher(
 
   attributeObserver.observe(observeTarget, {
     attributes: true,
-    attributeFilter: ["class", "aria-label"],
+    attributeFilter: ["class", "aria-label", "data-twse-last-action-timestamp"],
     subtree: true,
   });
 
   const flightInterval = setInterval(() => {
     poll_traveling_flights(list);
+    update_last_action_visibility(list);
   }, 30000);
 
   cleanup_when_detached(list, () => {

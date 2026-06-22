@@ -1,3 +1,4 @@
+import parseDuration from "parse-duration";
 import { ColorScheme, ffconfig } from "./ffconfig";
 import type { FFData, FFDataComplete, TimestampSec } from "./types";
 
@@ -317,4 +318,11 @@ export function parse_suffix_number(valStr: string): number | null {
   };
 
   return num * (multiplier[suffix] ?? 1);
+}
+
+export function parse_duration_to_seconds(valStr: string): number | null {
+  const trimmed = valStr.trim();
+  if (!trimmed) return null;
+
+  return parseDuration(trimmed, "s");
 }
