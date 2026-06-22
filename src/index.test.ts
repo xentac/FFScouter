@@ -48,7 +48,7 @@ vi.mock("@utils/logger", () => ({
   },
 }));
 
-const INJECTION_KEY = "__FF_SCOUTER_V3_INJECTED__";
+const INJECTION_KEY = "__FF_SCOUTER_V2_INJECTED__";
 
 function makeFeature(overrides: Partial<Feature> = {}): Feature {
   return {

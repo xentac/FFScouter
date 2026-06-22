@@ -27,22 +27,22 @@ test("Logger forwards to console functions when severity is high enough", () => 
   logger.error("error msg");
 
   expect(debugSpy).toHaveBeenCalledWith(
-    expect.stringContaining("[FFSV3] - [DEBUG]: "),
+    expect.stringContaining("[FFSV2] - [DEBUG]: "),
     expect.any(String),
     "debug msg",
   );
   expect(infoSpy).toHaveBeenCalledWith(
-    expect.stringContaining("[FFSV3] - [INFO]: "),
+    expect.stringContaining("[FFSV2] - [INFO]: "),
     expect.any(String),
     "info msg",
   );
   expect(warnSpy).toHaveBeenCalledWith(
-    expect.stringContaining("[FFSV3] - [WARN]: "),
+    expect.stringContaining("[FFSV2] - [WARN]: "),
     expect.any(String),
     "warn msg",
   );
   expect(errorSpy).toHaveBeenCalledWith(
-    expect.stringContaining("[FFSV3] - [ERROR]: "),
+    expect.stringContaining("[FFSV2] - [ERROR]: "),
     expect.any(String),
     "error msg",
   );
@@ -77,11 +77,11 @@ test("Logger handles groups correctly and filters them at NONE level", () => {
     .mockImplementation(() => {});
 
   logger.group("my group", false);
-  expect(groupSpy).toHaveBeenCalledWith("[FFSV3]: ", "my group");
+  expect(groupSpy).toHaveBeenCalledWith("[FFSV2]: ", "my group");
 
   logger.group("my collapsed group", true);
   expect(groupCollapsedSpy).toHaveBeenCalledWith(
-    "[FFSV3]: ",
+    "[FFSV2]: ",
     "my collapsed group",
   );
 
@@ -111,7 +111,7 @@ test("Logger child creates a child logger with combined prefixes", () => {
   childLogger.debug("child msg");
 
   expect(debugSpy).toHaveBeenCalledWith(
-    expect.stringContaining("[FFSV3:sub] - [DEBUG]: "),
+    expect.stringContaining("[FFSV2:sub] - [DEBUG]: "),
     expect.any(String),
     "child msg",
   );

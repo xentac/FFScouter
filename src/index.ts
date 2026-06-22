@@ -15,7 +15,7 @@ const log = logger.child("boot");
 // registrations) inject this script into more than one isolated JS realm per
 // page. Each realm gets its own `window`, so a window-based flag never
 // actually deduplicates. The document is the one thing every realm shares.
-const INJECTION_KEY = "__FF_SCOUTER_V3_INJECTED__";
+const INJECTION_KEY = "__FF_SCOUTER_V2_INJECTED__";
 
 // Runs `shouldRun()`/`run()` without letting one feature's bug take down or
 // hide the rest. `shouldRun()` is awaited directly in the loop below, so an

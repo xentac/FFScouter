@@ -218,5 +218,5 @@ class Logger {
   }
 }
 
-export default new Logger("FFSV3", LogLevel.DEBUG);
+export default new Logger("FFSV2", LogLevel.DEBUG);
 export { Logger };
