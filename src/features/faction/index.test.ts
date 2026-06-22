@@ -164,6 +164,66 @@ test("initialize_features MutationObserver reacts to status class changes and fi
   container.remove();
 });
 
+test("initialize_features MutationObserver reacts to activity aria-label changes and filters correctly", async () => {
+  vi.mocked(ffscouter.get).mockResolvedValue({
+    player_id: 111 as PlayerId,
+    no_data: true,
+  } as any);
+
+  const container = document.createElement("div");
+  container.className = "members-list";
+  container.innerHTML = `
+    <ul class="table-header">
+      <li class="member">Member</li>
+      <li class="lvl">Lvl</li>
+    </ul>
+    <div class="table-body">
+      <div class="table-row" id="row-1">
+        <div class="member">
+          <div aria-label="Player 111 is offline" class="userStatusWrap___abc"></div>
+          <a href="/profiles.php?XID=111">Player 111</a>
+        </div>
+        <div class="lvl">50</div>
+        <div class="status okay">Okay</div>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(container);
+
+  // Initialize features (which sets up MutationObserver)
+  initialize_features(container);
+  await new Promise((resolve) => setTimeout(resolve, 0));
+
+  // Find the injected filterBox
+  const filterBox = container.parentNode?.querySelector(
+    "ff-faction-filter-box",
+  ) as any;
+  expect(filterBox).not.toBeNull();
+
+  // Set filter state: only show Online
+  filterBox.activity = { online: true, idle: false, offline: false };
+  filterBox.dispatchChange();
+  await new Promise((resolve) => setTimeout(resolve, 0));
+
+  const row = container.querySelector("#row-1") as HTMLElement;
+  // Row is offline, so it should be hidden
+  expect(row.hasAttribute("data-ffscouter-hidden")).toBe(true);
+
+  // Dynamically change activity to online via the aria-label Torn updates in place
+  const statusWrap = row.querySelector(
+    '[class*="userStatusWrap"]',
+  ) as HTMLElement;
+  statusWrap.setAttribute("aria-label", "Player 111 is online");
+
+  // Wait for MutationObserver and rAF debounce to run (jsdom rAF fires at ~16ms)
+  await new Promise((resolve) => setTimeout(resolve, 50));
+
+  // Row should now be visible!
+  expect(row.hasAttribute("data-ffscouter-hidden")).toBe(false);
+
+  container.remove();
+});
+
 test("setup_war_features MutationObserver in Ranked War reacts to status changes and filters correctly", async () => {
   vi.mocked(ffscouter.get).mockResolvedValue({
     player_id: 111 as PlayerId,

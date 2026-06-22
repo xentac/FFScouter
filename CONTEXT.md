@@ -64,3 +64,9 @@ In the settings panel, configured via a range slider paired with a synced, clamp
 
 ### Info Line
 The `ff-header-line` LitElement component (`src/ui/info-line.ts`) rendering the FF/BS summary line on profile pages, including a background colored via the [[FF Color Scale]].
+
+### Activity Status
+Online/idle/offline state derived per-row from the `aria-label` ("{name} is online/offline/idle") on Torn's `userStatusWrap___*` div (`get_activity_status()` in `src/utils/dom.ts`), not from an `<img alt>` as in pre-2026-06 markup — `.icons` is now reused for multiple unrelated row sections (e.g. the achievement-icon tray on the regular faction member list) and can no longer scope the lookup. An unparseable label yields `"unknown"`, which always passes the [[Filter Box]]'s activity filter rather than being hidden, and is logged once per distinct label text so a future wording change is loud, not silent. See [[Torn Markup Snapshot]].
+
+### Torn Markup Snapshot
+A dated, untrimmed capture of a live Torn page fragment, stored under a feature's `__fixtures__/torn-markup/<date>/` directory (e.g. `src/features/faction/__fixtures__/torn-markup/2026-06-22/`). Captured opportunistically when Torn changes markup; the latest dated folder is wired into a test asserting our parsing still produces the expected result, so the snapshot and the parser can't silently drift apart. Older dated folders are kept for reference but not re-tested. Distinct from the trimmed inline `innerHTML` strings used elsewhere in `.test.ts` files, which exist only to exercise one assertion and aren't meant to be faithful.

@@ -257,6 +257,33 @@ export function get_player_id_in_element(element: Element): PlayerId | null {
   return null;
 }
 
+const seenUnknownActivityLabels = new Set<string>();
+
+// Torn's faction/war member rows expose online/idle/offline state via an
+// aria-label ("{name} is online/offline/idle") on a userStatusWrap___* div,
+// not via an <img alt> as in pre-2026-06 markup. `.icons` is no longer a safe
+// scoping selector for this lookup: it's reused for unrelated row sections
+// (e.g. the achievement-icon tray on the regular faction member list), so
+// scope directly on the userStatusWrap class instead.
+export function get_activity_status(
+  row: Element,
+): "online" | "idle" | "offline" | "unknown" {
+  const wrap = row.querySelector('[class*="userStatusWrap"]');
+  const label = wrap?.getAttribute("aria-label") || "";
+  const match = label.match(/ is (online|offline|idle)$/i);
+  const status = match?.[1];
+
+  if (!status) {
+    if (!seenUnknownActivityLabels.has(label)) {
+      seenUnknownActivityLabels.add(label);
+      log.warn(`Unrecognized activity aria-label: "${label}"`);
+    }
+    return "unknown";
+  }
+
+  return status.toLowerCase() as "online" | "idle" | "offline";
+}
+
 export function apply_ff_gauge_selector(
   node_list: NodeListOf<HTMLElement>,
   featureName = "Unknown",

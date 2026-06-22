@@ -15,7 +15,7 @@ test("apply_filters_and_sort filters and sorts member rows correctly", () => {
       <div class="table-body">
         <div class="table-row" id="row-1" data-ff-value="2.5" data-est-value="1000000">
           <div class="member">
-            <span class="icons"><img alt="Online" /></span>
+            <span class="icons"><div aria-label="Player 111 is online" class="userStatusWrap___abc"></div></span>
             <a href="/profiles.php?XID=111">Player 111</a>
           </div>
           <div class="lvl">50</div>
@@ -23,7 +23,7 @@ test("apply_filters_and_sort filters and sorts member rows correctly", () => {
         </div>
         <div class="table-row" id="row-2" data-ff-value="4.5" data-est-value="5000000">
           <div class="member">
-            <span class="icons"><img alt="Offline" /></span>
+            <span class="icons"><div aria-label="Player 222 is offline" class="userStatusWrap___abc"></div></span>
             <a href="/profiles.php?XID=222">Player 222</a>
           </div>
           <div class="lvl">60</div>
@@ -31,7 +31,7 @@ test("apply_filters_and_sort filters and sorts member rows correctly", () => {
         </div>
         <div class="table-row" id="row-3" data-ff-value="1.5" data-est-value="500000">
           <div class="member">
-            <span class="icons"><img alt="Idle" /></span>
+            <span class="icons"><div aria-label="Player 333 is idle" class="userStatusWrap___abc"></div></span>
             <a href="/profiles.php?XID=333">Player 333</a>
           </div>
           <div class="lvl">40</div>
@@ -434,13 +434,13 @@ test("apply_filters_and_sort bypasses filtering but still sorts when filterEnabl
         <div class="member"><a href="/profiles.php?XID=111">Player 111</a></div>
         <div class="lvl">50</div>
         <div class="status traveling">Traveling</div>
-        <div class="icons"><img alt="Offline" /></div>
+        <div class="icons"><div aria-label="Player 111 is offline" class="userStatusWrap___abc"></div></div>
       </div>
       <div class="table-row" id="row-2" data-ff-value="3.5" data-est-value="5000">
         <div class="member"><a href="/profiles.php?XID=222">Player 222</a></div>
         <div class="lvl">60</div>
         <div class="status okay">Okay</div>
-        <div class="icons"><img alt="Online" /></div>
+        <div class="icons"><div aria-label="Player 222 is online" class="userStatusWrap___abc"></div></div>
       </div>
     </div>
   `;

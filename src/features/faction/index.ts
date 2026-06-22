@@ -76,9 +76,9 @@ function setup_reapply_watcher(
     for (const m of mutations) {
       if (m.type === "attributes") {
         if (
-          m.attributeName === "alt" &&
-          m.target instanceof HTMLImageElement &&
-          m.target.closest(".icons")
+          m.attributeName === "aria-label" &&
+          m.target instanceof HTMLElement &&
+          m.target.closest('[class*="userStatusWrap"]')
         ) {
           shouldReapply = true;
           break;
@@ -113,7 +113,7 @@ function setup_reapply_watcher(
 
   attributeObserver.observe(observeTarget, {
     attributes: true,
-    attributeFilter: ["class", "alt"],
+    attributeFilter: ["class", "aria-label"],
     subtree: true,
   });
 

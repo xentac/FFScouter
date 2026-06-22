@@ -1,11 +1,18 @@
 // @vitest-environment jsdom
 import { beforeEach, expect, test, vi } from "vitest";
+import regularRowIdle from "../features/faction/__fixtures__/torn-markup/2026-06-22/regular-row-idle.html?raw";
+import regularRowOffline from "../features/faction/__fixtures__/torn-markup/2026-06-22/regular-row-offline.html?raw";
+import regularRowOnline from "../features/faction/__fixtures__/torn-markup/2026-06-22/regular-row-online.html?raw";
+import warRowIdle from "../features/faction/__fixtures__/torn-markup/2026-06-22/war-row-idle.html?raw";
+import warRowOffline from "../features/faction/__fixtures__/torn-markup/2026-06-22/war-row-offline.html?raw";
+import warRowOnline from "../features/faction/__fixtures__/torn-markup/2026-06-22/war-row-online.html?raw";
 import {
   add_ff_arrow,
   apply_ff_gauge,
   create_ff_element,
   create_info_line,
   extract_id_from_url,
+  get_activity_status,
   get_attack_url,
   get_player_id_in_element,
   getHashParameters,
@@ -47,6 +54,24 @@ test("extract_id_from_url extracts user IDs from standard XID and user2ID parame
   expect(
     extract_id_from_url("https://www.torn.com/profiles.php?other=123"),
   ).toBeNull();
+});
+
+test("get_activity_status parses online/idle/offline from canonical Torn markup fixtures", () => {
+  const cases: [string, "online" | "idle" | "offline"][] = [
+    [warRowOffline, "offline"],
+    [warRowOnline, "online"],
+    [warRowIdle, "idle"],
+    [regularRowOffline, "offline"],
+    [regularRowOnline, "online"],
+    [regularRowIdle, "idle"],
+  ];
+
+  for (const [html, expected] of cases) {
+    document.body.innerHTML = html;
+    const row = document.body.firstElementChild;
+    expect(row).not.toBeNull();
+    expect(get_activity_status(row as Element)).toBe(expected);
+  }
 });
 
 test("torn_page matches the current URL, step, and sid parameters", () => {

@@ -1,4 +1,4 @@
-import { detect_sort_icon_classes } from "@utils/dom";
+import { detect_sort_icon_classes, get_activity_status } from "@utils/dom";
 import { FactionsColDisplay } from "@utils/ffconfig";
 
 // Per-list re-entrancy guard to prevent layout loop on DOM mutation sorting
@@ -57,16 +57,14 @@ export function apply_filters_and_sort(
       }
 
       // Activity
-      const activityImg = row.querySelector(".icons img");
-      const activity = (
-        activityImg?.getAttribute("alt") || "offline"
-      ).toLowerCase();
+      const activity = get_activity_status(row);
       const allActivityUnchecked =
         !filters.activity.online &&
         !filters.activity.idle &&
         !filters.activity.offline;
       const matchesActivity =
         allActivityUnchecked ||
+        activity === "unknown" ||
         (activity === "online" && filters.activity.online) ||
         (activity === "idle" && filters.activity.idle) ||
         (activity === "offline" && filters.activity.offline);
