@@ -94,7 +94,7 @@ function make_arrow(d: FFDataComplete): SVGElement {
   const fill = get_ff_arrow_colour(d);
   const div = document.createElement("div");
   div.innerHTML = `<svg version="1.2" id="Layer_1" x="0px" y="0px" width="20" height="13" viewBox="${FF_ARROW_VIEWBOX}" xml:space="preserve" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg">
-	<path fill-rule="evenodd" fill="${fill}" stroke="#000000" d="${FF_ARROW_PATH_D}" id="path1" style="display:inline;stroke-width:1.50;"/>
+	<path fill-rule="evenodd" fill="${fill}" stroke="#000000" d="${FF_ARROW_PATH_D}" id="path1" style="display:inline;stroke-width:${ffconfig.gauge_marker_border_width};"/>
 </svg>`;
 
   if (!div.firstChild || !(div.firstChild instanceof SVGElement)) {
@@ -119,6 +119,9 @@ function make_marker(d: FFDataComplete): HTMLElement | SVGElement {
     bubble.classList.add("ffscouter-bubble");
     bubble.style.backgroundColor = fill;
     bubble.style.color = contrastColor;
+    bubble.style.borderWidth = `${
+      ffconfig.gauge_marker_border_width * (ffconfig.gauge_marker_scale / 100)
+    }px`;
 
     if (markerType === GaugeMarkerType.BUBBLE_FF) {
       bubble.textContent = d.fair_fight.toFixed(2);

@@ -183,6 +183,58 @@ test("add_ff_arrow fetches data and inserts gauge arrow SVG to elements", async 
   expect(svg?.tagName.toLowerCase()).toEqual("svg");
 });
 
+test("add_ff_arrow draws the arrow's stroke-width from gauge_marker_border_width config", async () => {
+  ffconfig.gauge_marker_border_width = 3;
+  vi.mocked(ffscouter.get).mockResolvedValue({
+    player_id: 123,
+    no_data: false,
+    fair_fight: 3.5,
+    last_updated: Date.now() / 1000,
+    bs_estimate: 1000,
+    bs_estimate_human: "1k",
+    bss_public: 10,
+    source: "bss",
+    premium_insights_available: false,
+  });
+
+  const anchor = document.createElement("a");
+  anchor.href = "https://www.torn.com/profiles.php?XID=123";
+  document.body.appendChild(anchor);
+
+  add_ff_arrow(anchor);
+  await new Promise((resolve) => setTimeout(resolve, 10));
+
+  const path = anchor.querySelector(".ffscouter-arrow path");
+  expect(path?.getAttribute("style")).toContain("stroke-width:3;");
+});
+
+test("add_ff_arrow sizes the bubble's border-width from gauge_marker_border_width scaled by gauge_marker_scale", async () => {
+  ffconfig.gauge_marker_type = GaugeMarkerType.BUBBLE_FF;
+  ffconfig.gauge_marker_border_width = 2;
+  ffconfig.gauge_marker_scale = 150;
+  vi.mocked(ffscouter.get).mockResolvedValue({
+    player_id: 123,
+    no_data: false,
+    fair_fight: 3.5,
+    last_updated: Date.now() / 1000,
+    bs_estimate: 1000,
+    bs_estimate_human: "1k",
+    bss_public: 10,
+    source: "bss",
+    premium_insights_available: false,
+  });
+
+  const anchor = document.createElement("a");
+  anchor.href = "https://www.torn.com/profiles.php?XID=123";
+  document.body.appendChild(anchor);
+
+  add_ff_arrow(anchor);
+  await new Promise((resolve) => setTimeout(resolve, 10));
+
+  const bubble = anchor.querySelector(".ffscouter-bubble") as HTMLElement;
+  expect(bubble.style.borderWidth).toEqual("3px");
+});
+
 test("add_ff_arrow sets the shared marker-scale CSS var from config", async () => {
   ffconfig.gauge_marker_scale = 150;
   vi.mocked(ffscouter.get).mockResolvedValue({

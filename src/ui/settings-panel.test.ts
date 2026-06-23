@@ -163,6 +163,56 @@ test("ff-settings-panel syncs the marker-size slider and number input, clamps ou
   expect(saveEvents[0]?.detail?.gaugeMarkerScale).toBe(50);
 });
 
+test("ff-settings-panel syncs the border-thickness slider and number input, clamps out-of-range values, and dispatches gaugeMarkerBorderWidth on save", async () => {
+  const el = document.createElement("ff-settings-panel") as FFSettingsPanel;
+  document.body.appendChild(el);
+  await el.updateComplete;
+
+  const saveEvents: CustomEvent[] = [];
+  el.addEventListener("ff-save", (e: Event) => {
+    saveEvents.push(e as CustomEvent);
+  });
+
+  const range = el.querySelector(
+    "#gauge-marker-border-width",
+  ) as HTMLInputElement;
+  const number = el.querySelector(
+    "#gauge-marker-border-width-number",
+  ) as HTMLInputElement;
+  expect(range).not.toBeNull();
+  expect(number).not.toBeNull();
+  expect(range.value).toBe("1.5");
+  expect(number.value).toBe("1.5");
+
+  // Moving the slider updates the synced number input
+  range.value = "2";
+  range.dispatchEvent(new Event("input"));
+  await el.updateComplete;
+  expect(number.value).toBe("2");
+
+  // Typing an out-of-range value into the number input clamps to the max
+  number.value = "999";
+  number.dispatchEvent(new Event("input"));
+  await el.updateComplete;
+  expect(range.value).toBe("3");
+  expect(number.value).toBe("3");
+
+  // Typing below the minimum clamps to the min
+  number.value = "-1";
+  number.dispatchEvent(new Event("input"));
+  await el.updateComplete;
+  expect(range.value).toBe("0");
+  expect(number.value).toBe("0");
+
+  const saveBtn = Array.from(el.querySelectorAll("button")).find(
+    (btn) => btn.textContent?.trim() === "Save Settings",
+  ) as HTMLButtonElement;
+  saveBtn.click();
+
+  expect(saveEvents.length).toBe(1);
+  expect(saveEvents[0]?.detail?.gaugeMarkerBorderWidth).toBe(0);
+});
+
 test("ff-settings-panel renders a live marker-size preview that updates with the color scheme dropdown", async () => {
   const el = document.createElement("ff-settings-panel") as FFSettingsPanel;
   document.body.appendChild(el);
@@ -186,6 +236,20 @@ test("ff-settings-panel renders a live marker-size preview that updates with the
 
   expect(previewArrow?.getAttribute("fill")).toBe("#808080");
   expect(previewBubble.style.backgroundColor).not.toBe(classicBubbleColor);
+
+  // Border thickness also drives the preview, scaled by the draft marker size
+  expect(previewArrow?.getAttribute("stroke-width")).toBe("1.5");
+  expect(previewBubble.style.borderWidth).toBe("1.5px");
+
+  const borderRange = el.querySelector(
+    "#gauge-marker-border-width",
+  ) as HTMLInputElement;
+  borderRange.value = "3";
+  borderRange.dispatchEvent(new Event("input"));
+  await el.updateComplete;
+
+  expect(previewArrow?.getAttribute("stroke-width")).toBe("3");
+  expect(previewBubble.style.borderWidth).toBe("3px");
 });
 
 test("ff-settings-panel renders a live swatch preview that updates with the color scheme dropdown", async () => {
@@ -232,9 +296,38 @@ test("ff-settings-panel lays each section out as a grid with full-width bundles 
   document.body.appendChild(el);
   await el.updateComplete;
 
-  // One grid per <h3> section: top (api/ranges), Feature Toggles, Debug Settings
+  // One grid per section: API Key & Premium, Gauge Marker Settings, Feature
+  // Toggles, Debug Settings -- each nested in its own visually distinct
+  // .ff-settings-group
   const sections = el.querySelectorAll(".ff-settings-section");
-  expect(sections.length).toBe(3);
+  expect(sections.length).toBe(4);
+
+  const groups = el.querySelectorAll(".ff-settings-group");
+  expect(groups.length).toBe(4);
+
+  // Gauge Marker Style, Marker Size, Color Scheme, Border Thickness, and FF
+  // Ranges all live together in the visually distinct Gauge Marker Settings
+  // group, not in Feature Toggles
+  expect(
+    el.querySelector("#gauge-marker-type")?.closest(".ff-settings-group"),
+  ).not.toBeNull();
+  expect(
+    el
+      .querySelector("#gauge-marker-border-width")
+      ?.closest(".ff-settings-group"),
+  ).not.toBeNull();
+
+  // API key/Premium, Feature Toggles, and Debug Settings are each wrapped in
+  // their own visually distinct group too
+  expect(
+    el.querySelector("#api-key")?.closest(".ff-settings-group"),
+  ).not.toBeNull();
+  expect(
+    el.querySelector("#chain-button-toggle")?.closest(".ff-settings-group"),
+  ).not.toBeNull();
+  expect(
+    el.querySelector("#debug-logs")?.closest(".ff-settings-group"),
+  ).not.toBeNull();
 
   // Plain selects/checkboxes are single grid cells
   const gaugeStyleCell = el

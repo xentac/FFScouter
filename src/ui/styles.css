@@ -229,12 +229,8 @@ ff-settings-panel select {
 }
 
 ff-settings-panel .ff-api-explanation {
-  background-color: var(--ffscouter-alt-bg-color);
-  border: 1px solid var(--ffscouter-border-color);
-  border-radius: 8px;
   color: var(--ffscouter-text-color);
   margin-bottom: 20px;
-  padding: 12px 16px;
   font-size: 13px;
   line-height: 1.5;
 }
@@ -618,8 +614,25 @@ ff-settings-panel .ff-chain-suboptions .ff-chain-wide {
   }
 }
 
-/* Marker size: label above a wrapping row of slider + number + % + live preview */
-ff-settings-panel .ff-marker-size {
+/* Generic visually-distinct grouping box, nested one level inside the
+   .accordion panel. Currently used for Gauge Marker Settings; written
+   generically so other sections (e.g. Feature Toggles) can reuse it later. */
+ff-settings-panel .ff-settings-group {
+  background-color: var(--ffscouter-alt-bg-color);
+  border: 1px solid var(--ffscouter-border-color);
+  border-radius: 5px;
+  padding: 12px;
+  margin-bottom: 15px;
+}
+
+ff-settings-panel .ff-settings-group h4 {
+  margin: 0 0 12px;
+}
+
+/* Marker size / border thickness: label above a wrapping row of
+   slider + number + suffix (+ live preview, on the border thickness row) */
+ff-settings-panel .ff-marker-size,
+ff-settings-panel .ff-marker-border-width {
   display: flex;
   flex-direction: column;
   gap: 5px;

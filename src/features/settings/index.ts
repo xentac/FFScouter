@@ -54,6 +54,7 @@ export default {
     panel.networkInterceptionEnabled = ffconfig.network_interception_enabled;
     panel.gaugeMarkerType = ffconfig.gauge_marker_type;
     panel.gaugeMarkerScale = ffconfig.gauge_marker_scale;
+    panel.gaugeMarkerBorderWidth = ffconfig.gauge_marker_border_width;
     panel.colorScheme = ffconfig.color_scheme;
     panel.warQuickAttackAction = ffconfig.war_quick_attack_action;
     panel.statusAttackLinksEnabled = ffconfig.status_attack_links_enabled;
@@ -90,6 +91,7 @@ export default {
       ffconfig.network_interception_enabled = detail.networkInterceptionEnabled;
       ffconfig.gauge_marker_type = detail.gaugeMarkerType;
       ffconfig.gauge_marker_scale = detail.gaugeMarkerScale;
+      ffconfig.gauge_marker_border_width = detail.gaugeMarkerBorderWidth;
       document.body.style.setProperty(
         "--ffscouter-marker-scale",
         `${detail.gaugeMarkerScale / 100}`,
@@ -130,6 +132,7 @@ export default {
       panel.networkInterceptionEnabled = ffconfig.network_interception_enabled;
       panel.gaugeMarkerType = ffconfig.gauge_marker_type;
       panel.gaugeMarkerScale = ffconfig.gauge_marker_scale;
+      panel.gaugeMarkerBorderWidth = ffconfig.gauge_marker_border_width;
       document.body.style.setProperty(
         "--ffscouter-marker-scale",
         `${ffconfig.gauge_marker_scale / 100}`,

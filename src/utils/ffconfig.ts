@@ -79,6 +79,7 @@ export const CONFIG_DEFAULTS = {
   chain_factionless: false,
   gauge_marker_type: GaugeMarkerType.ARROW,
   gauge_marker_scale: 100,
+  gauge_marker_border_width: 1.5,
   war_quick_attack_action: WarQuickAttackAction.NEW_TAB,
   network_interception_enabled: false,
   status_attack_links_enabled: true,
@@ -115,6 +116,7 @@ enum CONFIG {
   CHAIN_TARGET_INDEX = "chain_target_index",
   GAUGE_MARKER_TYPE = "gauge_marker_type",
   GAUGE_MARKER_SCALE = "gauge_marker_scale",
+  GAUGE_MARKER_BORDER_WIDTH = "gauge_marker_border_width",
   WAR_QUICK_ATTACK_ACTION = "war_quick_attack_action",
   NETWORK_INTERCEPTION_ENABLED = "network_interception_enabled",
   STATUS_ATTACK_LINKS_ENABLED = "status_attack_links_enabled",
@@ -412,6 +414,17 @@ export class FFConfig {
     this.storage.set(CONFIG.GAUGE_MARKER_SCALE, val);
   }
 
+  get gauge_marker_border_width(): number {
+    return (
+      this.storage.get(CONFIG.GAUGE_MARKER_BORDER_WIDTH) ??
+      CONFIG_DEFAULTS.gauge_marker_border_width
+    );
+  }
+
+  set gauge_marker_border_width(val: number) {
+    this.storage.set(CONFIG.GAUGE_MARKER_BORDER_WIDTH, val);
+  }
+
   get color_scheme(): ColorScheme {
     return (
       this.storage.get(CONFIG.COLOR_SCHEME) ?? CONFIG_DEFAULTS.color_scheme
@@ -516,6 +529,7 @@ export class FFConfig {
     this.storage.remove(CONFIG.CHAIN_TARGET_INDEX);
     this.storage.remove(CONFIG.GAUGE_MARKER_TYPE);
     this.storage.remove(CONFIG.GAUGE_MARKER_SCALE);
+    this.storage.remove(CONFIG.GAUGE_MARKER_BORDER_WIDTH);
     this.storage.remove(CONFIG.WAR_QUICK_ATTACK_ACTION);
     this.storage.remove(CONFIG.STATUS_ATTACK_LINKS_ENABLED);
     this.storage.remove(CONFIG.DEBUG_DISABLE_PDA_HTTP);
