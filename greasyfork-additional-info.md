@@ -8,11 +8,12 @@ FF Scouter overlays Fair Fight ("FF") or estimated Battle Stat ("Est") values fo
 - Flight estimates for traveling players on profiles and mini-profiles (FF Scouter Premium)
 - Configurable gauge marker style (arrow or bubble) and color scheme for FF/Est values
 - Quick-attack links from online/idle/offline status indicators
-- A link from player profiles to their full FF history on ffscouter.com
+- A link from player profiles to their full FF history on ffscouter\.com
 
-- Install both [FF Scouter](https://greasyfork.org/en/scripts/535292-ff-scouter-v2) and [Torn War Stuff Enhanced](https://greasyfork.org/en/scripts/529238-torn-war-stuff-enhanced) to enable additional features
-  - Filter by last action
-  - Sort ranked war member lists by hospital timers
+Install both [FF Scouter](https://greasyfork.org/en/scripts/535292-ff-scouter-v2) and [Torn War Stuff Enhanced](https://greasyfork.org/en/scripts/529238-torn-war-stuff-enhanced) to enable additional features:
+
+- Filter by last action
+- Sort ranked war member lists by hospital timers
 
 ## Setup
 
