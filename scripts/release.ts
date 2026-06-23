@@ -47,6 +47,10 @@ type EditionKey = keyof typeof EDITIONS;
 // built userscript itself.
 const ADDITIONAL_INFO_PATH = "docs/greasyfork-additional-info.md";
 
+// Kept separate from "dist" (the dev watch build's output dir) so that running a
+// release never deletes the userscript `bun run dev:tm` is currently serving.
+const RELEASE_OUT_DIR = "dist-release";
+
 // Helper to run shell commands safely
 function runCmd(
   cmd: string,
@@ -593,26 +597,30 @@ async function main() {
 
     // 7. Run the Build
     console.log(`Building ${edition.name} v${version}...`);
-    if (existsSync("dist")) {
-      rmSync("dist", { recursive: true, force: true });
+    if (existsSync(RELEASE_OUT_DIR)) {
+      rmSync(RELEASE_OUT_DIR, { recursive: true, force: true });
     }
 
     // Set environment variables for build
-    const buildResult = spawnSync("bun", ["run", "build"], {
-      env: {
-        ...process.env,
-        BUILD_EDITION: editionKey,
-        BUILD_VERSION: version,
+    const buildResult = spawnSync(
+      "bun",
+      ["run", "build", "--", "--outDir", RELEASE_OUT_DIR],
+      {
+        env: {
+          ...process.env,
+          BUILD_EDITION: editionKey,
+          BUILD_VERSION: version,
+        },
+        stdio: "inherit",
       },
-      stdio: "inherit",
-    });
+    );
 
     if (buildResult.status !== 0) {
       console.error("\x1b[31mBuild failed!\x1b[0m");
       process.exit(1);
     }
 
-    const builtFilePath = `dist/${edition.fileName}`;
+    const builtFilePath = `${RELEASE_OUT_DIR}/${edition.fileName}`;
     if (!existsSync(builtFilePath)) {
       console.error(
         `\x1b[31mError: Expected built file not found at ${builtFilePath}\x1b[0m`,
