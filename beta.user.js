@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FF Scouter V2 beta
 // @namespace    xentac-beta
-// @version      3.0-beta12
+// @version      3.0-beta13
 // @author       xentac [3354782], MAVRI [2402357], rDacted [2670953], Weav3r [1853324], Glasnost [1844049]
 // @description  Shows the expected Fair Fight score against targets and faction war status
 // @license      GPLv3
@@ -849,7 +849,7 @@ clearAll() {
   }
   const FF_SCOUTER_BASE_URL = "https://ffscouter.com/api/v1";
   new TornApiClient({
-    defaultComment: `FFScouterV2-${"3.0-beta12"}`,
+    defaultComment: `FFScouterV2-${"3.0-beta13"}`,
     defaultTimeout: 30
 });
   async function gmRequest(options) {
@@ -2179,7 +2179,7 @@ queryString.charCodeAt(pos - 1) === 63) {
         } catch (_2) {
           results = new Map();
         }
-        log$e.debug("Received results", results);
+        log$e.debug(`Received ${results.size} cache results`);
         for (const id of ids) {
           const v2 = results.get(id);
           if (v2) {
@@ -2229,7 +2229,7 @@ queryString.charCodeAt(pos - 1) === 63) {
         let next_run = this.api_default_delay;
         let results;
         try {
-          log$e.debug("Calling query_stats with", this.config.key, ",", ids);
+          log$e.debug(`Calling query_stats with key=*** ids=[${ids}]`);
           results = await query_stats(this.config.key, ids);
         } catch (err) {
           log$e.error("Received error response querying ffscouter api:", err);
@@ -2243,7 +2243,9 @@ queryString.charCodeAt(pos - 1) === 63) {
             limits: ff_error.ff_api_limits
           };
         }
-        log$e.debug("Received results", results);
+        log$e.debug(
+          `Received api results: blank=${results.blank}, count=${results.result.size}`
+        );
         if (results.blank) {
           for (const id of ids) {
             this.requeue_api(id);
@@ -5200,7 +5202,9 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
         }
       });
       descriptions_observer.observe(node, { childList: true });
-      log$9.debug("Set up descriptions observer on", node);
+      log$9.debug(
+        `Set up descriptions observer on <${node.tagName.toLowerCase()}> .${[...node.classList].join(".")}`
+      );
       const existing_descriptions = node.querySelector(".descriptions");
       if (existing_descriptions) {
         const faction_war = await wait_for_element(
@@ -8103,7 +8107,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       return;
     }
     document.documentElement.setAttribute(INJECTION_KEY, "1");
-    log.info("Initializing", "3.0-beta12");
+    log.info("Initializing", "3.0-beta13");
     run_migration();
     if (ffscouter.analytics_enabled) {
       if (typeof unsafeWindow !== "undefined") {
