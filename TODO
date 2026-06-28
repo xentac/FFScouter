@@ -2,10 +2,11 @@
 
 - Configure positioning of FF chain button (fixed floating, relative to other elements, etc)
 - Add better error messages for when you have a bad key (specifically that the key provided to ff scouter script isn't valid or is not registered)
+- Consider using React templates instead of Lit templates
 
 # Before releasing version 3.0
 
 - Make exposed summary function which, given a timeframe, returns the number of page/hash and which feature found or was ignored for the arrow
   - That way we can use the table to monitor migration progress
-- There are reports that sending and changing balances don't work with FF Scouter V3 enabled. It says "player not found" in the box.
 - Add support for flight tracking during raids
+- Shorten FF Scouter status in mini-profile and move the span inside the last action div with a <br>.
