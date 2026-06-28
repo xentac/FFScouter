@@ -436,7 +436,9 @@ const process_page = () => {
       }
     });
     descriptions_observer.observe(node, { childList: true });
-    log.debug("Set up descriptions observer on", node);
+    log.debug(
+      `Set up descriptions observer on <${node.tagName.toLowerCase()}> .${[...node.classList].join(".")}`,
+    );
 
     const existing_descriptions = node.querySelector(".descriptions");
     if (existing_descriptions) {

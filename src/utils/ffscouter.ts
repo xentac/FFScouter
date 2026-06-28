@@ -447,7 +447,7 @@ export class FFScouter {
       // Cache failure is usually non-fatal; fall through to API
       results = new Map();
     }
-    log.debug("Received results", results);
+    log.debug(`Received ${results.size} cache results`);
 
     for (const id of ids) {
       const v = results.get(id);
@@ -506,7 +506,7 @@ export class FFScouter {
     let next_run: number | undefined = this.api_default_delay;
     let results: FFApiQueryResponse;
     try {
-      log.debug("Calling query_stats with", this.config.key, ",", ids);
+      log.debug(`Calling query_stats with key=*** ids=[${ids}]`);
       results = await query_stats(this.config.key, ids);
     } catch (err) {
       log.error("Received error response querying ffscouter api:", err);
@@ -521,7 +521,9 @@ export class FFScouter {
         limits: ff_error.ff_api_limits,
       };
     }
-    log.debug("Received results", results);
+    log.debug(
+      `Received api results: blank=${results.blank}, count=${results.result.size}`,
+    );
 
     // This is the case where we made too many requests close in time and Torn PDA returned nothing
     if (results.blank) {
