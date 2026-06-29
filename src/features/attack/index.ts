@@ -1,14 +1,13 @@
+import { FFHeaderLine } from "@ui/info-line";
 import {
-  create_ff_element,
   create_info_line,
   extract_id_from_url,
   torn_page,
   wait_for_element,
 } from "@utils/dom";
-import { ffscouter } from "@utils/ffscouter";
 import logger from "@utils/logger";
-import "@ui/info-line";
-import type { FFData } from "@utils/types";
+import { mountComponent } from "@utils/react";
+import { createElement } from "react";
 import { type Feature, StartTime } from "../feature";
 
 const log = logger.child("feature:attack");
@@ -46,16 +45,11 @@ export default {
 
     // Create container to hold info line
     const info_line = create_info_line();
-
-    // Query ff scouter for FFData
-    ffscouter.get(player_id).then(async (data: FFData) => {
-      const line = await create_ff_element("ff-header-line");
-      if (!line) return;
-      line.data = data;
-      info_line.appendChild(line);
-      inject_info_line(info_line);
-    });
-    ffscouter.complete();
+    mountComponent(
+      createElement(FFHeaderLine, { playerId: player_id }),
+      info_line,
+    );
+    inject_info_line(info_line);
   },
 
   httpIntercept: {

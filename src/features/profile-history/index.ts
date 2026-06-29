@@ -1,5 +1,4 @@
 import { extract_id_from_url, torn_page, wait_for_element } from "@utils/dom";
-import "@ui/info-line";
 import { ffconfig } from "@utils/ffconfig";
 import { type Feature, StartTime } from "../feature";
 
