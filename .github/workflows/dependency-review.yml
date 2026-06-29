@@ -1,0 +1,24 @@
+name: Dependency Review
+
+# Blocks pull requests that introduce dependencies with known high/critical
+# vulnerabilities (compares the PR's dependency changes against the base ref).
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  dependency-review:
+    name: Review dependency changes
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Dependency review
+        uses: actions/dependency-review-action@v4
+        with:
+          fail-on-severity: high
+          # Comment a summary on the PR (requires pull-requests: write at org/repo
+          # level; degrades gracefully to log-only if not granted).
+          comment-summary-in-pr: on-failure
