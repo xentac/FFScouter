@@ -33,7 +33,9 @@
     "paths": {
       "@ui/*": ["src/ui/*"],
       "@utils/*": ["src/utils/*"],
-      "@features/*": ["src/features/*"]
+      "@features/*": ["src/features/*"],
+      "@real-react": ["node_modules/@types/react/index.d.ts"],
+      "@real-react-dom": ["node_modules/@types/react-dom/index.d.ts"]
     }
   }
 }

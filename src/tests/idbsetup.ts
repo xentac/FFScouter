@@ -1,5 +1,16 @@
 import { BroadcastChannel as NodeBroadcastChannel } from "node:worker_threads";
+// @real-react bypasses the unsafeWindow shim alias to get the actual package.
+import * as React from "@real-react";
+import * as ReactDOM from "@real-react-dom";
 import { setup } from "vitest-indexeddb";
+
+// The shims read from unsafeWindow.React / unsafeWindow.ReactDOM at call time.
+// In tests there is no Tampermonkey, so we expose the devDependency build here.
+(
+  globalThis as unknown as {
+    unsafeWindow: { React: unknown; ReactDOM: unknown };
+  }
+).unsafeWindow = { React, ReactDOM };
 
 setup();
 
