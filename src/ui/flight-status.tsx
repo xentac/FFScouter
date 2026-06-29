@@ -45,11 +45,23 @@ type Props = {
 export function FFFlightProfileStatus({ playerId, compact = false }: Props) {
   const [data, setData] = useState<PlayerFlightsResponse | null>(null);
   const [isPremium, setIsPremium] = useState<boolean | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentTimeSeconds, setCurrentTimeSeconds] = useState(
     get_current_time_seconds,
   );
+
+  // Reset dependent state during render (not in an effect) when playerId
+  // changes, so the previous player's flight data never paints before the
+  // reset commits. See https://react.dev/learn/you-might-not-need-an-effect
+  const [prevPlayerId, setPrevPlayerId] = useState(playerId);
+  if (playerId !== prevPlayerId) {
+    setPrevPlayerId(playerId);
+    setData(null);
+    setError(null);
+    setLoading(true);
+    setIsPremium(null);
+  }
 
   // Ref so interval callbacks can read the latest data without stale closures.
   const dataRef = useRef<PlayerFlightsResponse | null>(null);
@@ -114,10 +126,6 @@ export function FFFlightProfileStatus({ playerId, compact = false }: Props) {
       }
     };
 
-    setData(null);
-    setError(null);
-    setLoading(true);
-    setIsPremium(null);
     fetchData();
 
     const tick = setInterval(() => {
