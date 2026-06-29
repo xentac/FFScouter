@@ -1,11 +1,7 @@
 import { apply_ff_gauge, get_player_id_in_element } from "@utils/dom";
 import { ffscouter } from "@utils/ffscouter";
 import logger from "@utils/logger";
-import {
-  format_difficulty_text,
-  format_ff_score,
-  format_relative_time,
-} from "@utils/strings";
+import { format_ff_score, format_relative_time } from "@utils/strings";
 import type { FFData } from "@utils/types";
 import { type Feature, StartTime } from "../feature";
 
@@ -97,15 +93,15 @@ const setup_mini_observer = () => {
 
       // Minimal, text-only Fair Fight string for mini-profiles
       const ff_string = format_ff_score(d);
-      const difficulty = format_difficulty_text(d);
       const fresh = format_relative_time(d.last_updated);
-      const message = `FF ${ff_string} (${difficulty}) ${fresh}`;
+      const message = `FF ${ff_string} ${fresh}`;
 
-      const description = miniroot.querySelector(".description");
+      const lastaction = miniroot.querySelector(".last-action");
       const desc = document.createElement("span");
       desc.classList.add("ffscouter-mini-desc");
       desc.innerText = message;
-      description?.appendChild(desc);
+      lastaction?.appendChild(document.createElement("br"));
+      lastaction?.appendChild(desc);
     });
     ffscouter.complete();
   });

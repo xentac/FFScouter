@@ -9,4 +9,3 @@
 - Make exposed summary function which, given a timeframe, returns the number of page/hash and which feature found or was ignored for the arrow
   - That way we can use the table to monitor migration progress
 - Add support for flight tracking during raids
-- Shorten FF Scouter status in mini-profile and move the span inside the last action div with a <br>.
