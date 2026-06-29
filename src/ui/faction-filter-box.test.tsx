@@ -195,6 +195,27 @@ test("supports mode='war' styling and independent configs", async () => {
   expect(ffconfig.factions_col_display).toBe("battle_stats");
 });
 
+test("hides the Fallen status option in war mode but keeps Fallen and Fedded in faction mode", async () => {
+  const statusLabels = (mode: "faction" | "war") => {
+    const ref = createRef<FactionFilterBoxHandle | null>();
+    const { container } = render(
+      <FFFactionFilterBox ref={ref} mode={mode} onFilterChange={() => {}} />,
+    );
+    const group = container.querySelector(".ff-filter-box__group--status")!;
+    return Array.from(group.querySelectorAll("label")).map((l) =>
+      l.textContent?.trim(),
+    );
+  };
+
+  const faction = statusLabels("faction");
+  expect(faction).toContain("Fedded");
+  expect(faction).toContain("Fallen");
+
+  const war = statusLabels("war");
+  expect(war).toContain("Fedded");
+  expect(war).not.toContain("Fallen");
+});
+
 test("supports column visibility toggles and reactive container attributes in war mode", async () => {
   const warWrapper = document.createElement("div");
   warWrapper.className = "faction-war";

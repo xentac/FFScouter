@@ -211,7 +211,12 @@ export function FFFactionFilterBox({
       sortBy: s.sortBy,
       filterEnabled: s.filterEnabled,
       activity: s.activity,
-      status: s.status,
+      // War lists never contain fallen members and the Fallen checkbox is hidden
+      // in war mode, so force it off there; otherwise its (unreachable) default
+      // would keep the "all statuses unchecked → show everything" guard from
+      // ever triggering when a war user clears the remaining boxes.
+      status:
+        modeRef.current === "war" ? { ...s.status, fallen: false } : s.status,
       levelMin: s.levelMin,
       levelMax: s.levelMax,
       ffMin: s.ffMin,
@@ -768,16 +773,20 @@ export function FFFactionFilterBox({
                 ["federal", "Fedded"],
                 ["fallen", "Fallen"],
               ] as const
-            ).map(([key, label]) => (
-              <label key={key}>
-                <input
-                  type="checkbox"
-                  checked={s.status[key]}
-                  onChange={(e) => onStatusChange(key, e.target.checked)}
-                />
-                {label}
-              </label>
-            ))}
+            )
+              // Fallen members never appear in war member lists, so the Fallen
+              // option is only meaningful (and only shown) in faction mode.
+              .filter(([key]) => mode !== "war" || key !== "fallen")
+              .map(([key, label]) => (
+                <label key={key}>
+                  <input
+                    type="checkbox"
+                    checked={s.status[key]}
+                    onChange={(e) => onStatusChange(key, e.target.checked)}
+                  />
+                  {label}
+                </label>
+              ))}
           </div>
         </div>
 
