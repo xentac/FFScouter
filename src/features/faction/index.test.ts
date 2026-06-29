@@ -1,17 +1,39 @@
 // @vitest-environment jsdom
 
+import type { FactionFilterBoxHandle } from "@ui/faction-filter-box";
 import { on_navigation } from "@utils/dom";
 import { ffscouter } from "@utils/ffscouter";
 import type { PlayerId } from "@utils/types";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import {
   default as factionFeature,
+  getFilterBoxHandle,
   initialize_features,
   setup_war_features,
   should_run_faction,
 } from "./index";
 
 const navigationListeners: (() => void)[] = [];
+
+async function waitForFilterBox(filterBox: FactionFilterBoxHandle) {
+  while (!filterBox.ready) {
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  }
+}
+
+async function waitForAttribute(
+  el: HTMLElement,
+  attr: string,
+  expected: boolean,
+) {
+  const start = Date.now();
+  while (el.hasAttribute(attr) !== expected) {
+    if (Date.now() - start > 1000) {
+      break;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 10));
+  }
+}
 
 vi.mock("@utils/dom", async (importOriginal) => {
   const original = await importOriginal<typeof import("@utils/dom")>();
@@ -94,10 +116,10 @@ test("setup_war_features detects enemy-faction and your-faction lists and setup 
   await new Promise((resolve) => setTimeout(resolve, 0));
 
   // Filter box should be injected at the top of the war box container
-  const filterBox = factionWar.querySelector(
-    "ff-faction-filter-box[mode='war']",
+  const filterBoxEl = factionWar.querySelector(
+    "[data-ff-filter-box][data-mode='war']",
   );
-  expect(filterBox).not.toBeNull();
+  expect(filterBoxEl).not.toBeNull();
 
   // Clean up
   factionWar.remove();
@@ -137,12 +159,13 @@ test("setup_war_features detects TWSE last-action data and exposes it on the fil
   document.body.appendChild(factionWar);
 
   setup_war_features(factionWar);
-  await new Promise((resolve) => setTimeout(resolve, 0));
 
-  const filterBox = factionWar.querySelector(
-    "ff-faction-filter-box[mode='war']",
-  ) as any;
-  expect(filterBox).not.toBeNull();
+  const filterBoxEl = factionWar.querySelector(
+    "[data-ff-filter-box][data-mode='war']",
+  );
+  const filterBox = getFilterBoxHandle(filterBoxEl)!;
+  await waitForFilterBox(filterBox);
+  expect(filterBoxEl).not.toBeNull();
   expect(filterBox.hasLastActionData).toBe(true);
 
   factionWar.remove();
@@ -171,12 +194,13 @@ test("setup_war_features picks up TWSE annotating a row after setup has already 
   document.body.appendChild(factionWar);
 
   setup_war_features(factionWar);
-  await new Promise((resolve) => setTimeout(resolve, 0));
 
-  const filterBox = factionWar.querySelector(
-    "ff-faction-filter-box[mode='war']",
-  ) as any;
-  expect(filterBox).not.toBeNull();
+  const filterBoxEl = factionWar.querySelector(
+    "[data-ff-filter-box][data-mode='war']",
+  );
+  const filterBox = getFilterBoxHandle(filterBoxEl)!;
+  await waitForFilterBox(filterBox);
+  expect(filterBoxEl).not.toBeNull();
   // TWSE hasn't run yet at the moment our watcher was set up
   expect(filterBox.hasLastActionData).toBe(false);
 
@@ -216,12 +240,13 @@ test("setup_war_features leaves the filter box's hasLastActionData false when TW
   document.body.appendChild(factionWar);
 
   setup_war_features(factionWar);
-  await new Promise((resolve) => setTimeout(resolve, 0));
 
-  const filterBox = factionWar.querySelector(
-    "ff-faction-filter-box[mode='war']",
-  ) as any;
-  expect(filterBox).not.toBeNull();
+  const filterBoxEl = factionWar.querySelector(
+    "[data-ff-filter-box][data-mode='war']",
+  );
+  const filterBox = getFilterBoxHandle(filterBoxEl)!;
+  await waitForFilterBox(filterBox);
+  expect(filterBoxEl).not.toBeNull();
   expect(filterBox.hasLastActionData).toBe(false);
 
   factionWar.remove();
@@ -252,22 +277,25 @@ test("initialize_features MutationObserver reacts to status class changes and fi
 
   // Initialize features (which sets up MutationObserver)
   initialize_features(container);
-  await new Promise((resolve) => setTimeout(resolve, 0));
 
   // Find the injected filterBox
-  const filterBox = container.parentNode?.querySelector(
-    "ff-faction-filter-box",
-  ) as any;
-  expect(filterBox).not.toBeNull();
+  const filterBoxEl = container.parentNode?.querySelector(
+    "[data-ff-filter-box]",
+  );
+  const filterBox = getFilterBoxHandle(filterBoxEl)!;
+  await waitForFilterBox(filterBox);
+  expect(filterBoxEl).not.toBeNull();
 
   // Set filter state: keep Okay, filter out Traveling
-  filterBox.status = {
-    okay: true,
-    hospital: false,
-    jail: false,
-    abroad: false,
-    traveling: false,
-  };
+  filterBox.setFilterState({
+    status: {
+      okay: true,
+      hospital: false,
+      jail: false,
+      abroad: false,
+      traveling: false,
+    },
+  });
   filterBox.dispatchChange();
   await new Promise((resolve) => setTimeout(resolve, 0));
 
@@ -279,8 +307,8 @@ test("initialize_features MutationObserver reacts to status class changes and fi
   const statusCell = row.querySelector(".status") as HTMLElement;
   statusCell.className = "status okay";
 
-  // Wait for MutationObserver and rAF debounce to run (jsdom rAF fires at ~16ms)
-  await new Promise((resolve) => setTimeout(resolve, 50));
+  // Wait for MutationObserver and rAF debounce to run
+  await waitForAttribute(row, "data-ffscouter-hidden", false);
 
   // Row should now be visible!
   expect(row.hasAttribute("data-ffscouter-hidden")).toBe(false);
@@ -316,16 +344,19 @@ test("initialize_features MutationObserver reacts to activity aria-label changes
 
   // Initialize features (which sets up MutationObserver)
   initialize_features(container);
-  await new Promise((resolve) => setTimeout(resolve, 0));
 
   // Find the injected filterBox
-  const filterBox = container.parentNode?.querySelector(
-    "ff-faction-filter-box",
-  ) as any;
-  expect(filterBox).not.toBeNull();
+  const filterBoxEl = container.parentNode?.querySelector(
+    "[data-ff-filter-box]",
+  );
+  const filterBox = getFilterBoxHandle(filterBoxEl)!;
+  await waitForFilterBox(filterBox);
+  expect(filterBoxEl).not.toBeNull();
 
   // Set filter state: only show Online
-  filterBox.activity = { online: true, idle: false, offline: false };
+  filterBox.setFilterState({
+    activity: { online: true, idle: false, offline: false },
+  });
   filterBox.dispatchChange();
   await new Promise((resolve) => setTimeout(resolve, 0));
 
@@ -339,8 +370,8 @@ test("initialize_features MutationObserver reacts to activity aria-label changes
   ) as HTMLElement;
   statusWrap.setAttribute("aria-label", "Player 111 is online");
 
-  // Wait for MutationObserver and rAF debounce to run (jsdom rAF fires at ~16ms)
-  await new Promise((resolve) => setTimeout(resolve, 50));
+  // Wait for MutationObserver and rAF debounce to run
+  await waitForAttribute(row, "data-ffscouter-hidden", false);
 
   // Row should now be visible!
   expect(row.hasAttribute("data-ffscouter-hidden")).toBe(false);
@@ -372,22 +403,25 @@ test("setup_war_features MutationObserver in Ranked War reacts to status changes
   document.body.appendChild(factionWar);
 
   setup_war_features(factionWar);
-  await new Promise((resolve) => setTimeout(resolve, 0));
 
   // Find the injected filterBox
-  const filterBox = factionWar.querySelector(
-    "ff-faction-filter-box[mode='war']",
-  ) as any;
-  expect(filterBox).not.toBeNull();
+  const filterBoxEl = factionWar.querySelector(
+    "[data-ff-filter-box][data-mode='war']",
+  );
+  const filterBox = getFilterBoxHandle(filterBoxEl)!;
+  await waitForFilterBox(filterBox);
+  expect(filterBoxEl).not.toBeNull();
 
   // Set filter state: keep Traveling, filter out Okay
-  filterBox.status = {
-    okay: false,
-    hospital: false,
-    jail: false,
-    abroad: false,
-    traveling: true,
-  };
+  filterBox.setFilterState({
+    status: {
+      okay: false,
+      hospital: false,
+      jail: false,
+      abroad: false,
+      traveling: true,
+    },
+  });
   filterBox.dispatchChange();
   await new Promise((resolve) => setTimeout(resolve, 0));
 
@@ -399,8 +433,8 @@ test("setup_war_features MutationObserver in Ranked War reacts to status changes
   const statusCell = row.querySelector(".status") as HTMLElement;
   statusCell.className = "status okay";
 
-  // Wait for MutationObserver and rAF debounce to run (jsdom rAF fires at ~16ms)
-  await new Promise((resolve) => setTimeout(resolve, 50));
+  // Wait for MutationObserver and rAF debounce to run
+  await waitForAttribute(row, "data-ffscouter-hidden", true);
 
   // Row should now be hidden!
   expect(row.hasAttribute("data-ffscouter-hidden")).toBe(true);
@@ -434,10 +468,11 @@ test("war header click toggles sort between ff-desc and ff-asc, and native colum
   document.body.appendChild(factionWar);
 
   setup_war_features(factionWar);
-  await new Promise((resolve) => setTimeout(resolve, 0));
 
-  const filterBox = factionWar.querySelector("ff-faction-filter-box") as any;
-  expect(filterBox).not.toBeNull();
+  const filterBoxEl = factionWar.querySelector("[data-ff-filter-box]");
+  const filterBox = getFilterBoxHandle(filterBoxEl)!;
+  await waitForFilterBox(filterBox);
+  expect(filterBoxEl).not.toBeNull();
 
   const ffHeader = list.querySelector(".ffscouter-header") as HTMLElement;
   expect(ffHeader).not.toBeNull();
@@ -484,9 +519,10 @@ test("war header click does not reset sort when native column is clicked and sor
   document.body.appendChild(factionWar);
 
   setup_war_features(factionWar);
-  await new Promise((resolve) => setTimeout(resolve, 0));
 
-  const filterBox = factionWar.querySelector("ff-faction-filter-box") as any;
+  const filterBoxEl = factionWar.querySelector("[data-ff-filter-box]");
+  const filterBox = getFilterBoxHandle(filterBoxEl)!;
+  await waitForFilterBox(filterBox);
   expect(filterBox.sortBy).toBe("none");
 
   const setSortBySpy = vi.spyOn(filterBox, "setSortBy");
@@ -525,13 +561,14 @@ test("war header sort indicator attribute tracks sort state changes", async () =
   document.body.appendChild(factionWar);
 
   setup_war_features(factionWar);
-  await new Promise((resolve) => setTimeout(resolve, 0));
+
+  const filterBoxEl = factionWar.querySelector("[data-ff-filter-box]");
+  const filterBox = getFilterBoxHandle(filterBoxEl)!;
+  await waitForFilterBox(filterBox);
 
   const ffHeader = list.querySelector(".ffscouter-header") as HTMLElement;
   expect(ffHeader).not.toBeNull();
   expect(ffHeader.getAttribute("data-ffscouter-sort")).toBeNull();
-
-  const filterBox = factionWar.querySelector("ff-faction-filter-box") as any;
 
   // Set to ff-desc via setSortBy — indicator should update via filter-change
   filterBox.setSortBy("ff-desc");

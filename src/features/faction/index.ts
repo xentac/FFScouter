@@ -1,14 +1,20 @@
 import {
+  type FactionFilterBoxHandle,
+  type FactionFilterSnapshot,
+  FFFactionFilterBox,
+  getFilterBoxHandle,
+} from "@ui/faction-filter-box";
+import {
   apply_ff_gauge_selector,
-  create_ff_element,
   on_navigation,
   torn_page,
   wait_for_element,
 } from "@utils/dom";
 import { type FactionsColDisplay, ffconfig } from "@utils/ffconfig";
 import logger from "@utils/logger";
+import { createElement } from "react";
+import { createRoot } from "react-dom/client";
 import { type Feature, StartTime } from "../feature";
-import "@ui/faction-filter-box";
 import { apply_ff_columns, poll_traveling_flights } from "./column-population";
 import {
   apply_filters_and_sort,
@@ -57,6 +63,118 @@ function run_when_ready(
   cleanup_when_detached(root, () => loadObserver.disconnect());
 }
 
+// ============================================================================
+// FILTER BOX MOUNTING HELPERS
+// ============================================================================
+
+// Re-exported so feature tests can import it from the feature module.
+export { getFilterBoxHandle };
+
+function mountFilterBox(
+  mode: "faction" | "war",
+  onFilterChange: (snapshot: FactionFilterSnapshot) => void,
+): HTMLElement {
+  const container = document.createElement("div");
+  container.style.display = "contents";
+  container.setAttribute("data-ff-filter-box", "true");
+  container.setAttribute("data-mode", mode);
+
+  const ref: { current: FactionFilterBoxHandle | null } = { current: null };
+  // Set true once the component's mount effect completes (after its initial
+  // loadState dispatch). Until then, imperative calls are buffered so they
+  // aren't clobbered by that initial dispatch — and reads return defaults.
+  let ready = false;
+  // Track hasLastActionData locally so we can seed it before React mounts.
+  let hasLastActionDataProp = false;
+  // Operations invoked before the component is ready, replayed in order once
+  // onReady fires. createRoot commits asynchronously, so feature code / tests
+  // that call handle methods right after mounting would otherwise be lost.
+  const pending: Array<(h: FactionFilterBoxHandle) => void> = [];
+
+  const runOrBuffer = (fn: (h: FactionFilterBoxHandle) => void) => {
+    if (ready && ref.current) {
+      fn(ref.current);
+    } else {
+      pending.push(fn);
+    }
+  };
+
+  const onReady = () => {
+    ready = true;
+    if (ref.current && pending.length > 0) {
+      for (const fn of pending) fn(ref.current);
+      pending.length = 0;
+    }
+  };
+
+  // A stable handle proxy that delegates to the mounted instance (buffering
+  // until it is ready). Feature code and tests access this via
+  // getFilterBoxHandle(container).
+  const handle: FactionFilterBoxHandle = {
+    get ready() {
+      return ready;
+    },
+    get sortBy() {
+      return ready ? (ref.current?.sortBy ?? "none") : "none";
+    },
+    get activity() {
+      return ready && ref.current
+        ? ref.current.activity
+        : { online: true, idle: true, offline: true };
+    },
+    get hasLastActionData() {
+      return ready && ref.current
+        ? ref.current.hasLastActionData
+        : hasLastActionDataProp;
+    },
+    setSortBy: (val) => runOrBuffer((h) => h.setSortBy(val)),
+    getFilterSnapshot: () =>
+      ready && ref.current
+        ? ref.current.getFilterSnapshot()
+        : {
+            sortBy: "none",
+            filterEnabled: true,
+            activity: { online: true, idle: true, offline: true },
+            status: {
+              okay: true,
+              traveling: true,
+              hospital: true,
+              jail: true,
+              abroad: true,
+            },
+            levelMin: null,
+            levelMax: null,
+            ffMin: null,
+            ffMax: null,
+            statsMin: null,
+            statsMax: null,
+            lastActionMinSec: null,
+            lastActionMaxSec: null,
+          },
+    setHasLastActionData: (val) => {
+      hasLastActionDataProp = val;
+      runOrBuffer((h) => h.setHasLastActionData(val));
+    },
+    setFilterState: (patch) => runOrBuffer((h) => h.setFilterState(patch)),
+    dispatchChange: () => runOrBuffer((h) => h.dispatchChange()),
+  };
+
+  (container as unknown as { __ffHandle: FactionFilterBoxHandle }).__ffHandle =
+    handle;
+
+  createRoot(container).render(
+    createElement(FFFactionFilterBox, {
+      mode,
+      onFilterChange,
+      ref,
+      initialHasLastActionData: hasLastActionDataProp,
+      onReady,
+    }),
+  );
+
+  return container;
+}
+
 // Detects whether TWSE is present (see CONTEXT.md's "TWSE Presence Detection")
 // by scanning for at least one row carrying data-twse-last-action-timestamp,
 // and pushes the result onto the shared filter box as a property — mirroring
@@ -65,12 +183,13 @@ function run_when_ready(
 // not just the one list passed in.
 function update_last_action_visibility(list: HTMLElement) {
   const scope = list.closest(".faction-war") || list;
-  const filterBox = (
+  const boxEl = (
     list.closest(".faction-war") || list.parentNode
-  )?.querySelector("ff-faction-filter-box") as any;
-  if (!filterBox) return;
-  filterBox.hasLastActionData = !!scope.querySelector(
-    "[data-twse-last-action-timestamp]",
+  )?.querySelector("[data-ff-filter-box]");
+  const handle = getFilterBoxHandle(boxEl);
+  if (!handle) return;
+  handle.setHasLastActionData(
+    !!scope.querySelector("[data-twse-last-action-timestamp]"),
   );
 }
 
@@ -130,12 +249,13 @@ function setup_reapply_watcher(
       requestAnimationFrame(() => {
         rafPending = false;
         update_last_action_visibility(list);
-        const filterBox = (
+        const boxEl = (
           list.closest(".faction-war") || list.parentNode
-        )?.querySelector("ff-faction-filter-box");
-        if (filterBox?.activity) {
+        )?.querySelector("[data-ff-filter-box]");
+        const handle = getFilterBoxHandle(boxEl);
+        if (handle?.activity) {
           apply_filters_and_sort(list, {
-            ...filterBox.getFilterSnapshot(),
+            ...handle.getFilterSnapshot(),
             colDisplay: getColDisplay(),
           });
         }
@@ -165,25 +285,20 @@ function setup_reapply_watcher(
 // Setup, observation, and initialization functions for standard faction member list
 // pages. Monitors additions and status updates to dynamically keep columns and filters updated.
 // ============================================================================
-async function inject_filter_box(membersList: HTMLElement) {
+function inject_filter_box(membersList: HTMLElement) {
   const parent = membersList.parentNode;
   if (!parent) return;
 
-  let filterBox = parent.querySelector(
-    "ff-faction-filter-box",
-  ) as HTMLElement | null;
-  if (!filterBox) {
-    filterBox = await create_ff_element("ff-faction-filter-box");
-    if (!filterBox) return;
-    filterBox.addEventListener("filter-change", (e: any) => {
-      apply_filters_and_sort(membersList, {
-        ...e.detail,
-        colDisplay: ffconfig.factions_col_display,
-      });
-      update_header_sort_indicator(membersList, e.detail.sortBy);
+  if (parent.querySelector("[data-ff-filter-box]")) return;
+
+  const container = mountFilterBox("faction", (snapshot) => {
+    apply_filters_and_sort(membersList, {
+      ...snapshot,
+      colDisplay: ffconfig.factions_col_display,
     });
-    parent.insertBefore(filterBox, membersList);
-  }
+    update_header_sort_indicator(membersList, snapshot.sortBy);
+  });
+  parent.insertBefore(container, membersList);
 }
 
 export function initialize_features(membersList: HTMLElement) {
@@ -302,20 +417,20 @@ function setup_header_click(
       const target = e.target as HTMLElement;
       if (!target.closest(headerAreaSelector)) return;
 
-      const container = list.closest(".faction-war") ?? list.parentElement;
-      const filterBox = container?.querySelector(
-        "ff-faction-filter-box",
-      ) as any;
-      if (!filterBox) return;
+      const scope = list.closest(".faction-war") ?? list.parentElement;
+      const handle = getFilterBoxHandle(
+        scope?.querySelector("[data-ff-filter-box]"),
+      );
+      if (!handle) return;
 
       if (target.closest(".ffscouter-header")) {
         e.preventDefault();
         e.stopPropagation();
-        const newSort = filterBox.sortBy === "ff-desc" ? "ff-asc" : "ff-desc";
-        filterBox.setSortBy(newSort);
+        const newSort = handle.sortBy === "ff-desc" ? "ff-asc" : "ff-desc";
+        handle.setSortBy(newSort);
       } else if (target.closest(nativeTabSelector)) {
-        if (filterBox.sortBy !== "none") {
-          filterBox.setSortBy("none");
+        if (handle.sortBy !== "none") {
+          handle.setSortBy("none");
         }
       }
     },
@@ -338,7 +453,7 @@ export function setup_war_features(factionWar: HTMLElement) {
   );
 }
 
-async function initialize_war_features(
+function initialize_war_features(
   factionWar: HTMLElement,
   lists: HTMLElement[],
 ) {
@@ -349,26 +464,19 @@ async function initialize_war_features(
   factionWar.setAttribute("data-ffscouter-initialized", "true");
 
   // Inject single filter box at the top of the war box (factionWar)
-  let filterBox = factionWar.querySelector(
-    "ff-faction-filter-box[mode='war']",
-  ) as any;
-  if (!filterBox) {
-    filterBox = await create_ff_element("ff-faction-filter-box");
-    if (!filterBox) return;
-    filterBox.setAttribute("mode", "war");
-    factionWar.insertBefore(filterBox, factionWar.firstChild);
+  if (!factionWar.querySelector("[data-ff-filter-box][data-mode='war']")) {
+    const container = mountFilterBox("war", (snapshot) => {
+      const currentLists = Array.from(
+        factionWar.querySelectorAll(".enemy-faction, .your-faction"),
+      ) as HTMLElement[];
+      const colDisplay = ffconfig.war_col_display;
+      for (const list of currentLists) {
+        apply_filters_and_sort(list, { ...snapshot, colDisplay });
+        update_header_sort_indicator(list, snapshot.sortBy);
+      }
+    });
+    factionWar.insertBefore(container, factionWar.firstChild);
   }
-
-  filterBox.addEventListener("filter-change", (e: any) => {
-    const currentLists = Array.from(
-      factionWar.querySelectorAll(".enemy-faction, .your-faction"),
-    ) as HTMLElement[];
-    const colDisplay = ffconfig.war_col_display;
-    for (const list of currentLists) {
-      apply_filters_and_sort(list, { ...e.detail, colDisplay });
-      update_header_sort_indicator(list, e.detail.sortBy);
-    }
-  });
 
   for (const list of lists) {
     setup_war_list(list);

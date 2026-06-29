@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { beforeEach, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import miniProfileFlights from "./index";
 
 vi.mock("@utils/check_key", () => ({
@@ -13,6 +13,11 @@ vi.mock("@utils/ffscouter", () => ({
 beforeEach(() => {
   document.body.innerHTML = "";
   vi.restoreAllMocks();
+});
+
+afterEach(async () => {
+  // Let React scheduler finish rendering inside JSDOM before environment teardown
+  await new Promise((resolve) => setTimeout(resolve, 50));
 });
 
 function buildMiniRoot(travelling: boolean) {

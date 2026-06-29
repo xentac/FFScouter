@@ -1,3 +1,4 @@
+import { getFilterBoxHandle } from "@ui/faction-filter-box";
 import { check_key_status } from "@utils/check_key";
 import { get_player_id_in_element, open_attack_link } from "@utils/dom";
 import { FactionsColDisplay, ffconfig } from "@utils/ffconfig";
@@ -10,7 +11,6 @@ import {
   get_ff_colour,
 } from "@utils/strings";
 import type { PlayerId } from "@utils/types";
-import "@ui/faction-filter-box";
 import {
   apply_filters_and_sort,
   update_header_sort_indicator,
@@ -271,17 +271,18 @@ export async function apply_ff_columns(membersList: HTMLElement) {
   }
 
   // Trigger filtering and sorting if filter box is connected
-  const filterBox = (
+  const boxEl = (
     membersList.closest(".faction-war") || membersList.parentNode
-  )?.querySelector("ff-faction-filter-box");
-  if (filterBox?.activity) {
+  )?.querySelector("[data-ff-filter-box]");
+  const handle = getFilterBoxHandle(boxEl);
+  if (handle?.activity) {
     apply_filters_and_sort(membersList, {
-      ...filterBox.getFilterSnapshot(),
+      ...handle.getFilterSnapshot(),
       colDisplay,
     });
   }
 
-  update_header_sort_indicator(membersList, filterBox?.sortBy ?? "none");
+  update_header_sort_indicator(membersList, handle?.sortBy ?? "none");
 
   // Concurrently scan flights for traveling players
   poll_traveling_flights(membersList);

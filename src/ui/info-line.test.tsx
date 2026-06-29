@@ -30,8 +30,7 @@ test("renders 'Loading...' before data arrives", () => {
 test("renders 'No data' when ffscouter returns no_data", async () => {
   vi.mocked(ffscouter.get).mockResolvedValue({ player_id: 123, no_data: true });
   const { container } = render(<FFHeaderLine playerId={123} />);
-  await waitFor(() => expect(ffscouter.get).toHaveBeenCalledWith(123));
-  expect(container.textContent).toContain("No data");
+  await waitFor(() => expect(container.textContent).toContain("No data"));
 });
 
 test("renders basic stats for non-premium user when premium is not available", async () => {
