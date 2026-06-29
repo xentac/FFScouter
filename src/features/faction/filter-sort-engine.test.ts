@@ -62,6 +62,8 @@ test("apply_filters_and_sort filters and sorts member rows correctly", () => {
         jail: true,
         abroad: true,
         traveling: true,
+        federal: true,
+        fallen: true,
       },
       levelMin: null,
       levelMax: null,
@@ -99,6 +101,8 @@ test("apply_filters_and_sort filters and sorts member rows correctly", () => {
         jail: false,
         abroad: false,
         traveling: false,
+        federal: false,
+        fallen: false,
       },
       levelMin: null,
       levelMax: null,
@@ -136,6 +140,8 @@ test("apply_filters_and_sort filters and sorts member rows correctly", () => {
         jail: true,
         abroad: true,
         traveling: true,
+        federal: true,
+        fallen: true,
       },
       levelMin: 45,
       levelMax: 55,
@@ -173,6 +179,8 @@ test("apply_filters_and_sort filters and sorts member rows correctly", () => {
         jail: true,
         abroad: true,
         traveling: true,
+        federal: true,
+        fallen: true,
       },
       levelMin: null,
       levelMax: null,
@@ -210,6 +218,8 @@ test("apply_filters_and_sort filters and sorts member rows correctly", () => {
         jail: true,
         abroad: true,
         traveling: true,
+        federal: true,
+        fallen: true,
       },
       levelMin: null,
       levelMax: null,
@@ -236,6 +246,8 @@ test("apply_filters_and_sort filters and sorts member rows correctly", () => {
         jail: true,
         abroad: true,
         traveling: true,
+        federal: true,
+        fallen: true,
       },
       levelMin: null,
       levelMax: null,
@@ -262,6 +274,8 @@ test("apply_filters_and_sort filters and sorts member rows correctly", () => {
         jail: true,
         abroad: true,
         traveling: true,
+        federal: true,
+        fallen: true,
       },
       levelMin: null,
       levelMax: null,
@@ -301,6 +315,8 @@ test("apply_filters_and_sort filters and sorts member rows correctly", () => {
         jail: false,
         abroad: false,
         traveling: false,
+        federal: false,
+        fallen: false,
       },
       levelMin: null,
       levelMax: null,
@@ -338,6 +354,8 @@ test("apply_filters_and_sort filters and sorts member rows correctly", () => {
         jail: true,
         abroad: true,
         traveling: true,
+        federal: true,
+        fallen: true,
       },
       levelMin: null,
       levelMax: null,
@@ -364,6 +382,8 @@ test("apply_filters_and_sort filters and sorts member rows correctly", () => {
         jail: true,
         abroad: true,
         traveling: true,
+        federal: true,
+        fallen: true,
       },
       levelMin: null,
       levelMax: null,
@@ -402,6 +422,8 @@ test("apply_filters_and_sort sets and removes data-ffscouter-active-filter attri
       jail: true,
       abroad: true,
       traveling: true,
+      federal: true,
+      fallen: true,
     },
     levelMin: null,
     levelMax: null,
@@ -463,6 +485,8 @@ test("apply_filters_and_sort bypasses filtering but still sorts when filterEnabl
       jail: false,
       abroad: false,
       traveling: false,
+      federal: false,
+      fallen: false,
     },
     levelMin: 55,
     levelMax: null,
@@ -534,6 +558,8 @@ test("apply_filters_and_sort filters by Last Action Range, with 0/missing data a
       jail: true,
       abroad: true,
       traveling: true,
+      federal: true,
+      fallen: true,
     },
     levelMin: null,
     levelMax: null,
@@ -576,4 +602,86 @@ test("apply_filters_and_sort filters by Last Action Range, with 0/missing data a
   ).toBe(false);
 
   document.body.removeChild(container);
+});
+
+test("apply_filters_and_sort detects and filters Fedded (federal) and Fallen statuses", () => {
+  const container = document.createElement("div");
+  container.innerHTML = `
+    <div class="members-list">
+      <div class="table-body">
+        <div class="table-row" id="row-okay">
+          <div class="member"><a href="/profiles.php?XID=111">P1</a></div>
+          <div class="lvl">50</div>
+          <div class="status okay">Okay</div>
+        </div>
+        <div class="table-row" id="row-federal">
+          <div class="member"><a href="/profiles.php?XID=222">P2</a></div>
+          <div class="lvl">60</div>
+          <div class="status federal">Federal</div>
+        </div>
+        <div class="table-row" id="row-fallen">
+          <div class="member"><a href="/profiles.php?XID=333">P3</a></div>
+          <div class="lvl">40</div>
+          <div class="status fallen">Fallen</div>
+        </div>
+      </div>
+    </div>
+  `;
+  const tbody = container.querySelector(".table-body") as HTMLElement;
+  const isHidden = (id: string) =>
+    (tbody.querySelector(`#${id}`) as HTMLElement).hasAttribute(
+      "data-ffscouter-hidden",
+    );
+
+  // Show only Fedded: the federal row stays, okay and fallen are hidden.
+  apply_filters_and_sort(
+    container.querySelector(".members-list") as HTMLElement,
+    {
+      sortBy: "none",
+      colDisplay: FactionsColDisplay.FAIR_FIGHT,
+      activity: { online: true, idle: true, offline: true },
+      status: {
+        okay: false,
+        hospital: false,
+        jail: false,
+        abroad: false,
+        traveling: false,
+        federal: true,
+        fallen: false,
+      },
+      levelMin: null,
+      levelMax: null,
+      ffMin: null,
+      ffMax: null,
+    },
+  );
+  expect(isHidden("row-okay")).toBe(true);
+  expect(isHidden("row-federal")).toBe(false);
+  expect(isHidden("row-fallen")).toBe(true);
+
+  // Show only Fallen: the fallen row stays, okay and federal are hidden.
+  apply_filters_and_sort(
+    container.querySelector(".members-list") as HTMLElement,
+    {
+      sortBy: "none",
+      colDisplay: FactionsColDisplay.FAIR_FIGHT,
+      activity: { online: true, idle: true, offline: true },
+      status: {
+        okay: false,
+        hospital: false,
+        jail: false,
+        abroad: false,
+        traveling: false,
+        federal: false,
+        fallen: true,
+      },
+      levelMin: null,
+      levelMax: null,
+      ffMin: null,
+      ffMax: null,
+    },
+  );
+  expect(isHidden("row-okay")).toBe(true);
+  expect(isHidden("row-federal")).toBe(true);
+  expect(isHidden("row-fallen")).toBe(false);
 });

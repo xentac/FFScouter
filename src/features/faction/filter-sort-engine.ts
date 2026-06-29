@@ -27,6 +27,8 @@ export function apply_filters_and_sort(
       hospital: boolean;
       jail: boolean;
       abroad: boolean;
+      federal: boolean;
+      fallen: boolean;
     };
     levelMin: number | null;
     levelMax: number | null;
@@ -101,6 +103,16 @@ export function apply_filters_and_sort(
           statusCell.querySelector(".abroad")
         ) {
           status = "abroad";
+        } else if (
+          statusCell.classList.contains("federal") ||
+          statusCell.querySelector(".federal")
+        ) {
+          status = "federal";
+        } else if (
+          statusCell.classList.contains("fallen") ||
+          statusCell.querySelector(".fallen")
+        ) {
+          status = "fallen";
         } else {
           status = "okay";
         }
@@ -110,14 +122,18 @@ export function apply_filters_and_sort(
         !filters.status.traveling &&
         !filters.status.hospital &&
         !filters.status.jail &&
-        !filters.status.abroad;
+        !filters.status.abroad &&
+        !filters.status.federal &&
+        !filters.status.fallen;
       const matchesStatus =
         allStatusUnchecked ||
         (status === "okay" && filters.status.okay) ||
         (status === "traveling" && filters.status.traveling) ||
         (status === "hospital" && filters.status.hospital) ||
         (status === "jail" && filters.status.jail) ||
-        (status === "abroad" && filters.status.abroad);
+        (status === "abroad" && filters.status.abroad) ||
+        (status === "federal" && filters.status.federal) ||
+        (status === "fallen" && filters.status.fallen);
 
       if (!matchesStatus) {
         hide_row(row);
@@ -350,6 +366,8 @@ function is_filter_active(filters: {
     hospital: boolean;
     jail: boolean;
     abroad: boolean;
+    federal: boolean;
+    fallen: boolean;
   };
   levelMin: number | null;
   levelMax: number | null;

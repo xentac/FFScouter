@@ -141,6 +141,8 @@ function mountFilterBox(
               hospital: true,
               jail: true,
               abroad: true,
+              federal: true,
+              fallen: true,
             },
             levelMin: null,
             levelMax: null,

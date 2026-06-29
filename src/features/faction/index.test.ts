@@ -294,6 +294,8 @@ test("initialize_features MutationObserver reacts to status class changes and fi
       jail: false,
       abroad: false,
       traveling: false,
+      federal: false,
+      fallen: false,
     },
   });
   filterBox.dispatchChange();
@@ -420,6 +422,8 @@ test("setup_war_features MutationObserver in Ranked War reacts to status changes
       jail: false,
       abroad: false,
       traveling: true,
+      federal: false,
+      fallen: false,
     },
   });
   filterBox.dispatchChange();

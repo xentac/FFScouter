@@ -52,6 +52,8 @@ export interface FactionFilterState {
     hospital: boolean;
     jail: boolean;
     abroad: boolean;
+    federal: boolean;
+    fallen: boolean;
   };
   levelMin: number | null;
   levelMax: number | null;
@@ -125,6 +127,8 @@ export const DEFAULT_STATE: FactionFilterState = {
     hospital: true,
     jail: true,
     abroad: true,
+    federal: true,
+    fallen: true,
   },
   levelMin: null,
   levelMax: null,
@@ -481,6 +485,8 @@ export function FFFactionFilterBox({
         hospital: true,
         jail: true,
         abroad: true,
+        federal: true,
+        fallen: true,
       },
       levelMin: null,
       levelMax: null,
@@ -759,6 +765,8 @@ export function FFFactionFilterBox({
                 ["jail", "Jail"],
                 ["abroad", "Abroad"],
                 ["traveling", "Traveling"],
+                ["federal", "Fedded"],
+                ["fallen", "Fallen"],
               ] as const
             ).map(([key, label]) => (
               <label key={key}>
