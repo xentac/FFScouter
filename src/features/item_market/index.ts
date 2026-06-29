@@ -3,9 +3,11 @@ import {
   torn_page,
   wait_for_element,
 } from "@utils/dom";
+import logger from "@utils/logger";
 import { type Feature, StartTime } from "../feature";
 
 const FEATURE_NAME = "item_market";
+const log = logger.child(`feature:${FEATURE_NAME}`);
 
 export default {
   name: "Item market FF display",
@@ -23,8 +25,8 @@ export default {
     if (!root) {
       return;
     }
-    console.log("Found item list wrapper!");
-    console.log(root);
+    log.info("Found item list wrapper!");
+    log.debug("Root element:", root);
 
     const process = () => {
       apply_ff_gauge_selector(

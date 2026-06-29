@@ -206,9 +206,35 @@ class Logger {
    */
   private formatArgs(args: unknown[]): unknown[] {
     return args.map((arg) => {
+      if (isDOMNode(arg)) {
+        return formatDOMNode(arg);
+      }
       if (typeof arg === "object" && arg !== null) {
         try {
-          return JSON.stringify(arg, Object.getOwnPropertyNames(arg), 2);
+          const seen = new WeakSet();
+          return JSON.stringify(
+            arg,
+            (_key, val) => {
+              if (typeof val === "object" && val !== null) {
+                if (seen.has(val)) {
+                  return "[Circular]";
+                }
+                seen.add(val);
+              }
+              if (isDOMNode(val)) {
+                return formatDOMNode(val);
+              }
+              if (val instanceof Error) {
+                return {
+                  message: val.message,
+                  stack: val.stack,
+                  name: val.name,
+                };
+              }
+              return val;
+            },
+            2,
+          );
         } catch {
           return String(arg);
         }
@@ -216,6 +242,32 @@ class Logger {
       return arg;
     });
   }
+}
+
+function isDOMNode(val: unknown): boolean {
+  return (
+    typeof val === "object" &&
+    val !== null &&
+    "nodeType" in val &&
+    typeof (val as any).nodeType === "number" &&
+    "nodeName" in val &&
+    typeof (val as any).nodeName === "string"
+  );
+}
+
+function formatDOMNode(node: any): string {
+  if (node.nodeType === 1) {
+    const tagName = node.tagName.toLowerCase();
+    const id = node.id ? `#${node.id}` : "";
+    const classes =
+      node.className &&
+      typeof node.className === "string" &&
+      node.className.trim()
+        ? `.${node.className.trim().split(/\s+/).join(".")}`
+        : "";
+    return `<${tagName}${id}${classes}>`;
+  }
+  return `[Node: ${node.nodeName}]`;
 }
 
 export default new Logger("FFSV2", LogLevel.DEBUG);

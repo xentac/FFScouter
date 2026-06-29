@@ -153,7 +153,7 @@ export default {
         clear_v2_data();
         toast("FF Scouter cache cleared successfully!");
       } catch (err) {
-        console.error("Failed to delete IndexedDB cache", err);
+        logger.error("Failed to delete IndexedDB cache", err);
         toast("Failed to clear cache database", TOAST_LEVEL.ERROR);
       }
     });

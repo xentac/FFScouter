@@ -1,5 +1,7 @@
+// @vitest-environment jsdom
+
 import { beforeEach, expect, test, vi } from "vitest";
-import logger, { LogLevel } from "./logger";
+import logger, { Logger, LogLevel } from "./logger";
 
 beforeEach(() => {
   vi.restoreAllMocks();
@@ -115,4 +117,66 @@ test("Logger child creates a child logger with combined prefixes", () => {
     expect.any(String),
     "child msg",
   );
+});
+
+test("Logger formats DOM Element safely", () => {
+  const pdaLogger = new Logger("PDA-TEST", LogLevel.DEBUG);
+  // biome-ignore lint/complexity/useLiteralKeys: access private property
+  pdaLogger["isPDA"] = true;
+  const debugSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+  const div = document.createElement("div");
+  div.id = "test-id";
+  div.className = "test-class1 test-class2";
+  pdaLogger.debug(div);
+  expect(debugSpy).toHaveBeenCalledWith(
+    expect.stringContaining("[PDA-TEST] - [DEBUG]: "),
+    "<div#test-id.test-class1.test-class2>",
+  );
+});
+
+test("Logger formats nested DOM Element safely", () => {
+  const pdaLogger = new Logger("PDA-TEST", LogLevel.DEBUG);
+  // biome-ignore lint/complexity/useLiteralKeys: access private property
+  pdaLogger["isPDA"] = true;
+  const debugSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+  const div = document.createElement("span");
+  div.className = "my-span";
+  pdaLogger.debug({ target: div, count: 5 });
+
+  const call = debugSpy.mock.calls[0];
+  expect(call).toBeDefined();
+  const loggedArg = call![1] as string;
+  expect(loggedArg).toContain('"<span.my-span>"');
+  expect(loggedArg).toContain('"count": 5');
+});
+
+test("Logger serializes Error objects safely", () => {
+  const pdaLogger = new Logger("PDA-TEST", LogLevel.DEBUG);
+  // biome-ignore lint/complexity/useLiteralKeys: access private property
+  pdaLogger["isPDA"] = true;
+  const debugSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+  const err = new Error("something went wrong");
+  pdaLogger.debug(err);
+
+  const call = debugSpy.mock.calls[0];
+  expect(call).toBeDefined();
+  const loggedArg = call![1] as string;
+  expect(loggedArg).toContain('"message": "something went wrong"');
+  expect(loggedArg).toContain('"stack":');
+});
+
+test("Logger handles circular references safely", () => {
+  const pdaLogger = new Logger("PDA-TEST", LogLevel.DEBUG);
+  // biome-ignore lint/complexity/useLiteralKeys: access private property
+  pdaLogger["isPDA"] = true;
+  const debugSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+  const obj: any = { a: 1 };
+  obj.self = obj;
+  pdaLogger.debug(obj);
+
+  const call = debugSpy.mock.calls[0];
+  expect(call).toBeDefined();
+  const loggedArg = call![1] as string;
+  expect(loggedArg).toContain('"a": 1');
+  expect(loggedArg).toContain('"self": "[Circular]"');
 });
