@@ -151,6 +151,13 @@ export default defineConfig(({ mode }) => {
             "node_modules/react-dom/index.js",
           ),
         },
+        {
+          find: "@real-react-dom-client",
+          replacement: path.resolve(
+            __dirname,
+            "node_modules/react-dom/client.js",
+          ),
+        },
       ],
     },
     define: {

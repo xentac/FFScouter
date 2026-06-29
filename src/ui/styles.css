@@ -277,7 +277,7 @@ ff-settings-panel .is_premium_unknown {
   position: relative;
 }
 
-ff-flight-profile-status {
+.ff-flight-element {
   position: absolute;
   right: 10px;
   bottom: 2px;

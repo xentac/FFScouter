@@ -1,11 +1,8 @@
-import {
-  create_ff_element,
-  extract_id_from_url,
-  torn_page,
-  wait_for_element,
-} from "@utils/dom";
+import { FFFlightProfileStatus } from "@ui/flight-status";
+import { extract_id_from_url, torn_page, wait_for_element } from "@utils/dom";
 import { ffscouter } from "@utils/ffscouter";
-import "@ui/flight-status";
+import { createElement } from "react";
+import { createRoot } from "react-dom/client";
 import { type Feature, StartTime } from "../feature";
 
 function is_flying(status: Element) {
@@ -34,9 +31,11 @@ export default {
       return;
     }
 
-    const element = await create_ff_element("ff-flight-profile-status");
-    if (!element) return;
-    element.playerId = player_id;
+    const container = document.createElement("div");
+    container.classList.add("ff-flight-element");
+    createRoot(container).render(
+      createElement(FFFlightProfileStatus, { playerId: player_id }),
+    );
 
     const check_and_update = () => {
       if (is_flying(status)) {
@@ -44,12 +43,11 @@ export default {
         if (description === null) {
           return;
         }
-        if (!description.contains(element)) {
-          console.log("Appending child", element);
-          description.appendChild(element);
+        if (!description.contains(container)) {
+          description.appendChild(container);
         }
       } else {
-        element.remove();
+        container.remove();
         ffscouter.clear_flight_cache(player_id);
       }
     };

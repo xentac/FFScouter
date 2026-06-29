@@ -1,10 +1,17 @@
-import { create_ff_element, get_player_id_in_element } from "@utils/dom";
+import { FFFlightProfileStatus } from "@ui/flight-status";
+import { get_player_id_in_element } from "@utils/dom";
 import { ffscouter } from "@utils/ffscouter";
 import logger from "@utils/logger";
-import "@ui/flight-status";
+import { createElement } from "react";
+import type { Root } from "react-dom/client";
+import { createRoot } from "react-dom/client";
 import { type Feature, StartTime } from "../feature";
 
 const log = logger.child("feature:mini-profile-flights");
+
+// Marker class so the mutation observer can identify our own container additions
+// and avoid processing them as player changes.
+const FLIGHT_CONTAINER_CLASS = "ff-flight-element";
 
 function is_flying(status: Element) {
   return status.classList.contains("travelling");
@@ -38,22 +45,32 @@ const setup_mini_flight_observer = async () => {
     return;
   }
 
-  const flight_element = await create_ff_element("ff-flight-profile-status");
-  if (!flight_element) {
-    return;
-  }
-  flight_element.compact = true;
+  const container = document.createElement("div");
+  container.classList.add(FLIGHT_CONTAINER_CLASS);
+  let root: Root | null = null;
 
   let lastPlayerId: number | null = null;
 
+  const renderForPlayer = (player_id: number) => {
+    if (!root) {
+      root = createRoot(container);
+    }
+    root.render(
+      createElement(FFFlightProfileStatus, {
+        playerId: player_id,
+        compact: true,
+      }),
+    );
+  };
+
   const mp_observer = new MutationObserver((mutations) => {
-    // Prevent infinite loop from our own changes
+    // Prevent infinite loop from our own container being added
     for (const mutation of mutations) {
       if (
         Array.from(mutation.addedNodes).some(
           (node) =>
             node instanceof HTMLElement &&
-            (node.tagName.toLowerCase() === "ff-flight-profile-status" ||
+            (node.classList.contains(FLIGHT_CONTAINER_CLASS) ||
               node.classList.contains("ff-scouter-profile-flight-info")),
         )
       ) {
@@ -76,18 +93,18 @@ const setup_mini_flight_observer = async () => {
       return;
     }
 
-    flight_element.playerId = player_id;
+    renderForPlayer(player_id);
 
     if (is_flying(status)) {
       const description = status.querySelector(".description");
-      if (description && !description.contains(flight_element)) {
+      if (description && !description.contains(container)) {
         log.debug(
           `Player ${player_id} is flying, adding flight tracker to mini-profile`,
         );
-        description.appendChild(flight_element);
+        description.appendChild(container);
       }
     } else {
-      flight_element.remove();
+      container.remove();
       ffscouter.clear_flight_cache(player_id);
     }
   });
@@ -98,11 +115,12 @@ const setup_mini_flight_observer = async () => {
   const player_id = get_player_id_in_element(miniroot);
   const status = miniroot.querySelector(".profile-status");
   if (player_id && status) {
-    flight_element.playerId = player_id;
+    renderForPlayer(player_id);
+    lastPlayerId = player_id;
     if (is_flying(status)) {
       const description = status.querySelector(".description");
-      if (description && !description.contains(flight_element)) {
-        description.appendChild(flight_element);
+      if (description && !description.contains(container)) {
+        description.appendChild(container);
       }
     }
   }

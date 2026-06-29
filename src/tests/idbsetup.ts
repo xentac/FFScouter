@@ -1,16 +1,19 @@
 import { BroadcastChannel as NodeBroadcastChannel } from "node:worker_threads";
-// @real-react bypasses the unsafeWindow shim alias to get the actual package.
+// @real-react* bypasses the unsafeWindow shim aliases to get the actual packages.
 import * as React from "@real-react";
 import * as ReactDOM from "@real-react-dom";
+import * as ReactDOMClient from "@real-react-dom-client";
 import { setup } from "vitest-indexeddb";
 
 // The shims read from unsafeWindow.React / unsafeWindow.ReactDOM at call time.
 // In tests there is no Tampermonkey, so we expose the devDependency build here.
+// Merge react-dom and react-dom/client so the shim's createRoot call works.
+const ReactDOMFull = { ...ReactDOM, ...ReactDOMClient };
 (
   globalThis as unknown as {
     unsafeWindow: { React: unknown; ReactDOM: unknown };
   }
-).unsafeWindow = { React, ReactDOM };
+).unsafeWindow = { React, ReactDOM: ReactDOMFull };
 
 setup();
 
