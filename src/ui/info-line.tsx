@@ -10,6 +10,7 @@ import {
 } from "@utils/strings";
 import type { FFData, PlayerId } from "@utils/types";
 import { useEffect, useState } from "react";
+import styles from "./info-line.module.css";
 
 const log = logger.child("ui");
 
@@ -62,9 +63,7 @@ export function FFHeaderLine({ playerId }: Props) {
   if (data === null) {
     return (
       <>
-        <span style={{ fontWeight: "bold", marginRight: "6px" }}>
-          FairFight:
-        </span>
+        <span className={styles["ffscouter-info-line__label"]}>FairFight:</span>
         <span style={{ fontStyle: "italic" }}>Loading...</span>
       </>
     );
@@ -73,18 +72,10 @@ export function FFHeaderLine({ playerId }: Props) {
   if (data.no_data) {
     return (
       <>
-        <span style={{ fontWeight: "bold", marginRight: "6px" }}>
-          FairFight:
-        </span>
+        <span className={styles["ffscouter-info-line__label"]}>FairFight:</span>
         <span
-          style={{
-            background: "#444",
-            color: "#fff",
-            fontWeight: "bold",
-            padding: "2px 6px",
-            borderRadius: "4px",
-            display: "inline-block",
-          }}
+          className={styles["ffscouter-info-line__badge"]}
+          style={{ background: "#444", color: "#fff" }}
         >
           No data
         </span>
@@ -110,9 +101,7 @@ export function FFHeaderLine({ playerId }: Props) {
           fontStyle: "normal",
         }}
       >
-        <span style={{ fontWeight: "bold", marginRight: "6px" }}>
-          Top Stats:
-        </span>
+        <span className={styles["ffscouter-info-line__label"]}>Top Stats:</span>
         <span style={{ fontWeight: "normal" }}>
           {data.distribution.distribution_human} {ageStr}
         </span>
@@ -122,7 +111,7 @@ export function FFHeaderLine({ playerId }: Props) {
     extraDetailsLine = null;
   } else if (isPremium === false && data.premium_insights_available) {
     extraDetailsLine = (
-      <span className="ff-premium-upgrade-line">
+      <span className={styles["ffscouter-info-line__premium-upgrade"]}>
         <a
           href={PREMIUM_UPGRADE_URL}
           target="_blank"
@@ -137,16 +126,10 @@ export function FFHeaderLine({ playerId }: Props) {
 
   return (
     <>
-      <span style={{ fontWeight: "bold", marginRight: "6px" }}>FairFight:</span>
+      <span className={styles["ffscouter-info-line__label"]}>FairFight:</span>
       <span
-        style={{
-          background: backgroundColor,
-          color: textColor,
-          fontWeight: "bold",
-          padding: "2px 6px",
-          borderRadius: "4px",
-          display: "inline-block",
-        }}
+        className={styles["ffscouter-info-line__badge"]}
+        style={{ background: backgroundColor, color: textColor }}
       >
         {ffString} ({difficulty}) {fresh}
       </span>

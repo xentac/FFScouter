@@ -100,7 +100,7 @@ test("debounces stats input and parses suffix numbers", async () => {
   });
 
   const statsGroup = Array.from(
-    container.querySelectorAll(".ff-filter-group"),
+    container.querySelectorAll(".ff-filter-box__group"),
   ).find((g) => g.querySelector("strong")?.textContent === "Stats Range")!;
   const [minInput, maxInput] = Array.from(
     statsGroup.querySelectorAll<HTMLInputElement>(
@@ -183,7 +183,7 @@ test("supports mode='war' styling and independent configs", async () => {
   await waitFor(() => expect(ref.current).not.toBeNull());
 
   const details = container.querySelector("details")!;
-  expect(details.classList.contains("no-borders")).toBe(true);
+  expect(details.classList.contains("ff-filter-box--no-borders")).toBe(true);
 
   const select = container.querySelector<HTMLSelectElement>(
     "#war-col-display-filter",
@@ -212,7 +212,7 @@ test("supports column visibility toggles and reactive container attributes in wa
   );
   await waitFor(() => expect(ref.current).not.toBeNull());
 
-  const grpColumns = container.querySelector(".grp-columns")!;
+  const grpColumns = container.querySelector(".ff-filter-box__group--columns")!;
   expect(grpColumns).not.toBeNull();
   expect(grpColumns.querySelector("strong")?.textContent).toBe(
     "Visible Columns",
@@ -249,7 +249,9 @@ test("supports column visibility toggles and reactive container attributes in wa
     { container: warWrapper },
   );
   await waitFor(() =>
-    expect(container.querySelector(".grp-columns")).toBeNull(),
+    expect(
+      container.querySelector(".ff-filter-box__group--columns"),
+    ).toBeNull(),
   );
 
   document.body.removeChild(warWrapper);
@@ -379,7 +381,7 @@ test("defaults to level column hidden on mobile viewport", async () => {
   );
   await waitFor(() => expect(ref.current).not.toBeNull());
 
-  const grpColumns = container.querySelector(".grp-columns")!;
+  const grpColumns = container.querySelector(".ff-filter-box__group--columns")!;
   const [lvlCheckbox] = Array.from(
     grpColumns.querySelectorAll<HTMLInputElement>('input[type="checkbox"]'),
   ) as [HTMLInputElement];
@@ -410,7 +412,7 @@ test("separates desktop and mobile visible column settings", async () => {
 
   const getCheckbox = () =>
     warWrapper.querySelector<HTMLInputElement>(
-      ".grp-columns input[type='checkbox']",
+      ".ff-filter-box__group--columns input[type='checkbox']",
     )!;
 
   expect(getCheckbox().checked).toBe(true);
@@ -441,7 +443,7 @@ test("separates desktop and mobile visible column settings", async () => {
 });
 
 test("has correct mobile order for filter groups", async () => {
-  const cssPath = path.resolve(__dirname, "./styles.css");
+  const cssPath = path.resolve(__dirname, "./faction-filter-box.module.css");
   const cssContent = fs.readFileSync(cssPath, "utf-8");
   const styleEl = document.createElement("style");
   styleEl.textContent = cssContent;
@@ -456,7 +458,9 @@ test("has correct mobile order for filter groups", async () => {
     await waitFor(() => expect(ref.current).not.toBeNull());
     ref.current!.setHasLastActionData(true);
     await waitFor(() =>
-      expect(container.querySelector(".grp-last-action")).not.toBeNull(),
+      expect(
+        container.querySelector(".ff-filter-box__group--last-action"),
+      ).not.toBeNull(),
     );
 
     const getOrder = (selector: string) => {
@@ -465,14 +469,14 @@ test("has correct mobile order for filter groups", async () => {
       return window.getComputedStyle(target).order;
     };
 
-    expect(getOrder(".grp-sort")).toBe("1");
-    expect(getOrder(".grp-level")).toBe("2");
-    expect(getOrder(".grp-activity")).toBe("3");
-    expect(getOrder(".grp-status")).toBe("4");
-    expect(getOrder(".grp-ff")).toBe("5");
-    expect(getOrder(".grp-stats")).toBe("6");
-    expect(getOrder(".grp-last-action")).toBe("7");
-    expect(getOrder(".grp-columns")).toBe("8");
+    expect(getOrder(".ff-filter-box__group--sort")).toBe("1");
+    expect(getOrder(".ff-filter-box__group--level")).toBe("2");
+    expect(getOrder(".ff-filter-box__group--activity")).toBe("3");
+    expect(getOrder(".ff-filter-box__group--status")).toBe("4");
+    expect(getOrder(".ff-filter-box__group--ff")).toBe("5");
+    expect(getOrder(".ff-filter-box__group--stats")).toBe("6");
+    expect(getOrder(".ff-filter-box__group--last-action")).toBe("7");
+    expect(getOrder(".ff-filter-box__group--columns")).toBe("8");
   } finally {
     document.head.removeChild(styleEl);
   }
@@ -501,7 +505,7 @@ test("supports toggling filtering on and off", async () => {
   await waitFor(() => expect(ref.current).not.toBeNull());
 
   const toggleBtn = container.querySelector<HTMLButtonElement>(
-    ".ff-action-icon-btn:not(.reset-btn)",
+    ".ff-filter-box__action-btn:not(.ff-filter-box__action-btn--reset)",
   )!;
   toggleBtn.click();
   await waitFor(() => expect(events.at(-1).filterEnabled).toBe(false));
@@ -526,7 +530,9 @@ test("supports resetting filters to defaults while keeping sort", async () => {
     container.querySelector<HTMLButtonElement>("#sort-toggle-btn")!;
   sortBtn.click(); // none → ff-desc
 
-  const resetBtn = container.querySelector<HTMLButtonElement>(".reset-btn")!;
+  const resetBtn = container.querySelector<HTMLButtonElement>(
+    ".ff-filter-box__action-btn--reset",
+  )!;
   resetBtn.click();
 
   await act(async () => {
@@ -543,7 +549,7 @@ test("only renders Last Action Range group in war mode with hasLastActionData", 
   await waitFor(() => expect(ref.current).not.toBeNull());
 
   const findGroup = () =>
-    Array.from(container.querySelectorAll(".ff-filter-group")).find(
+    Array.from(container.querySelectorAll(".ff-filter-box__group")).find(
       (g) => g.querySelector("strong")?.textContent === "Last Action Range",
     );
 
@@ -587,9 +593,13 @@ test("parses Last Action Range duration strings into seconds", async () => {
   act(() => {
     ref.current!.setHasLastActionData(true);
   });
-  expect(container.querySelector(".grp-last-action")).not.toBeNull();
+  expect(
+    container.querySelector(".ff-filter-box__group--last-action"),
+  ).not.toBeNull();
 
-  const lastActionGroup = container.querySelector(".grp-last-action")!;
+  const lastActionGroup = container.querySelector(
+    ".ff-filter-box__group--last-action",
+  )!;
   const [minInput, maxInput] = Array.from(
     lastActionGroup.querySelectorAll<HTMLInputElement>(
       'input[placeholder="Min"], input[placeholder="Max"]',
@@ -614,7 +624,9 @@ test("parses Last Action Range duration strings into seconds", async () => {
   });
   expect(events.at(-1).lastActionMinSec).toBeNull();
 
-  const resetBtn = container.querySelector<HTMLButtonElement>(".reset-btn")!;
+  const resetBtn = container.querySelector<HTMLButtonElement>(
+    ".ff-filter-box__action-btn--reset",
+  )!;
   resetBtn.click();
   await act(async () => {
     vi.advanceTimersByTime(10);

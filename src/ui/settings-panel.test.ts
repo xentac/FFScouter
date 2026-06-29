@@ -291,68 +291,78 @@ test("ff-settings-panel renders a live swatch preview that updates with the colo
 test("ff-settings-panel lays each section out as a grid with full-width bundles spanning all columns", async () => {
   const el = document.createElement("ff-settings-panel") as FFSettingsPanel;
   // Disable the chain button so the nested chain sub-options grid (itself a
-  // .ff-settings-section) doesn't count toward the top-level section total.
+  // .ff-settings-panel__section) doesn't count toward the top-level section total.
   el.chainButtonEnabled = false;
   document.body.appendChild(el);
   await el.updateComplete;
 
   // One grid per section: API Key & Premium, Gauge Marker Settings, Feature
   // Toggles, Debug Settings -- each nested in its own visually distinct
-  // .ff-settings-group
-  const sections = el.querySelectorAll(".ff-settings-section");
+  // .ff-settings-panel__group
+  const sections = el.querySelectorAll(".ff-settings-panel__section");
   expect(sections.length).toBe(4);
 
-  const groups = el.querySelectorAll(".ff-settings-group");
+  const groups = el.querySelectorAll(".ff-settings-panel__group");
   expect(groups.length).toBe(4);
 
   // Gauge Marker Style, Marker Size, Color Scheme, Border Thickness, and FF
   // Ranges all live together in the visually distinct Gauge Marker Settings
   // group, not in Feature Toggles
   expect(
-    el.querySelector("#gauge-marker-type")?.closest(".ff-settings-group"),
+    el
+      .querySelector("#gauge-marker-type")
+      ?.closest(".ff-settings-panel__group"),
   ).not.toBeNull();
   expect(
     el
       .querySelector("#gauge-marker-border-width")
-      ?.closest(".ff-settings-group"),
+      ?.closest(".ff-settings-panel__group"),
   ).not.toBeNull();
 
   // API key/Premium, Feature Toggles, and Debug Settings are each wrapped in
   // their own visually distinct group too
   expect(
-    el.querySelector("#api-key")?.closest(".ff-settings-group"),
+    el.querySelector("#api-key")?.closest(".ff-settings-panel__group"),
   ).not.toBeNull();
   expect(
-    el.querySelector("#chain-button-toggle")?.closest(".ff-settings-group"),
+    el
+      .querySelector("#chain-button-toggle")
+      ?.closest(".ff-settings-panel__group"),
   ).not.toBeNull();
   expect(
-    el.querySelector("#debug-logs")?.closest(".ff-settings-group"),
+    el.querySelector("#debug-logs")?.closest(".ff-settings-panel__group"),
   ).not.toBeNull();
 
   // Plain selects/checkboxes are single grid cells
   const gaugeStyleCell = el
     .querySelector("#gauge-marker-type")
-    ?.closest(".ff-settings-cell");
+    ?.closest(".ff-settings-panel__cell");
   expect(gaugeStyleCell).not.toBeNull();
-  expect(gaugeStyleCell?.classList.contains("ff-settings-span")).toBe(false);
+  expect(gaugeStyleCell?.classList.contains("ff-settings-panel__span")).toBe(
+    false,
+  );
 
   const debugLogsCell = el
     .querySelector("#debug-logs")
-    ?.closest(".ff-settings-cell");
-  expect(debugLogsCell?.classList.contains("checkbox-cell")).toBe(true);
+    ?.closest(".ff-settings-panel__cell");
+  expect(
+    debugLogsCell?.classList.contains("ff-settings-panel__cell--checkbox"),
+  ).toBe(true);
 
   // Multi-control bundles span the full grid width
   expect(
-    el.querySelector("#color-scheme")?.closest(".ff-settings-span"),
+    el.querySelector("#color-scheme")?.closest(".ff-settings-panel__span"),
   ).not.toBeNull();
   expect(
-    el.querySelector("#gauge-marker-scale")?.closest(".ff-settings-span"),
+    el
+      .querySelector("#gauge-marker-scale")
+      ?.closest(".ff-settings-panel__span"),
   ).not.toBeNull();
   expect(
-    el.querySelector("#ff-range-low")?.closest(".ff-settings-span"),
+    el.querySelector("#ff-range-low")?.closest(".ff-settings-panel__span"),
   ).not.toBeNull();
   expect(
-    el.querySelector("#api-key")?.closest(".ff-settings-span"),
+    el.querySelector("#api-key")?.closest(".ff-settings-panel__span"),
   ).not.toBeNull();
 });
 
@@ -362,7 +372,7 @@ test("ff-settings-panel renders chain sub-options as a nested grid only when ena
   document.body.appendChild(el);
   await el.updateComplete;
 
-  expect(el.querySelector(".ff-chain-suboptions")).toBeNull();
+  expect(el.querySelector(".ff-settings-panel__chain-suboptions")).toBeNull();
 
   // Enabling the chain button reveals the nested sub-options grid
   const toggle = el.querySelector("#chain-button-toggle") as HTMLInputElement;
@@ -370,26 +380,32 @@ test("ff-settings-panel renders chain sub-options as a nested grid only when ena
   toggle.dispatchEvent(new Event("change"));
   await el.updateComplete;
 
-  const suboptions = el.querySelector(".ff-chain-suboptions");
+  const suboptions = el.querySelector(".ff-settings-panel__chain-suboptions");
   expect(suboptions).not.toBeNull();
-  expect(suboptions?.classList.contains("ff-settings-section")).toBe(true);
+  expect(suboptions?.classList.contains("ff-settings-panel__section")).toBe(
+    true,
+  );
   // Sub-options live inside the chain bundle's full-width span
   expect(suboptions?.closest(".ff-chain-block")).not.toBeNull();
   // The compact min/max level inputs are cells within that nested grid
   expect(
-    el.querySelector("#chain-min-level")?.closest(".ff-settings-cell"),
+    el.querySelector("#chain-min-level")?.closest(".ff-settings-panel__cell"),
   ).not.toBeNull();
 
   // Number fields pair 2-up when narrow (not full-row), while the selects and
-  // checkboxes span the full nested row via .ff-chain-wide.
+  // checkboxes span the full nested row via .ff-settings-panel__chain-wide.
   const numberCell = el
     .querySelector("#chain-min-level")
-    ?.closest(".ff-settings-cell");
-  expect(numberCell?.classList.contains("ff-chain-wide")).toBe(false);
+    ?.closest(".ff-settings-panel__cell");
+  expect(numberCell?.classList.contains("ff-settings-panel__chain-wide")).toBe(
+    false,
+  );
 
   for (const id of ["#chain-link-type", "#chain-tab-type", "#chain-inactive"]) {
-    const wideCell = el.querySelector(id)?.closest(".ff-settings-cell");
-    expect(wideCell?.classList.contains("ff-chain-wide")).toBe(true);
+    const wideCell = el.querySelector(id)?.closest(".ff-settings-panel__cell");
+    expect(wideCell?.classList.contains("ff-settings-panel__chain-wide")).toBe(
+      true,
+    );
   }
 });
 

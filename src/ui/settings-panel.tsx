@@ -15,6 +15,41 @@ import {
 } from "@utils/strings";
 import { createElement, useEffect } from "react";
 import { createRoot, type Root } from "react-dom/client";
+import styles from "./settings-panel.module.css";
+
+// Local aliases for the BEM module classes. The keys are hyphenated, so they are
+// bracket-accessed once here and referenced by short name in the render below.
+const cls = {
+  accordion: styles["ff-settings-panel__accordion"],
+  accordionGlow: styles["ff-settings-panel__accordion--glow"],
+  body: styles["ff-settings-panel__body"],
+  group: styles["ff-settings-panel__group"],
+  section: styles["ff-settings-panel__section"],
+  span: styles["ff-settings-panel__span"],
+  cell: styles["ff-settings-panel__cell"],
+  cellCheckbox: styles["ff-settings-panel__cell--checkbox"],
+  apiExplanation: styles["ff-settings-panel__api-explanation"],
+  apiBlock: styles["ff-settings-panel__api-block"],
+  apiStatusRow: styles["ff-settings-panel__api-status-row"],
+  premiumBadge: styles["ff-settings-panel__premium-badge"],
+  premiumBadgeEnabled: styles["ff-settings-panel__premium-badge--enabled"],
+  premiumBadgeDisabled: styles["ff-settings-panel__premium-badge--disabled"],
+  premiumBadgeUnknown: styles["ff-settings-panel__premium-badge--unknown"],
+  blur: styles["ff-settings-panel__blur"],
+  number: styles["ff-settings-panel__number"],
+  markerSize: styles["ff-settings-panel__marker-size"],
+  markerBorderWidth: styles["ff-settings-panel__marker-border-width"],
+  markerSizeControls: styles["ff-settings-panel__marker-size-controls"],
+  colorScheme: styles["ff-settings-panel__color-scheme"],
+  colorSchemeControls: styles["ff-settings-panel__color-scheme-controls"],
+  inputRow: styles["ff-settings-panel__input-row"],
+  rangeRow: styles["ff-settings-panel__range-row"],
+  errorMsg: styles["ff-settings-panel__error-msg"],
+  chainSuboptions: styles["ff-settings-panel__chain-suboptions"],
+  chainWide: styles["ff-settings-panel__chain-wide"],
+  actions: styles["ff-settings-panel__actions"],
+  savedMsg: styles["ff-settings-panel__saved-msg"],
+};
 
 const DEFAULT_VALUES = {
   apiKey: "",
@@ -81,18 +116,16 @@ export function SettingsPanelComponent({
 
   return (
     <details
-      className={`accordion ${!props.apiKey ? "glow" : ""} cont-gray border-round`}
+      className={`${cls.accordion}${!props.apiKey ? ` ${cls.accordionGlow}` : ""} cont-gray border-round`}
     >
-      <summary style={{ cursor: "pointer", fontWeight: "bold" }}>
-        FF Scouter Settings
-      </summary>
+      <summary>FF Scouter Settings</summary>
 
-      <div style={{ marginTop: "15px" }}>
+      <div className={cls.body}>
         {/* API Key & Premium */}
-        <div className="ff-settings-group">
+        <div className={cls.group}>
           <h4>API Key &amp; Premium</h4>
-          <div className="ff-settings-section">
-            <div className="ff-api-explanation ff-settings-span">
+          <div className={cls.section}>
+            <div className={`${cls.apiExplanation} ${cls.span}`}>
               <strong>Important:</strong> You must use the SAME exact API key
               that you use on{" "}
               <a href="https://ffscouter.com/" target="_blank" rel="noreferrer">
@@ -111,28 +144,28 @@ export function SettingsPanelComponent({
               and look for "FFScouter3" in your API key history comments.
             </div>
 
-            <div className="ff-settings-span ff-api-block">
-              <div className="ff-settings-cell">
+            <div className={`${cls.span} ${cls.apiBlock}`}>
+              <div className={cls.cell}>
                 <label htmlFor="api-key">API Key:</label>
                 <input
                   id="api-key"
                   type="text"
-                  className={props.apiKey ? "blur-mode" : ""}
+                  className={props.apiKey ? cls.blur : ""}
                   placeholder="Paste your key here..."
                   value={drafts.apiKey}
                   onChange={() => {}}
                 />
               </div>
-              <div className="ff-api-status-row">
+              <div className={cls.apiStatusRow}>
                 <label htmlFor="ff-premium-badge">FF Scouter Premium:</label>
                 <span
                   id="ff-premium-badge"
-                  className={`is_premium_${
+                  className={`${cls.premiumBadge} ${
                     isPremium === null
-                      ? "unknown"
+                      ? cls.premiumBadgeUnknown
                       : isPremium
-                        ? "enabled"
-                        : "disabled"
+                        ? cls.premiumBadgeEnabled
+                        : cls.premiumBadgeDisabled
                   }`}
                 >
                   {isPremium === null
@@ -154,10 +187,10 @@ export function SettingsPanelComponent({
         </div>
 
         {/* Gauge Marker Settings */}
-        <div className="ff-settings-group">
+        <div className={cls.group}>
           <h4>Gauge Marker Settings</h4>
-          <div className="ff-settings-section">
-            <div className="ff-settings-cell">
+          <div className={cls.section}>
+            <div className={cls.cell}>
               <label htmlFor="gauge-marker-type">Gauge Marker Style:</label>
               <select
                 id="gauge-marker-type"
@@ -170,9 +203,9 @@ export function SettingsPanelComponent({
               </select>
             </div>
 
-            <div className="ff-settings-span ff-marker-size">
+            <div className={`${cls.span} ${cls.markerSize}`}>
               <label htmlFor="gauge-marker-scale">Marker Size:</label>
-              <div className="ff-marker-size-controls">
+              <div className={cls.markerSizeControls}>
                 <input
                   id="gauge-marker-scale"
                   type="range"
@@ -188,7 +221,7 @@ export function SettingsPanelComponent({
                   min="50"
                   max="200"
                   step="5"
-                  className="ff-number"
+                  className={cls.number}
                   value={drafts.gaugeMarkerScale}
                   onChange={() => {}}
                 />
@@ -196,11 +229,11 @@ export function SettingsPanelComponent({
               </div>
             </div>
 
-            <div className="ff-settings-span ff-marker-border-width">
+            <div className={`${cls.span} ${cls.markerBorderWidth}`}>
               <label htmlFor="gauge-marker-border-width">
                 Border Thickness:
               </label>
-              <div className="ff-marker-size-controls">
+              <div className={cls.markerSizeControls}>
                 <input
                   id="gauge-marker-border-width"
                   type="range"
@@ -216,7 +249,7 @@ export function SettingsPanelComponent({
                   min="0"
                   max="3"
                   step="0.5"
-                  className="ff-number"
+                  className={cls.number}
                   value={drafts.gaugeMarkerBorderWidth}
                   onChange={() => {}}
                 />
@@ -259,9 +292,9 @@ export function SettingsPanelComponent({
               </div>
             </div>
 
-            <div className="ff-settings-span ff-color-scheme">
+            <div className={`${cls.span} ${cls.colorScheme}`}>
               <label htmlFor="color-scheme">Color Scheme:</label>
-              <div className="ff-color-scheme-controls">
+              <div className={cls.colorSchemeControls}>
                 <select
                   id="color-scheme"
                   value={drafts.colorScheme}
@@ -297,16 +330,14 @@ export function SettingsPanelComponent({
               </div>
             </div>
 
-            <div className="input-row ff-settings-span">
+            <div className={`${cls.inputRow} ${cls.span}`}>
               <label htmlFor="ff-range-low">FF Ranges (Low, High, Max):</label>
-              <div
-                style={{ display: "flex", gap: "10px", alignItems: "center" }}
-              >
+              <div className={cls.rangeRow}>
                 <input
                   id="ff-range-low"
                   type="number"
                   step="0.1"
-                  className="ff-number"
+                  className={cls.number}
                   value={drafts.lowRange}
                   onChange={() => {}}
                 />
@@ -315,7 +346,7 @@ export function SettingsPanelComponent({
                   id="ff-range-high"
                   type="number"
                   step="0.1"
-                  className="ff-number"
+                  className={cls.number}
                   value={drafts.highRange}
                   onChange={() => {}}
                 />
@@ -324,22 +355,22 @@ export function SettingsPanelComponent({
                   id="ff-range-max"
                   type="number"
                   step="0.1"
-                  className="ff-number"
+                  className={cls.number}
                   value={drafts.maxRange}
                   onChange={() => {}}
                 />
               </div>
-              {rangeError && <div className="error-msg">{rangeError}</div>}
+              {rangeError && <div className={cls.errorMsg}>{rangeError}</div>}
             </div>
           </div>
         </div>
 
         {/* Feature Toggles */}
-        <div className="ff-settings-group">
+        <div className={cls.group}>
           <h4>Feature Toggles</h4>
-          <div className="ff-settings-section">
-            <div className="ff-settings-span ff-chain-block">
-              <div className="ff-settings-cell checkbox-cell">
+          <div className={cls.section}>
+            <div className={`${cls.span} ff-chain-block`}>
+              <div className={`${cls.cell} ${cls.cellCheckbox}`}>
                 <input
                   id="chain-button-toggle"
                   type="checkbox"
@@ -352,8 +383,8 @@ export function SettingsPanelComponent({
               </div>
 
               {drafts.chainButtonEnabled && (
-                <div className="ff-settings-section ff-chain-suboptions">
-                  <div className="ff-settings-cell ff-chain-wide">
+                <div className={`${cls.section} ${cls.chainSuboptions}`}>
+                  <div className={`${cls.cell} ${cls.chainWide}`}>
                     <label htmlFor="chain-link-type">Chain button opens:</label>
                     <select
                       id="chain-link-type"
@@ -365,7 +396,7 @@ export function SettingsPanelComponent({
                     </select>
                   </div>
 
-                  <div className="ff-settings-cell ff-chain-wide">
+                  <div className={`${cls.cell} ${cls.chainWide}`}>
                     <label htmlFor="chain-tab-type">Open in:</label>
                     <select
                       id="chain-tab-type"
@@ -377,12 +408,12 @@ export function SettingsPanelComponent({
                     </select>
                   </div>
 
-                  <div className="ff-settings-cell">
+                  <div className={cls.cell}>
                     <label htmlFor="chain-min-level">Min Level:</label>
                     <input
                       id="chain-min-level"
                       type="number"
-                      className="ff-number"
+                      className={cls.number}
                       placeholder="No min"
                       value={
                         drafts.chainMinLevel === null
@@ -393,12 +424,12 @@ export function SettingsPanelComponent({
                     />
                   </div>
 
-                  <div className="ff-settings-cell">
+                  <div className={cls.cell}>
                     <label htmlFor="chain-max-level">Max Level:</label>
                     <input
                       id="chain-max-level"
                       type="number"
-                      className="ff-number"
+                      className={cls.number}
                       placeholder="No max"
                       value={
                         drafts.chainMaxLevel === null
@@ -409,13 +440,13 @@ export function SettingsPanelComponent({
                     />
                   </div>
 
-                  <div className="ff-settings-cell">
+                  <div className={cls.cell}>
                     <label htmlFor="chain-min-ff">Min FF:</label>
                     <input
                       id="chain-min-ff"
                       type="number"
                       step="0.1"
-                      className="ff-number"
+                      className={cls.number}
                       placeholder="No min"
                       value={
                         drafts.chainMinFF === null ? "" : drafts.chainMinFF
@@ -424,20 +455,22 @@ export function SettingsPanelComponent({
                     />
                   </div>
 
-                  <div className="ff-settings-cell">
+                  <div className={cls.cell}>
                     <label htmlFor="chain-max-ff">Max FF:</label>
                     <input
                       id="chain-max-ff"
                       type="number"
                       step="0.1"
-                      className="ff-number"
+                      className={cls.number}
                       placeholder="No max"
                       value={drafts.chainMaxFF}
                       onChange={() => {}}
                     />
                   </div>
 
-                  <div className="ff-settings-cell checkbox-cell ff-chain-wide">
+                  <div
+                    className={`${cls.cell} ${cls.cellCheckbox} ${cls.chainWide}`}
+                  >
                     <input
                       id="chain-inactive"
                       type="checkbox"
@@ -449,7 +482,9 @@ export function SettingsPanelComponent({
                     </label>
                   </div>
 
-                  <div className="ff-settings-cell checkbox-cell ff-chain-wide">
+                  <div
+                    className={`${cls.cell} ${cls.cellCheckbox} ${cls.chainWide}`}
+                  >
                     <input
                       id="chain-factionless"
                       type="checkbox"
@@ -462,7 +497,7 @@ export function SettingsPanelComponent({
               )}
             </div>
 
-            <div className="ff-settings-cell">
+            <div className={cls.cell}>
               <label htmlFor="factions-col-display">Faction Page Shows:</label>
               <select
                 id="factions-col-display"
@@ -475,7 +510,7 @@ export function SettingsPanelComponent({
               </select>
             </div>
 
-            <div className="ff-settings-cell">
+            <div className={cls.cell}>
               <label htmlFor="war-col-display">War Page Shows:</label>
               <select
                 id="war-col-display"
@@ -488,7 +523,7 @@ export function SettingsPanelComponent({
               </select>
             </div>
 
-            <div className="ff-settings-cell checkbox-cell">
+            <div className={`${cls.cell} ${cls.cellCheckbox}`}>
               <input
                 id="status-attack-links-toggle"
                 type="checkbox"
@@ -500,7 +535,7 @@ export function SettingsPanelComponent({
               </label>
             </div>
 
-            <div className="ff-settings-cell">
+            <div className={cls.cell}>
               <label htmlFor="war-quick-attack-action">
                 Quick Attack Action:
               </label>
@@ -514,7 +549,7 @@ export function SettingsPanelComponent({
               </select>
             </div>
 
-            <div className="ff-settings-cell checkbox-cell">
+            <div className={`${cls.cell} ${cls.cellCheckbox}`}>
               <input
                 id="ff-history-toggle"
                 type="checkbox"
@@ -526,7 +561,7 @@ export function SettingsPanelComponent({
               </label>
             </div>
 
-            <div className="ff-settings-span ff-deprecation-note">
+            <div className={`${cls.span} ff-deprecation-note`}>
               <span>
                 War Monitor is no longer supported. Use{" "}
                 <a
@@ -543,10 +578,10 @@ export function SettingsPanelComponent({
         </div>
 
         {/* Debug Settings */}
-        <div className="ff-settings-group">
+        <div className={cls.group}>
           <h4>Debug Settings</h4>
-          <div className="ff-settings-section">
-            <div className="ff-settings-cell checkbox-cell">
+          <div className={cls.section}>
+            <div className={`${cls.cell} ${cls.cellCheckbox}`}>
               <input
                 id="debug-logs"
                 type="checkbox"
@@ -556,7 +591,7 @@ export function SettingsPanelComponent({
               <label htmlFor="debug-logs">Enable debug logging</label>
             </div>
 
-            <div className="ff-settings-cell checkbox-cell">
+            <div className={`${cls.cell} ${cls.cellCheckbox}`}>
               <input
                 id="analytics-toggle"
                 type="checkbox"
@@ -568,7 +603,7 @@ export function SettingsPanelComponent({
               </label>
             </div>
 
-            <div className="ff-settings-cell checkbox-cell">
+            <div className={`${cls.cell} ${cls.cellCheckbox}`}>
               <input
                 id="network-interception-toggle"
                 type="checkbox"
@@ -580,7 +615,7 @@ export function SettingsPanelComponent({
               </label>
             </div>
 
-            <div className="ff-settings-cell checkbox-cell">
+            <div className={`${cls.cell} ${cls.cellCheckbox}`}>
               <input
                 id="debug-disable-pda-http"
                 type="checkbox"
@@ -595,16 +630,7 @@ export function SettingsPanelComponent({
         </div>
 
         {/* Action Buttons Area */}
-        <div
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: "10px",
-            marginTop: "20px",
-          }}
-        >
+        <div className={cls.actions}>
           <button type="button" className="torn-btn btn-save" onClick={onSave}>
             Save Settings
           </button>
@@ -622,9 +648,7 @@ export function SettingsPanelComponent({
           >
             Clear FF Cache
           </button>
-          {showSavedMessage && (
-            <span style={{ color: "#4CAF50" }}>✓ Saved!</span>
-          )}
+          {showSavedMessage && <span className={cls.savedMsg}>✓ Saved!</span>}
         </div>
       </div>
     </details>

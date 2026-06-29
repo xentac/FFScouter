@@ -170,6 +170,12 @@ export default defineConfig(({ mode }) => {
     test: {
       environment: "node",
       setupFiles: ["./src/tests/idbsetup.ts"],
+      css: {
+        // Resolve CSS Module imports to their literal (unscoped) class names so
+        // `styles.foo` returns "foo" in tests, letting `.class` querySelectors
+        // and getComputedStyle()-based assertions keep matching the source CSS.
+        modules: { classNameStrategy: "non-scoped" },
+      },
     },
   };
 });

@@ -1,0 +1,247 @@
+.ff-filter-box,
+.ff-filter-box *,
+.ff-filter-box *::before,
+.ff-filter-box *::after {
+  box-sizing: border-box !important;
+}
+
+.ff-filter-box {
+  background-color: var(--ffscouter-bg-color);
+  border: 1px solid var(--ffscouter-border-color);
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  color: var(--ffscouter-text-color);
+  font-family: Arial, sans-serif;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.ff-filter-box.ff-filter-box--no-borders {
+  background-color: var(--default-bg-panel-color);
+  border-top: 1px solid var(--ffscouter-border-color);
+  border-bottom: 1px solid var(--ffscouter-border-color);
+  border-left: none;
+  border-right: none;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 12px 10px;
+  margin: 0;
+}
+
+.ff-filter-box summary {
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  outline: none;
+  user-select: none;
+}
+
+.ff-filter-box[open] summary {
+  border-bottom: 1px solid var(--ffscouter-border-color);
+  padding-bottom: 6px;
+  margin-bottom: 12px;
+}
+
+.ff-filter-box summary:focus-visible {
+  outline: 2px solid var(--ffscouter-glow-color);
+  outline-offset: 2px;
+}
+
+/* Header row inside <summary>: title on the left, action buttons on the right.
+   width is capped to leave room for the native disclosure triangle. */
+.ff-filter-box__header {
+  display: inline-flex;
+  justify-content: space-between;
+  align-items: center;
+  width: calc(100% - 24px);
+  vertical-align: middle;
+}
+
+.ff-filter-box__header-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.ff-filter-box .ff-filter-box__action-btn {
+  background: var(--ffscouter-alt-bg-color);
+  border: 1px solid var(--ffscouter-border-color);
+  border-radius: 4px;
+  color: var(--ffscouter-text-color);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  transition:
+    background-color 0.2s,
+    color 0.2s,
+    opacity 0.2s;
+}
+
+.ff-filter-box .ff-filter-box__action-btn:hover {
+  background-color: var(--ffscouter-hover-color);
+}
+
+.ff-filter-box .ff-filter-box__action-btn.ff-filter-box__action-btn--active {
+  color: var(--ffscouter-text-color);
+  opacity: 1;
+}
+
+.ff-filter-box .ff-filter-box__action-btn.ff-filter-box__action-btn--inactive {
+  color: var(--ffscouter-text-color);
+  opacity: 0.4;
+}
+
+.ff-filter-box .ff-filter-box__action-btn svg {
+  width: 14px;
+  height: 14px;
+  fill: currentColor;
+}
+
+.ff-filter-box .ff-filter-box__action-btn.ff-filter-box__action-btn--reset svg {
+  transition: transform 0.25s ease-in-out;
+}
+
+.ff-filter-box
+  .ff-filter-box__action-btn.ff-filter-box__action-btn--reset:hover
+  svg {
+  transform: rotate(-180deg);
+}
+
+.ff-filter-box__grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.ff-filter-box__group--sort {
+  order: 1;
+}
+
+.ff-filter-box__group--level {
+  order: 2;
+}
+
+.ff-filter-box__group--activity {
+  order: 3;
+}
+
+.ff-filter-box__group--status {
+  order: 4;
+}
+
+.ff-filter-box__group--ff {
+  order: 5;
+}
+
+.ff-filter-box__group--stats {
+  order: 6;
+}
+
+.ff-filter-box__group--last-action {
+  order: 7;
+}
+
+.ff-filter-box__group--columns {
+  order: 8;
+}
+
+@media (min-width: 784px) {
+  .ff-filter-box__grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .ff-filter-box__grid > * {
+    order: 0;
+  }
+}
+
+.ff-filter-box__group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* Vertical stack of the sort button, display select and compare-activity button
+   in the Sort & Display group. */
+.ff-filter-box__sort-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ff-filter-box__sort-controls .ff-filter-box__sort-btn {
+  width: 100%;
+}
+
+.ff-filter-box__sort-controls .ff-filter-box__compare-btn {
+  width: 100%;
+  height: 32px;
+}
+
+.ff-filter-box__display-select {
+  padding: 4px;
+  border: 1px solid var(--ffscouter-border-color);
+  border-radius: 4px;
+  background: var(--ffscouter-alt-bg-color);
+  color: var(--ffscouter-text-color);
+  font-size: 11px;
+  cursor: pointer;
+  height: 32px;
+}
+
+.ff-filter-box__options {
+  display: flex;
+  flex-direction: column;
+}
+
+.ff-filter-box__options label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.ff-filter-box__range-inputs {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.ff-filter-box__range-inputs input {
+  flex: 1;
+  width: 0;
+  min-width: 30px;
+  max-width: 80px;
+  padding: 4px;
+  border: 1px solid var(--ffscouter-border-color);
+  border-radius: 4px;
+  background: var(--ffscouter-alt-bg-color);
+  color: var(--ffscouter-text-color);
+  font-size: 11px;
+  text-align: center;
+}
+
+.ff-filter-box button {
+  padding: 6px 10px;
+  border: 1px solid var(--ffscouter-border-color);
+  border-radius: 4px;
+  background: var(--ffscouter-alt-bg-color);
+  color: var(--ffscouter-text-color);
+  font-size: 12px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: background-color 0.2s;
+}
+
+.ff-filter-box button:hover {
+  background-color: var(--ffscouter-hover-color);
+}

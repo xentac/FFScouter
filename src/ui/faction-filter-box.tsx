@@ -7,6 +7,36 @@ import {
   useRef,
   useState,
 } from "react";
+import styles from "./faction-filter-box.module.css";
+
+// Local aliases for the BEM module classes. The keys are hyphenated, so they are
+// bracket-accessed once here and referenced by short name in the render below.
+const cls = {
+  box: styles["ff-filter-box"],
+  boxNoBorders: styles["ff-filter-box--no-borders"],
+  header: styles["ff-filter-box__header"],
+  headerActions: styles["ff-filter-box__header-actions"],
+  actionBtn: styles["ff-filter-box__action-btn"],
+  actionBtnActive: styles["ff-filter-box__action-btn--active"],
+  actionBtnInactive: styles["ff-filter-box__action-btn--inactive"],
+  actionBtnReset: styles["ff-filter-box__action-btn--reset"],
+  grid: styles["ff-filter-box__grid"],
+  group: styles["ff-filter-box__group"],
+  groupSort: styles["ff-filter-box__group--sort"],
+  groupLevel: styles["ff-filter-box__group--level"],
+  groupActivity: styles["ff-filter-box__group--activity"],
+  groupStatus: styles["ff-filter-box__group--status"],
+  groupFf: styles["ff-filter-box__group--ff"],
+  groupStats: styles["ff-filter-box__group--stats"],
+  groupLastAction: styles["ff-filter-box__group--last-action"],
+  groupColumns: styles["ff-filter-box__group--columns"],
+  sortControls: styles["ff-filter-box__sort-controls"],
+  sortBtn: styles["ff-filter-box__sort-btn"],
+  compareBtn: styles["ff-filter-box__compare-btn"],
+  displaySelect: styles["ff-filter-box__display-select"],
+  options: styles["ff-filter-box__options"],
+  rangeInputs: styles["ff-filter-box__range-inputs"],
+};
 
 export interface FactionFilterState {
   sortBy: "ff-asc" | "ff-desc" | "none";
@@ -595,31 +625,16 @@ export function FFFactionFilterBox({
   return (
     <details
       ref={rootRef}
-      className={`ff-filter-box${mode === "war" ? " no-borders" : ""}`}
+      className={`${cls.box}${mode === "war" ? ` ${cls.boxNoBorders}` : ""}`}
       open={!collapsed}
       onToggle={onToggle}
     >
-      <summary
-        style={{
-          cursor: "pointer",
-          fontWeight: "bold",
-          fontSize: "14px",
-          userSelect: "none",
-        }}
-      >
-        <div
-          style={{
-            display: "inline-flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            width: "calc(100% - 24px)",
-            verticalAlign: "middle",
-          }}
-        >
+      <summary>
+        <div className={cls.header}>
           <span>FFScouter Filter &amp; Sort Controls</span>
           {/* biome-ignore lint/a11y/noStaticElementInteractions lint/a11y/useKeyWithClickEvents: click-stop propagation on a decorative grouping div */}
           <div
-            className="ff-filter-header-actions"
+            className={cls.headerActions}
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
@@ -627,7 +642,7 @@ export function FFFactionFilterBox({
           >
             <button
               type="button"
-              className={`ff-action-icon-btn ${s.filterEnabled ? "active" : "inactive"}`}
+              className={`${cls.actionBtn} ${s.filterEnabled ? cls.actionBtnActive : cls.actionBtnInactive}`}
               title={
                 s.filterEnabled ? "Turn off filtering" : "Turn on filtering"
               }
@@ -653,7 +668,7 @@ export function FFFactionFilterBox({
             </button>
             <button
               type="button"
-              className="ff-action-icon-btn reset-btn"
+              className={`${cls.actionBtn} ${cls.actionBtnReset}`}
               title="Reset filters to default"
               onClick={onResetFilters}
             >
@@ -669,15 +684,15 @@ export function FFFactionFilterBox({
         </div>
       </summary>
 
-      <div className="ff-filter-grid" style={{ marginTop: "12px" }}>
-        <div className="ff-filter-group grp-sort">
+      <div className={cls.grid}>
+        <div className={`${cls.group} ${cls.groupSort}`}>
           <strong>Sort &amp; Display</strong>
-          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+          <div className={cls.sortControls}>
             <button
               type="button"
               id="sort-toggle-btn"
+              className={cls.sortBtn}
               onClick={onSortToggle}
-              style={{ width: "100%" }}
             >
               {s.sortBy === "none"
                 ? "Sort: Default"
@@ -693,16 +708,7 @@ export function FFFactionFilterBox({
               }
               value={colDisplay}
               onChange={onDisplayChange}
-              style={{
-                padding: "4px",
-                border: "1px solid var(--ffscouter-border-color)",
-                borderRadius: "4px",
-                background: "var(--ffscouter-alt-bg-color)",
-                color: "var(--ffscouter-text-color)",
-                fontSize: "11px",
-                cursor: "pointer",
-                height: "32px",
-              }}
+              className={cls.displaySelect}
             >
               <option value="fair_fight">Show: FF Score</option>
               <option value="battle_stats">Show: BS Estimate</option>
@@ -712,8 +718,8 @@ export function FFFactionFilterBox({
               <button
                 type="button"
                 id="compare-faction-activity-btn"
+                className={cls.compareBtn}
                 onClick={onCompareActivity}
-                style={{ width: "100%", height: "32px" }}
               >
                 Compare Activity
               </button>
@@ -721,9 +727,9 @@ export function FFFactionFilterBox({
           </div>
         </div>
 
-        <div className="ff-filter-group grp-activity">
+        <div className={`${cls.group} ${cls.groupActivity}`}>
           <strong>Activity</strong>
-          <div className="ff-filter-options">
+          <div className={cls.options}>
             {(
               [
                 ["online", "Online"],
@@ -743,9 +749,9 @@ export function FFFactionFilterBox({
           </div>
         </div>
 
-        <div className="ff-filter-group grp-status">
+        <div className={`${cls.group} ${cls.groupStatus}`}>
           <strong>Status</strong>
-          <div className="ff-filter-options">
+          <div className={cls.options}>
             {(
               [
                 ["okay", "Okay"],
@@ -767,9 +773,9 @@ export function FFFactionFilterBox({
           </div>
         </div>
 
-        <div className="ff-filter-group grp-level">
+        <div className={`${cls.group} ${cls.groupLevel}`}>
           <strong>Level Range</strong>
-          <div className="ff-filter-range-inputs">
+          <div className={cls.rangeInputs}>
             <input
               type="number"
               placeholder="Min"
@@ -786,9 +792,9 @@ export function FFFactionFilterBox({
           </div>
         </div>
 
-        <div className="ff-filter-group grp-ff">
+        <div className={`${cls.group} ${cls.groupFf}`}>
           <strong>FF Range</strong>
-          <div className="ff-filter-range-inputs">
+          <div className={cls.rangeInputs}>
             <input
               type="number"
               step="0.1"
@@ -807,9 +813,9 @@ export function FFFactionFilterBox({
           </div>
         </div>
 
-        <div className="ff-filter-group grp-stats">
+        <div className={`${cls.group} ${cls.groupStats}`}>
           <strong>Stats Range</strong>
-          <div className="ff-filter-range-inputs">
+          <div className={cls.rangeInputs}>
             <input
               type="text"
               placeholder="Min"
@@ -827,9 +833,9 @@ export function FFFactionFilterBox({
         </div>
 
         {mode === "war" && hasLastActionData && (
-          <div className="ff-filter-group grp-last-action">
+          <div className={`${cls.group} ${cls.groupLastAction}`}>
             <strong>Last Action Range</strong>
-            <div className="ff-filter-range-inputs">
+            <div className={cls.rangeInputs}>
               <input
                 type="text"
                 placeholder="Min"
@@ -850,9 +856,9 @@ export function FFFactionFilterBox({
         )}
 
         {mode === "war" && (
-          <div className="ff-filter-group grp-columns">
+          <div className={`${cls.group} ${cls.groupColumns}`}>
             <strong>Visible Columns</strong>
-            <div className="ff-filter-options">
+            <div className={cls.options}>
               {(
                 [
                   ["level", "Level"],
