@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FF Scouter V2 beta
 // @namespace    xentac-beta
-// @version      3.0-beta13
+// @version      3.0-beta14
 // @author       xentac [3354782], MAVRI [2402357], rDacted [2670953], Weav3r [1853324], Glasnost [1844049]
 // @description  Shows the expected Fair Fight score against targets and faction war status
 // @license      GPLv3
@@ -18,12 +18,30 @@
 
   const n=new Set;const importCSS = async e=>{n.has(e)||(n.add(e),(d=>{const t=document.createElement("style");t.textContent=d,(document.head||document.documentElement).appendChild(t);})(e));};
 
+  importCSS(" ._ffscouter-info-line__label_xi5zk_1{font-weight:700;margin-right:6px}._ffscouter-info-line__badge_xi5zk_8{font-weight:700;padding:2px 6px;border-radius:4px;display:inline-block}._ffscouter-info-line__premium-upgrade_xi5zk_15{display:block;margin-top:4px;line-height:1.3;white-space:nowrap;font-size:12px;font-style:normal}@media(max-width:768px){._ffscouter-info-line__premium-upgrade_xi5zk_15{margin-top:6px;line-height:1.35;white-space:normal;overflow-wrap:anywhere}}._ff-filter-box_ursux_1,._ff-filter-box_ursux_1 *,._ff-filter-box_ursux_1 *:before,._ff-filter-box_ursux_1 *:after{box-sizing:border-box!important}._ff-filter-box_ursux_1{background-color:var(--ffscouter-bg-color);border:1px solid var(--ffscouter-border-color);border-radius:8px;padding:12px 16px;margin-bottom:16px;color:var(--ffscouter-text-color);font-family:Arial,sans-serif;box-shadow:0 2px 5px #0000000d}._ff-filter-box_ursux_1._ff-filter-box--no-borders_ursux_19{background-color:var(--default-bg-panel-color);border-top:1px solid var(--ffscouter-border-color);border-bottom:1px solid var(--ffscouter-border-color);border-left:none;border-right:none;border-radius:0;box-shadow:none;padding:12px 10px;margin:0}._ff-filter-box_ursux_1 summary{cursor:pointer;font-size:14px;font-weight:700;outline:none;-webkit-user-select:none;user-select:none}._ff-filter-box_ursux_1[open] summary{border-bottom:1px solid var(--ffscouter-border-color);padding-bottom:6px;margin-bottom:12px}._ff-filter-box_ursux_1 summary:focus-visible{outline:2px solid var(--ffscouter-glow-color);outline-offset:2px}._ff-filter-box__header_ursux_52{display:inline-flex;justify-content:space-between;align-items:center;width:calc(100% - 24px);vertical-align:middle}._ff-filter-box__header-actions_ursux_60{display:flex;gap:6px;align-items:center}._ff-filter-box_ursux_1 ._ff-filter-box__action-btn_ursux_66{background:var(--ffscouter-alt-bg-color);border:1px solid var(--ffscouter-border-color);border-radius:4px;color:var(--ffscouter-text-color);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;padding:0;transition:background-color .2s,color .2s,opacity .2s}._ff-filter-box_ursux_1 ._ff-filter-box__action-btn_ursux_66:hover{background-color:var(--ffscouter-hover-color)}._ff-filter-box_ursux_1 ._ff-filter-box__action-btn_ursux_66._ff-filter-box__action-btn--active_ursux_88{color:var(--ffscouter-text-color);opacity:1}._ff-filter-box_ursux_1 ._ff-filter-box__action-btn_ursux_66._ff-filter-box__action-btn--inactive_ursux_93{color:var(--ffscouter-text-color);opacity:.4}._ff-filter-box_ursux_1 ._ff-filter-box__action-btn_ursux_66 svg{width:14px;height:14px;fill:currentColor}._ff-filter-box_ursux_1 ._ff-filter-box__action-btn_ursux_66._ff-filter-box__action-btn--reset_ursux_104 svg{transition:transform .25s ease-in-out}._ff-filter-box_ursux_1 ._ff-filter-box__action-btn_ursux_66._ff-filter-box__action-btn--reset_ursux_104:hover svg{transform:rotate(-180deg)}._ff-filter-box__grid_ursux_114{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:12px}._ff-filter-box__group--sort_ursux_121{order:1}._ff-filter-box__group--level_ursux_125{order:2}._ff-filter-box__group--activity_ursux_129{order:3}._ff-filter-box__group--status_ursux_133{order:4}._ff-filter-box__group--ff_ursux_137{order:5}._ff-filter-box__group--stats_ursux_141{order:6}._ff-filter-box__group--last-action_ursux_145{order:7}._ff-filter-box__group--columns_ursux_149{order:8}@media(min-width:784px){._ff-filter-box__grid_ursux_114{grid-template-columns:repeat(3,1fr)}._ff-filter-box__grid_ursux_114>*{order:0}}._ff-filter-box__group_ursux_121{display:flex;flex-direction:column;gap:2px}._ff-filter-box__sort-controls_ursux_171{display:flex;flex-direction:column;gap:8px}._ff-filter-box__sort-controls_ursux_171 ._ff-filter-box__sort-btn_ursux_177{width:100%}._ff-filter-box__sort-controls_ursux_171 ._ff-filter-box__compare-btn_ursux_181{width:100%;height:32px}._ff-filter-box__display-select_ursux_186{padding:4px;border:1px solid var(--ffscouter-border-color);border-radius:4px;background:var(--ffscouter-alt-bg-color);color:var(--ffscouter-text-color);font-size:11px;cursor:pointer;height:32px}._ff-filter-box__options_ursux_197{display:flex;flex-direction:column}._ff-filter-box__options_ursux_197 label{display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer}._ff-filter-box__range-inputs_ursux_210{display:flex;align-items:center;gap:4px}._ff-filter-box__range-inputs_ursux_210 input{flex:1;width:0;min-width:30px;max-width:80px;padding:4px;border:1px solid var(--ffscouter-border-color);border-radius:4px;background:var(--ffscouter-alt-bg-color);color:var(--ffscouter-text-color);font-size:11px;text-align:center}._ff-filter-box_ursux_1 button{padding:6px 10px;border:1px solid var(--ffscouter-border-color);border-radius:4px;background:var(--ffscouter-alt-bg-color);color:var(--ffscouter-text-color);font-size:12px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;transition:background-color .2s}._ff-filter-box_ursux_1 button:hover{background-color:var(--ffscouter-hover-color)}._ff-settings-panel__accordion_6bhvd_1{margin:10px 0;padding:15px;background-color:var(--ffscouter-bg-color);border:1px solid var(--ffscouter-border-color);border-radius:5px;color:var(--ffscouter-text-color)}._ff-settings-panel__accordion_6bhvd_1._ff-settings-panel__accordion--glow_6bhvd_10{border-color:var(--ffscouter-glow-color);box-shadow:0 0 8px #4caf5080}._ff-settings-panel__accordion_6bhvd_1 summary{cursor:pointer;font-weight:700}._ff-settings-panel__body_6bhvd_20{margin-top:15px}._ff-settings-panel__input-row_6bhvd_24{display:flex;flex-direction:column;gap:5px;margin-bottom:15px}._ff-settings-panel__range-row_6bhvd_32{display:flex;gap:10px;align-items:center}._ff-settings-panel__blur_6bhvd_38{filter:blur(4px);transition:filter .2s ease}._ff-settings-panel__blur_6bhvd_38:hover,._ff-settings-panel__blur_6bhvd_38:focus{filter:blur(0)}._ff-settings-panel__error-msg_6bhvd_48{color:#f33;font-size:13px;margin-top:5px}._ff-settings-panel__accordion_6bhvd_1 input[type=text],._ff-settings-panel__accordion_6bhvd_1 input[type=number]{box-sizing:border-box!important;text-align:left;vertical-align:top;width:178px;height:34px!important;margin-right:8px;padding:9px 10px;line-height:14px;display:inline-block}._ff-settings-panel__accordion_6bhvd_1 input[type=number]._ff-settings-panel__number_6bhvd_67{width:80px}._ff-settings-panel__accordion_6bhvd_1 select{box-sizing:border-box;text-align:left;vertical-align:top;width:178px;height:34px;margin-right:8px;padding:8px 10px;line-height:14px;display:inline-block;border:var(--input-border-color, 1px solid var(--ffscouter-border-color));border-radius:5px;font-family:Arial,serif;color:var(--input-color, var(--ffscouter-text-color));background:var(--input-background-color, var(--ffscouter-alt-bg-color))}.dark-mode ._ff-settings-panel__accordion_6bhvd_1 select option{background-color:#000;color:var(--input-color)}._ff-settings-panel__api-explanation_6bhvd_94{color:var(--ffscouter-text-color);margin-bottom:20px;font-size:13px;line-height:1.5}._ff-settings-panel__accordion_6bhvd_1 a{color:var(--ffscouter-success-color);text-decoration:underline}._ff-settings-panel__premium-badge_6bhvd_107{display:inline-block;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;vertical-align:middle}._ff-settings-panel__premium-badge--enabled_6bhvd_117{background:#4caf50}._ff-settings-panel__premium-badge--disabled_6bhvd_121{background:#c62828}._ff-settings-panel__premium-badge--unknown_6bhvd_125{background:#f39c12}._ff-settings-panel__section_6bhvd_138{display:grid;grid-template-columns:1fr;gap:12px;margin-bottom:15px}@media(min-width:784px){._ff-settings-panel__section_6bhvd_138{grid-template-columns:repeat(3,1fr)}}._ff-settings-panel__span_6bhvd_152{grid-column:1 / -1;margin-bottom:0}._ff-settings-panel__cell_6bhvd_160{display:flex;flex-direction:column;gap:5px;min-width:0;margin-bottom:0}._ff-settings-panel__cell_6bhvd_160._ff-settings-panel__cell--checkbox_6bhvd_169{flex-direction:row;align-items:flex-start;gap:10px}._ff-settings-panel__cell_6bhvd_160 input[type=text]{width:100%;margin-right:0}._ff-settings-panel__cell_6bhvd_160 select{width:auto;max-width:100%;margin-right:0}._ff-settings-panel__api-block_6bhvd_193{display:flex;flex-direction:column;gap:10px}._ff-settings-panel__api-block_6bhvd_193 ._ff-settings-panel__cell_6bhvd_160 input[type=text]{max-width:360px}._ff-settings-panel__api-status-row_6bhvd_203{display:flex;flex-wrap:wrap;align-items:center;gap:10px}._ff-settings-panel__chain-suboptions_6bhvd_213{border-left:2px solid var(--ffscouter-border-color);padding-left:8px;margin-top:10px;grid-template-columns:repeat(2,1fr)}._ff-settings-panel__chain-suboptions_6bhvd_213 ._ff-settings-panel__chain-wide_6bhvd_218{grid-column:1 / -1}@media(min-width:784px){._ff-settings-panel__chain-suboptions_6bhvd_213{padding-left:16px;grid-template-columns:repeat(3,1fr)}._ff-settings-panel__chain-suboptions_6bhvd_213 ._ff-settings-panel__chain-wide_6bhvd_218{grid-column:auto}}._ff-settings-panel__group_6bhvd_242{background-color:var(--ffscouter-alt-bg-color);border:1px solid var(--ffscouter-border-color);border-radius:5px;padding:12px;margin-bottom:15px}._ff-settings-panel__group_6bhvd_242 h4{margin:0 0 12px}._ff-settings-panel__marker-size_6bhvd_256,._ff-settings-panel__marker-border-width_6bhvd_257{display:flex;flex-direction:column;gap:5px}._ff-settings-panel__marker-size-controls_6bhvd_263{display:flex;flex-wrap:wrap;align-items:center;gap:10px}._ff-settings-panel__marker-size-controls_6bhvd_263 input[type=range]{flex:1 1 120px;min-width:120px}._ff-settings-panel__color-scheme_6bhvd_276{display:flex;flex-direction:column;gap:5px}._ff-settings-panel__color-scheme-controls_6bhvd_282{display:flex;flex-wrap:wrap;align-items:center;gap:10px}._ff-settings-panel__accordion_6bhvd_1 .ffscouter-swatch-row{flex-wrap:wrap}._ff-settings-panel__actions_6bhvd_295{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:10px;margin-top:20px}._ff-settings-panel__saved-msg_6bhvd_304{color:#4caf50} ");
+
   var StartTime = ((StartTime2) => {
     StartTime2[StartTime2["DocumentStart"] = 0] = "DocumentStart";
     StartTime2[StartTime2["DocumentBody"] = 1] = "DocumentBody";
     StartTime2[StartTime2["DocumentEnd"] = 2] = "DocumentEnd";
     return StartTime2;
   })(StartTime || {});
+  let _react$1;
+  function getReact$1() {
+    return _react$1 ??= unsafeWindow.React;
+  }
+  const FRAGMENT_SENTINEL = Symbol("ReactFragment");
+  const Fragment = FRAGMENT_SENTINEL;
+  function jsx(type, { children, ...props }, key) {
+    const R = getReact$1();
+    const realType = type === FRAGMENT_SENTINEL ? R.Fragment : type;
+    if (key !== void 0) props.key = key;
+    if (children === void 0) {
+      return R.createElement(realType, props);
+    }
+    return Array.isArray(children) ? R.createElement(realType, props, ...children) : R.createElement(realType, props, children);
+  }
+  const jsxs = jsx;
   function isInPDA() {
     return typeof window !== "undefined" && typeof window.PDA_httpGet === "function";
   }
@@ -137,9 +155,35 @@ formatPrefix(level) {
     }
 formatArgs(args) {
       return args.map((arg) => {
+        if (isDOMNode(arg)) {
+          return formatDOMNode(arg);
+        }
         if (typeof arg === "object" && arg !== null) {
           try {
-            return JSON.stringify(arg, Object.getOwnPropertyNames(arg), 2);
+            const seen = new WeakSet();
+            return JSON.stringify(
+              arg,
+              (_key, val) => {
+                if (typeof val === "object" && val !== null) {
+                  if (seen.has(val)) {
+                    return "[Circular]";
+                  }
+                  seen.add(val);
+                }
+                if (isDOMNode(val)) {
+                  return formatDOMNode(val);
+                }
+                if (val instanceof Error) {
+                  return {
+                    message: val.message,
+                    stack: val.stack,
+                    name: val.name
+                  };
+                }
+                return val;
+              },
+              2
+            );
           } catch {
             return String(arg);
           }
@@ -148,11 +192,23 @@ formatArgs(args) {
       });
     }
   }
+  function isDOMNode(val) {
+    return typeof val === "object" && val !== null && "nodeType" in val && typeof val.nodeType === "number" && "nodeName" in val && typeof val.nodeName === "string";
+  }
+  function formatDOMNode(node) {
+    if (node.nodeType === 1) {
+      const tagName = node.tagName.toLowerCase();
+      const id = node.id ? `#${node.id}` : "";
+      const classes = node.className && typeof node.className === "string" && node.className.trim() ? `.${node.className.trim().split(/\s+/).join(".")}` : "";
+      return `<${tagName}${id}${classes}>`;
+    }
+    return `[Node: ${node.nodeName}]`;
+  }
   const logger = new Logger(
     "FFSV2",
     0
 );
-  const log$h = logger.child("storage");
+  const log$i = logger.child("storage");
   var Time = ((Time2) => {
     Time2[Time2["Seconds"] = 1e3] = "Seconds";
     Time2[Time2["Minutes"] = 6e4] = "Minutes";
@@ -174,7 +230,7 @@ set(key, value, expireConfig) {
         };
         localStorage.setItem(this.prefix + key, JSON.stringify(item));
       } catch (error) {
-        log$h.error(`Error storing item '${key}':`, error);
+        log$i.error(`Error storing item '${key}':`, error);
       }
     }
 get(key) {
@@ -190,18 +246,18 @@ get(key) {
           item = null;
         }
         if (!item) {
-          log$h.warn(`Key '${key}' has invalid JSON in it.`);
+          log$i.warn(`Key '${key}' has invalid JSON in it.`);
           this.remove(key);
           return null;
         }
         if (item.expiration && Date.now() > item.expiration) {
           this.remove(key);
-          log$h.debug(`Key ${key} has expired.`);
+          log$i.debug(`Key ${key} has expired.`);
           return null;
         }
         return item.value;
       } catch (error) {
-        log$h.error(`Error retrieving item '${key}':`, error);
+        log$i.error(`Error retrieving item '${key}':`, error);
         return null;
       }
     }
@@ -209,7 +265,7 @@ remove(key) {
       try {
         localStorage.removeItem(this.prefix + key);
       } catch (error) {
-        log$h.error(`Error removing item [${key}]:`, error);
+        log$i.error(`Error removing item [${key}]:`, error);
       }
     }
 has(key) {
@@ -221,8 +277,162 @@ clearAll() {
           localStorage.removeItem(key);
         });
       } catch (error) {
-        log$h.error("Error clearing storage:", error);
+        log$i.error("Error clearing storage:", error);
       }
+    }
+  }
+  var TornApiError;
+  (function(TornApiError2) {
+    TornApiError2[TornApiError2["UNKNOWN_ERROR"] = 0] = "UNKNOWN_ERROR";
+    TornApiError2[TornApiError2["KEY_EMPTY"] = 1] = "KEY_EMPTY";
+    TornApiError2[TornApiError2["INCORRECT_KEY"] = 2] = "INCORRECT_KEY";
+    TornApiError2[TornApiError2["WRONG_TYPE"] = 3] = "WRONG_TYPE";
+    TornApiError2[TornApiError2["WRONG_FIELDS"] = 4] = "WRONG_FIELDS";
+    TornApiError2[TornApiError2["TOO_MANY_REQUESTS"] = 5] = "TOO_MANY_REQUESTS";
+    TornApiError2[TornApiError2["INCORRECT_ID"] = 6] = "INCORRECT_ID";
+    TornApiError2[TornApiError2["INCORRECT_RELATION"] = 7] = "INCORRECT_RELATION";
+    TornApiError2[TornApiError2["IP_BLOCK"] = 8] = "IP_BLOCK";
+    TornApiError2[TornApiError2["API_DISABLED"] = 9] = "API_DISABLED";
+    TornApiError2[TornApiError2["KEY_FEDERAL_JAIL"] = 10] = "KEY_FEDERAL_JAIL";
+    TornApiError2[TornApiError2["KEY_CHANGE_ERROR"] = 11] = "KEY_CHANGE_ERROR";
+    TornApiError2[TornApiError2["KEY_READ_ERROR"] = 12] = "KEY_READ_ERROR";
+    TornApiError2[TornApiError2["KEY_TEMPORARILY_DISABLED_TO_INACTIVITY"] = 13] = "KEY_TEMPORARILY_DISABLED_TO_INACTIVITY";
+    TornApiError2[TornApiError2["DAILY_READ_LIMIT_REACHED"] = 14] = "DAILY_READ_LIMIT_REACHED";
+    TornApiError2[TornApiError2["TEMPORARY_ERROR"] = 15] = "TEMPORARY_ERROR";
+    TornApiError2[TornApiError2["ACCESS_LEVEL_KEY_NOT_HIGH"] = 16] = "ACCESS_LEVEL_KEY_NOT_HIGH";
+    TornApiError2[TornApiError2["BACKEND_ERROR_OCCURRED"] = 17] = "BACKEND_ERROR_OCCURRED";
+    TornApiError2[TornApiError2["API_KEY_HAS_BEEN_PAUSED"] = 18] = "API_KEY_HAS_BEEN_PAUSED";
+    TornApiError2[TornApiError2["MUST_BE_MIGRATED_TO_CRIMES"] = 19] = "MUST_BE_MIGRATED_TO_CRIMES";
+    TornApiError2[TornApiError2["RACE_NOT_YET_FINISHED"] = 20] = "RACE_NOT_YET_FINISHED";
+    TornApiError2[TornApiError2["INCORRECT_CATEGORY"] = 21] = "INCORRECT_CATEGORY";
+    TornApiError2[TornApiError2["SELECTION_ONLY_AVAILABLE_API_V1"] = 22] = "SELECTION_ONLY_AVAILABLE_API_V1";
+    TornApiError2[TornApiError2["SELECTION_ONLY_AVAILABLE_API_V2"] = 23] = "SELECTION_ONLY_AVAILABLE_API_V2";
+    TornApiError2[TornApiError2["CLOSED_TEMPORARILY"] = 24] = "CLOSED_TEMPORARILY";
+    TornApiError2[TornApiError2["INVALID_STAT_REQUESTED"] = 25] = "INVALID_STAT_REQUESTED";
+    TornApiError2[TornApiError2["ONLY_CATEGORY_OR_STATS_CAN"] = 26] = "ONLY_CATEGORY_OR_STATS_CAN";
+    TornApiError2[TornApiError2["MUST_BE_MIGRATED_TO_ORGANIZED"] = 27] = "MUST_BE_MIGRATED_TO_ORGANIZED";
+    TornApiError2[TornApiError2["INCORRECT_LOG_ID"] = 28] = "INCORRECT_LOG_ID";
+    TornApiError2[TornApiError2["CATEGORY_SELECTION_NOT_AVAILABLE_FOR"] = 29] = "CATEGORY_SELECTION_NOT_AVAILABLE_FOR";
+  })(TornApiError || (TornApiError = {}));
+  class HTTPClient {
+    canAbort() {
+      return false;
+    }
+  }
+  class AbortableHTTPClient extends HTTPClient {
+    canAbort() {
+      return true;
+    }
+  }
+  class FetchHTTPClient extends AbortableHTTPClient {
+    async getJson(url, timeout = void 0) {
+      let response;
+      if (timeout !== void 0) {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), timeout);
+        response = await fetch(url, { signal: controller.signal });
+        clearTimeout(timeoutId);
+      } else {
+        response = await fetch(url);
+      }
+      return await response.json();
+    }
+  }
+  class TornApiClient {
+    httpClient;
+    defaultComment;
+    defaultTimeout;
+    constructor(options = {}) {
+      this.httpClient = options.httpClient ?? new FetchHTTPClient();
+      this.defaultComment = options.defaultComment;
+      this.defaultTimeout = options.defaultTimeout;
+    }
+    async getV1({ section, selections, id, params = {}, key, comment, cache, expiry, timeout }) {
+      const cached = await cache?.get({
+        section,
+        selections,
+        id,
+        params,
+        key
+      });
+      if (cached)
+        return cached;
+      let url = `https://api.torn.com/${section}/${id ?? ""}`;
+      url = this.populateUrl(url, key, selections ?? [], comment, params ?? {});
+      if (this.httpClient.canAbort() && typeof timeout === "number") {
+        return this.httpClient.getJson(url, timeout).then(addToCache).catch(this.handleError);
+      } else {
+        return this.httpClient.getJson(url).then(addToCache).catch(this.handleError);
+      }
+      function addToCache(response) {
+        if ("error" in response)
+          return response;
+        cache?.set({
+          section,
+          selections,
+          id,
+          params,
+          key
+        }, response, expiry ?? Date.now() + 3e4);
+        return response;
+      }
+    }
+    async getV2({ section, selections, id, params = {}, key, comment, cache, expiry, timeout }) {
+      const cached = await cache?.get({
+        section,
+        selections,
+        id,
+        params,
+        key
+      });
+      if (cached)
+        return cached;
+      let url = `https://api.torn.com/v2/${section}/${id ?? ""}`;
+      url = this.populateUrl(url, key, selections ?? [], comment, params ?? {});
+      if (this.httpClient.canAbort() && typeof timeout === "number") {
+        return this.httpClient.getJson(url, timeout).then(addToCache).catch(this.handleError);
+      } else {
+        return this.httpClient.getJson(url).then(addToCache).catch(this.handleError);
+      }
+      function addToCache(response) {
+        if ("error" in response)
+          return response;
+        cache?.set({
+          section,
+          selections,
+          id,
+          params,
+          key
+        }, response, expiry ?? Date.now() + 3e4);
+        return response;
+      }
+    }
+    handleError(error) {
+      console.error(error);
+      return { error: { code: -1, error: generateErrorString(error) } };
+      function generateErrorString(e) {
+        switch (typeof e) {
+          case "string":
+            return e;
+          case "object": {
+            if (e instanceof Error)
+              return e.message;
+            return JSON.stringify(e);
+          }
+          default:
+            return e.toString();
+        }
+      }
+    }
+    populateUrl(url, key, selections, comment, params) {
+      const allParams = {
+        key,
+        comment: comment ?? this.defaultComment,
+        selections: selections.length ? selections.join(",") : void 0,
+        ...params
+      };
+      const query = Object.entries(allParams).filter((entry) => !!entry[1]).map(([key2, value]) => `${key2}=${value}`).join("&");
+      return `${url}?${query}`;
     }
   }
   var FactionsColDisplay = ((FactionsColDisplay2) => {
@@ -270,7 +480,7 @@ clearAll() {
     chain_factionless: false,
     gauge_marker_type: "arrow",
     gauge_marker_scale: 100,
-    gauge_marker_border_width: 1.5,
+    gauge_marker_border_width: 1,
     war_quick_attack_action: "new_tab",
     network_interception_enabled: false,
     status_attack_links_enabled: true,
@@ -693,163 +903,9 @@ clearAll() {
     }
   }
   const ffconfig = new FFConfig("ffsv3-config");
-  var TornApiError;
-  (function(TornApiError2) {
-    TornApiError2[TornApiError2["UNKNOWN_ERROR"] = 0] = "UNKNOWN_ERROR";
-    TornApiError2[TornApiError2["KEY_EMPTY"] = 1] = "KEY_EMPTY";
-    TornApiError2[TornApiError2["INCORRECT_KEY"] = 2] = "INCORRECT_KEY";
-    TornApiError2[TornApiError2["WRONG_TYPE"] = 3] = "WRONG_TYPE";
-    TornApiError2[TornApiError2["WRONG_FIELDS"] = 4] = "WRONG_FIELDS";
-    TornApiError2[TornApiError2["TOO_MANY_REQUESTS"] = 5] = "TOO_MANY_REQUESTS";
-    TornApiError2[TornApiError2["INCORRECT_ID"] = 6] = "INCORRECT_ID";
-    TornApiError2[TornApiError2["INCORRECT_RELATION"] = 7] = "INCORRECT_RELATION";
-    TornApiError2[TornApiError2["IP_BLOCK"] = 8] = "IP_BLOCK";
-    TornApiError2[TornApiError2["API_DISABLED"] = 9] = "API_DISABLED";
-    TornApiError2[TornApiError2["KEY_FEDERAL_JAIL"] = 10] = "KEY_FEDERAL_JAIL";
-    TornApiError2[TornApiError2["KEY_CHANGE_ERROR"] = 11] = "KEY_CHANGE_ERROR";
-    TornApiError2[TornApiError2["KEY_READ_ERROR"] = 12] = "KEY_READ_ERROR";
-    TornApiError2[TornApiError2["KEY_TEMPORARILY_DISABLED_TO_INACTIVITY"] = 13] = "KEY_TEMPORARILY_DISABLED_TO_INACTIVITY";
-    TornApiError2[TornApiError2["DAILY_READ_LIMIT_REACHED"] = 14] = "DAILY_READ_LIMIT_REACHED";
-    TornApiError2[TornApiError2["TEMPORARY_ERROR"] = 15] = "TEMPORARY_ERROR";
-    TornApiError2[TornApiError2["ACCESS_LEVEL_KEY_NOT_HIGH"] = 16] = "ACCESS_LEVEL_KEY_NOT_HIGH";
-    TornApiError2[TornApiError2["BACKEND_ERROR_OCCURRED"] = 17] = "BACKEND_ERROR_OCCURRED";
-    TornApiError2[TornApiError2["API_KEY_HAS_BEEN_PAUSED"] = 18] = "API_KEY_HAS_BEEN_PAUSED";
-    TornApiError2[TornApiError2["MUST_BE_MIGRATED_TO_CRIMES"] = 19] = "MUST_BE_MIGRATED_TO_CRIMES";
-    TornApiError2[TornApiError2["RACE_NOT_YET_FINISHED"] = 20] = "RACE_NOT_YET_FINISHED";
-    TornApiError2[TornApiError2["INCORRECT_CATEGORY"] = 21] = "INCORRECT_CATEGORY";
-    TornApiError2[TornApiError2["SELECTION_ONLY_AVAILABLE_API_V1"] = 22] = "SELECTION_ONLY_AVAILABLE_API_V1";
-    TornApiError2[TornApiError2["SELECTION_ONLY_AVAILABLE_API_V2"] = 23] = "SELECTION_ONLY_AVAILABLE_API_V2";
-    TornApiError2[TornApiError2["CLOSED_TEMPORARILY"] = 24] = "CLOSED_TEMPORARILY";
-    TornApiError2[TornApiError2["INVALID_STAT_REQUESTED"] = 25] = "INVALID_STAT_REQUESTED";
-    TornApiError2[TornApiError2["ONLY_CATEGORY_OR_STATS_CAN"] = 26] = "ONLY_CATEGORY_OR_STATS_CAN";
-    TornApiError2[TornApiError2["MUST_BE_MIGRATED_TO_ORGANIZED"] = 27] = "MUST_BE_MIGRATED_TO_ORGANIZED";
-    TornApiError2[TornApiError2["INCORRECT_LOG_ID"] = 28] = "INCORRECT_LOG_ID";
-    TornApiError2[TornApiError2["CATEGORY_SELECTION_NOT_AVAILABLE_FOR"] = 29] = "CATEGORY_SELECTION_NOT_AVAILABLE_FOR";
-  })(TornApiError || (TornApiError = {}));
-  class HTTPClient {
-    canAbort() {
-      return false;
-    }
-  }
-  class AbortableHTTPClient extends HTTPClient {
-    canAbort() {
-      return true;
-    }
-  }
-  class FetchHTTPClient extends AbortableHTTPClient {
-    async getJson(url, timeout = void 0) {
-      let response;
-      if (timeout !== void 0) {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), timeout);
-        response = await fetch(url, { signal: controller.signal });
-        clearTimeout(timeoutId);
-      } else {
-        response = await fetch(url);
-      }
-      return await response.json();
-    }
-  }
-  class TornApiClient {
-    httpClient;
-    defaultComment;
-    defaultTimeout;
-    constructor(options = {}) {
-      this.httpClient = options.httpClient ?? new FetchHTTPClient();
-      this.defaultComment = options.defaultComment;
-      this.defaultTimeout = options.defaultTimeout;
-    }
-    async getV1({ section, selections, id, params = {}, key, comment, cache, expiry, timeout }) {
-      const cached = await cache?.get({
-        section,
-        selections,
-        id,
-        params,
-        key
-      });
-      if (cached)
-        return cached;
-      let url = `https://api.torn.com/${section}/${id ?? ""}`;
-      url = this.populateUrl(url, key, selections ?? [], comment, params ?? {});
-      if (this.httpClient.canAbort() && typeof timeout === "number") {
-        return this.httpClient.getJson(url, timeout).then(addToCache).catch(this.handleError);
-      } else {
-        return this.httpClient.getJson(url).then(addToCache).catch(this.handleError);
-      }
-      function addToCache(response) {
-        if ("error" in response)
-          return response;
-        cache?.set({
-          section,
-          selections,
-          id,
-          params,
-          key
-        }, response, expiry ?? Date.now() + 3e4);
-        return response;
-      }
-    }
-    async getV2({ section, selections, id, params = {}, key, comment, cache, expiry, timeout }) {
-      const cached = await cache?.get({
-        section,
-        selections,
-        id,
-        params,
-        key
-      });
-      if (cached)
-        return cached;
-      let url = `https://api.torn.com/v2/${section}/${id ?? ""}`;
-      url = this.populateUrl(url, key, selections ?? [], comment, params ?? {});
-      if (this.httpClient.canAbort() && typeof timeout === "number") {
-        return this.httpClient.getJson(url, timeout).then(addToCache).catch(this.handleError);
-      } else {
-        return this.httpClient.getJson(url).then(addToCache).catch(this.handleError);
-      }
-      function addToCache(response) {
-        if ("error" in response)
-          return response;
-        cache?.set({
-          section,
-          selections,
-          id,
-          params,
-          key
-        }, response, expiry ?? Date.now() + 3e4);
-        return response;
-      }
-    }
-    handleError(error) {
-      console.error(error);
-      return { error: { code: -1, error: generateErrorString(error) } };
-      function generateErrorString(e2) {
-        switch (typeof e2) {
-          case "string":
-            return e2;
-          case "object": {
-            if (e2 instanceof Error)
-              return e2.message;
-            return JSON.stringify(e2);
-          }
-          default:
-            return e2.toString();
-        }
-      }
-    }
-    populateUrl(url, key, selections, comment, params) {
-      const allParams = {
-        key,
-        comment: comment ?? this.defaultComment,
-        selections: selections.length ? selections.join(",") : void 0,
-        ...params
-      };
-      const query = Object.entries(allParams).filter((entry) => !!entry[1]).map(([key2, value]) => `${key2}=${value}`).join("&");
-      return `${url}?${query}`;
-    }
-  }
   const FF_SCOUTER_BASE_URL = "https://ffscouter.com/api/v1";
   new TornApiClient({
-    defaultComment: `FFScouterV2-${"3.0-beta13"}`,
+    defaultComment: `FFScouterV2-${"3.0-beta14"}`,
     defaultTimeout: 30
 });
   async function gmRequest(options) {
@@ -984,6 +1040,9 @@ clearAll() {
     return { result: results, blank: false, limits };
   };
   const parse_limit_headers = (responseHeaders) => {
+    if (typeof responseHeaders !== "string") {
+      return void 0;
+    }
     const headerLines = responseHeaders.split("\n");
     const headers = new Map();
     for (const line of headerLines) {
@@ -1168,7 +1227,7 @@ clearAll() {
     }
     return parsed;
   };
-  const log$g = logger.child("api");
+  const log$h = logger.child("api");
   const CHECK_KEY = "check-key-status";
   class CheckKeyStatus {
     constructor(config, storage) {
@@ -1183,7 +1242,7 @@ clearAll() {
         try {
           result = await check_key(this.config.key);
         } catch (err) {
-          log$g.error(
+          log$h.error(
             "Received error response querying ffscouter check-key api:",
             err
           );
@@ -1204,7 +1263,7 @@ clearAll() {
           if (!status) return null;
           return status.is_premium;
         } catch (err) {
-          log$g.warn("Failed to check premium status:", err);
+          log$h.warn("Failed to check premium status:", err);
           return null;
         }
       };
@@ -1219,7 +1278,7 @@ clearAll() {
     ffconfig,
     new Storage("ffsv3-check")
   );
-  const instanceOfAny = (object, constructors) => constructors.some((c2) => object instanceof c2);
+  const instanceOfAny = (object, constructors) => constructors.some((c) => object instanceof c);
   let idbProxyableTypes;
   let cursorAdvanceMethods;
   function getIdbProxyableTypes() {
@@ -1460,7 +1519,7 @@ event.oldVersion,
       return isIteratorProp(target, prop) || oldTraps.has(target, prop);
     }
   }));
-  const log$f = logger.child("storage");
+  const log$g = logger.child("storage");
   const STORES = {
     CACHE: "cache",
     FLIGHTS: "flights",
@@ -1482,7 +1541,7 @@ event.oldVersion,
       this.migrations = new Map([
         [
           1,
-          (db, _2) => {
+          (db, _) => {
             const store = db.createObjectStore(STORES.CACHE, {
               keyPath: "player_id"
             });
@@ -1493,7 +1552,7 @@ event.oldVersion,
         ],
         [
           2,
-          (db, _2) => {
+          (db, _) => {
             const store = db.createObjectStore(STORES.FLIGHTS, {
               keyPath: "player_id"
             });
@@ -1504,7 +1563,7 @@ event.oldVersion,
         ],
         [
           3,
-          (db, _2) => {
+          (db, _) => {
             const store = db.createObjectStore(STORES.ANALYTICS, {
               keyPath: "id",
               autoIncrement: true
@@ -1536,20 +1595,20 @@ event.oldVersion,
           try {
             const db = await openDB(this.db_name, this.db_version, {
               upgrade(db2, oldVersion, newVersion, transaction, _event) {
-                log$f.info("Need to upgrade from", oldVersion, "to", newVersion);
-                for (let i2 = (oldVersion ?? 0) + 1; i2 <= cache.db_version; i2++) {
-                  log$f.debug(`Migration: ${i2}`);
-                  const m2 = cache.migrations.get(i2);
+                log$g.info("Need to upgrade from", oldVersion, "to", newVersion);
+                for (let i = (oldVersion ?? 0) + 1; i <= cache.db_version; i++) {
+                  log$g.debug(`Migration: ${i}`);
+                  const m2 = cache.migrations.get(i);
                   if (m2) {
                     m2(db2, transaction);
                   } else {
-                    log$f.debug(`Migration not found: ${i2}`);
+                    log$g.debug(`Migration not found: ${i}`);
                   }
-                  log$f.debug(`Migration complete: ${i2}`);
+                  log$g.debug(`Migration complete: ${i}`);
                 }
               },
               blocking(currentVersion, blockedVersion, event) {
-                log$f.debug(
+                log$g.debug(
                   `Can't open ${blockedVersion} because ${currentVersion} is open. Closing.`
                 );
                 cache.close();
@@ -1609,10 +1668,10 @@ event.oldVersion,
         try {
           await deleteDB(this.db_name, {
             blocked: () => {
-              log$f.debug("deleteDB blocked callback called!");
+              log$g.debug("deleteDB blocked callback called!");
             }
           });
-          log$f.info(`Successfully deleted ${this.db_name} IndexedDB.`);
+          log$g.info(`Successfully deleted ${this.db_name} IndexedDB.`);
         } finally {
           this.channel?.postMessage({ type: "deleted" });
           this.state = "CLOSED";
@@ -1716,18 +1775,18 @@ event.oldVersion,
               const tx = db.transaction(STORES.CACHE, "readwrite");
               const index2 = tx.store.index("expiry");
               const range = IDBKeyRange.upperBound(Date.now());
-              const r2 = await index2.getAllKeys(range);
-              log$f.info(`Found ${r2.length} expired values to delete from cache.`);
-              await Promise.all(r2.map((id) => tx.store.delete(id)));
+              const r = await index2.getAllKeys(range);
+              log$g.info(`Found ${r.length} expired values to delete from cache.`);
+              await Promise.all(r.map((id) => tx.store.delete(id)));
               await tx.done;
             }
             {
               const tx = db.transaction(STORES.FLIGHTS, "readwrite");
               const index2 = tx.store.index("expiry");
               const range = IDBKeyRange.upperBound(Date.now());
-              const r2 = await index2.getAllKeys(range);
-              log$f.info(`Found ${r2.length} expired values to delete from flights.`);
-              await Promise.all(r2.map((id) => tx.store.delete(id)));
+              const r = await index2.getAllKeys(range);
+              log$g.info(`Found ${r.length} expired values to delete from flights.`);
+              await Promise.all(r.map((id) => tx.store.delete(id)));
               await tx.done;
             }
             {
@@ -1735,11 +1794,11 @@ event.oldVersion,
               const index2 = tx.store.index("timestamp");
               const thirty_days_ago = Date.now() - 30 * 24 * 60 * 60 * 1e3;
               const range = IDBKeyRange.upperBound(thirty_days_ago);
-              const r2 = await index2.getAllKeys(range);
-              log$f.info(
-                `Found ${r2.length} expired values to delete from analytics.`
+              const r = await index2.getAllKeys(range);
+              log$g.info(
+                `Found ${r.length} expired values to delete from analytics.`
               );
-              await Promise.all(r2.map((id) => tx.store.delete(id)));
+              await Promise.all(r.map((id) => tx.store.delete(id)));
               await tx.done;
             }
           } finally {
@@ -1862,7 +1921,7 @@ event.oldVersion,
       }
     }
   }
-  const log$e = logger.child("api");
+  const log$f = logger.child("api");
   const DB_NAME = "FFSV3-cache";
   const RECHECK_RETRY_DELAY = 60 * 1e3;
   const RECHECK_WINDOW_DURATION = 3 * 60 * 1e3;
@@ -1926,9 +1985,9 @@ queryString.charCodeAt(pos - 1) === 63) {
         }
       };
       this.get = (player_id) => {
-        const p2 = this.pending.get(player_id);
-        if (p2) {
-          return p2.promise;
+        const p = this.pending.get(player_id);
+        if (p) {
+          return p.promise;
         }
         let resolve;
         let reject;
@@ -1948,7 +2007,7 @@ queryString.charCodeAt(pos - 1) === 63) {
         try {
           await this.cache.delete_flight(player_id);
         } catch (err) {
-          log$e.error("Failed to delete flight from cache", err);
+          log$f.error("Failed to delete flight from cache", err);
         }
       };
       this.calculate_flight_cache_ttl = (result) => {
@@ -1996,7 +2055,7 @@ queryString.charCodeAt(pos - 1) === 63) {
           return;
         }
         if (this.last_limits && this.last_limits.reset_time > new Date() && this.last_limits.remaining <= GLOBAL_BUDGET_RESERVE) {
-          log$e.warn(
+          log$f.warn(
             `Total API quota <= ${GLOBAL_BUDGET_RESERVE}. Deferring flight status checks to prioritize stats.`
           );
           this.schedule_flight_processor(5e3);
@@ -2011,7 +2070,7 @@ queryString.charCodeAt(pos - 1) === 63) {
           this.schedule_flight_processor(0);
           return;
         }
-        log$e.debug(`Querying paced flight API for player ${player_id}`);
+        log$f.debug(`Querying paced flight API for player ${player_id}`);
         try {
           const response = await query_flights(this.config.key, player_id);
           if (response.blank) {
@@ -2028,10 +2087,10 @@ queryString.charCodeAt(pos - 1) === 63) {
               const ttl = this.calculate_flight_cache_ttl(response.result);
               await this.cache.update_flight(response.result, ttl);
             } catch (err) {
-              log$e.error("Failed to update flight cache", err);
+              log$f.error("Failed to update flight cache", err);
             }
           } else {
-            log$e.debug(`Start rechecking cycle for player ${player_id}`);
+            log$f.debug(`Start rechecking cycle for player ${player_id}`);
             const now = Date.now();
             const next_retry_at = now + RECHECK_RETRY_DELAY;
             const existing_recheck_until = this.flight_recheck_until.get(player_id);
@@ -2048,7 +2107,7 @@ queryString.charCodeAt(pos - 1) === 63) {
               const remaining_ttl = Math.max(0, recheck_until - now);
               await this.cache.update_flight(rechecking_response, remaining_ttl);
             } catch (err) {
-              log$e.error("Failed to update flight cache during recheck", err);
+              log$f.error("Failed to update flight cache during recheck", err);
             }
             finalResult = rechecking_response;
           }
@@ -2056,7 +2115,7 @@ queryString.charCodeAt(pos - 1) === 63) {
             job.resolve(finalResult);
           }
         } catch (err) {
-          log$e.error(`Paced flight API query failed for ${player_id}:`, err);
+          log$f.error(`Paced flight API query failed for ${player_id}:`, err);
           const apiErr = err;
           if (apiErr?.ff_api_limits) {
             this.last_limits = apiErr.ff_api_limits;
@@ -2070,7 +2129,7 @@ queryString.charCodeAt(pos - 1) === 63) {
           try {
             await this.cache.clean_expired();
           } catch (err) {
-            log$e.error("Failed to clean expired cache entries", err);
+            log$f.error("Failed to clean expired cache entries", err);
           }
           if (this.flight_queue.length > 0) {
             this.schedule_flight_processor(FLIGHT_PACING_DELAY);
@@ -2078,7 +2137,7 @@ queryString.charCodeAt(pos - 1) === 63) {
         }
       };
       this.get_flights = async (player_id) => {
-        log$e.debug(`get_flights called for ${player_id}`);
+        log$f.debug(`get_flights called for ${player_id}`);
         if (!this.config.key) {
           return {
             player_id,
@@ -2090,14 +2149,14 @@ queryString.charCodeAt(pos - 1) === 63) {
         try {
           cached = await this.cache.get_flight(player_id);
         } catch (err) {
-          log$e.error("Failed to query flight cache", err);
+          log$f.error("Failed to query flight cache", err);
         }
         if (cached) {
-          log$e.debug(`Flight cache hit for player ${player_id}`);
+          log$f.debug(`Flight cache hit for player ${player_id}`);
           if (cached.rechecking) {
             const now = Date.now();
             if (cached.recheck_until && now >= cached.recheck_until) {
-              log$e.debug(
+              log$f.debug(
                 `Rechecking window expired for player ${player_id}. Finalizing no data.`
               );
               const final_response = {
@@ -2112,12 +2171,12 @@ queryString.charCodeAt(pos - 1) === 63) {
                   FINALIZED_NO_FLIGHT_TTL
                 );
               } catch (err) {
-                log$e.error("Failed to finalize flight cache", err);
+                log$f.error("Failed to finalize flight cache", err);
               }
               return final_response;
             }
             if (cached.next_retry_at && now >= cached.next_retry_at) {
-              log$e.debug(
+              log$f.debug(
                 `Retrying API call for player ${player_id} during recheck window`
               );
               const result2 = await this.enqueue_flight_api(
@@ -2141,7 +2200,7 @@ queryString.charCodeAt(pos - 1) === 63) {
             recent_flights: cached.recent_flights
           };
         }
-        log$e.debug(`Flight cache miss for player ${player_id}. Querying API paced.`);
+        log$f.debug(`Flight cache miss for player ${player_id}. Querying API paced.`);
         const result = await this.enqueue_flight_api(player_id);
         return result;
       };
@@ -2149,16 +2208,16 @@ queryString.charCodeAt(pos - 1) === 63) {
         this.process_cache();
       };
       this.enqueue_cache = (player_id) => {
-        log$e.debug(`Enqueuing cache ${player_id}`);
+        log$f.debug(`Enqueuing cache ${player_id}`);
         this.cache_queue.add(player_id);
         this.schedule_cache();
       };
       this.schedule_cache = () => {
         if (this.cache_timer) {
-          log$e.debug(`schedule_cache called but job already scheduled`);
+          log$f.debug(`schedule_cache called but job already scheduled`);
           return;
         }
-        log$e.debug(
+        log$f.debug(
           `schedule_cache called and job scheduled for ${this.cache_delay} ms`
         );
         this.cache_timer = this.schedule(this.process_cache, this.cache_delay);
@@ -2176,17 +2235,17 @@ queryString.charCodeAt(pos - 1) === 63) {
         let results;
         try {
           results = await this.cache.get(ids);
-        } catch (_2) {
+        } catch (_) {
           results = new Map();
         }
-        log$e.debug(`Received ${results.size} cache results`);
+        log$f.debug(`Received ${results.size} cache results`);
         for (const id of ids) {
-          const v2 = results.get(id);
-          if (v2) {
-            log$e.debug("Id", id, "found in cache. Resolving value.");
-            this.resolve(id, v2);
+          const v = results.get(id);
+          if (v) {
+            log$f.debug("Id", id, "found in cache. Resolving value.");
+            this.resolve(id, v);
           } else {
-            log$e.debug("Id", id, "not found in cache. Scheduling api call.");
+            log$f.debug("Id", id, "not found in cache. Scheduling api call.");
             this.enqueue_api(id);
           }
         }
@@ -2196,20 +2255,20 @@ queryString.charCodeAt(pos - 1) === 63) {
         check_key_status.clear();
       };
       this.enqueue_api = (player_id) => {
-        log$e.debug(`Enqueuing api ${player_id}`);
+        log$f.debug(`Enqueuing api ${player_id}`);
         this.api_queue.add(player_id);
         this.schedule_api();
       };
       this.schedule_api = (delay = this.api_initial_delay) => {
         if (this.api_timer) {
-          log$e.debug(`schedule_api called but job already scheduled`);
+          log$f.debug(`schedule_api called but job already scheduled`);
           return;
         }
-        log$e.debug(`schedule_api called and job scheduled for ${delay} ms`);
+        log$f.debug(`schedule_api called and job scheduled for ${delay} ms`);
         this.api_timer = this.schedule(this.process_api, delay);
       };
       this.process_api = async () => {
-        log$e.debug("process_api called");
+        log$f.debug("process_api called");
         if (this.api_timer) {
           this.clear(this.api_timer);
           this.api_timer = null;
@@ -2221,18 +2280,18 @@ queryString.charCodeAt(pos - 1) === 63) {
         for (const id of ids) {
           this.api_queue.delete(id);
         }
-        log$e.debug(`Processing ${ids} api requests`);
+        log$f.debug(`Processing ${ids} api requests`);
         if (ids.length <= 0) {
-          log$e.debug("No ids found to query");
+          log$f.debug("No ids found to query");
           return;
         }
         let next_run = this.api_default_delay;
         let results;
         try {
-          log$e.debug(`Calling query_stats with key=*** ids=[${ids}]`);
+          log$f.debug(`Calling query_stats with key=*** ids=[${ids}]`);
           results = await query_stats(this.config.key, ids);
         } catch (err) {
-          log$e.error("Received error response querying ffscouter api:", err);
+          log$f.error("Received error response querying ffscouter api:", err);
           for (const id of ids) {
             this.reject(id, err);
           }
@@ -2243,7 +2302,7 @@ queryString.charCodeAt(pos - 1) === 63) {
             limits: ff_error.ff_api_limits
           };
         }
-        log$e.debug(
+        log$f.debug(
           `Received api results: blank=${results.blank}, count=${results.result.size}`
         );
         if (results.blank) {
@@ -2254,15 +2313,15 @@ queryString.charCodeAt(pos - 1) === 63) {
           try {
             await this.cache.update(Array.from(results.result.values()));
           } catch (err) {
-            log$e.error("Failed to update cache", err);
+            log$f.error("Failed to update cache", err);
           }
           for (const id of ids) {
-            const v2 = results.result.get(id);
-            if (v2) {
-              log$e.debug("Id", id, "found in results. Resolving value.");
-              this.resolve(id, v2);
+            const v = results.result.get(id);
+            if (v) {
+              log$f.debug("Id", id, "found in results. Resolving value.");
+              this.resolve(id, v);
             } else {
-              log$e.debug("Id", id, "not found in results. Resolving no_data.");
+              log$f.debug("Id", id, "not found in results. Resolving no_data.");
               this.resolve(id, { player_id: id, no_data: true });
             }
           }
@@ -2329,14 +2388,14 @@ queryString.charCodeAt(pos - 1) === 63) {
             hash
           });
         } catch (err) {
-          log$e.error("Failed to add analytics entry", err);
+          log$f.error("Failed to add analytics entry", err);
         }
       };
       this.get_analytics_entries = async () => {
         try {
           return await this.cache.get_analytics();
         } catch (err) {
-          log$e.error("Failed to get analytics entries", err);
+          log$f.error("Failed to get analytics entries", err);
           return [];
         }
       };
@@ -2380,7 +2439,7 @@ queryString.charCodeAt(pos - 1) === 63) {
         try {
           await this.cache.clear_analytics();
         } catch (err) {
-          log$e.error("Failed to clear analytics entries", err);
+          log$f.error("Failed to clear analytics entries", err);
         }
       };
       this.config = config;
@@ -2394,13 +2453,13 @@ queryString.charCodeAt(pos - 1) === 63) {
   }
   const ffscouter = new FFScouter(ffconfig);
   const unit = Object.create(null);
-  const m$1 = 6e4, h$2 = m$1 * 60, d$2 = h$2 * 24, y$2 = d$2 * 365.25;
-  unit.year = unit.yr = unit.y = y$2;
-  unit.month = unit.mo = unit.mth = y$2 / 12;
-  unit.week = unit.wk = unit.w = d$2 * 7;
-  unit.day = unit.d = d$2;
-  unit.hour = unit.hr = unit.h = h$2;
-  unit.minute = unit.min = unit.m = m$1;
+  const m = 6e4, h = m * 60, d = h * 24, y = d * 365.25;
+  unit.year = unit.yr = unit.y = y;
+  unit.month = unit.mo = unit.mth = y / 12;
+  unit.week = unit.wk = unit.w = d * 7;
+  unit.day = unit.d = d;
+  unit.hour = unit.hr = unit.h = h;
+  unit.minute = unit.min = unit.m = m;
   unit.second = unit.sec = unit.s = 1e3;
   unit.millisecond = unit.millisec = unit.ms = 1;
   unit.microsecond = unit.microsec = unit.us = unit.µs = 1e-3;
@@ -2412,17 +2471,17 @@ queryString.charCodeAt(pos - 1) === 63) {
   parse.unit = unit;
   function parse(str = "", format = "ms") {
     let result = null, prevUnits;
-    String(str).replace(new RegExp(`(\\d)[${parse.unit.placeholder}${parse.unit.group}](\\d)`, "g"), "$1$2").replace(parse.unit.decimal, ".").replace(durationRE, (_2, n3, units) => {
+    String(str).replace(new RegExp(`(\\d)[${parse.unit.placeholder}${parse.unit.group}](\\d)`, "g"), "$1$2").replace(parse.unit.decimal, ".").replace(durationRE, (_, n, units) => {
       if (!units) {
         if (prevUnits) {
-          for (const u2 in parse.unit) if (parse.unit[u2] < prevUnits) {
-            units = u2;
+          for (const u in parse.unit) if (parse.unit[u] < prevUnits) {
+            units = u;
             break;
           }
         } else units = format;
       } else units = units.toLowerCase();
       prevUnits = units = parse.unit[units] || parse.unit[units.replace(/s$/, "")];
-      if (units) result = (result || 0) + n3 * units;
+      if (units) result = (result || 0) + n * units;
     });
     return result && result / (parse.unit[format] || 1) * (str[0] === "-" ? -1 : 1);
   }
@@ -2602,7 +2661,7 @@ queryString.charCodeAt(pos - 1) === 63) {
     ]
   };
   function is_valid_custom_palette(colors) {
-    return colors !== null && colors.length === 11 && colors.every((c2) => typeof c2 === "string");
+    return colors !== null && colors.length === 11 && colors.every((c) => typeof c === "string");
   }
   function get_palette_for_scheme(scheme, customColors = null) {
     if (scheme === ColorScheme.CUSTOM) {
@@ -2627,14 +2686,14 @@ queryString.charCodeAt(pos - 1) === 63) {
       ff = 5;
     }
     const ratio = Math.floor((ff - 1) / 4 * 10);
-    const r2 = get_active_palette()[ratio];
-    return r2 ?? NO_DATA_COLOR;
+    const r = get_active_palette()[ratio];
+    return r ?? NO_DATA_COLOR;
   }
   function get_contrast_color(hex) {
-    const r2 = parseInt(hex.slice(1, 3), 16);
-    const g2 = parseInt(hex.slice(3, 5), 16);
-    const b2 = parseInt(hex.slice(5, 7), 16);
-    const brightness = r2 * 0.299 + g2 * 0.587 + b2 * 0.114;
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    const brightness = r * 0.299 + g * 0.587 + b * 0.114;
     return brightness > 126 ? "black" : "white";
   }
   function ff_to_percent(d2) {
@@ -2682,15 +2741,195 @@ queryString.charCodeAt(pos - 1) === 63) {
     if (!trimmed) return null;
     return parse(trimmed, "s");
   }
+  let _react;
+  function getReact() {
+    return _react ??= unsafeWindow.React;
+  }
+  new Proxy({}, {
+    get(_, prop) {
+      return getReact()[prop];
+    }
+  });
+  const useState = ((...args) => getReact().useState(
+    ...args
+  ));
+  const useEffect = ((...args) => getReact().useEffect(
+    ...args
+  ));
+  const useRef = ((...args) => getReact().useRef(
+    ...args
+  ));
+  const useImperativeHandle = ((...args) => getReact().useImperativeHandle(
+    ...args
+  ));
+  const createElement = ((...args) => getReact().createElement(
+    ...args
+  ));
+  new Proxy(
+    {},
+    {
+      get: (_, prop) => getReact().Fragment[prop]
+    }
+  );
+  new Proxy(
+    {},
+    {
+      get: (_, prop) => getReact().StrictMode[prop]
+    }
+  );
+  new Proxy(
+    {},
+    {
+      get: (_, prop) => getReact().Suspense[prop]
+    }
+  );
+  new Proxy(
+    {},
+    {
+      get: (_, prop) => getReact().Children[prop]
+    }
+  );
+  const styles$2 = {
+    "ffscouter-info-line__label": "_ffscouter-info-line__label_xi5zk_1",
+    "ffscouter-info-line__badge": "_ffscouter-info-line__badge_xi5zk_8",
+    "ffscouter-info-line__premium-upgrade": "_ffscouter-info-line__premium-upgrade_xi5zk_15"
+  };
+  const log$e = logger.child("ui");
+  const PREMIUM_UPGRADE_URL$1 = "https://ffscouter.com/premium";
+  function FFHeaderLine({ playerId }) {
+    const [data, setData] = useState(null);
+    const [isPremium, setIsPremium] = useState(null);
+    const [premiumLoading, setPremiumLoading] = useState(false);
+    useEffect(() => {
+      let cancelled = false;
+      ffscouter.get(playerId).then((result) => {
+        if (!cancelled) setData(result);
+      }).catch((err) => {
+        log$e.error(err);
+      });
+      return () => {
+        cancelled = true;
+      };
+    }, [playerId]);
+    useEffect(() => {
+      if (!data) return;
+      setPremiumLoading(true);
+      let cancelled = false;
+      check_key_status.is_premium().then((premium) => {
+        if (!cancelled) setIsPremium(premium);
+      }).catch((err) => {
+        log$e.error(err);
+      }).finally(() => {
+        if (!cancelled) setPremiumLoading(false);
+      });
+      return () => {
+        cancelled = true;
+      };
+    }, [data]);
+    if (data === null) {
+      return jsxs(Fragment, { children: [
+jsx("span", { className: styles$2["ffscouter-info-line__label"], children: "FairFight:" }),
+jsx("span", { style: { fontStyle: "italic" }, children: "Loading..." })
+      ] });
+    }
+    if (data.no_data) {
+      return jsxs(Fragment, { children: [
+jsx("span", { className: styles$2["ffscouter-info-line__label"], children: "FairFight:" }),
+jsx(
+          "span",
+          {
+            className: styles$2["ffscouter-info-line__badge"],
+            style: { background: "#444", color: "#fff" },
+            children: "No data"
+          }
+        )
+      ] });
+    }
+    const ffString = format_ff_score(data);
+    const difficulty = format_difficulty_text(data);
+    const fresh = format_relative_time(data.last_updated);
+    const backgroundColor = get_ff_colour(data);
+    const textColor = get_contrast_color(backgroundColor);
+    let extraDetailsLine = null;
+    if (data.distribution?.distribution_human) {
+      const ageStr = format_relative_time(data.distribution.last_updated);
+      extraDetailsLine = jsxs(
+        "span",
+        {
+          style: {
+            display: "block",
+            marginTop: "2px",
+            fontSize: "12px",
+            fontStyle: "normal"
+          },
+          children: [
+jsx("span", { className: styles$2["ffscouter-info-line__label"], children: "Top Stats:" }),
+jsxs("span", { style: { fontWeight: "normal" }, children: [
+              data.distribution.distribution_human,
+              " ",
+              ageStr
+            ] })
+          ]
+        }
+      );
+    } else if (premiumLoading) {
+      extraDetailsLine = null;
+    } else if (isPremium === false && data.premium_insights_available) {
+      extraDetailsLine = jsx("span", { className: styles$2["ffscouter-info-line__premium-upgrade"], children: jsx(
+        "a",
+        {
+          href: PREMIUM_UPGRADE_URL$1,
+          target: "_blank",
+          rel: "noopener noreferrer",
+          style: { fontWeight: "bold", textDecoration: "underline" },
+          children: "Premium Data Available - Upgrade To View"
+        }
+      ) });
+    }
+    return jsxs(Fragment, { children: [
+jsx("span", { className: styles$2["ffscouter-info-line__label"], children: "FairFight:" }),
+jsxs(
+        "span",
+        {
+          className: styles$2["ffscouter-info-line__badge"],
+          style: { background: backgroundColor, color: textColor },
+          children: [
+            ffString,
+            " (",
+            difficulty,
+            ") ",
+            fresh
+          ]
+        }
+      ),
+jsxs(
+        "span",
+        {
+          style: {
+            fontSize: "11px",
+            fontWeight: "normal",
+            marginLeft: "6px",
+            verticalAlign: "middle",
+            fontStyle: "italic"
+          },
+          children: [
+            "Est. Stats: ",
+jsx("span", { children: data.bs_estimate_human })
+          ]
+        }
+      ),
+      extraDetailsLine
+    ] });
+  }
   const log$d = logger.child("dom");
   const ID_PARAMS = ["XID", "user2ID"];
   function extract_id_from_url(url) {
     const parsed = new URL(url);
     const search = new URLSearchParams(parsed.search);
     for (const param of ID_PARAMS) {
-      const v2 = search.get(param);
-      if (v2) {
-        return parseInt(v2, 10);
+      const v = search.get(param);
+      if (v) {
+        return parseInt(v, 10);
       }
     }
     return null;
@@ -2800,9 +3039,9 @@ queryString.charCodeAt(pos - 1) === 63) {
         "--ffscouter-marker-scale",
         `${ffconfig.gauge_marker_scale / 100}`
       );
-      const a2 = element.querySelector(".ffscouter-arrow, .ffscouter-bubble");
-      if (a2) {
-        a2.remove();
+      const a = element.querySelector(".ffscouter-arrow, .ffscouter-bubble");
+      if (a) {
+        a.remove();
       }
       element.appendChild(make_marker(d2));
       ffscouter.add_analytics_entry(featureName, player_id, "applied");
@@ -2811,8 +3050,8 @@ queryString.charCodeAt(pos - 1) === 63) {
   function has_href(el) {
     return el instanceof HTMLAnchorElement;
   }
-  function extract_target_id(href, r2) {
-    const match = href.match(r2);
+  function extract_target_id(href, r) {
+    const match = href.match(r);
     const groups = match?.groups;
     if (groups?.target_id) {
       return parseInt(groups.target_id, 10);
@@ -3100,642 +3339,33 @@ queryString.charCodeAt(pos - 1) === 63) {
       "[class*='sortIcon___']:not(.ffscouter-sort-icon)"
     );
     if (!existing) return null;
-    const sortIcon = Array.from(existing.classList).find((c2) => c2.startsWith("sortIcon___")) ?? "";
+    const sortIcon = Array.from(existing.classList).find((c) => c.startsWith("sortIcon___")) ?? "";
     const classes = SORT_ICON_CLASS_SETS[sortIcon];
     if (!classes) return null;
     const tab = Array.from(existing.parentElement?.classList ?? []).find(
-      (c2) => c2.startsWith("tab___")
+      (c) => c.startsWith("tab___")
     ) ?? "";
     return { ...classes, tab };
   }
-  const t$2 = globalThis, e$2 = t$2.ShadowRoot && (void 0 === t$2.ShadyCSS || t$2.ShadyCSS.nativeShadow) && "adoptedStyleSheets" in Document.prototype && "replace" in CSSStyleSheet.prototype, s$2 = Symbol(), o$4 = new WeakMap();
-  let n$3 = class n {
-    constructor(t2, e2, o2) {
-      if (this._$cssResult$ = true, o2 !== s$2) throw Error("CSSResult is not constructable. Use `unsafeCSS` or `css` instead.");
-      this.cssText = t2, this.t = e2;
-    }
-    get styleSheet() {
-      let t2 = this.o;
-      const s2 = this.t;
-      if (e$2 && void 0 === t2) {
-        const e2 = void 0 !== s2 && 1 === s2.length;
-        e2 && (t2 = o$4.get(s2)), void 0 === t2 && ((this.o = t2 = new CSSStyleSheet()).replaceSync(this.cssText), e2 && o$4.set(s2, t2));
-      }
-      return t2;
-    }
-    toString() {
-      return this.cssText;
-    }
-  };
-  const r$4 = (t2) => new n$3("string" == typeof t2 ? t2 : t2 + "", void 0, s$2), S$1 = (s2, o2) => {
-    if (e$2) s2.adoptedStyleSheets = o2.map((t2) => t2 instanceof CSSStyleSheet ? t2 : t2.styleSheet);
-    else for (const e2 of o2) {
-      const o3 = document.createElement("style"), n3 = t$2.litNonce;
-      void 0 !== n3 && o3.setAttribute("nonce", n3), o3.textContent = e2.cssText, s2.appendChild(o3);
-    }
-  }, c$2 = e$2 ? (t2) => t2 : (t2) => t2 instanceof CSSStyleSheet ? ((t3) => {
-    let e2 = "";
-    for (const s2 of t3.cssRules) e2 += s2.cssText;
-    return r$4(e2);
-  })(t2) : t2;
-  const { is: i$2, defineProperty: e$1, getOwnPropertyDescriptor: h$1, getOwnPropertyNames: r$3, getOwnPropertySymbols: o$3, getPrototypeOf: n$2 } = Object, a$1 = globalThis, c$1 = a$1.trustedTypes, l$1 = c$1 ? c$1.emptyScript : "", p$1 = a$1.reactiveElementPolyfillSupport, d$1 = (t2, s2) => t2, u$1 = { toAttribute(t2, s2) {
-    switch (s2) {
-      case Boolean:
-        t2 = t2 ? l$1 : null;
-        break;
-      case Object:
-      case Array:
-        t2 = null == t2 ? t2 : JSON.stringify(t2);
-    }
-    return t2;
-  }, fromAttribute(t2, s2) {
-    let i2 = t2;
-    switch (s2) {
-      case Boolean:
-        i2 = null !== t2;
-        break;
-      case Number:
-        i2 = null === t2 ? null : Number(t2);
-        break;
-      case Object:
-      case Array:
-        try {
-          i2 = JSON.parse(t2);
-        } catch (t3) {
-          i2 = null;
-        }
-    }
-    return i2;
-  } }, f$1 = (t2, s2) => !i$2(t2, s2), b$1 = { attribute: true, type: String, converter: u$1, reflect: false, useDefault: false, hasChanged: f$1 };
-  Symbol.metadata ??= Symbol("metadata"), a$1.litPropertyMetadata ??= new WeakMap();
-  let y$1 = class y extends HTMLElement {
-    static addInitializer(t2) {
-      this._$Ei(), (this.l ??= []).push(t2);
-    }
-    static get observedAttributes() {
-      return this.finalize(), this._$Eh && [...this._$Eh.keys()];
-    }
-    static createProperty(t2, s2 = b$1) {
-      if (s2.state && (s2.attribute = false), this._$Ei(), this.prototype.hasOwnProperty(t2) && ((s2 = Object.create(s2)).wrapped = true), this.elementProperties.set(t2, s2), !s2.noAccessor) {
-        const i2 = Symbol(), h2 = this.getPropertyDescriptor(t2, i2, s2);
-        void 0 !== h2 && e$1(this.prototype, t2, h2);
-      }
-    }
-    static getPropertyDescriptor(t2, s2, i2) {
-      const { get: e2, set: r2 } = h$1(this.prototype, t2) ?? { get() {
-        return this[s2];
-      }, set(t3) {
-        this[s2] = t3;
-      } };
-      return { get: e2, set(s3) {
-        const h2 = e2?.call(this);
-        r2?.call(this, s3), this.requestUpdate(t2, h2, i2);
-      }, configurable: true, enumerable: true };
-    }
-    static getPropertyOptions(t2) {
-      return this.elementProperties.get(t2) ?? b$1;
-    }
-    static _$Ei() {
-      if (this.hasOwnProperty(d$1("elementProperties"))) return;
-      const t2 = n$2(this);
-      t2.finalize(), void 0 !== t2.l && (this.l = [...t2.l]), this.elementProperties = new Map(t2.elementProperties);
-    }
-    static finalize() {
-      if (this.hasOwnProperty(d$1("finalized"))) return;
-      if (this.finalized = true, this._$Ei(), this.hasOwnProperty(d$1("properties"))) {
-        const t3 = this.properties, s2 = [...r$3(t3), ...o$3(t3)];
-        for (const i2 of s2) this.createProperty(i2, t3[i2]);
-      }
-      const t2 = this[Symbol.metadata];
-      if (null !== t2) {
-        const s2 = litPropertyMetadata.get(t2);
-        if (void 0 !== s2) for (const [t3, i2] of s2) this.elementProperties.set(t3, i2);
-      }
-      this._$Eh = new Map();
-      for (const [t3, s2] of this.elementProperties) {
-        const i2 = this._$Eu(t3, s2);
-        void 0 !== i2 && this._$Eh.set(i2, t3);
-      }
-      this.elementStyles = this.finalizeStyles(this.styles);
-    }
-    static finalizeStyles(s2) {
-      const i2 = [];
-      if (Array.isArray(s2)) {
-        const e2 = new Set(s2.flat(1 / 0).reverse());
-        for (const s3 of e2) i2.unshift(c$2(s3));
-      } else void 0 !== s2 && i2.push(c$2(s2));
-      return i2;
-    }
-    static _$Eu(t2, s2) {
-      const i2 = s2.attribute;
-      return false === i2 ? void 0 : "string" == typeof i2 ? i2 : "string" == typeof t2 ? t2.toLowerCase() : void 0;
-    }
-    constructor() {
-      super(), this._$Ep = void 0, this.isUpdatePending = false, this.hasUpdated = false, this._$Em = null, this._$Ev();
-    }
-    _$Ev() {
-      this._$ES = new Promise((t2) => this.enableUpdating = t2), this._$AL = new Map(), this._$E_(), this.requestUpdate(), this.constructor.l?.forEach((t2) => t2(this));
-    }
-    addController(t2) {
-      (this._$EO ??= new Set()).add(t2), void 0 !== this.renderRoot && this.isConnected && t2.hostConnected?.();
-    }
-    removeController(t2) {
-      this._$EO?.delete(t2);
-    }
-    _$E_() {
-      const t2 = new Map(), s2 = this.constructor.elementProperties;
-      for (const i2 of s2.keys()) this.hasOwnProperty(i2) && (t2.set(i2, this[i2]), delete this[i2]);
-      t2.size > 0 && (this._$Ep = t2);
-    }
-    createRenderRoot() {
-      const t2 = this.shadowRoot ?? this.attachShadow(this.constructor.shadowRootOptions);
-      return S$1(t2, this.constructor.elementStyles), t2;
-    }
-    connectedCallback() {
-      this.renderRoot ??= this.createRenderRoot(), this.enableUpdating(true), this._$EO?.forEach((t2) => t2.hostConnected?.());
-    }
-    enableUpdating(t2) {
-    }
-    disconnectedCallback() {
-      this._$EO?.forEach((t2) => t2.hostDisconnected?.());
-    }
-    attributeChangedCallback(t2, s2, i2) {
-      this._$AK(t2, i2);
-    }
-    _$ET(t2, s2) {
-      const i2 = this.constructor.elementProperties.get(t2), e2 = this.constructor._$Eu(t2, i2);
-      if (void 0 !== e2 && true === i2.reflect) {
-        const h2 = (void 0 !== i2.converter?.toAttribute ? i2.converter : u$1).toAttribute(s2, i2.type);
-        this._$Em = t2, null == h2 ? this.removeAttribute(e2) : this.setAttribute(e2, h2), this._$Em = null;
-      }
-    }
-    _$AK(t2, s2) {
-      const i2 = this.constructor, e2 = i2._$Eh.get(t2);
-      if (void 0 !== e2 && this._$Em !== e2) {
-        const t3 = i2.getPropertyOptions(e2), h2 = "function" == typeof t3.converter ? { fromAttribute: t3.converter } : void 0 !== t3.converter?.fromAttribute ? t3.converter : u$1;
-        this._$Em = e2;
-        const r2 = h2.fromAttribute(s2, t3.type);
-        this[e2] = r2 ?? this._$Ej?.get(e2) ?? r2, this._$Em = null;
-      }
-    }
-    requestUpdate(t2, s2, i2, e2 = false, h2) {
-      if (void 0 !== t2) {
-        const r2 = this.constructor;
-        if (false === e2 && (h2 = this[t2]), i2 ??= r2.getPropertyOptions(t2), !((i2.hasChanged ?? f$1)(h2, s2) || i2.useDefault && i2.reflect && h2 === this._$Ej?.get(t2) && !this.hasAttribute(r2._$Eu(t2, i2)))) return;
-        this.C(t2, s2, i2);
-      }
-      false === this.isUpdatePending && (this._$ES = this._$EP());
-    }
-    C(t2, s2, { useDefault: i2, reflect: e2, wrapped: h2 }, r2) {
-      i2 && !(this._$Ej ??= new Map()).has(t2) && (this._$Ej.set(t2, r2 ?? s2 ?? this[t2]), true !== h2 || void 0 !== r2) || (this._$AL.has(t2) || (this.hasUpdated || i2 || (s2 = void 0), this._$AL.set(t2, s2)), true === e2 && this._$Em !== t2 && (this._$Eq ??= new Set()).add(t2));
-    }
-    async _$EP() {
-      this.isUpdatePending = true;
-      try {
-        await this._$ES;
-      } catch (t3) {
-        Promise.reject(t3);
-      }
-      const t2 = this.scheduleUpdate();
-      return null != t2 && await t2, !this.isUpdatePending;
-    }
-    scheduleUpdate() {
-      return this.performUpdate();
-    }
-    performUpdate() {
-      if (!this.isUpdatePending) return;
-      if (!this.hasUpdated) {
-        if (this.renderRoot ??= this.createRenderRoot(), this._$Ep) {
-          for (const [t4, s3] of this._$Ep) this[t4] = s3;
-          this._$Ep = void 0;
-        }
-        const t3 = this.constructor.elementProperties;
-        if (t3.size > 0) for (const [s3, i2] of t3) {
-          const { wrapped: t4 } = i2, e2 = this[s3];
-          true !== t4 || this._$AL.has(s3) || void 0 === e2 || this.C(s3, void 0, i2, e2);
-        }
-      }
-      let t2 = false;
-      const s2 = this._$AL;
-      try {
-        t2 = this.shouldUpdate(s2), t2 ? (this.willUpdate(s2), this._$EO?.forEach((t3) => t3.hostUpdate?.()), this.update(s2)) : this._$EM();
-      } catch (s3) {
-        throw t2 = false, this._$EM(), s3;
-      }
-      t2 && this._$AE(s2);
-    }
-    willUpdate(t2) {
-    }
-    _$AE(t2) {
-      this._$EO?.forEach((t3) => t3.hostUpdated?.()), this.hasUpdated || (this.hasUpdated = true, this.firstUpdated(t2)), this.updated(t2);
-    }
-    _$EM() {
-      this._$AL = new Map(), this.isUpdatePending = false;
-    }
-    get updateComplete() {
-      return this.getUpdateComplete();
-    }
-    getUpdateComplete() {
-      return this._$ES;
-    }
-    shouldUpdate(t2) {
-      return true;
-    }
-    update(t2) {
-      this._$Eq &&= this._$Eq.forEach((t3) => this._$ET(t3, this[t3])), this._$EM();
-    }
-    updated(t2) {
-    }
-    firstUpdated(t2) {
-    }
-  };
-  y$1.elementStyles = [], y$1.shadowRootOptions = { mode: "open" }, y$1[d$1("elementProperties")] = new Map(), y$1[d$1("finalized")] = new Map(), p$1?.({ ReactiveElement: y$1 }), (a$1.reactiveElementVersions ??= []).push("2.1.2");
-  const t$1 = globalThis, i$1 = (t2) => t2, s$1 = t$1.trustedTypes, e = s$1 ? s$1.createPolicy("lit-html", { createHTML: (t2) => t2 }) : void 0, h = "$lit$", o$2 = `lit$${Math.random().toFixed(9).slice(2)}$`, n$1 = "?" + o$2, r$2 = `<${n$1}>`, l = document, c = () => l.createComment(""), a = (t2) => null === t2 || "object" != typeof t2 && "function" != typeof t2, u = Array.isArray, d = (t2) => u(t2) || "function" == typeof t2?.[Symbol.iterator], f = "[ 	\n\f\r]", v = /<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g, _ = /-->/g, m = />/g, p = RegExp(`>|${f}(?:([^\\s"'>=/]+)(${f}*=${f}*(?:[^ 	
-\f\r"'\`<>=]|("|')|))|$)`, "g"), g = /'/g, $ = /"/g, y2 = /^(?:script|style|textarea|title)$/i, x = (t2) => (i2, ...s2) => ({ _$litType$: t2, strings: i2, values: s2 }), b = x(1), E = Symbol.for("lit-noChange"), A = Symbol.for("lit-nothing"), C = new WeakMap(), P = l.createTreeWalker(l, 129);
-  function V(t2, i2) {
-    if (!u(t2) || !t2.hasOwnProperty("raw")) throw Error("invalid template strings array");
-    return void 0 !== e ? e.createHTML(i2) : i2;
+  let _reactDOM;
+  function getReactDOM() {
+    return _reactDOM ??= unsafeWindow.ReactDOM;
   }
-  const N = (t2, i2) => {
-    const s2 = t2.length - 1, e2 = [];
-    let n3, l2 = 2 === i2 ? "<svg>" : 3 === i2 ? "<math>" : "", c2 = v;
-    for (let i3 = 0; i3 < s2; i3++) {
-      const s3 = t2[i3];
-      let a2, u2, d2 = -1, f2 = 0;
-      for (; f2 < s3.length && (c2.lastIndex = f2, u2 = c2.exec(s3), null !== u2); ) f2 = c2.lastIndex, c2 === v ? "!--" === u2[1] ? c2 = _ : void 0 !== u2[1] ? c2 = m : void 0 !== u2[2] ? (y2.test(u2[2]) && (n3 = RegExp("</" + u2[2], "g")), c2 = p) : void 0 !== u2[3] && (c2 = p) : c2 === p ? ">" === u2[0] ? (c2 = n3 ?? v, d2 = -1) : void 0 === u2[1] ? d2 = -2 : (d2 = c2.lastIndex - u2[2].length, a2 = u2[1], c2 = void 0 === u2[3] ? p : '"' === u2[3] ? $ : g) : c2 === $ || c2 === g ? c2 = p : c2 === _ || c2 === m ? c2 = v : (c2 = p, n3 = void 0);
-      const x2 = c2 === p && t2[i3 + 1].startsWith("/>") ? " " : "";
-      l2 += c2 === v ? s3 + r$2 : d2 >= 0 ? (e2.push(a2), s3.slice(0, d2) + h + s3.slice(d2) + o$2 + x2) : s3 + o$2 + (-2 === d2 ? i3 : x2);
+  new Proxy({}, {
+    get(_, prop) {
+      return getReactDOM()[prop];
     }
-    return [V(t2, l2 + (t2[s2] || "<?>") + (2 === i2 ? "</svg>" : 3 === i2 ? "</math>" : "")), e2];
-  };
-  class S {
-    constructor({ strings: t2, _$litType$: i2 }, e2) {
-      let r2;
-      this.parts = [];
-      let l2 = 0, a2 = 0;
-      const u2 = t2.length - 1, d2 = this.parts, [f2, v2] = N(t2, i2);
-      if (this.el = S.createElement(f2, e2), P.currentNode = this.el.content, 2 === i2 || 3 === i2) {
-        const t3 = this.el.content.firstChild;
-        t3.replaceWith(...t3.childNodes);
-      }
-      for (; null !== (r2 = P.nextNode()) && d2.length < u2; ) {
-        if (1 === r2.nodeType) {
-          if (r2.hasAttributes()) for (const t3 of r2.getAttributeNames()) if (t3.endsWith(h)) {
-            const i3 = v2[a2++], s2 = r2.getAttribute(t3).split(o$2), e3 = /([.?@])?(.*)/.exec(i3);
-            d2.push({ type: 1, index: l2, name: e3[2], strings: s2, ctor: "." === e3[1] ? I : "?" === e3[1] ? L : "@" === e3[1] ? z : H }), r2.removeAttribute(t3);
-          } else t3.startsWith(o$2) && (d2.push({ type: 6, index: l2 }), r2.removeAttribute(t3));
-          if (y2.test(r2.tagName)) {
-            const t3 = r2.textContent.split(o$2), i3 = t3.length - 1;
-            if (i3 > 0) {
-              r2.textContent = s$1 ? s$1.emptyScript : "";
-              for (let s2 = 0; s2 < i3; s2++) r2.append(t3[s2], c()), P.nextNode(), d2.push({ type: 2, index: ++l2 });
-              r2.append(t3[i3], c());
-            }
-          }
-        } else if (8 === r2.nodeType) if (r2.data === n$1) d2.push({ type: 2, index: l2 });
-        else {
-          let t3 = -1;
-          for (; -1 !== (t3 = r2.data.indexOf(o$2, t3 + 1)); ) d2.push({ type: 7, index: l2 }), t3 += o$2.length - 1;
-        }
-        l2++;
-      }
-    }
-    static createElement(t2, i2) {
-      const s2 = l.createElement("template");
-      return s2.innerHTML = t2, s2;
-    }
+  });
+  const createRoot = ((...args) => getReactDOM().createRoot(...args));
+  function mountComponent(element, parent) {
+    const container = document.createElement("div");
+    container.style.display = "contents";
+    parent.appendChild(container);
+    const root = createRoot(container);
+    root.render(element);
+    return root;
   }
-  function M(t2, i2, s2 = t2, e2) {
-    if (i2 === E) return i2;
-    let h2 = void 0 !== e2 ? s2._$Co?.[e2] : s2._$Cl;
-    const o2 = a(i2) ? void 0 : i2._$litDirective$;
-    return h2?.constructor !== o2 && (h2?._$AO?.(false), void 0 === o2 ? h2 = void 0 : (h2 = new o2(t2), h2._$AT(t2, s2, e2)), void 0 !== e2 ? (s2._$Co ??= [])[e2] = h2 : s2._$Cl = h2), void 0 !== h2 && (i2 = M(t2, h2._$AS(t2, i2.values), h2, e2)), i2;
-  }
-  class R {
-    constructor(t2, i2) {
-      this._$AV = [], this._$AN = void 0, this._$AD = t2, this._$AM = i2;
-    }
-    get parentNode() {
-      return this._$AM.parentNode;
-    }
-    get _$AU() {
-      return this._$AM._$AU;
-    }
-    u(t2) {
-      const { el: { content: i2 }, parts: s2 } = this._$AD, e2 = (t2?.creationScope ?? l).importNode(i2, true);
-      P.currentNode = e2;
-      let h2 = P.nextNode(), o2 = 0, n3 = 0, r2 = s2[0];
-      for (; void 0 !== r2; ) {
-        if (o2 === r2.index) {
-          let i3;
-          2 === r2.type ? i3 = new k(h2, h2.nextSibling, this, t2) : 1 === r2.type ? i3 = new r2.ctor(h2, r2.name, r2.strings, this, t2) : 6 === r2.type && (i3 = new Z(h2, this, t2)), this._$AV.push(i3), r2 = s2[++n3];
-        }
-        o2 !== r2?.index && (h2 = P.nextNode(), o2++);
-      }
-      return P.currentNode = l, e2;
-    }
-    p(t2) {
-      let i2 = 0;
-      for (const s2 of this._$AV) void 0 !== s2 && (void 0 !== s2.strings ? (s2._$AI(t2, s2, i2), i2 += s2.strings.length - 2) : s2._$AI(t2[i2])), i2++;
-    }
-  }
-  class k {
-    get _$AU() {
-      return this._$AM?._$AU ?? this._$Cv;
-    }
-    constructor(t2, i2, s2, e2) {
-      this.type = 2, this._$AH = A, this._$AN = void 0, this._$AA = t2, this._$AB = i2, this._$AM = s2, this.options = e2, this._$Cv = e2?.isConnected ?? true;
-    }
-    get parentNode() {
-      let t2 = this._$AA.parentNode;
-      const i2 = this._$AM;
-      return void 0 !== i2 && 11 === t2?.nodeType && (t2 = i2.parentNode), t2;
-    }
-    get startNode() {
-      return this._$AA;
-    }
-    get endNode() {
-      return this._$AB;
-    }
-    _$AI(t2, i2 = this) {
-      t2 = M(this, t2, i2), a(t2) ? t2 === A || null == t2 || "" === t2 ? (this._$AH !== A && this._$AR(), this._$AH = A) : t2 !== this._$AH && t2 !== E && this._(t2) : void 0 !== t2._$litType$ ? this.$(t2) : void 0 !== t2.nodeType ? this.T(t2) : d(t2) ? this.k(t2) : this._(t2);
-    }
-    O(t2) {
-      return this._$AA.parentNode.insertBefore(t2, this._$AB);
-    }
-    T(t2) {
-      this._$AH !== t2 && (this._$AR(), this._$AH = this.O(t2));
-    }
-    _(t2) {
-      this._$AH !== A && a(this._$AH) ? this._$AA.nextSibling.data = t2 : this.T(l.createTextNode(t2)), this._$AH = t2;
-    }
-    $(t2) {
-      const { values: i2, _$litType$: s2 } = t2, e2 = "number" == typeof s2 ? this._$AC(t2) : (void 0 === s2.el && (s2.el = S.createElement(V(s2.h, s2.h[0]), this.options)), s2);
-      if (this._$AH?._$AD === e2) this._$AH.p(i2);
-      else {
-        const t3 = new R(e2, this), s3 = t3.u(this.options);
-        t3.p(i2), this.T(s3), this._$AH = t3;
-      }
-    }
-    _$AC(t2) {
-      let i2 = C.get(t2.strings);
-      return void 0 === i2 && C.set(t2.strings, i2 = new S(t2)), i2;
-    }
-    k(t2) {
-      u(this._$AH) || (this._$AH = [], this._$AR());
-      const i2 = this._$AH;
-      let s2, e2 = 0;
-      for (const h2 of t2) e2 === i2.length ? i2.push(s2 = new k(this.O(c()), this.O(c()), this, this.options)) : s2 = i2[e2], s2._$AI(h2), e2++;
-      e2 < i2.length && (this._$AR(s2 && s2._$AB.nextSibling, e2), i2.length = e2);
-    }
-    _$AR(t2 = this._$AA.nextSibling, s2) {
-      for (this._$AP?.(false, true, s2); t2 !== this._$AB; ) {
-        const s3 = i$1(t2).nextSibling;
-        i$1(t2).remove(), t2 = s3;
-      }
-    }
-    setConnected(t2) {
-      void 0 === this._$AM && (this._$Cv = t2, this._$AP?.(t2));
-    }
-  }
-  class H {
-    get tagName() {
-      return this.element.tagName;
-    }
-    get _$AU() {
-      return this._$AM._$AU;
-    }
-    constructor(t2, i2, s2, e2, h2) {
-      this.type = 1, this._$AH = A, this._$AN = void 0, this.element = t2, this.name = i2, this._$AM = e2, this.options = h2, s2.length > 2 || "" !== s2[0] || "" !== s2[1] ? (this._$AH = Array(s2.length - 1).fill(new String()), this.strings = s2) : this._$AH = A;
-    }
-    _$AI(t2, i2 = this, s2, e2) {
-      const h2 = this.strings;
-      let o2 = false;
-      if (void 0 === h2) t2 = M(this, t2, i2, 0), o2 = !a(t2) || t2 !== this._$AH && t2 !== E, o2 && (this._$AH = t2);
-      else {
-        const e3 = t2;
-        let n3, r2;
-        for (t2 = h2[0], n3 = 0; n3 < h2.length - 1; n3++) r2 = M(this, e3[s2 + n3], i2, n3), r2 === E && (r2 = this._$AH[n3]), o2 ||= !a(r2) || r2 !== this._$AH[n3], r2 === A ? t2 = A : t2 !== A && (t2 += (r2 ?? "") + h2[n3 + 1]), this._$AH[n3] = r2;
-      }
-      o2 && !e2 && this.j(t2);
-    }
-    j(t2) {
-      t2 === A ? this.element.removeAttribute(this.name) : this.element.setAttribute(this.name, t2 ?? "");
-    }
-  }
-  class I extends H {
-    constructor() {
-      super(...arguments), this.type = 3;
-    }
-    j(t2) {
-      this.element[this.name] = t2 === A ? void 0 : t2;
-    }
-  }
-  class L extends H {
-    constructor() {
-      super(...arguments), this.type = 4;
-    }
-    j(t2) {
-      this.element.toggleAttribute(this.name, !!t2 && t2 !== A);
-    }
-  }
-  class z extends H {
-    constructor(t2, i2, s2, e2, h2) {
-      super(t2, i2, s2, e2, h2), this.type = 5;
-    }
-    _$AI(t2, i2 = this) {
-      if ((t2 = M(this, t2, i2, 0) ?? A) === E) return;
-      const s2 = this._$AH, e2 = t2 === A && s2 !== A || t2.capture !== s2.capture || t2.once !== s2.once || t2.passive !== s2.passive, h2 = t2 !== A && (s2 === A || e2);
-      e2 && this.element.removeEventListener(this.name, this, s2), h2 && this.element.addEventListener(this.name, this, t2), this._$AH = t2;
-    }
-    handleEvent(t2) {
-      "function" == typeof this._$AH ? this._$AH.call(this.options?.host ?? this.element, t2) : this._$AH.handleEvent(t2);
-    }
-  }
-  class Z {
-    constructor(t2, i2, s2) {
-      this.element = t2, this.type = 6, this._$AN = void 0, this._$AM = i2, this.options = s2;
-    }
-    get _$AU() {
-      return this._$AM._$AU;
-    }
-    _$AI(t2) {
-      M(this, t2);
-    }
-  }
-  const B = t$1.litHtmlPolyfillSupport;
-  B?.(S, k), (t$1.litHtmlVersions ??= []).push("3.3.3");
-  const D = (t2, i2, s2) => {
-    const e2 = s2?.renderBefore ?? i2;
-    let h2 = e2._$litPart$;
-    if (void 0 === h2) {
-      const t3 = s2?.renderBefore ?? null;
-      e2._$litPart$ = h2 = new k(i2.insertBefore(c(), t3), t3, void 0, s2 ?? {});
-    }
-    return h2._$AI(t2), h2;
-  };
-  const s = globalThis;
-  class i extends y$1 {
-    constructor() {
-      super(...arguments), this.renderOptions = { host: this }, this._$Do = void 0;
-    }
-    createRenderRoot() {
-      const t2 = super.createRenderRoot();
-      return this.renderOptions.renderBefore ??= t2.firstChild, t2;
-    }
-    update(t2) {
-      const r2 = this.render();
-      this.hasUpdated || (this.renderOptions.isConnected = this.isConnected), super.update(t2), this._$Do = D(r2, this.renderRoot, this.renderOptions);
-    }
-    connectedCallback() {
-      super.connectedCallback(), this._$Do?.setConnected(true);
-    }
-    disconnectedCallback() {
-      super.disconnectedCallback(), this._$Do?.setConnected(false);
-    }
-    render() {
-      return E;
-    }
-  }
-  i._$litElement$ = true, i["finalized"] = true, s.litElementHydrateSupport?.({ LitElement: i });
-  const o$1 = s.litElementPolyfillSupport;
-  o$1?.({ LitElement: i });
-  (s.litElementVersions ??= []).push("4.2.2");
-  const t = (t2) => (e2, o2) => {
-    void 0 !== o2 ? o2.addInitializer(() => {
-      customElements.define(t2, e2);
-    }) : customElements.define(t2, e2);
-  };
-  const o = { attribute: true, type: String, converter: u$1, reflect: false, hasChanged: f$1 }, r$1 = (t2 = o, e2, r2) => {
-    const { kind: n3, metadata: i2 } = r2;
-    let s2 = globalThis.litPropertyMetadata.get(i2);
-    if (void 0 === s2 && globalThis.litPropertyMetadata.set(i2, s2 = new Map()), "setter" === n3 && ((t2 = Object.create(t2)).wrapped = true), s2.set(r2.name, t2), "accessor" === n3) {
-      const { name: o2 } = r2;
-      return { set(r3) {
-        const n4 = e2.get.call(this);
-        e2.set.call(this, r3), this.requestUpdate(o2, n4, t2, true, r3);
-      }, init(e3) {
-        return void 0 !== e3 && this.C(o2, void 0, t2, e3), e3;
-      } };
-    }
-    if ("setter" === n3) {
-      const { name: o2 } = r2;
-      return function(r3) {
-        const n4 = this[o2];
-        e2.call(this, r3), this.requestUpdate(o2, n4, t2, true, r3);
-      };
-    }
-    throw Error("Unsupported decorator location: " + n3);
-  };
-  function n2(t2) {
-    return (e2, o2) => "object" == typeof o2 ? r$1(t2, e2, o2) : ((t3, e3, o3) => {
-      const r2 = e3.hasOwnProperty(o3);
-      return e3.constructor.createProperty(o3, t3), r2 ? Object.getOwnPropertyDescriptor(e3, o3) : void 0;
-    })(t2, e2, o2);
-  }
-  function r(r2) {
-    return n2({ ...r2, state: true, attribute: false });
-  }
-  var __defProp$3 = Object.defineProperty;
-  var __getOwnPropDesc$3 = Object.getOwnPropertyDescriptor;
-  var __decorateClass$3 = (decorators, target, key, kind) => {
-    var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$3(target, key) : target;
-    for (var i2 = decorators.length - 1, decorator; i2 >= 0; i2--)
-      if (decorator = decorators[i2])
-        result = (kind ? decorator(target, key, result) : decorator(result)) || result;
-    if (kind && result) __defProp$3(target, key, result);
-    return result;
-  };
-  const log$c = logger.child("ui");
-  const PREMIUM_UPGRADE_URL$1 = "https://ffscouter.com/premium";
-  let FFHeaderLine = class extends i {
-    constructor() {
-      super(...arguments);
-      this.data = null;
-      this.is_premium = null;
-      this.loading = false;
-    }
-    createRenderRoot() {
-      return this;
-    }
-willUpdate(changedProperties) {
-      if (changedProperties.has("data") && this.data) {
-        this.loading = true;
-        const currentData = this.data;
-        check_key_status.is_premium().then((premium) => {
-          if (this.data === currentData) {
-            this.is_premium = premium;
-          }
-        }).catch((error) => {
-          log$c.error(error);
-        }).finally(() => {
-          if (this.data === currentData) {
-            this.loading = false;
-          }
-        });
-      }
-    }
-    render() {
-      if (this.data === null || this.data.no_data) {
-        return b`<span style="font-weight: bold; margin-right: 6px;"
-          >FairFight:</span
-        ><span
-          style="background: #444; color: #fff; font-weight: bold; padding: 2px 6px; border-radius: 4px; display: inline-block;"
-          >No data</span
-        >`;
-      }
-      const ff_string = format_ff_score(this.data);
-      const difficulty = format_difficulty_text(this.data);
-      const fresh = format_relative_time(this.data.last_updated);
-      const background_colour = get_ff_colour(this.data);
-      const text_colour = get_contrast_color(background_colour);
-      let extraDetailsLine = b``;
-      if (this.data.distribution?.distribution_human) {
-        const ageStr = format_relative_time(this.data.distribution.last_updated);
-        extraDetailsLine = b`<span
-        style="display:block; margin-top: 2px; font-size: 12px; font-style: normal;"
-        ><span style="font-weight: bold; margin-right: 6px;">Top Stats:</span
-        ><span style="font-weight: normal;"
-          >${this.data.distribution.distribution_human} ${ageStr}</span
-        ></span
-      >`;
-      } else if (this.loading) {
-        extraDetailsLine = b``;
-      } else if (this.is_premium === false && this.data.premium_insights_available) {
-        extraDetailsLine = b`<span class="ff-premium-upgrade-line"
-        ><a
-          href="${PREMIUM_UPGRADE_URL$1}"
-          target="_blank"
-          rel="noopener noreferrer"
-          style="font-weight: bold; text-decoration: underline;"
-          >Premium Data Available - Upgrade To View</a
-        ></span
-      >`;
-      }
-      return b`<span style="font-weight: bold; margin-right: 6px;"
-        >FairFight:</span
-      ><span
-        style="background: ${background_colour}; color: ${text_colour}; font-weight: bold; padding: 2px 6px; border-radius: 4px; display: inline-block;"
-        >${ff_string} (${difficulty}) ${fresh}</span
-      ><span
-        style="font-size: 11px; font-weight: normal; margin-left: 6px; vertical-align: middle; font-style: italic;"
-        >Est. Stats: <span>${this.data.bs_estimate_human}</span></span
-      >${extraDetailsLine}`;
-    }
-  };
-  __decorateClass$3([
-    n2({ type: Object })
-  ], FFHeaderLine.prototype, "data", 2);
-  __decorateClass$3([
-    r()
-  ], FFHeaderLine.prototype, "is_premium", 2);
-  __decorateClass$3([
-    r()
-  ], FFHeaderLine.prototype, "loading", 2);
-  FFHeaderLine = __decorateClass$3([
-    t("ff-header-line")
-  ], FFHeaderLine);
-  const log$b = logger.child("feature:attack");
+  const log$c = logger.child("feature:attack");
   async function inject_info_line$1(info_line) {
     const h4 = await wait_for_element("h4", 1e4);
     if (!h4) {
@@ -3758,16 +3388,13 @@ willUpdate(changedProperties) {
       if (!player_id) {
         return;
       }
-      log$b.debug("On the attack page, found player_id", player_id);
+      log$c.debug("On the attack page, found player_id", player_id);
       const info_line = create_info_line();
-      ffscouter.get(player_id).then(async (data) => {
-        const line = await create_ff_element("ff-header-line");
-        if (!line) return;
-        line.data = data;
-        info_line.appendChild(line);
-        inject_info_line$1(info_line);
-      });
-      ffscouter.complete();
+      mountComponent(
+        createElement(FFHeaderLine, { playerId: player_id }),
+        info_line
+      );
+      inject_info_line$1(info_line);
     },
     httpIntercept: {
       before(_url, _init) {
@@ -3787,357 +3414,403 @@ willUpdate(changedProperties) {
     __proto__: null,
     default: _deprecatedStub
   }, Symbol.toStringTag, { value: "Module" }));
-  var __defProp$2 = Object.defineProperty;
-  var __getOwnPropDesc$2 = Object.getOwnPropertyDescriptor;
-  var __decorateClass$2 = (decorators, target, key, kind) => {
-    var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$2(target, key) : target;
-    for (var i2 = decorators.length - 1, decorator; i2 >= 0; i2--)
-      if (decorator = decorators[i2])
-        result = (kind ? decorator(target, key, result) : decorator(result)) || result;
-    if (kind && result) __defProp$2(target, key, result);
-    return result;
+  const styles$1 = {
+    "ff-filter-box": "_ff-filter-box_ursux_1",
+    "ff-filter-box--no-borders": "_ff-filter-box--no-borders_ursux_19",
+    "ff-filter-box__header": "_ff-filter-box__header_ursux_52",
+    "ff-filter-box__header-actions": "_ff-filter-box__header-actions_ursux_60",
+    "ff-filter-box__action-btn": "_ff-filter-box__action-btn_ursux_66",
+    "ff-filter-box__action-btn--active": "_ff-filter-box__action-btn--active_ursux_88",
+    "ff-filter-box__action-btn--inactive": "_ff-filter-box__action-btn--inactive_ursux_93",
+    "ff-filter-box__action-btn--reset": "_ff-filter-box__action-btn--reset_ursux_104",
+    "ff-filter-box__grid": "_ff-filter-box__grid_ursux_114",
+    "ff-filter-box__group--sort": "_ff-filter-box__group--sort_ursux_121",
+    "ff-filter-box__group--level": "_ff-filter-box__group--level_ursux_125",
+    "ff-filter-box__group--activity": "_ff-filter-box__group--activity_ursux_129",
+    "ff-filter-box__group--status": "_ff-filter-box__group--status_ursux_133",
+    "ff-filter-box__group--ff": "_ff-filter-box__group--ff_ursux_137",
+    "ff-filter-box__group--stats": "_ff-filter-box__group--stats_ursux_141",
+    "ff-filter-box__group--last-action": "_ff-filter-box__group--last-action_ursux_145",
+    "ff-filter-box__group--columns": "_ff-filter-box__group--columns_ursux_149",
+    "ff-filter-box__group": "_ff-filter-box__group_ursux_121",
+    "ff-filter-box__sort-controls": "_ff-filter-box__sort-controls_ursux_171",
+    "ff-filter-box__sort-btn": "_ff-filter-box__sort-btn_ursux_177",
+    "ff-filter-box__compare-btn": "_ff-filter-box__compare-btn_ursux_181",
+    "ff-filter-box__display-select": "_ff-filter-box__display-select_ursux_186",
+    "ff-filter-box__options": "_ff-filter-box__options_ursux_197",
+    "ff-filter-box__range-inputs": "_ff-filter-box__range-inputs_ursux_210"
   };
-  const DEFAULT_HIDDEN_COLUMNS = {
-    level: false,
-    status: false,
-    score: false
+  const cls$1 = {
+    box: styles$1["ff-filter-box"],
+    boxNoBorders: styles$1["ff-filter-box--no-borders"],
+    header: styles$1["ff-filter-box__header"],
+    headerActions: styles$1["ff-filter-box__header-actions"],
+    actionBtn: styles$1["ff-filter-box__action-btn"],
+    actionBtnActive: styles$1["ff-filter-box__action-btn--active"],
+    actionBtnInactive: styles$1["ff-filter-box__action-btn--inactive"],
+    actionBtnReset: styles$1["ff-filter-box__action-btn--reset"],
+    grid: styles$1["ff-filter-box__grid"],
+    group: styles$1["ff-filter-box__group"],
+    groupSort: styles$1["ff-filter-box__group--sort"],
+    groupLevel: styles$1["ff-filter-box__group--level"],
+    groupActivity: styles$1["ff-filter-box__group--activity"],
+    groupStatus: styles$1["ff-filter-box__group--status"],
+    groupFf: styles$1["ff-filter-box__group--ff"],
+    groupStats: styles$1["ff-filter-box__group--stats"],
+    groupLastAction: styles$1["ff-filter-box__group--last-action"],
+    groupColumns: styles$1["ff-filter-box__group--columns"],
+    sortControls: styles$1["ff-filter-box__sort-controls"],
+    sortBtn: styles$1["ff-filter-box__sort-btn"],
+    compareBtn: styles$1["ff-filter-box__compare-btn"],
+    displaySelect: styles$1["ff-filter-box__display-select"],
+    options: styles$1["ff-filter-box__options"],
+    rangeInputs: styles$1["ff-filter-box__range-inputs"]
   };
+  const DEFAULT_HIDDEN_COLUMNS = { level: false, status: false, score: false };
   const DEFAULT_STATE = {
-    activity: {
-      online: true,
-      idle: true,
-      offline: true
-    },
+    sortBy: "none",
+    filterEnabled: true,
+    activity: { online: true, idle: true, offline: true },
     status: {
       okay: true,
       traveling: true,
       hospital: true,
       jail: true,
-      abroad: true
-    }
+      abroad: true,
+      federal: true,
+      fallen: true
+    },
+    levelMin: null,
+    levelMax: null,
+    ffMin: null,
+    ffMax: null,
+    statsMin: null,
+    statsMax: null,
+    lastActionMin: null,
+    lastActionMax: null,
+    hiddenColumns: DEFAULT_HIDDEN_COLUMNS
   };
+  function getFilterBoxHandle(el) {
+    if (!el) return null;
+    return el.__ffHandle ?? null;
+  }
   function isMobileView() {
     return typeof window !== "undefined" && window.innerWidth < 784;
   }
-  let FFFactionFilterBox = class extends i {
-    constructor() {
-      super(...arguments);
-      this.mode = "faction";
-      this.hasLastActionData = false;
-      this.sortBy = "none";
-      this.filterEnabled = true;
-      this.colDisplay = FactionsColDisplay.FAIR_FIGHT;
-      this.activity = { ...DEFAULT_STATE.activity };
-      this.status = { ...DEFAULT_STATE.status };
-      this.levelMin = null;
-      this.levelMax = null;
-      this.ffMin = null;
-      this.ffMax = null;
-      this.statsMin = null;
-      this.statsMax = null;
-      this.lastActionMin = null;
-      this.lastActionMax = null;
-      this.hiddenColumns = { ...DEFAULT_HIDDEN_COLUMNS };
-      this.collapsed = false;
-      this.wasMobile = isMobileView();
-      this.debounceTimer = null;
-      this.onResize = () => {
-        const isMobile = isMobileView();
-        if (isMobile !== this.wasMobile) {
-          this.wasMobile = isMobile;
-          this.loadState();
-        }
+  function FFFactionFilterBox({
+    mode,
+    onFilterChange,
+    ref,
+    initialHasLastActionData = false,
+    onReady
+  }) {
+    const [filterState, setFilterState] = useState(
+      () => DEFAULT_STATE
+    );
+    const [collapsed, setCollapsed] = useState(false);
+    const [colDisplay, setColDisplay] = useState(
+      FactionsColDisplay.FAIR_FIGHT
+    );
+    const [hasLastActionData, setHasLastActionData] = useState(
+      initialHasLastActionData
+    );
+    const filterStateRef = useRef(filterState);
+    filterStateRef.current = filterState;
+    const hasLastActionDataRef = useRef(hasLastActionData);
+    hasLastActionDataRef.current = hasLastActionData;
+    const modeRef = useRef(mode);
+    modeRef.current = mode;
+    const onFilterChangeRef = useRef(onFilterChange);
+    onFilterChangeRef.current = onFilterChange;
+    const debounceTimerRef = useRef(null);
+    const wasMobileRef = useRef(isMobileView());
+    const rootRef = useRef(null);
+    const applyStatePatch = (patch) => {
+      const next = { ...filterStateRef.current, ...patch };
+      filterStateRef.current = next;
+      setFilterState(next);
+    };
+    const getFilterSnapshot = () => {
+      const s2 = filterStateRef.current;
+      return {
+        sortBy: s2.sortBy,
+        filterEnabled: s2.filterEnabled,
+        activity: s2.activity,
+
+
+
+status: modeRef.current === "war" ? { ...s2.status, fallen: false } : s2.status,
+        levelMin: s2.levelMin,
+        levelMax: s2.levelMax,
+        ffMin: s2.ffMin,
+        ffMax: s2.ffMax,
+        statsMin: s2.statsMin ? parse_suffix_number(s2.statsMin) : null,
+        statsMax: s2.statsMax ? parse_suffix_number(s2.statsMax) : null,
+        lastActionMinSec: s2.lastActionMin ? parse_duration_to_seconds(s2.lastActionMin) : null,
+        lastActionMaxSec: s2.lastActionMax ? parse_duration_to_seconds(s2.lastActionMax) : null
       };
-      this.onConfigUpdated = () => {
-        this.colDisplay = this.mode === "war" ? ffconfig.war_col_display : ffconfig.factions_col_display;
-        this.requestUpdate();
-      };
-    }
-    createRenderRoot() {
-      return this;
-    }
-    connectedCallback() {
-      super.connectedCallback();
-      this.loadState();
-      window.addEventListener("ff-config-updated", this.onConfigUpdated);
-      window.addEventListener("resize", this.onResize);
-    }
-    disconnectedCallback() {
-      if (this.debounceTimer) {
-        clearTimeout(this.debounceTimer);
-        this.debounceTimer = null;
-      }
-      window.removeEventListener("resize", this.onResize);
-      window.removeEventListener("ff-config-updated", this.onConfigUpdated);
-      super.disconnectedCallback();
-    }
-    updated(changedProperties) {
-      super.updated(changedProperties);
-      if (changedProperties.has("hiddenColumns") || changedProperties.has("mode")) {
-        this.updateContainerAttributes();
-      }
-    }
-    updateContainerAttributes() {
-      const isWar = this.mode === "war";
-      if (!isWar) return;
-      const target = this.closest(".faction-war");
-      if (target instanceof HTMLElement) {
-        for (const [col, isHidden] of Object.entries(this.hiddenColumns)) {
-          const attrName = `data-ffscouter-hide-${col}`;
-          if (isHidden) {
-            target.setAttribute(attrName, "true");
-          } else {
-            target.removeAttribute(attrName);
-          }
-        }
-      }
-    }
-    loadState() {
-      const isWar = this.mode === "war";
-      this.collapsed = isWar ? ffconfig.war_filter_collapsed : ffconfig.faction_filter_collapsed;
-      this.colDisplay = isWar ? ffconfig.war_col_display : ffconfig.factions_col_display;
-      const parsed = isWar ? ffconfig.war_filter_state : ffconfig.faction_filter_state;
+    };
+    const dispatchChange = () => {
+      onFilterChangeRef.current(getFilterSnapshot());
+    };
+    const saveState = (state) => {
+      const isWar = modeRef.current === "war";
       const isMobile = isMobileView();
-      if (parsed) {
-        const savedSortBy = parsed.sortBy ?? "none";
-        this.sortBy = savedSortBy === "ff-asc" || savedSortBy === "ff-desc" ? savedSortBy : "none";
-        this.filterEnabled = parsed.filterEnabled ?? true;
-        this.activity = { ...DEFAULT_STATE.activity, ...parsed.activity };
-        this.status = { ...DEFAULT_STATE.status, ...parsed.status };
-        this.levelMin = parsed.levelMin ?? null;
-        this.levelMax = parsed.levelMax ?? null;
-        this.ffMin = parsed.ffMin ?? null;
-        this.ffMax = parsed.ffMax ?? null;
-        this.statsMin = parsed.statsMin ?? null;
-        this.statsMax = parsed.statsMax ?? null;
-        this.lastActionMin = parsed.lastActionMin ?? null;
-        this.lastActionMax = parsed.lastActionMax ?? null;
-        if (isMobile) {
-          this.hiddenColumns = {
-            level: parsed.hiddenColumnsMobile?.level ?? true,
-status: parsed.hiddenColumnsMobile?.status ?? DEFAULT_HIDDEN_COLUMNS.status,
-            score: parsed.hiddenColumnsMobile?.score ?? DEFAULT_HIDDEN_COLUMNS.score
-          };
-        } else {
-          this.hiddenColumns = {
-            level: parsed.hiddenColumns?.level ?? DEFAULT_HIDDEN_COLUMNS.level,
-            status: parsed.hiddenColumns?.status ?? DEFAULT_HIDDEN_COLUMNS.status,
-            score: parsed.hiddenColumns?.score ?? DEFAULT_HIDDEN_COLUMNS.score
-          };
-        }
-      } else {
-        this.hiddenColumns = {
-          level: isMobile,
-status: DEFAULT_HIDDEN_COLUMNS.status,
-          score: DEFAULT_HIDDEN_COLUMNS.score
-        };
-      }
-      this.dispatchChange();
-    }
-    onToggle(e2) {
-      const details = e2.currentTarget;
-      this.collapsed = !details.open;
-      if (this.mode === "war") {
-        ffconfig.war_filter_collapsed = this.collapsed;
-      } else {
-        ffconfig.faction_filter_collapsed = this.collapsed;
-      }
-    }
-    saveState() {
-      const isWar = this.mode === "war";
-      const isMobile = isMobileView();
-      const existingState = isWar ? ffconfig.war_filter_state : ffconfig.faction_filter_state;
-      const savedHiddenColumns = existingState?.hiddenColumns;
-      const savedHiddenColumnsMobile = existingState?.hiddenColumnsMobile;
-      const hiddenColumnsToSave = isMobile ? savedHiddenColumns ?? DEFAULT_HIDDEN_COLUMNS : this.hiddenColumns;
-      const hiddenColumnsMobileToSave = isMobile ? this.hiddenColumns : savedHiddenColumnsMobile ?? {
+      const existing = isWar ? ffconfig.war_filter_state : ffconfig.faction_filter_state;
+      const savedHiddenColumns = existing?.hiddenColumns;
+      const savedHiddenColumnsMobile = existing?.hiddenColumnsMobile;
+      const hiddenColumnsToSave = isMobile ? savedHiddenColumns ?? DEFAULT_HIDDEN_COLUMNS : state.hiddenColumns ?? DEFAULT_HIDDEN_COLUMNS;
+      const hiddenColumnsMobileToSave = isMobile ? state.hiddenColumns ?? DEFAULT_HIDDEN_COLUMNS : savedHiddenColumnsMobile ?? {
         level: true,
         status: false,
         score: false
       };
-      const stateObj = {
-        sortBy: this.sortBy,
-        filterEnabled: this.filterEnabled,
-        activity: this.activity,
-        status: this.status,
-        levelMin: this.levelMin,
-        levelMax: this.levelMax,
-        ffMin: this.ffMin,
-        ffMax: this.ffMax,
-        statsMin: this.statsMin,
-        statsMax: this.statsMax,
-        lastActionMin: this.lastActionMin,
-        lastActionMax: this.lastActionMax,
+      const toSave = {
+        ...state,
         hiddenColumns: hiddenColumnsToSave,
         hiddenColumnsMobile: hiddenColumnsMobileToSave
       };
       if (isWar) {
-        ffconfig.war_filter_state = stateObj;
+        ffconfig.war_filter_state = toSave;
       } else {
-        ffconfig.faction_filter_state = stateObj;
+        ffconfig.faction_filter_state = toSave;
       }
-    }
-    queueChange() {
-      if (this.debounceTimer) {
-        clearTimeout(this.debounceTimer);
+    };
+    const executeChangeImmediately = () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+        debounceTimerRef.current = null;
       }
-      this.debounceTimer = setTimeout(() => {
-        this.saveState();
-        this.dispatchChange();
-        this.debounceTimer = null;
+      saveState(filterStateRef.current);
+      dispatchChange();
+    };
+    const queueChange = () => {
+      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+      debounceTimerRef.current = setTimeout(() => {
+        saveState(filterStateRef.current);
+        dispatchChange();
+        debounceTimerRef.current = null;
       }, 250);
-    }
-    executeChangeImmediately() {
-      if (this.debounceTimer) {
-        clearTimeout(this.debounceTimer);
-        this.debounceTimer = null;
-      }
-      this.saveState();
-      this.dispatchChange();
-    }
-
-
-
-getFilterSnapshot() {
-      return {
-        sortBy: this.sortBy,
-        filterEnabled: this.filterEnabled,
-        activity: this.activity,
-        status: this.status,
-        levelMin: this.levelMin,
-        levelMax: this.levelMax,
-        ffMin: this.ffMin,
-        ffMax: this.ffMax,
-        statsMin: this.statsMin ? parse_suffix_number(this.statsMin) : null,
-        statsMax: this.statsMax ? parse_suffix_number(this.statsMax) : null,
-        lastActionMinSec: this.lastActionMin ? parse_duration_to_seconds(this.lastActionMin) : null,
-        lastActionMaxSec: this.lastActionMax ? parse_duration_to_seconds(this.lastActionMax) : null
-      };
-    }
-    dispatchChange() {
-      this.dispatchEvent(
-        new CustomEvent("filter-change", {
-          detail: this.getFilterSnapshot(),
-          bubbles: true,
-          composed: true
-        })
+    };
+    const loadState = () => {
+      const isWar = modeRef.current === "war";
+      const isMobile = isMobileView();
+      const newCollapsed = isWar ? ffconfig.war_filter_collapsed : ffconfig.faction_filter_collapsed;
+      setCollapsed(newCollapsed);
+      setColDisplay(
+        isWar ? ffconfig.war_col_display : ffconfig.factions_col_display
       );
-    }
-    onColumnVisibilityChange(key, val) {
-      this.hiddenColumns = {
-        ...this.hiddenColumns,
-        [key]: val
-      };
-      this.executeChangeImmediately();
-    }
-    setSortBy(val) {
-      this.sortBy = val;
-      this.executeChangeImmediately();
-    }
-    onSortToggle() {
-      if (this.sortBy === "none") {
-        this.sortBy = "ff-desc";
-      } else if (this.sortBy === "ff-desc") {
-        this.sortBy = "ff-asc";
+      const parsed = isWar ? ffconfig.war_filter_state : ffconfig.faction_filter_state;
+      let next;
+      if (parsed) {
+        const savedSortBy = parsed.sortBy ?? "none";
+        const hiddenColumns2 = isMobile ? {
+          level: parsed.hiddenColumnsMobile?.level ?? true,
+          status: parsed.hiddenColumnsMobile?.status ?? DEFAULT_HIDDEN_COLUMNS.status,
+          score: parsed.hiddenColumnsMobile?.score ?? DEFAULT_HIDDEN_COLUMNS.score
+        } : {
+          level: parsed.hiddenColumns?.level ?? DEFAULT_HIDDEN_COLUMNS.level,
+          status: parsed.hiddenColumns?.status ?? DEFAULT_HIDDEN_COLUMNS.status,
+          score: parsed.hiddenColumns?.score ?? DEFAULT_HIDDEN_COLUMNS.score
+        };
+        next = {
+          sortBy: savedSortBy === "ff-asc" || savedSortBy === "ff-desc" ? savedSortBy : "none",
+          filterEnabled: parsed.filterEnabled ?? true,
+          activity: { ...DEFAULT_STATE.activity, ...parsed.activity },
+          status: { ...DEFAULT_STATE.status, ...parsed.status },
+          levelMin: parsed.levelMin ?? null,
+          levelMax: parsed.levelMax ?? null,
+          ffMin: parsed.ffMin ?? null,
+          ffMax: parsed.ffMax ?? null,
+          statsMin: parsed.statsMin ?? null,
+          statsMax: parsed.statsMax ?? null,
+          lastActionMin: parsed.lastActionMin ?? null,
+          lastActionMax: parsed.lastActionMax ?? null,
+          hiddenColumns: hiddenColumns2
+        };
       } else {
-        this.sortBy = "none";
+        next = {
+          ...DEFAULT_STATE,
+          hiddenColumns: {
+            level: isMobile,
+            status: DEFAULT_HIDDEN_COLUMNS.status,
+            score: DEFAULT_HIDDEN_COLUMNS.score
+          }
+        };
       }
-      this.executeChangeImmediately();
-    }
-    onDisplayChange(e2) {
-      const val = e2.target.value;
-      this.colDisplay = val;
-      if (this.mode === "war") {
+      filterStateRef.current = next;
+      setFilterState(next);
+      onFilterChangeRef.current(getFilterSnapshot());
+    };
+    useEffect(() => {
+      loadState();
+      const onConfigUpdated = () => {
+        setColDisplay(
+          modeRef.current === "war" ? ffconfig.war_col_display : ffconfig.factions_col_display
+        );
+      };
+      const onResize = () => {
+        const isMobile = isMobileView();
+        if (isMobile !== wasMobileRef.current) {
+          wasMobileRef.current = isMobile;
+          loadState();
+        }
+      };
+      window.addEventListener("ff-config-updated", onConfigUpdated);
+      window.addEventListener("resize", onResize);
+      onReady?.();
+      return () => {
+        if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+        window.removeEventListener("ff-config-updated", onConfigUpdated);
+        window.removeEventListener("resize", onResize);
+      };
+    }, []);
+    useEffect(() => {
+      if (mode !== "war") return;
+      const target = rootRef.current?.closest(".faction-war");
+      if (!(target instanceof HTMLElement)) return;
+      const cols = filterState.hiddenColumns ?? DEFAULT_HIDDEN_COLUMNS;
+      for (const [col, isHidden] of Object.entries(cols)) {
+        if (isHidden) {
+          target.setAttribute(`data-ffscouter-hide-${col}`, "true");
+        } else {
+          target.removeAttribute(`data-ffscouter-hide-${col}`);
+        }
+      }
+    }, [filterState.hiddenColumns, mode]);
+    useImperativeHandle(
+      ref,
+      () => ({
+        setSortBy(val) {
+          applyStatePatch({ sortBy: val });
+          executeChangeImmediately();
+        },
+        getFilterSnapshot,
+        get sortBy() {
+          return filterStateRef.current.sortBy;
+        },
+        get activity() {
+          return filterStateRef.current.activity;
+        },
+        get hasLastActionData() {
+          return hasLastActionDataRef.current;
+        },
+        setHasLastActionData(val) {
+          hasLastActionDataRef.current = val;
+          setHasLastActionData(val);
+        },
+        setFilterState(patch) {
+          applyStatePatch(patch);
+          dispatchChange();
+        },
+        dispatchChange,
+        get ready() {
+          return true;
+        }
+      }),
+      []
+    );
+    const onToggle = (e) => {
+      const newCollapsed = !e.currentTarget.open;
+      setCollapsed(newCollapsed);
+      if (mode === "war") {
+        ffconfig.war_filter_collapsed = newCollapsed;
+      } else {
+        ffconfig.faction_filter_collapsed = newCollapsed;
+      }
+    };
+    const onSortToggle = () => {
+      const next = filterStateRef.current.sortBy === "none" ? "ff-desc" : filterStateRef.current.sortBy === "ff-desc" ? "ff-asc" : "none";
+      applyStatePatch({ sortBy: next });
+      executeChangeImmediately();
+    };
+    const onDisplayChange = (e) => {
+      const val = e.target.value;
+      setColDisplay(val);
+      if (mode === "war") {
         ffconfig.war_col_display = val;
       } else {
         ffconfig.factions_col_display = val;
       }
       window.dispatchEvent(new CustomEvent("ff-config-updated"));
-      this.executeChangeImmediately();
-    }
-    onActivityChange(key, val) {
-      this.activity = {
-        ...this.activity,
-        [key]: val
-      };
-      this.executeChangeImmediately();
-    }
-    onStatusChange(key, val) {
-      this.status = {
-        ...this.status,
-        [key]: val
-      };
-      this.executeChangeImmediately();
-    }
-    onLevelChange(type, valStr) {
+      executeChangeImmediately();
+    };
+    const onToggleFilter = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      applyStatePatch({ filterEnabled: !filterStateRef.current.filterEnabled });
+      executeChangeImmediately();
+    };
+    const onResetFilters = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      applyStatePatch({
+        activity: { online: true, idle: true, offline: true },
+        status: {
+          okay: true,
+          traveling: true,
+          hospital: true,
+          jail: true,
+          abroad: true,
+          federal: true,
+          fallen: true
+        },
+        levelMin: null,
+        levelMax: null,
+        ffMin: null,
+        ffMax: null,
+        statsMin: null,
+        statsMax: null,
+        lastActionMin: null,
+        lastActionMax: null
+      });
+      executeChangeImmediately();
+    };
+    const onActivityChange = (key, val) => {
+      applyStatePatch({
+        activity: { ...filterStateRef.current.activity, [key]: val }
+      });
+      executeChangeImmediately();
+    };
+    const onStatusChange = (key, val) => {
+      applyStatePatch({
+        status: { ...filterStateRef.current.status, [key]: val }
+      });
+      executeChangeImmediately();
+    };
+    const onLevelChange = (type, valStr) => {
       const val = valStr === "" ? null : Number.parseInt(valStr, 10);
-      if (type === "min") {
-        this.levelMin = val;
-      } else {
-        this.levelMax = val;
-      }
-      this.queueChange();
-    }
-    onFFChange(type, valStr) {
+      applyStatePatch(type === "min" ? { levelMin: val } : { levelMax: val });
+      queueChange();
+    };
+    const onFFChange = (type, valStr) => {
       const val = valStr === "" ? null : Number.parseFloat(valStr);
-      if (type === "min") {
-        this.ffMin = val;
-      } else {
-        this.ffMax = val;
-      }
-      this.queueChange();
-    }
-    onStatsChange(type, valStr) {
+      applyStatePatch(type === "min" ? { ffMin: val } : { ffMax: val });
+      queueChange();
+    };
+    const onStatsChange = (type, valStr) => {
       const val = valStr.trim() === "" ? null : valStr;
-      if (type === "min") {
-        this.statsMin = val;
-      } else {
-        this.statsMax = val;
-      }
-      this.queueChange();
-    }
-    onLastActionChange(type, valStr) {
+      applyStatePatch(type === "min" ? { statsMin: val } : { statsMax: val });
+      queueChange();
+    };
+    const onLastActionChange = (type, valStr) => {
       const val = valStr.trim() === "" ? null : valStr;
-      if (type === "min") {
-        this.lastActionMin = val;
-      } else {
-        this.lastActionMax = val;
-      }
-      this.queueChange();
-    }
-    onToggleFilter(e2) {
-      if (e2) {
-        e2.preventDefault();
-        e2.stopPropagation();
-      }
-      this.filterEnabled = !this.filterEnabled;
-      this.executeChangeImmediately();
-    }
-    onResetFilters(e2) {
-      if (e2) {
-        e2.preventDefault();
-        e2.stopPropagation();
-      }
-      this.activity = { online: true, idle: true, offline: true };
-      this.status = {
-        okay: true,
-        traveling: true,
-        hospital: true,
-        jail: true,
-        abroad: true
-      };
-      this.levelMin = null;
-      this.levelMax = null;
-      this.ffMin = null;
-      this.ffMax = null;
-      this.statsMin = null;
-      this.statsMax = null;
-      this.lastActionMin = null;
-      this.lastActionMax = null;
-      this.executeChangeImmediately();
-    }
-    onCompareActivity() {
-      const container = this.closest(".faction-war");
+      applyStatePatch(
+        type === "min" ? { lastActionMin: val } : { lastActionMax: val }
+      );
+      queueChange();
+    };
+    const onColumnVisibilityChange = (key, val) => {
+      applyStatePatch({
+        hiddenColumns: {
+          ...filterStateRef.current.hiddenColumns ?? DEFAULT_HIDDEN_COLUMNS,
+          [key]: val
+        }
+      });
+      executeChangeImmediately();
+    };
+    const onCompareActivity = () => {
+      const container = rootRef.current?.closest(".faction-war");
       const links = container ? Array.from(
         container.querySelectorAll('a[href*="step=profile"]')
       ) : [];
@@ -4162,379 +3835,304 @@ getFilterSnapshot() {
           }
         }
       };
-      for (const link of links) {
-        tryExtract(link);
-      }
+      for (const link of links) tryExtract(link);
       if (ids.length < 2) {
         const docLinks = Array.from(
           document.querySelectorAll('a[href*="step=profile"]')
         );
-        for (const link of docLinks) {
-          tryExtract(link);
-        }
+        for (const link of docLinks) tryExtract(link);
       }
       if (ids.length < 2) {
         console.warn("Could not find faction IDs to compare activity.");
         return;
       }
-      const factionId1 = ids[0];
-      const factionId2 = ids[1];
       const now = new Date();
       const start = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1e3);
       const formatUTC = (d2) => {
-        const y3 = d2.getUTCFullYear();
+        const y2 = d2.getUTCFullYear();
         const m2 = String(d2.getUTCMonth() + 1).padStart(2, "0");
         const day = String(d2.getUTCDate()).padStart(2, "0");
         const h2 = String(d2.getUTCHours()).padStart(2, "0");
         const min = String(d2.getUTCMinutes()).padStart(2, "0");
-        return `${y3}-${m2}-${day}T${h2}:${min}`;
+        return `${y2}-${m2}-${day}T${h2}:${min}`;
       };
-      const startAt = formatUTC(start);
-      const endAt = formatUTC(now);
-      const bucketMinutes = 5;
-      const scouterUrl = `https://ffscouter.com/faction-activity-comparison?faction_id_1=${factionId1}&faction_id_2=${factionId2}&start_at=${encodeURIComponent(
-      startAt
-    )}&end_at=${encodeURIComponent(endAt)}&bucket_minutes=${bucketMinutes}`;
+      const factionId1 = ids[0];
+      const factionId2 = ids[1];
+      const scouterUrl = `https://ffscouter.com/faction-activity-comparison?faction_id_1=${factionId1}&faction_id_2=${factionId2}&start_at=${encodeURIComponent(formatUTC(start))}&end_at=${encodeURIComponent(formatUTC(now))}&bucket_minutes=5`;
       window.open(scouterUrl, "_blank");
-    }
-    render() {
-      const isEst = this.colDisplay === FactionsColDisplay.BATTLE_STATS;
-      const sortText = isEst ? "Stats" : "FF";
-      return b`
-      <details
-        class="ff-filter-box ${this.mode === "war" ? "no-borders" : ""}"
-        ?open="${!this.collapsed}"
-        @toggle="${this.onToggle}"
-      >
-        <summary
-          style="cursor: pointer; font-weight: bold; font-size: 14px; user-select: none;"
-        >
-          <div
-            style="display: inline-flex; justify-content: space-between; align-items: center; width: calc(100% - 24px); vertical-align: middle;"
-          >
-            <span>FFScouter Filter & Sort Controls</span>
-            <div
-              class="ff-filter-header-actions"
-              @click="${(e2) => {
-      e2.preventDefault();
-      e2.stopPropagation();
-    }}"
-            >
-              <button
-                class="ff-action-icon-btn ${this.filterEnabled ? "active" : "inactive"}"
-                title="${this.filterEnabled ? "Turn off filtering" : "Turn on filtering"}"
-                @click="${(e2) => this.onToggleFilter(e2)}"
-              >
-                ${this.filterEnabled ? b`
-                    <svg viewBox="0 0 16 16">
-                      <path d="M1.5 1.5A.5.5 0 0 1 2 1h12a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.124.318l-4.5 5.5v4.682a.5.5 0 0 1-.168.373l-2.5 2a.5.5 0 0 1-.832-.373v-6.682l-4.5-5.5A.5.5 0 0 1 1.5 3.5v-2z" />
-                    </svg>
-                  ` : b`
-                    <svg viewBox="0 0 16 16">
-                      <path d="M1.5 1.5A.5.5 0 0 1 2 1h12a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.124.318l-4.5 5.5v4.682a.5.5 0 0 1-.168.373l-2.5 2a.5.5 0 0 1-.832-.373v-6.682l-4.5-5.5A.5.5 0 0 1 1.5 3.5v-2z" />
-                      <line x1="1.5" y1="14.5" x2="14.5" y2="1.5" stroke="currentColor" stroke-width="1.5" />
-                    </svg>
-                  `}
-              </button>
-              <button
-                class="ff-action-icon-btn reset-btn"
-                title="Reset filters to default"
-                @click="${(e2) => this.onResetFilters(e2)}"
-              >
-                <svg viewBox="0 0 16 16">
-                  <path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
-                  <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/>
-                </svg>
-              </button>
-            </div>
-          </div>
-        </summary>
-        <div class="ff-filter-grid" style="margin-top: 12px;">
-          <div class="ff-filter-group grp-sort">
-            <strong>Sort & Display</strong>
-            <div style="display: flex; flex-direction: column; gap: 8px;">
-              <button id="sort-toggle-btn" @click="${this.onSortToggle}" style="width: 100%;">
-                ${this.sortBy === "none" ? "Sort: Default" : this.sortBy === "ff-asc" ? `Sort: ${sortText} ▲` : `Sort: ${sortText} ▼`}
-              </button>
-              <select
-                id="${this.mode === "war" ? "war-col-display-filter" : "factions-col-display-filter"}"
-                .value=${this.colDisplay}
-                @change=${this.onDisplayChange}
-                style="padding: 4px; border: 1px solid var(--ffscouter-border-color); border-radius: 4px; background: var(--ffscouter-alt-bg-color); color: var(--ffscouter-text-color); font-size: 11px; cursor: pointer; height: 32px;"
-              >
-                <option value="fair_fight">Show: FF Score</option>
-                <option value="battle_stats">Show: BS Estimate</option>
-                <option value="none">Show: None (Hide)</option>
-              </select>
-              ${this.mode === "war" ? b`
-                    <button
-                      id="compare-faction-activity-btn"
-                      @click="${this.onCompareActivity}"
-                      style="width: 100%; height: 32px;"
-                    >
-                      Compare Activity
-                    </button>
-                  ` : ""}
-            </div>
-          </div>
-
-          <div class="ff-filter-group grp-activity">
-            <strong>Activity</strong>
-            <div class="ff-filter-options">
-              <label>
-                <input
-                  type="checkbox"
-                  ?checked="${this.activity.online}"
-                  @change="${(e2) => this.onActivityChange("online", e2.target.checked)}"
-                />
-                Online
-              </label>
-              <label>
-                <input
-                  type="checkbox"
-                  ?checked="${this.activity.idle}"
-                  @change="${(e2) => this.onActivityChange("idle", e2.target.checked)}"
-                />
-                Idle
-              </label>
-              <label>
-                <input
-                  type="checkbox"
-                  ?checked="${this.activity.offline}"
-                  @change="${(e2) => this.onActivityChange("offline", e2.target.checked)}"
-                />
-                Offline
-              </label>
-            </div>
-          </div>
-
-          <div class="ff-filter-group grp-status">
-            <strong>Status</strong>
-            <div class="ff-filter-options">
-              <label>
-                <input
-                  type="checkbox"
-                  ?checked="${this.status.okay}"
-                  @change="${(e2) => this.onStatusChange("okay", e2.target.checked)}"
-                />
-                Okay
-              </label>
-              <label>
-                <input
-                  type="checkbox"
-                  ?checked="${this.status.hospital}"
-                  @change="${(e2) => this.onStatusChange("hospital", e2.target.checked)}"
-                />
-                Hospital
-              </label>
-              <label>
-                <input
-                  type="checkbox"
-                  ?checked="${this.status.jail}"
-                  @change="${(e2) => this.onStatusChange("jail", e2.target.checked)}"
-                />
-                Jail
-              </label>
-              <label>
-                <input
-                  type="checkbox"
-                  ?checked="${this.status.abroad}"
-                  @change="${(e2) => this.onStatusChange("abroad", e2.target.checked)}"
-                />
-                Abroad
-              </label>
-              <label>
-                <input
-                  type="checkbox"
-                  ?checked="${this.status.traveling}"
-                  @change="${(e2) => this.onStatusChange("traveling", e2.target.checked)}"
-                />
-                Traveling
-              </label>
-            </div>
-          </div>
-
-          <div class="ff-filter-group grp-level">
-            <strong>Level Range</strong>
-            <div class="ff-filter-range-inputs">
-              <input
-                type="number"
-                placeholder="Min"
-                .value="${this.levelMin !== null ? String(this.levelMin) : ""}"
-                @input="${(e2) => this.onLevelChange("min", e2.target.value)}"
-              />
-              <span>to</span>
-              <input
-                type="number"
-                placeholder="Max"
-                .value="${this.levelMax !== null ? String(this.levelMax) : ""}"
-                @input="${(e2) => this.onLevelChange("max", e2.target.value)}"
-              />
-            </div>
-          </div>
-
-          <div class="ff-filter-group grp-ff">
-            <strong>FF Range</strong>
-            <div class="ff-filter-range-inputs">
-              <input
-                type="number"
-                step="0.1"
-                placeholder="Min"
-                .value="${this.ffMin !== null ? String(this.ffMin) : ""}"
-                @input="${(e2) => this.onFFChange("min", e2.target.value)}"
-              />
-              <span>to</span>
-              <input
-                type="number"
-                step="0.1"
-                placeholder="Max"
-                .value="${this.ffMax !== null ? String(this.ffMax) : ""}"
-                @input="${(e2) => this.onFFChange("max", e2.target.value)}"
-              />
-            </div>
-          </div>
-
-          <div class="ff-filter-group grp-stats">
-            <strong>Stats Range</strong>
-            <div class="ff-filter-range-inputs">
-              <input
-                type="text"
-                placeholder="Min"
-                .value="${this.statsMin !== null ? this.statsMin : ""}"
-                @input="${(e2) => this.onStatsChange("min", e2.target.value)}"
-              />
-              <span>to</span>
-              <input
-                type="text"
-                placeholder="Max"
-                .value="${this.statsMax !== null ? this.statsMax : ""}"
-                @input="${(e2) => this.onStatsChange("max", e2.target.value)}"
-              />
-            </div>
-          </div>
-
-          ${this.mode === "war" && this.hasLastActionData ? b`
-                <div class="ff-filter-group grp-last-action">
-                  <strong>Last Action Range</strong>
-                  <div class="ff-filter-range-inputs">
-                    <input
-                      type="text"
-                      placeholder="Min"
-                      title='e.g. "10m", "1h", "4h2m15s"'
-                      .value="${this.lastActionMin !== null ? this.lastActionMin : ""}"
-                      @input="${(e2) => this.onLastActionChange("min", e2.target.value)}"
-                    />
-                    <span>to</span>
-                    <input
-                      type="text"
-                      placeholder="Max"
-                      title='e.g. "10m", "1h", "4h2m15s"'
-                      .value="${this.lastActionMax !== null ? this.lastActionMax : ""}"
-                      @input="${(e2) => this.onLastActionChange("max", e2.target.value)}"
-                    />
-                  </div>
-                </div>
-              ` : ""}
-
-          ${this.mode === "war" ? b`
-                <div class="ff-filter-group grp-columns">
-                  <strong>Visible Columns</strong>
-                  <div class="ff-filter-options">
-                    <label>
-                      <input
-                        type="checkbox"
-                        .checked="${!this.hiddenColumns.level}"
-                        @change="${(e2) => this.onColumnVisibilityChange(
-      "level",
-      !e2.target.checked
-    )}"
-                      />
-                      Level
-                    </label>
-                    <label>
-                      <input
-                        type="checkbox"
-                        .checked="${!this.hiddenColumns.status}"
-                        @change="${(e2) => this.onColumnVisibilityChange(
-      "status",
-      !e2.target.checked
-    )}"
-                      />
-                      Status
-                    </label>
-                    <label>
-                      <input
-                        type="checkbox"
-                        .checked="${!this.hiddenColumns.score}"
-                        @change="${(e2) => this.onColumnVisibilityChange(
-      "score",
-      !e2.target.checked
-    )}"
-                      />
-                      Score
-                    </label>
-                  </div>
-                </div>
-              ` : ""}
-        </div>
-      </details>
-    `;
-    }
-  };
-  __decorateClass$2([
-    n2({ type: String })
-  ], FFFactionFilterBox.prototype, "mode", 2);
-  __decorateClass$2([
-    n2({ type: Boolean })
-  ], FFFactionFilterBox.prototype, "hasLastActionData", 2);
-  __decorateClass$2([
-    r()
-  ], FFFactionFilterBox.prototype, "sortBy", 2);
-  __decorateClass$2([
-    r()
-  ], FFFactionFilterBox.prototype, "filterEnabled", 2);
-  __decorateClass$2([
-    r()
-  ], FFFactionFilterBox.prototype, "colDisplay", 2);
-  __decorateClass$2([
-    r()
-  ], FFFactionFilterBox.prototype, "activity", 2);
-  __decorateClass$2([
-    r()
-  ], FFFactionFilterBox.prototype, "status", 2);
-  __decorateClass$2([
-    r()
-  ], FFFactionFilterBox.prototype, "levelMin", 2);
-  __decorateClass$2([
-    r()
-  ], FFFactionFilterBox.prototype, "levelMax", 2);
-  __decorateClass$2([
-    r()
-  ], FFFactionFilterBox.prototype, "ffMin", 2);
-  __decorateClass$2([
-    r()
-  ], FFFactionFilterBox.prototype, "ffMax", 2);
-  __decorateClass$2([
-    r()
-  ], FFFactionFilterBox.prototype, "statsMin", 2);
-  __decorateClass$2([
-    r()
-  ], FFFactionFilterBox.prototype, "statsMax", 2);
-  __decorateClass$2([
-    r()
-  ], FFFactionFilterBox.prototype, "lastActionMin", 2);
-  __decorateClass$2([
-    r()
-  ], FFFactionFilterBox.prototype, "lastActionMax", 2);
-  __decorateClass$2([
-    r()
-  ], FFFactionFilterBox.prototype, "hiddenColumns", 2);
-  __decorateClass$2([
-    r()
-  ], FFFactionFilterBox.prototype, "collapsed", 2);
-  FFFactionFilterBox = __decorateClass$2([
-    t("ff-faction-filter-box")
-  ], FFFactionFilterBox);
+    };
+    const s = filterState;
+    const hiddenColumns = s.hiddenColumns ?? DEFAULT_HIDDEN_COLUMNS;
+    const isEst = colDisplay === FactionsColDisplay.BATTLE_STATS;
+    const sortText = isEst ? "Stats" : "FF";
+    return jsxs(
+      "details",
+      {
+        ref: rootRef,
+        className: `${cls$1.box}${mode === "war" ? ` ${cls$1.boxNoBorders}` : ""}`,
+        open: !collapsed,
+        onToggle,
+        children: [
+jsx("summary", { children: jsxs("div", { className: cls$1.header, children: [
+jsx("span", { children: "FFScouter Filter & Sort Controls" }),
+jsxs(
+              "div",
+              {
+                className: cls$1.headerActions,
+                onClick: (e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                },
+                children: [
+jsx(
+                    "button",
+                    {
+                      type: "button",
+                      className: `${cls$1.actionBtn} ${s.filterEnabled ? cls$1.actionBtnActive : cls$1.actionBtnInactive}`,
+                      title: s.filterEnabled ? "Turn off filtering" : "Turn on filtering",
+                      onClick: onToggleFilter,
+                      children: s.filterEnabled ? jsx("svg", { viewBox: "0 0 16 16", "aria-hidden": "true", children: jsx("path", { d: "M1.5 1.5A.5.5 0 0 1 2 1h12a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.124.318l-4.5 5.5v4.682a.5.5 0 0 1-.168.373l-2.5 2a.5.5 0 0 1-.832-.373v-6.682l-4.5-5.5A.5.5 0 0 1 1.5 3.5v-2z" }) }) : jsxs("svg", { viewBox: "0 0 16 16", "aria-hidden": "true", children: [
+jsx("path", { d: "M1.5 1.5A.5.5 0 0 1 2 1h12a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.124.318l-4.5 5.5v4.682a.5.5 0 0 1-.168.373l-2.5 2a.5.5 0 0 1-.832-.373v-6.682l-4.5-5.5A.5.5 0 0 1 1.5 3.5v-2z" }),
+jsx(
+                          "line",
+                          {
+                            x1: "1.5",
+                            y1: "14.5",
+                            x2: "14.5",
+                            y2: "1.5",
+                            stroke: "currentColor",
+                            strokeWidth: "1.5"
+                          }
+                        )
+                      ] })
+                    }
+                  ),
+jsx(
+                    "button",
+                    {
+                      type: "button",
+                      className: `${cls$1.actionBtn} ${cls$1.actionBtnReset}`,
+                      title: "Reset filters to default",
+                      onClick: onResetFilters,
+                      children: jsxs("svg", { viewBox: "0 0 16 16", "aria-hidden": "true", children: [
+jsx(
+                          "path",
+                          {
+                            fillRule: "evenodd",
+                            d: "M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"
+                          }
+                        ),
+jsx("path", { d: "M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z" })
+                      ] })
+                    }
+                  )
+                ]
+              }
+            )
+          ] }) }),
+jsxs("div", { className: cls$1.grid, children: [
+jsxs("div", { className: `${cls$1.group} ${cls$1.groupSort}`, children: [
+jsx("strong", { children: "Sort & Display" }),
+jsxs("div", { className: cls$1.sortControls, children: [
+jsx(
+                  "button",
+                  {
+                    type: "button",
+                    id: "sort-toggle-btn",
+                    className: cls$1.sortBtn,
+                    onClick: onSortToggle,
+                    children: s.sortBy === "none" ? "Sort: Default" : s.sortBy === "ff-asc" ? `Sort: ${sortText} ▲` : `Sort: ${sortText} ▼`
+                  }
+                ),
+jsxs(
+                  "select",
+                  {
+                    id: mode === "war" ? "war-col-display-filter" : "factions-col-display-filter",
+                    value: colDisplay,
+                    onChange: onDisplayChange,
+                    className: cls$1.displaySelect,
+                    children: [
+jsx("option", { value: "fair_fight", children: "Show: FF Score" }),
+jsx("option", { value: "battle_stats", children: "Show: BS Estimate" }),
+jsx("option", { value: "none", children: "Show: None (Hide)" })
+                    ]
+                  }
+                ),
+                mode === "war" && jsx(
+                  "button",
+                  {
+                    type: "button",
+                    id: "compare-faction-activity-btn",
+                    className: cls$1.compareBtn,
+                    onClick: onCompareActivity,
+                    children: "Compare Activity"
+                  }
+                )
+              ] })
+            ] }),
+jsxs("div", { className: `${cls$1.group} ${cls$1.groupActivity}`, children: [
+jsx("strong", { children: "Activity" }),
+jsx("div", { className: cls$1.options, children: [
+                ["online", "Online"],
+                ["idle", "Idle"],
+                ["offline", "Offline"]
+              ].map(([key, label]) => jsxs("label", { children: [
+jsx(
+                  "input",
+                  {
+                    type: "checkbox",
+                    checked: s.activity[key],
+                    onChange: (e) => onActivityChange(key, e.target.checked)
+                  }
+                ),
+                label
+              ] }, key)) })
+            ] }),
+jsxs("div", { className: `${cls$1.group} ${cls$1.groupStatus}`, children: [
+jsx("strong", { children: "Status" }),
+jsx("div", { className: cls$1.options, children: [
+                ["okay", "Okay"],
+                ["hospital", "Hospital"],
+                ["jail", "Jail"],
+                ["abroad", "Abroad"],
+                ["traveling", "Traveling"],
+                ["federal", "Fedded"],
+                ["fallen", "Fallen"]
+              ].filter(([key]) => mode !== "war" || key !== "fallen").map(([key, label]) => jsxs("label", { children: [
+jsx(
+                  "input",
+                  {
+                    type: "checkbox",
+                    checked: s.status[key],
+                    onChange: (e) => onStatusChange(key, e.target.checked)
+                  }
+                ),
+                label
+              ] }, key)) })
+            ] }),
+jsxs("div", { className: `${cls$1.group} ${cls$1.groupLevel}`, children: [
+jsx("strong", { children: "Level Range" }),
+jsxs("div", { className: cls$1.rangeInputs, children: [
+jsx(
+                  "input",
+                  {
+                    type: "number",
+                    placeholder: "Min",
+                    value: s.levelMin !== null ? String(s.levelMin) : "",
+                    onChange: (e) => onLevelChange("min", e.target.value)
+                  }
+                ),
+jsx("span", { children: "to" }),
+jsx(
+                  "input",
+                  {
+                    type: "number",
+                    placeholder: "Max",
+                    value: s.levelMax !== null ? String(s.levelMax) : "",
+                    onChange: (e) => onLevelChange("max", e.target.value)
+                  }
+                )
+              ] })
+            ] }),
+jsxs("div", { className: `${cls$1.group} ${cls$1.groupFf}`, children: [
+jsx("strong", { children: "FF Range" }),
+jsxs("div", { className: cls$1.rangeInputs, children: [
+jsx(
+                  "input",
+                  {
+                    type: "number",
+                    step: "0.1",
+                    placeholder: "Min",
+                    value: s.ffMin !== null ? String(s.ffMin) : "",
+                    onChange: (e) => onFFChange("min", e.target.value)
+                  }
+                ),
+jsx("span", { children: "to" }),
+jsx(
+                  "input",
+                  {
+                    type: "number",
+                    step: "0.1",
+                    placeholder: "Max",
+                    value: s.ffMax !== null ? String(s.ffMax) : "",
+                    onChange: (e) => onFFChange("max", e.target.value)
+                  }
+                )
+              ] })
+            ] }),
+jsxs("div", { className: `${cls$1.group} ${cls$1.groupStats}`, children: [
+jsx("strong", { children: "Stats Range" }),
+jsxs("div", { className: cls$1.rangeInputs, children: [
+jsx(
+                  "input",
+                  {
+                    type: "text",
+                    placeholder: "Min",
+                    value: s.statsMin !== null ? s.statsMin : "",
+                    onChange: (e) => onStatsChange("min", e.target.value)
+                  }
+                ),
+jsx("span", { children: "to" }),
+jsx(
+                  "input",
+                  {
+                    type: "text",
+                    placeholder: "Max",
+                    value: s.statsMax !== null ? s.statsMax : "",
+                    onChange: (e) => onStatsChange("max", e.target.value)
+                  }
+                )
+              ] })
+            ] }),
+            mode === "war" && hasLastActionData && jsxs("div", { className: `${cls$1.group} ${cls$1.groupLastAction}`, children: [
+jsx("strong", { children: "Last Action Range" }),
+jsxs("div", { className: cls$1.rangeInputs, children: [
+jsx(
+                  "input",
+                  {
+                    type: "text",
+                    placeholder: "Min",
+                    title: 'e.g. "10m", "1h", "4h2m15s"',
+                    value: s.lastActionMin !== null ? s.lastActionMin : "",
+                    onChange: (e) => onLastActionChange("min", e.target.value)
+                  }
+                ),
+jsx("span", { children: "to" }),
+jsx(
+                  "input",
+                  {
+                    type: "text",
+                    placeholder: "Max",
+                    title: 'e.g. "10m", "1h", "4h2m15s"',
+                    value: s.lastActionMax !== null ? s.lastActionMax : "",
+                    onChange: (e) => onLastActionChange("max", e.target.value)
+                  }
+                )
+              ] })
+            ] }),
+            mode === "war" && jsxs("div", { className: `${cls$1.group} ${cls$1.groupColumns}`, children: [
+jsx("strong", { children: "Visible Columns" }),
+jsx("div", { className: cls$1.options, children: [
+                ["level", "Level"],
+                ["status", "Status"],
+                ["score", "Score"]
+              ].map(([key, label]) => jsxs("label", { children: [
+jsx(
+                  "input",
+                  {
+                    type: "checkbox",
+                    checked: !hiddenColumns[key],
+                    onChange: (e) => onColumnVisibilityChange(key, !e.target.checked)
+                  }
+                ),
+                label
+              ] }, key)) })
+            ] })
+          ] })
+        ]
+      }
+    );
+  }
   function get_current_time_seconds() {
     if (typeof window.getCurrentTimestamp === "function") {
       return window.getCurrentTimestamp() / 1e3;
@@ -4576,12 +4174,16 @@ getFilterSnapshot() {
             status = "jail";
           } else if (statusCell.classList.contains("abroad") || statusCell.querySelector(".abroad")) {
             status = "abroad";
+          } else if (statusCell.classList.contains("federal") || statusCell.querySelector(".federal")) {
+            status = "federal";
+          } else if (statusCell.classList.contains("fallen") || statusCell.querySelector(".fallen")) {
+            status = "fallen";
           } else {
             status = "okay";
           }
         }
-        const allStatusUnchecked = !filters.status.okay && !filters.status.traveling && !filters.status.hospital && !filters.status.jail && !filters.status.abroad;
-        const matchesStatus = allStatusUnchecked || status === "okay" && filters.status.okay || status === "traveling" && filters.status.traveling || status === "hospital" && filters.status.hospital || status === "jail" && filters.status.jail || status === "abroad" && filters.status.abroad;
+        const allStatusUnchecked = !filters.status.okay && !filters.status.traveling && !filters.status.hospital && !filters.status.jail && !filters.status.abroad && !filters.status.federal && !filters.status.fallen;
+        const matchesStatus = allStatusUnchecked || status === "okay" && filters.status.okay || status === "traveling" && filters.status.traveling || status === "hospital" && filters.status.hospital || status === "jail" && filters.status.jail || status === "abroad" && filters.status.abroad || status === "federal" && filters.status.federal || status === "fallen" && filters.status.fallen;
         if (!matchesStatus) {
           hide_row(row);
           continue;
@@ -4627,13 +4229,13 @@ Number.parseInt(row.dataset["estValue"], 10)
       if (filters.sortBy !== "none") {
         const isEst = filters.colDisplay === FactionsColDisplay.BATTLE_STATS;
         const valKey = isEst ? "estValue" : "ffValue";
-        rows.sort((a2, b2) => {
+        rows.sort((a, b) => {
           const getVal = (row) => {
             const dataVal = row.dataset[valKey];
             return dataVal ? Number.parseFloat(dataVal) : -1;
           };
-          const valA = getVal(a2);
-          const valB = getVal(b2);
+          const valA = getVal(a);
+          const valB = getVal(b);
           if (filters.sortBy.endsWith("asc")) {
             return valA - valB;
           }
@@ -4649,8 +4251,8 @@ Number.parseInt(row.dataset["estValue"], 10)
             next_sibling = next_sibling.nextElementSibling;
           }
           tbody.appendChild(row);
-          for (const r2 of extra_tt_rows) {
-            tbody.appendChild(r2);
+          for (const r of extra_tt_rows) {
+            tbody.appendChild(r);
           }
         }
       }
@@ -4716,7 +4318,7 @@ Number.parseInt(row.dataset["estValue"], 10)
     if (filters.sortBy !== "none") return true;
     return false;
   }
-  const log$a = logger.child("feature:faction");
+  const log$b = logger.child("feature:faction");
   async function poll_traveling_flights(membersList) {
     const rows = Array.from(
       membersList.querySelectorAll(".enemy, .your")
@@ -4729,39 +4331,39 @@ Number.parseInt(row.dataset["estValue"], 10)
       const isTraveling = statusText === "Traveling";
       return { row, player_id, isTraveling };
     }).filter((item) => item !== null);
-    for (const p2 of travelingPlayers) {
-      if (!p2.isTraveling) {
-        p2.row.removeAttribute("data-earliest-arrival");
-        p2.row.removeAttribute("data-latest-arrival");
-        ffscouter.clear_flight_cache(p2.player_id);
+    for (const p of travelingPlayers) {
+      if (!p.isTraveling) {
+        p.row.removeAttribute("data-earliest-arrival");
+        p.row.removeAttribute("data-latest-arrival");
+        ffscouter.clear_flight_cache(p.player_id);
       }
     }
-    const traveling = travelingPlayers.filter((p2) => p2.isTraveling);
+    const traveling = travelingPlayers.filter((p) => p.isTraveling);
     if (traveling.length === 0) return;
     const isPremium = await check_key_status.is_premium();
     if (!isPremium) {
-      for (const p2 of traveling) {
-        p2.row.removeAttribute("data-earliest-arrival");
-        p2.row.removeAttribute("data-latest-arrival");
+      for (const p of traveling) {
+        p.row.removeAttribute("data-earliest-arrival");
+        p.row.removeAttribute("data-latest-arrival");
       }
       return;
     }
     await Promise.all(
-      traveling.map(async (p2) => {
+      traveling.map(async (p) => {
         try {
-          const flights = await ffscouter.get_flights(p2.player_id);
+          const flights = await ffscouter.get_flights(p.player_id);
           const current = flights?.current;
           if (current) {
             const earliest = current.earliest_arrival_time;
             const latest = current.latest_arrival_time;
-            p2.row.setAttribute("data-earliest-arrival", String(earliest));
-            p2.row.setAttribute("data-latest-arrival", String(latest));
+            p.row.setAttribute("data-earliest-arrival", String(earliest));
+            p.row.setAttribute("data-latest-arrival", String(latest));
           } else {
-            p2.row.removeAttribute("data-earliest-arrival");
-            p2.row.removeAttribute("data-latest-arrival");
+            p.row.removeAttribute("data-earliest-arrival");
+            p.row.removeAttribute("data-latest-arrival");
           }
         } catch (err) {
-          log$a.error(`Failed to fetch flights for player ${p2.player_id}`, err);
+          log$b.error(`Failed to fetch flights for player ${p.player_id}`, err);
         }
       })
     );
@@ -4836,7 +4438,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       };
     }).filter((item) => item !== null);
     if (rowPlayers.length === 0) return;
-    const playerIds = rowPlayers.map((p2) => p2.player_id);
+    const playerIds = rowPlayers.map((p) => p.player_id);
     const dataPromises = playerIds.map((id) => ffscouter.get(id));
     ffscouter.complete();
     const dataList = await Promise.all(dataPromises);
@@ -4869,10 +4471,10 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
           }
         }
         cell.style.cursor = "pointer";
-        cell.onclick = (e2) => {
-          e2.preventDefault();
-          e2.stopPropagation();
-          const forceNewTab = e2.ctrlKey || e2.metaKey || e2.button === 1;
+        cell.onclick = (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const forceNewTab = e.ctrlKey || e.metaKey || e.button === 1;
           open_attack_link(rp.player_id, {
             openInNewTab: forceNewTab ? true : void 0
           });
@@ -4910,17 +4512,18 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
         }
       }
     }
-    const filterBox = (membersList.closest(".faction-war") || membersList.parentNode)?.querySelector("ff-faction-filter-box");
-    if (filterBox?.activity) {
+    const boxEl = (membersList.closest(".faction-war") || membersList.parentNode)?.querySelector("[data-ff-filter-box]");
+    const handle = getFilterBoxHandle(boxEl);
+    if (handle?.activity) {
       apply_filters_and_sort(membersList, {
-        ...filterBox.getFilterSnapshot(),
+        ...handle.getFilterSnapshot(),
         colDisplay
       });
     }
-    update_header_sort_indicator(membersList, filterBox?.sortBy ?? "none");
+    update_header_sort_indicator(membersList, handle?.sortBy ?? "none");
     poll_traveling_flights(membersList);
   }
-  const log$9 = logger.child("feature:faction");
+  const log$a = logger.child("feature:faction");
   const FEATURE_NAME$4 = "faction";
   function cleanup_when_detached(el, dispose) {
     const cleanupInterval = setInterval(() => {
@@ -4944,12 +4547,91 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     loadObserver.observe(root, { childList: true, subtree: true });
     cleanup_when_detached(root, () => loadObserver.disconnect());
   }
+  function mountFilterBox(mode, onFilterChange) {
+    const container = document.createElement("div");
+    container.style.display = "contents";
+    container.setAttribute("data-ff-filter-box", "true");
+    container.setAttribute("data-mode", mode);
+    const ref = { current: null };
+    let ready = false;
+    let hasLastActionDataProp = false;
+    const pending = [];
+    const runOrBuffer = (fn) => {
+      if (ready && ref.current) {
+        fn(ref.current);
+      } else {
+        pending.push(fn);
+      }
+    };
+    const onReady = () => {
+      ready = true;
+      if (ref.current && pending.length > 0) {
+        for (const fn of pending) fn(ref.current);
+        pending.length = 0;
+      }
+    };
+    const handle = {
+      get ready() {
+        return ready;
+      },
+      get sortBy() {
+        return ready ? ref.current?.sortBy ?? "none" : "none";
+      },
+      get activity() {
+        return ready && ref.current ? ref.current.activity : { online: true, idle: true, offline: true };
+      },
+      get hasLastActionData() {
+        return ready && ref.current ? ref.current.hasLastActionData : hasLastActionDataProp;
+      },
+      setSortBy: (val) => runOrBuffer((h2) => h2.setSortBy(val)),
+      getFilterSnapshot: () => ready && ref.current ? ref.current.getFilterSnapshot() : {
+        sortBy: "none",
+        filterEnabled: true,
+        activity: { online: true, idle: true, offline: true },
+        status: {
+          okay: true,
+          traveling: true,
+          hospital: true,
+          jail: true,
+          abroad: true,
+          federal: true,
+          fallen: true
+        },
+        levelMin: null,
+        levelMax: null,
+        ffMin: null,
+        ffMax: null,
+        statsMin: null,
+        statsMax: null,
+        lastActionMinSec: null,
+        lastActionMaxSec: null
+      },
+      setHasLastActionData: (val) => {
+        hasLastActionDataProp = val;
+        runOrBuffer((h2) => h2.setHasLastActionData(val));
+      },
+      setFilterState: (patch) => runOrBuffer((h2) => h2.setFilterState(patch)),
+      dispatchChange: () => runOrBuffer((h2) => h2.dispatchChange())
+    };
+    container.__ffHandle = handle;
+    createRoot(container).render(
+      createElement(FFFactionFilterBox, {
+        mode,
+        onFilterChange,
+        ref,
+        initialHasLastActionData: hasLastActionDataProp,
+        onReady
+      })
+    );
+    return container;
+  }
   function update_last_action_visibility(list) {
     const scope = list.closest(".faction-war") || list;
-    const filterBox = (list.closest(".faction-war") || list.parentNode)?.querySelector("ff-faction-filter-box");
-    if (!filterBox) return;
-    filterBox.hasLastActionData = !!scope.querySelector(
-      "[data-twse-last-action-timestamp]"
+    const boxEl = (list.closest(".faction-war") || list.parentNode)?.querySelector("[data-ff-filter-box]");
+    const handle = getFilterBoxHandle(boxEl);
+    if (!handle) return;
+    handle.setHasLastActionData(
+      !!scope.querySelector("[data-twse-last-action-timestamp]")
     );
   }
   function setup_reapply_watcher(list, observeTarget, getColDisplay) {
@@ -4979,10 +4661,11 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
         requestAnimationFrame(() => {
           rafPending = false;
           update_last_action_visibility(list);
-          const filterBox = (list.closest(".faction-war") || list.parentNode)?.querySelector("ff-faction-filter-box");
-          if (filterBox?.activity) {
+          const boxEl = (list.closest(".faction-war") || list.parentNode)?.querySelector("[data-ff-filter-box]");
+          const handle = getFilterBoxHandle(boxEl);
+          if (handle?.activity) {
             apply_filters_and_sort(list, {
-              ...filterBox.getFilterSnapshot(),
+              ...handle.getFilterSnapshot(),
               colDisplay: getColDisplay()
             });
           }
@@ -5003,24 +4686,18 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       attributeObserver.disconnect();
     });
   }
-  async function inject_filter_box(membersList) {
+  function inject_filter_box(membersList) {
     const parent = membersList.parentNode;
     if (!parent) return;
-    let filterBox = parent.querySelector(
-      "ff-faction-filter-box"
-    );
-    if (!filterBox) {
-      filterBox = await create_ff_element("ff-faction-filter-box");
-      if (!filterBox) return;
-      filterBox.addEventListener("filter-change", (e2) => {
-        apply_filters_and_sort(membersList, {
-          ...e2.detail,
-          colDisplay: ffconfig.factions_col_display
-        });
-        update_header_sort_indicator(membersList, e2.detail.sortBy);
+    if (parent.querySelector("[data-ff-filter-box]")) return;
+    const container = mountFilterBox("faction", (snapshot) => {
+      apply_filters_and_sort(membersList, {
+        ...snapshot,
+        colDisplay: ffconfig.factions_col_display
       });
-      parent.insertBefore(filterBox, membersList);
-    }
+      update_header_sort_indicator(membersList, snapshot.sortBy);
+    });
+    parent.insertBefore(container, membersList);
   }
   function initialize_features(membersList) {
     if (membersList.hasAttribute("data-ffscouter-initialized")) return;
@@ -5084,9 +4761,9 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       FEATURE_NAME$4
     );
     apply_ff_gauge_selector(root.querySelectorAll(".member"), FEATURE_NAME$4);
-    for (const l2 of root.querySelectorAll(".members-list, .chain-attacks-list")) {
-      if (l2 instanceof HTMLElement) {
-        apply_ff_members_list(l2);
+    for (const l of root.querySelectorAll(".members-list, .chain-attacks-list")) {
+      if (l instanceof HTMLElement) {
+        apply_ff_members_list(l);
       }
     }
   };
@@ -5095,22 +4772,22 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     list.setAttribute("data-ffscouter-header-click", "true");
     list.addEventListener(
       "click",
-      (e2) => {
-        const target = e2.target;
+      (e) => {
+        const target = e.target;
         if (!target.closest(headerAreaSelector)) return;
-        const container = list.closest(".faction-war") ?? list.parentElement;
-        const filterBox = container?.querySelector(
-          "ff-faction-filter-box"
+        const scope = list.closest(".faction-war") ?? list.parentElement;
+        const handle = getFilterBoxHandle(
+          scope?.querySelector("[data-ff-filter-box]")
         );
-        if (!filterBox) return;
+        if (!handle) return;
         if (target.closest(".ffscouter-header")) {
-          e2.preventDefault();
-          e2.stopPropagation();
-          const newSort = filterBox.sortBy === "ff-desc" ? "ff-asc" : "ff-desc";
-          filterBox.setSortBy(newSort);
+          e.preventDefault();
+          e.stopPropagation();
+          const newSort = handle.sortBy === "ff-desc" ? "ff-asc" : "ff-desc";
+          handle.setSortBy(newSort);
         } else if (target.closest(nativeTabSelector)) {
-          if (filterBox.sortBy !== "none") {
-            filterBox.setSortBy("none");
+          if (handle.sortBy !== "none") {
+            handle.setSortBy("none");
           }
         }
       },
@@ -5129,28 +4806,22 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       )
     );
   }
-  async function initialize_war_features(factionWar, lists) {
+  function initialize_war_features(factionWar, lists) {
     if (factionWar.hasAttribute("data-ffscouter-initialized")) return;
     factionWar.setAttribute("data-ffscouter-initialized", "true");
-    let filterBox = factionWar.querySelector(
-      "ff-faction-filter-box[mode='war']"
-    );
-    if (!filterBox) {
-      filterBox = await create_ff_element("ff-faction-filter-box");
-      if (!filterBox) return;
-      filterBox.setAttribute("mode", "war");
-      factionWar.insertBefore(filterBox, factionWar.firstChild);
+    if (!factionWar.querySelector("[data-ff-filter-box][data-mode='war']")) {
+      const container = mountFilterBox("war", (snapshot) => {
+        const currentLists = Array.from(
+          factionWar.querySelectorAll(".enemy-faction, .your-faction")
+        );
+        const colDisplay = ffconfig.war_col_display;
+        for (const list of currentLists) {
+          apply_filters_and_sort(list, { ...snapshot, colDisplay });
+          update_header_sort_indicator(list, snapshot.sortBy);
+        }
+      });
+      factionWar.insertBefore(container, factionWar.firstChild);
     }
-    filterBox.addEventListener("filter-change", (e2) => {
-      const currentLists = Array.from(
-        factionWar.querySelectorAll(".enemy-faction, .your-faction")
-      );
-      const colDisplay = ffconfig.war_col_display;
-      for (const list of currentLists) {
-        apply_filters_and_sort(list, { ...e2.detail, colDisplay });
-        update_header_sort_indicator(list, e2.detail.sortBy);
-      }
-    });
     for (const list of lists) {
       setup_war_list(list);
     }
@@ -5170,13 +4841,13 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
   const process_page = () => {
     wait_for_element(".members-list", 1e4).then((node) => {
       if (node instanceof HTMLElement) {
-        log$9.debug("Found members-list!");
+        log$a.debug("Found members-list!");
         monitor_member_list(node);
       }
     });
     wait_for_element(".chain-attacks-list", 1e4).then((node) => {
       if (node instanceof HTMLElement) {
-        log$9.debug("Found chain-attacks-list!");
+        log$a.debug("Found chain-attacks-list!");
         monitor_member_list(node, true);
       }
     });
@@ -5184,12 +4855,12 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       if (!node) {
         return;
       }
-      log$9.debug("Found faction_war_list_id");
+      log$a.debug("Found faction_war_list_id");
       const descriptions_observer = new MutationObserver(async (mutations) => {
         for (const mutation of mutations) {
           for (const node2 of mutation.addedNodes) {
             if (node2 instanceof HTMLElement && node2.classList.contains("descriptions")) {
-              log$9.debug(
+              log$a.debug(
                 "Observed mutation that included adding descriptions",
                 node2
               );
@@ -5202,7 +4873,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
         }
       });
       descriptions_observer.observe(node, { childList: true });
-      log$9.debug(
+      log$a.debug(
         `Set up descriptions observer on <${node.tagName.toLowerCase()}> .${[...node.classList].join(".")}`
       );
       const existing_descriptions = node.querySelector(".descriptions");
@@ -5262,11 +4933,12 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
   const __vite_glob_0_2 = Object.freeze( Object.defineProperty({
     __proto__: null,
     default: index$c,
+    getFilterBoxHandle,
     initialize_features,
     setup_war_features,
     should_run_faction
   }, Symbol.toStringTag, { value: "Module" }));
-  const log$8 = logger.child("feature:fallback");
+  const log$9 = logger.child("feature:fallback");
   const FEATURE_NAME_HONOR_BAR = "fallback-honor-bar";
   const FEATURE_NAME_USER_NAME = "fallback-user-name";
   const FEATURE_NAME$3 = "fallback";
@@ -5337,7 +5009,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       default:
         if (torn_page("factions", { step: "your" })) {
           const hash = window.location.hash;
-          if (!(hash.startsWith("#/war/") || hash === "#/tab=info")) {
+          if (!(hash.startsWith("#/war/") || hash === "#/tab=info" || hash.startsWith("#/tab=controls"))) {
             return true;
           }
         }
@@ -5458,7 +5130,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
           if (is_observing) {
             ff_gauge_observer.disconnect();
             is_observing = false;
-            log$8.debug("Disconnected fallback MutationObserver (excluded page)");
+            log$9.debug("Disconnected fallback MutationObserver (excluded page)");
           }
         } else {
           current_config = get_page_selectors();
@@ -5471,7 +5143,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
               subtree: true
             });
             is_observing = true;
-            log$8.debug("Connected fallback MutationObserver (included page)");
+            log$9.debug("Connected fallback MutationObserver (included page)");
             if (target) {
               check_mutation(target);
             }
@@ -5479,7 +5151,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
         }
       };
       on_navigation(() => {
-        log$8.debug("Navigation detected, re-evaluating fallback observer state");
+        log$9.debug("Navigation detected, re-evaluating fallback observer state");
         update_observer_state();
       });
       update_observer_state();
@@ -5497,7 +5169,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     __proto__: null,
     default: index$b
   }, Symbol.toStringTag, { value: "Module" }));
-  const log$7 = logger.child("ui");
+  const log$8 = logger.child("ui");
   var TOAST_LEVEL = ((TOAST_LEVEL2) => {
     TOAST_LEVEL2[TOAST_LEVEL2["DEBUG"] = 0] = "DEBUG";
     TOAST_LEVEL2[TOAST_LEVEL2["INFO"] = 1] = "INFO";
@@ -5562,7 +5234,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     } else {
       msg.textContent = `FairFight Scouter V2: ${message}`;
     }
-    log$7.info("[FF Scouter V2] Toast: ", message);
+    log$8.info("[FF Scouter V2] Toast: ", message);
     toast2.appendChild(msg);
     toast2.appendChild(closeBtn);
     document.body.appendChild(toast2);
@@ -5573,7 +5245,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       }
     }, 4e3);
   }
-  const log$6 = logger.child("feature:ff-button");
+  const log$7 = logger.child("feature:ff-button");
   const CACHE_LIFETIME_MS = 7 * 24 * 60 * 60 * 1e3;
   const POLL_INTERVAL_MS = 24 * 60 * 60 * 1e3;
   function get_active_filters() {
@@ -5586,13 +5258,13 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       factionless: ffconfig.chain_factionless
     };
   }
-  function filters_changed(a2, b2) {
-    return a2.minlevel !== b2.minlevel || a2.maxlevel !== b2.maxlevel || a2.minff !== b2.minff || a2.maxff !== b2.maxff || a2.inactive !== b2.inactive || a2.factionless !== b2.factionless;
+  function filters_changed(a, b) {
+    return a.minlevel !== b.minlevel || a.maxlevel !== b.maxlevel || a.minff !== b.minff || a.maxff !== b.maxff || a.inactive !== b.inactive || a.factionless !== b.factionless;
   }
   async function update_ff_targets(force = false) {
     const key = ffconfig.key;
     if (!key) {
-      log$6.debug("API key not set, skipping target fetch");
+      log$7.debug("API key not set, skipping target fetch");
       return;
     }
     const currentFilters = get_active_filters();
@@ -5601,7 +5273,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     const filtersChanged = cached && filters_changed(cached.filters, currentFilters);
     const timeToRefresh = cached && (!cached.last_updated || Date.now() - cached.last_updated > POLL_INTERVAL_MS);
     if (!force && !hasNoCacheOrExpired && !filtersChanged && !timeToRefresh) {
-      log$6.debug(
+      log$7.debug(
         "Using cached targets, not expired, filters match, and not time to poll yet"
       );
       return;
@@ -5624,12 +5296,12 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
           filters: currentFilters
         };
         ffconfig.chain_target_index = 0;
-        log$6.info(
+        log$7.info(
           `Chain targets updated successfully: ${response.targets.length} targets found`
         );
       }
     } catch (err) {
-      log$6.error("Failed to update chain targets:", err);
+      log$7.error("Failed to update chain targets:", err);
     }
   }
   function get_next_target_index(maxLen) {
@@ -5701,20 +5373,20 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     anchor.style.display = "block";
     anchor.style.textDecoration = "none";
     update_anchor_attributes(anchor);
-    const handler = async (e2) => {
-      if (e2 instanceof KeyboardEvent) {
-        if (e2.key !== "Enter") {
+    const handler = async (e) => {
+      if (e instanceof KeyboardEvent) {
+        if (e.key !== "Enter") {
           return;
         }
-      } else if (e2 instanceof MouseEvent) {
-        if (e2.button !== 0 && e2.button !== 1 && e2.button !== 2) {
+      } else if (e instanceof MouseEvent) {
+        if (e.button !== 0 && e.button !== 1 && e.button !== 2) {
           return;
         }
       }
       const cached = ffconfig.chain_targets;
       if (!cached || !cached.targets || cached.targets.length === 0) {
-        e2.preventDefault();
-        const isPrimary = e2 instanceof MouseEvent && e2.button === 0 || e2 instanceof KeyboardEvent;
+        e.preventDefault();
+        const isPrimary = e instanceof MouseEvent && e.button === 0 || e instanceof KeyboardEvent;
         if (isPrimary) {
           toast("No cached targets found. Fetching...", TOAST_LEVEL.WARNING);
           update_ff_targets(true).then(() => {
@@ -5768,7 +5440,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
         const cached = ffconfig.chain_targets;
         const currentFilters = get_active_filters();
         if (!cached || filters_changed(cached.filters, currentFilters)) {
-          log$6.info("Target filters changed, refetching targets immediately");
+          log$7.info("Target filters changed, refetching targets immediately");
           await update_ff_targets(true);
         }
         create_chain_button();
@@ -5790,6 +5462,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     update_ff_targets
   }, Symbol.toStringTag, { value: "Module" }));
   const FEATURE_NAME$2 = "item_market";
+  const log$6 = logger.child(`feature:${FEATURE_NAME$2}`);
   const index$9 = {
     name: "Item market FF display",
     description: "Shows FF on the item market page",
@@ -5802,8 +5475,8 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       if (!root) {
         return;
       }
-      console.log("Found item list wrapper!");
-      console.log(root);
+      log$6.info("Found item list wrapper!");
+      log$6.debug("Root element:", root);
       const process = () => {
         apply_ff_gauge_selector(
           root.querySelectorAll(
@@ -5847,25 +5520,8 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     __proto__: null,
     default: index$9
   }, Symbol.toStringTag, { value: "Module" }));
-  var __defProp$1 = Object.defineProperty;
-  var __getOwnPropDesc$1 = Object.getOwnPropertyDescriptor;
-  var __decorateClass$1 = (decorators, target, key, kind) => {
-    var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$1(target, key) : target;
-    for (var i2 = decorators.length - 1, decorator; i2 >= 0; i2--)
-      if (decorator = decorators[i2])
-        result = (kind ? decorator(target, key, result) : decorator(result)) || result;
-    if (kind && result) __defProp$1(target, key, result);
-    return result;
-  };
   const log$5 = logger.child("ui");
   const PREMIUM_UPGRADE_URL = "https://ffscouter.com/premium";
-  const premium_action = b`<a
-  href="${PREMIUM_UPGRADE_URL}"
-  target="_blank"
-  rel="noopener noreferrer"
-  style="font-weight: bold; text-decoration: underline;"
-  >Upgrade to FFScouter Flight Tracking</a
->`;
   function format_duration_human(totalSeconds, compact) {
     const clampedSeconds = Math.max(0, Math.floor(totalSeconds));
     const hours = Math.floor(clampedSeconds / 3600);
@@ -5891,201 +5547,198 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     const minutes = String(d2.getUTCMinutes()).padStart(2, "0");
     return `${hours}:${minutes}`;
   }
-  let FFFlightProfileStatus = class extends i {
-    constructor() {
-      super(...arguments);
-      this.playerId = null;
-      this.data = null;
-      this.compact = false;
-      this.is_premium = null;
-      this.loading = false;
-      this.error = null;
-      this.current_time_seconds = get_current_time_seconds();
-      this.fetch_interval = null;
-      this.tick_interval = null;
+  function FFFlightProfileStatus({ playerId, compact = false }) {
+    const [data, setData] = useState(null);
+    const [isPremium, setIsPremium] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [currentTimeSeconds, setCurrentTimeSeconds] = useState(
+      get_current_time_seconds
+    );
+    const [prevPlayerId, setPrevPlayerId] = useState(playerId);
+    if (playerId !== prevPlayerId) {
+      setPrevPlayerId(playerId);
+      setData(null);
+      setError(null);
+      setLoading(true);
+      setIsPremium(null);
     }
-    createRenderRoot() {
-      return this;
-    }
-    connectedCallback() {
-      super.connectedCallback();
-      this.start_timers();
-    }
-    disconnectedCallback() {
-      this.stop_timers();
-      super.disconnectedCallback();
-    }
-    start_timers() {
-      this.stop_timers();
-      this.tick_interval = setInterval(() => {
-        this.current_time_seconds = get_current_time_seconds();
-        if (this.data?.rechecking && this.data.next_retry_at) {
-          if (Date.now() >= this.data.next_retry_at) {
-            this.fetch_data();
+    const dataRef = useRef(null);
+    dataRef.current = data;
+    useEffect(() => {
+      if (!playerId) return;
+      let active = true;
+      const fetchData = async () => {
+        if (!active) return;
+        let isPremiumResult;
+        try {
+          isPremiumResult = await check_key_status.is_premium();
+        } catch (err) {
+          log$5.error("Failed to check premium status", err);
+          if (active) setLoading(false);
+          return;
+        }
+        if (!active) return;
+        setIsPremium(isPremiumResult);
+        if (!isPremiumResult) {
+          setLoading(false);
+          return;
+        }
+        try {
+          const result = await ffscouter.get_flights(playerId);
+          if (!active) return;
+          setData(result);
+          setError(null);
+        } catch (err) {
+          if (!active) return;
+          log$5.error("Failed to fetch flight data", err);
+          if (err instanceof FFApiError) {
+            const code = err.ff_api_error?.code;
+            if (code === 19) {
+              setIsPremium(false);
+            } else if (code === 2 || code === 10 || code === 12) {
+              setError("Invalid API key");
+            } else if (code === 20) {
+              setError("Rate limit exceeded. Retrying...");
+            } else {
+              setError(
+                err.ff_api_error?.error ?? err.message ?? "Flight tracking unavailable"
+              );
+            }
+          } else {
+            setError(
+              err instanceof Error ? err.message : "Flight tracking unavailable"
+            );
           }
+        } finally {
+          if (active) setLoading(false);
+        }
+      };
+      fetchData();
+      const tick = setInterval(() => {
+        setCurrentTimeSeconds(get_current_time_seconds());
+        const d2 = dataRef.current;
+        if (d2?.rechecking && d2.next_retry_at && Date.now() >= d2.next_retry_at) {
+          fetchData();
         }
       }, 1e3);
-      this.fetch_interval = setInterval(() => {
-        if (!this.data?.rechecking) {
-          this.fetch_data();
+      const fetchInterval = setInterval(() => {
+        if (!dataRef.current?.rechecking) {
+          fetchData();
         }
       }, 3e4);
-    }
-    stop_timers() {
-      if (this.tick_interval) {
-        clearInterval(this.tick_interval);
-        this.tick_interval = null;
-      }
-      if (this.fetch_interval) {
-        clearInterval(this.fetch_interval);
-        this.fetch_interval = null;
-      }
-    }
-    willUpdate(changedProperties) {
-      if (changedProperties.has("playerId") && this.playerId) {
-        this.data = null;
-        this.error = null;
-        this.loading = true;
-        this.is_premium = null;
-        this.fetch_data();
-      }
-    }
-    async fetch_data() {
-      if (!this.playerId) return;
-      const fetchId = this.playerId;
-      let is_premium;
-      try {
-        is_premium = await check_key_status.is_premium();
-      } catch (err) {
-        log$5.error("Failed to check premium status", err);
-        if (this.playerId === fetchId) {
-          this.loading = false;
+      return () => {
+        active = false;
+        clearInterval(tick);
+        clearInterval(fetchInterval);
+      };
+    }, [playerId]);
+    if (!playerId) return null;
+    if (isPremium === false) {
+      return jsx("div", { className: "ff-scouter-profile-flight-info", children: jsx(
+        "a",
+        {
+          href: PREMIUM_UPGRADE_URL,
+          target: "_blank",
+          rel: "noopener noreferrer",
+          style: { fontWeight: "bold", textDecoration: "underline" },
+          children: "Upgrade to FFScouter Flight Tracking"
         }
-        return;
-      }
-      if (this.playerId !== fetchId) return;
-      this.is_premium = is_premium;
-      if (!is_premium) {
-        this.loading = false;
-        return;
-      }
-      try {
-        const result = await ffscouter.get_flights(this.playerId);
-        if (this.playerId !== fetchId) return;
-        this.data = result;
-        this.error = null;
-      } catch (err) {
-        if (this.playerId !== fetchId) return;
-        log$5.error("Failed to fetch flight data", err);
-        if (err instanceof FFApiError) {
-          const code = err.ff_api_error?.code;
-          if (code === 19) {
-            this.is_premium = false;
-          } else if (code === 2 || code === 10 || code === 12) {
-            this.error = "Invalid API key";
-          } else if (code === 20) {
-            this.error = "Rate limit exceeded. Retrying...";
-          } else {
-            this.error = err.ff_api_error?.error || err.message || "Flight tracking unavailable";
-          }
-        } else {
-          this.error = err.message || "Flight tracking unavailable";
-        }
-      } finally {
-        if (this.playerId === fetchId) {
-          this.loading = false;
-        }
-      }
+      ) });
     }
-    render() {
-      if (this.is_premium === false) {
-        return b`<div class="ff-scouter-profile-flight-info">
-        ${premium_action}
-      </div>`;
-      }
-      let content = b``;
-      if (this.error) {
-        content = b`<span style="color: #ff6b6b;">Error: ${this.error}</span>`;
-      } else if (this.loading && !this.data) {
-        content = this.compact ? b`Estimating...` : b`Landing: estimating...`;
+    let content;
+    if (error) {
+      content = jsxs("span", { style: { color: "#ff6b6b" }, children: [
+        "Error: ",
+        error
+      ] });
+    } else if (loading && !data) {
+      content = compact ? "Estimating..." : "Landing: estimating...";
+    } else {
+      const current = data?.current;
+      if (data?.rechecking) {
+        const next = data.next_retry_at ?? 0;
+        const seconds = Math.max(0, Math.ceil((next - Date.now()) / 1e3));
+        content = compact ? jsxs(Fragment, { children: [
+          "No data.",
+jsx("br", {}),
+          "Rechecking..."
+        ] }) : `No data. Rechecking in ${seconds} seconds.`;
+      } else if (!current || !current.earliest_arrival_time && !current.latest_arrival_time) {
+        content = compact ? "Unavailable" : "Landing: unavailable for current route";
       } else {
-        const current = this.data?.current;
-        if (this.data?.rechecking) {
-          const next = this.data.next_retry_at ?? 0;
-          const now = Date.now();
-          const seconds = Math.max(0, Math.ceil((next - now) / 1e3));
-          content = this.compact ? b`No data.<br />Rechecking...` : b`No data. Rechecking in ${seconds} seconds.`;
-        } else if (!current || !current.earliest_arrival_time && !current.latest_arrival_time) {
-          content = this.compact ? b`Unavailable` : b`Landing: unavailable for current route`;
+        const earliest = Number(current.earliest_arrival_time);
+        const latest = Number(current.latest_arrival_time);
+        if (!Number.isFinite(earliest) || !Number.isFinite(latest)) {
+          content = compact ? "Unavailable" : "Landing: unavailable for current route";
         } else {
-          const earliest = Number(current.earliest_arrival_time);
-          const latest = Number(current.latest_arrival_time);
-          if (!Number.isFinite(earliest) || !Number.isFinite(latest)) {
-            content = this.compact ? b`Unavailable` : b`Landing: unavailable for current route`;
+          const earliestRemaining = earliest - currentTimeSeconds;
+          const latestRemaining = latest - currentTimeSeconds;
+          const earliestTct = format_tct_time(earliest);
+          const latestTct = format_tct_time(latest);
+          if (latestRemaining <= -5 * 60) {
+            content = compact ? "Late" : jsxs(Fragment, { children: [
+              "Landing: Late, probably flight delayed.",
+jsx("br", {}),
+              "(",
+              latestTct,
+              " TCT latest)"
+            ] });
+          } else if (latestRemaining <= 0) {
+            content = compact ? jsxs(Fragment, { children: [
+              "Just landed",
+jsx("br", {}),
+              "(Latest: ",
+              latestTct,
+              " TCT)"
+            ] }) : jsxs(Fragment, { children: [
+              "Landing: just landed",
+jsx("br", {}),
+              "(",
+              latestTct,
+              " TCT latest)"
+            ] });
+          } else if (earliestRemaining <= 0) {
+            content = compact ? jsxs(Fragment, { children: [
+              "Imminent",
+jsx("br", {}),
+              format_duration_human(latestRemaining, compact),
+jsx("br", {})
+            ] }) : jsxs(Fragment, { children: [
+              "Landing: imminent -",
+              " ",
+              format_duration_human(latestRemaining, compact),
+jsx("br", {}),
+              "(Latest: ",
+              latestTct,
+              " TCT)"
+            ] });
           } else {
-            const nowUnix = this.current_time_seconds;
-            const earliestRemaining = earliest - nowUnix;
-            const latestRemaining = latest - nowUnix;
-            const earliestTct = format_tct_time(earliest);
-            const latestTct = format_tct_time(latest);
-            console.log({
-              earliestRemaining,
-              latestRemaining,
+            content = compact ? jsxs(Fragment, { children: [
+              format_duration_human(earliestRemaining, compact),
+jsx("br", {}),
+              format_duration_human(latestRemaining, compact)
+            ] }) : jsxs(Fragment, { children: [
+              "Landing: ",
+              format_duration_human(earliestRemaining, compact),
+              " -",
+              " ",
+              format_duration_human(latestRemaining, compact),
+jsx("br", {}),
+              "(",
               earliestTct,
-              latestTct
-            });
-            if (latestRemaining <= -5 * 60) {
-              content = this.compact ? b`Late` : b`Landing: Late, probably flight delayed.<br />(${latestTct}
-                  TCT latest)`;
-            } else if (latestRemaining <= 0) {
-              content = this.compact ? b`Just landed<br />(Latest: ${latestTct} TCT)` : b`Landing: just landed<br />(${latestTct} TCT latest)`;
-            } else if (earliestRemaining <= 0) {
-              content = this.compact ? b`Imminent<br />${format_duration_human(
-              latestRemaining,
-              this.compact
-            )}<br />` : b`Landing: imminent -
-                  ${format_duration_human(latestRemaining, this.compact)}<br />(Latest:
-                  ${latestTct} TCT)`;
-            } else {
-              content = this.compact ? b`${format_duration_human(
-              earliestRemaining,
-              this.compact
-            )}<br />${format_duration_human(latestRemaining, this.compact)}` : b`Landing:
-                  ${format_duration_human(earliestRemaining, this.compact)} -
-                  ${format_duration_human(latestRemaining, this.compact)}<br />(${earliestTct}
-                  - ${latestTct} TCT)`;
-            }
+              " - ",
+              latestTct,
+              " TCT)"
+            ] });
           }
         }
       }
-      return b`<div class="ff-scouter-profile-flight-info">${content}</div>`;
     }
-  };
-  __decorateClass$1([
-    n2({ type: Number })
-  ], FFFlightProfileStatus.prototype, "playerId", 2);
-  __decorateClass$1([
-    n2({ type: Object })
-  ], FFFlightProfileStatus.prototype, "data", 2);
-  __decorateClass$1([
-    n2({ type: Boolean })
-  ], FFFlightProfileStatus.prototype, "compact", 2);
-  __decorateClass$1([
-    r()
-  ], FFFlightProfileStatus.prototype, "is_premium", 2);
-  __decorateClass$1([
-    r()
-  ], FFFlightProfileStatus.prototype, "loading", 2);
-  __decorateClass$1([
-    r()
-  ], FFFlightProfileStatus.prototype, "error", 2);
-  __decorateClass$1([
-    r()
-  ], FFFlightProfileStatus.prototype, "current_time_seconds", 2);
-  FFFlightProfileStatus = __decorateClass$1([
-    t("ff-flight-profile-status")
-  ], FFFlightProfileStatus);
+    return jsx("div", { className: "ff-scouter-profile-flight-info", children: content });
+  }
   const log$4 = logger.child("feature:mini-profile-flights");
+  const FLIGHT_CONTAINER_CLASS = "ff-flight-element";
   function is_flying$1(status) {
     return status.classList.contains("travelling");
   }
@@ -6113,16 +5766,25 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     if (!miniroot) {
       return;
     }
-    const flight_element = await create_ff_element("ff-flight-profile-status");
-    if (!flight_element) {
-      return;
-    }
-    flight_element.compact = true;
+    const container = document.createElement("div");
+    container.classList.add(FLIGHT_CONTAINER_CLASS);
+    let root = null;
     let lastPlayerId = null;
+    const renderForPlayer = (player_id2) => {
+      if (!root) {
+        root = createRoot(container);
+      }
+      root.render(
+        createElement(FFFlightProfileStatus, {
+          playerId: player_id2,
+          compact: true
+        })
+      );
+    };
     const mp_observer = new MutationObserver((mutations) => {
       for (const mutation of mutations) {
         if (Array.from(mutation.addedNodes).some(
-          (node) => node instanceof HTMLElement && (node.tagName.toLowerCase() === "ff-flight-profile-status" || node.classList.contains("ff-scouter-profile-flight-info"))
+          (node) => node instanceof HTMLElement && (node.classList.contains(FLIGHT_CONTAINER_CLASS) || node.classList.contains("ff-scouter-profile-flight-info"))
         )) {
           return;
         }
@@ -6140,17 +5802,17 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       if (!status2) {
         return;
       }
-      flight_element.playerId = player_id2;
+      renderForPlayer(player_id2);
       if (is_flying$1(status2)) {
         const description = status2.querySelector(".description");
-        if (description && !description.contains(flight_element)) {
+        if (description && !description.contains(container)) {
           log$4.debug(
             `Player ${player_id2} is flying, adding flight tracker to mini-profile`
           );
-          description.appendChild(flight_element);
+          description.appendChild(container);
         }
       } else {
-        flight_element.remove();
+        container.remove();
         ffscouter.clear_flight_cache(player_id2);
       }
     });
@@ -6158,11 +5820,12 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     const player_id = get_player_id_in_element(miniroot);
     const status = miniroot.querySelector(".profile-status");
     if (player_id && status) {
-      flight_element.playerId = player_id;
+      renderForPlayer(player_id);
+      lastPlayerId = player_id;
       if (is_flying$1(status)) {
         const description = status.querySelector(".description");
-        if (description && !description.contains(flight_element)) {
-          description.appendChild(flight_element);
+        if (description && !description.contains(container)) {
+          description.appendChild(container);
         }
       }
     }
@@ -6252,14 +5915,14 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
         }
         miniroot.querySelector(".ffscouter-mini-desc")?.remove();
         const ff_string = format_ff_score(d2);
-        const difficulty = format_difficulty_text(d2);
         const fresh = format_relative_time(d2.last_updated);
-        const message = `FF ${ff_string} (${difficulty}) ${fresh}`;
-        const description = miniroot.querySelector(".description");
+        const message = `FF ${ff_string} ${fresh}`;
+        const lastaction = miniroot.querySelector(".last-action");
         const desc = document.createElement("span");
         desc.classList.add("ffscouter-mini-desc");
         desc.innerText = message;
-        description?.appendChild(desc);
+        lastaction?.appendChild(document.createElement("br"));
+        lastaction?.appendChild(desc);
       });
       ffscouter.complete();
     });
@@ -6308,21 +5971,22 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       if (!status) {
         return;
       }
-      const element = await create_ff_element("ff-flight-profile-status");
-      if (!element) return;
-      element.playerId = player_id;
+      const container = document.createElement("div");
+      container.classList.add("ff-flight-element");
+      createRoot(container).render(
+        createElement(FFFlightProfileStatus, { playerId: player_id })
+      );
       const check_and_update = () => {
         if (is_flying(status)) {
           const description = status.querySelector(".description");
           if (description === null) {
             return;
           }
-          if (!description.contains(element)) {
-            console.log("Appending child", element);
-            description.appendChild(element);
+          if (!description.contains(container)) {
+            description.appendChild(container);
           }
         } else {
-          element.remove();
+          container.remove();
           ffscouter.clear_flight_cache(player_id);
         }
       };
@@ -6437,14 +6101,11 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       if (!player_id) {
         return;
       }
-      ffscouter.get(player_id).then(async (data) => {
-        const line = await create_ff_element("ff-header-line");
-        if (!line) return;
-        line.data = data;
-        info_line.appendChild(line);
-        inject_info_line(info_line);
-      });
-      ffscouter.complete();
+      mountComponent(
+        createElement(FFHeaderLine, { playerId: player_id }),
+        info_line
+      );
+      inject_info_line(info_line);
     },
     httpIntercept: {
       before(_url, _init) {
@@ -6513,1076 +6174,1416 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     __proto__: null,
     default: index$3
   }, Symbol.toStringTag, { value: "Module" }));
-  var __defProp = Object.defineProperty;
-  var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
-  var __decorateClass = (decorators, target, key, kind) => {
-    var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
-    for (var i2 = decorators.length - 1, decorator; i2 >= 0; i2--)
-      if (decorator = decorators[i2])
-        result = (kind ? decorator(target, key, result) : decorator(result)) || result;
-    if (kind && result) __defProp(target, key, result);
-    return result;
+  const styles = {
+    "ff-settings-panel__accordion": "_ff-settings-panel__accordion_6bhvd_1",
+    "ff-settings-panel__accordion--glow": "_ff-settings-panel__accordion--glow_6bhvd_10",
+    "ff-settings-panel__body": "_ff-settings-panel__body_6bhvd_20",
+    "ff-settings-panel__input-row": "_ff-settings-panel__input-row_6bhvd_24",
+    "ff-settings-panel__range-row": "_ff-settings-panel__range-row_6bhvd_32",
+    "ff-settings-panel__blur": "_ff-settings-panel__blur_6bhvd_38",
+    "ff-settings-panel__error-msg": "_ff-settings-panel__error-msg_6bhvd_48",
+    "ff-settings-panel__number": "_ff-settings-panel__number_6bhvd_67",
+    "ff-settings-panel__api-explanation": "_ff-settings-panel__api-explanation_6bhvd_94",
+    "ff-settings-panel__premium-badge": "_ff-settings-panel__premium-badge_6bhvd_107",
+    "ff-settings-panel__premium-badge--enabled": "_ff-settings-panel__premium-badge--enabled_6bhvd_117",
+    "ff-settings-panel__premium-badge--disabled": "_ff-settings-panel__premium-badge--disabled_6bhvd_121",
+    "ff-settings-panel__premium-badge--unknown": "_ff-settings-panel__premium-badge--unknown_6bhvd_125",
+    "ff-settings-panel__section": "_ff-settings-panel__section_6bhvd_138",
+    "ff-settings-panel__span": "_ff-settings-panel__span_6bhvd_152",
+    "ff-settings-panel__cell": "_ff-settings-panel__cell_6bhvd_160",
+    "ff-settings-panel__cell--checkbox": "_ff-settings-panel__cell--checkbox_6bhvd_169",
+    "ff-settings-panel__api-block": "_ff-settings-panel__api-block_6bhvd_193",
+    "ff-settings-panel__api-status-row": "_ff-settings-panel__api-status-row_6bhvd_203",
+    "ff-settings-panel__chain-suboptions": "_ff-settings-panel__chain-suboptions_6bhvd_213",
+    "ff-settings-panel__chain-wide": "_ff-settings-panel__chain-wide_6bhvd_218",
+    "ff-settings-panel__group": "_ff-settings-panel__group_6bhvd_242",
+    "ff-settings-panel__marker-size": "_ff-settings-panel__marker-size_6bhvd_256",
+    "ff-settings-panel__marker-border-width": "_ff-settings-panel__marker-border-width_6bhvd_257",
+    "ff-settings-panel__marker-size-controls": "_ff-settings-panel__marker-size-controls_6bhvd_263",
+    "ff-settings-panel__color-scheme": "_ff-settings-panel__color-scheme_6bhvd_276",
+    "ff-settings-panel__color-scheme-controls": "_ff-settings-panel__color-scheme-controls_6bhvd_282",
+    "ff-settings-panel__actions": "_ff-settings-panel__actions_6bhvd_295",
+    "ff-settings-panel__saved-msg": "_ff-settings-panel__saved-msg_6bhvd_304"
   };
-  let FFSettingsPanel = class extends i {
+  const cls = {
+    accordion: styles["ff-settings-panel__accordion"],
+    accordionGlow: styles["ff-settings-panel__accordion--glow"],
+    body: styles["ff-settings-panel__body"],
+    group: styles["ff-settings-panel__group"],
+    section: styles["ff-settings-panel__section"],
+    span: styles["ff-settings-panel__span"],
+    cell: styles["ff-settings-panel__cell"],
+    cellCheckbox: styles["ff-settings-panel__cell--checkbox"],
+    apiExplanation: styles["ff-settings-panel__api-explanation"],
+    apiBlock: styles["ff-settings-panel__api-block"],
+    apiStatusRow: styles["ff-settings-panel__api-status-row"],
+    premiumBadge: styles["ff-settings-panel__premium-badge"],
+    premiumBadgeEnabled: styles["ff-settings-panel__premium-badge--enabled"],
+    premiumBadgeDisabled: styles["ff-settings-panel__premium-badge--disabled"],
+    premiumBadgeUnknown: styles["ff-settings-panel__premium-badge--unknown"],
+    blur: styles["ff-settings-panel__blur"],
+    number: styles["ff-settings-panel__number"],
+    markerSize: styles["ff-settings-panel__marker-size"],
+    markerBorderWidth: styles["ff-settings-panel__marker-border-width"],
+    markerSizeControls: styles["ff-settings-panel__marker-size-controls"],
+    colorScheme: styles["ff-settings-panel__color-scheme"],
+    colorSchemeControls: styles["ff-settings-panel__color-scheme-controls"],
+    inputRow: styles["ff-settings-panel__input-row"],
+    rangeRow: styles["ff-settings-panel__range-row"],
+    errorMsg: styles["ff-settings-panel__error-msg"],
+    chainSuboptions: styles["ff-settings-panel__chain-suboptions"],
+    chainWide: styles["ff-settings-panel__chain-wide"],
+    actions: styles["ff-settings-panel__actions"],
+    savedMsg: styles["ff-settings-panel__saved-msg"]
+  };
+  const DEFAULT_VALUES = {
+    apiKey: "",
+    lowRange: CONFIG_DEFAULTS.low_ff_range,
+    highRange: CONFIG_DEFAULTS.high_ff_range,
+    maxRange: CONFIG_DEFAULTS.max_ff_range,
+    chainButtonEnabled: CONFIG_DEFAULTS.chain_button_enabled,
+    chainLinkType: CONFIG_DEFAULTS.chain_link_type,
+    chainTabType: CONFIG_DEFAULTS.chain_tab_type,
+    chainFFTarget: CONFIG_DEFAULTS.chain_ff_target,
+    chainMinLevel: CONFIG_DEFAULTS.chain_min_level,
+    chainMaxLevel: CONFIG_DEFAULTS.chain_max_level,
+    chainInactive: CONFIG_DEFAULTS.chain_inactive,
+    chainMinFF: CONFIG_DEFAULTS.chain_min_ff,
+    chainMaxFF: CONFIG_DEFAULTS.chain_max_ff,
+    chainFactionless: CONFIG_DEFAULTS.chain_factionless,
+    ffHistoryEnabled: CONFIG_DEFAULTS.ff_history_enabled,
+    factionsColDisplay: CONFIG_DEFAULTS.factions_col_display,
+    warColDisplay: CONFIG_DEFAULTS.war_col_display,
+    debugLogs: CONFIG_DEFAULTS.debug_logs,
+    analyticsEnabled: CONFIG_DEFAULTS.analytics_enabled,
+    networkInterceptionEnabled: CONFIG_DEFAULTS.network_interception_enabled,
+    gaugeMarkerType: CONFIG_DEFAULTS.gauge_marker_type,
+    gaugeMarkerScale: CONFIG_DEFAULTS.gauge_marker_scale,
+    gaugeMarkerBorderWidth: CONFIG_DEFAULTS.gauge_marker_border_width,
+    colorScheme: CONFIG_DEFAULTS.color_scheme,
+    warQuickAttackAction: CONFIG_DEFAULTS.war_quick_attack_action,
+    statusAttackLinksEnabled: CONFIG_DEFAULTS.status_attack_links_enabled,
+    debugDisablePdaHttp: CONFIG_DEFAULTS.debug_disable_pda_http,
+    isPremium: null
+  };
+  function SettingsPanelComponent({
+    props,
+    drafts,
+    isPremium,
+    rangeError,
+    showSavedMessage,
+    onVerify,
+    onSave,
+    onReset,
+    onClearCache,
+    onRendered
+  }) {
+    useEffect(() => {
+      onRendered();
+    });
+    const previewColor = get_palette_for_scheme(drafts.colorScheme)[5] ?? "#888888";
+    return jsxs(
+      "details",
+      {
+        className: `${cls.accordion}${!props.apiKey ? ` ${cls.accordionGlow}` : ""} cont-gray border-round`,
+        children: [
+jsx("summary", { children: "FF Scouter Settings" }),
+jsxs("div", { className: cls.body, children: [
+jsxs("div", { className: cls.group, children: [
+jsx("h4", { children: "API Key & Premium" }),
+jsxs("div", { className: cls.section, children: [
+jsxs("div", { className: `${cls.apiExplanation} ${cls.span}`, children: [
+jsx("strong", { children: "Important:" }),
+                  " You must use the SAME exact API key that you use on",
+                  " ",
+jsx("a", { href: "https://ffscouter.com/", target: "_blank", rel: "noreferrer", children: "ffscouter.com" }),
+                  ". ",
+jsx("br", {}),
+jsx("br", {}),
+                  "If you're not sure which API key you used, go to",
+                  " ",
+jsx(
+                    "a",
+                    {
+                      href: "https://www.torn.com/preferences.php#tab=api",
+                      target: "_blank",
+                      rel: "noreferrer",
+                      children: "your API preferences"
+                    }
+                  ),
+                  " ",
+                  'and look for "FFScouter3" in your API key history comments.'
+                ] }),
+jsxs("div", { className: `${cls.span} ${cls.apiBlock}`, children: [
+jsxs("div", { className: cls.cell, children: [
+jsx("label", { htmlFor: "api-key", children: "API Key:" }),
+jsx(
+                      "input",
+                      {
+                        id: "api-key",
+                        type: "text",
+                        className: props.apiKey ? cls.blur : "",
+                        placeholder: "Paste your key here...",
+                        value: drafts.apiKey,
+                        onChange: () => {
+                        }
+                      }
+                    )
+                  ] }),
+jsxs("div", { className: cls.apiStatusRow, children: [
+jsx("label", { htmlFor: "ff-premium-badge", children: "FF Scouter Premium:" }),
+jsx(
+                      "span",
+                      {
+                        id: "ff-premium-badge",
+                        className: `${cls.premiumBadge} ${isPremium === null ? cls.premiumBadgeUnknown : isPremium ? cls.premiumBadgeEnabled : cls.premiumBadgeDisabled}`,
+                        children: isPremium === null ? "Unknown" : isPremium ? "Enabled" : "Disabled"
+                      }
+                    ),
+jsx(
+                      "button",
+                      {
+                        type: "button",
+                        className: "torn-btn btn-save",
+                        onClick: onVerify,
+                        children: "Verify"
+                      }
+                    )
+                  ] })
+                ] })
+              ] })
+            ] }),
+jsxs("div", { className: cls.group, children: [
+jsx("h4", { children: "Gauge Marker Settings" }),
+jsxs("div", { className: cls.section, children: [
+jsxs("div", { className: cls.cell, children: [
+jsx("label", { htmlFor: "gauge-marker-type", children: "Gauge Marker Style:" }),
+jsxs(
+                    "select",
+                    {
+                      id: "gauge-marker-type",
+                      value: drafts.gaugeMarkerType,
+                      onChange: () => {
+                      },
+                      children: [
+jsx("option", { value: "arrow", children: "Arrow (Default)" }),
+jsx("option", { value: "bubble_ff", children: "Bubble (FF Score)" }),
+jsx("option", { value: "bubble_estimate", children: "Bubble (BS Estimate)" })
+                      ]
+                    }
+                  )
+                ] }),
+jsxs("div", { className: `${cls.span} ${cls.markerSize}`, children: [
+jsx("label", { htmlFor: "gauge-marker-scale", children: "Marker Size:" }),
+jsxs("div", { className: cls.markerSizeControls, children: [
+jsx(
+                      "input",
+                      {
+                        id: "gauge-marker-scale",
+                        type: "range",
+                        min: "50",
+                        max: "200",
+                        step: "5",
+                        value: drafts.gaugeMarkerScale,
+                        onChange: () => {
+                        }
+                      }
+                    ),
+jsx(
+                      "input",
+                      {
+                        id: "gauge-marker-scale-number",
+                        type: "number",
+                        min: "50",
+                        max: "200",
+                        step: "5",
+                        className: cls.number,
+                        value: drafts.gaugeMarkerScale,
+                        onChange: () => {
+                        }
+                      }
+                    ),
+jsx("span", { children: "%" })
+                  ] })
+                ] }),
+jsxs("div", { className: `${cls.span} ${cls.markerBorderWidth}`, children: [
+jsx("label", { htmlFor: "gauge-marker-border-width", children: "Border Thickness:" }),
+jsxs("div", { className: cls.markerSizeControls, children: [
+jsx(
+                      "input",
+                      {
+                        id: "gauge-marker-border-width",
+                        type: "range",
+                        min: "0",
+                        max: "3",
+                        step: "0.5",
+                        value: drafts.gaugeMarkerBorderWidth,
+                        onChange: () => {
+                        }
+                      }
+                    ),
+jsx(
+                      "input",
+                      {
+                        id: "gauge-marker-border-width-number",
+                        type: "number",
+                        min: "0",
+                        max: "3",
+                        step: "0.5",
+                        className: cls.number,
+                        value: drafts.gaugeMarkerBorderWidth,
+                        onChange: () => {
+                        }
+                      }
+                    ),
+jsx("span", { children: "px" }),
+jsxs(
+                      "div",
+                      {
+                        className: "ffscouter-marker-preview",
+                        style: {
+                          "--ffscouter-marker-scale": drafts.gaugeMarkerScale / 100
+                        },
+                        children: [
+jsxs(
+                            "svg",
+                            {
+                              className: "ffscouter-preview-arrow",
+                              viewBox: FF_ARROW_VIEWBOX,
+                              children: [
+jsx("title", { children: "Preview Gauge Marker" }),
+jsx(
+                                  "path",
+                                  {
+                                    fillRule: "evenodd",
+                                    fill: previewColor,
+                                    stroke: "#000000",
+                                    strokeWidth: drafts.gaugeMarkerBorderWidth,
+                                    d: FF_ARROW_PATH_D
+                                  }
+                                )
+                              ]
+                            }
+                          ),
+jsx(
+                            "div",
+                            {
+                              className: "ffscouter-preview-bubble",
+                              style: {
+                                backgroundColor: previewColor,
+                                color: get_contrast_color(previewColor),
+                                borderWidth: `${drafts.gaugeMarkerBorderWidth * (drafts.gaugeMarkerScale / 100)}px`
+                              },
+                              children: "2.34"
+                            }
+                          )
+                        ]
+                      }
+                    )
+                  ] })
+                ] }),
+jsxs("div", { className: `${cls.span} ${cls.colorScheme}`, children: [
+jsx("label", { htmlFor: "color-scheme", children: "Color Scheme:" }),
+jsxs("div", { className: cls.colorSchemeControls, children: [
+jsxs(
+                      "select",
+                      {
+                        id: "color-scheme",
+                        value: drafts.colorScheme,
+                        onChange: () => {
+                        },
+                        children: [
+jsx("option", { value: "classic", children: "Classic (Default)" }),
+jsx("option", { value: "cool_diverging", children: "Cool Diverging" }),
+jsx("option", { value: "neon", children: "Neon" }),
+jsx("option", { value: "colorblind_safe", children: "Colorblind-Safe" }),
+jsx("option", { value: "grayscale", children: "Grayscale" }),
+jsx("option", { value: "green_yellow_red", children: "Green-Yellow-Red" }),
+jsx("option", { value: "blue_yellow_red", children: "Blue-Yellow-Red" }),
+jsx("option", { value: "plasma", children: "Plasma" })
+                        ]
+                      }
+                    ),
+jsx("div", { className: "ffscouter-swatch-row", children: get_palette_for_scheme(drafts.colorScheme).map((color) => jsxs(
+                      "svg",
+                      {
+                        className: "ffscouter-swatch",
+                        viewBox: FF_ARROW_VIEWBOX,
+                        children: [
+jsxs("title", { children: [
+                            color,
+                            " swatch"
+                          ] }),
+jsx(
+                            "path",
+                            {
+                              fillRule: "evenodd",
+                              fill: color,
+                              stroke: "#000000",
+                              strokeWidth: "1.5",
+                              d: FF_ARROW_PATH_D
+                            }
+                          )
+                        ]
+                      },
+                      color
+                    )) })
+                  ] })
+                ] }),
+jsxs("div", { className: `${cls.inputRow} ${cls.span}`, children: [
+jsx("label", { htmlFor: "ff-range-low", children: "FF Ranges (Low, High, Max):" }),
+jsxs("div", { className: cls.rangeRow, children: [
+jsx(
+                      "input",
+                      {
+                        id: "ff-range-low",
+                        type: "number",
+                        step: "0.1",
+                        className: cls.number,
+                        value: drafts.lowRange,
+                        onChange: () => {
+                        }
+                      }
+                    ),
+jsx("span", { children: "<" }),
+jsx(
+                      "input",
+                      {
+                        id: "ff-range-high",
+                        type: "number",
+                        step: "0.1",
+                        className: cls.number,
+                        value: drafts.highRange,
+                        onChange: () => {
+                        }
+                      }
+                    ),
+jsx("span", { children: "<" }),
+jsx(
+                      "input",
+                      {
+                        id: "ff-range-max",
+                        type: "number",
+                        step: "0.1",
+                        className: cls.number,
+                        value: drafts.maxRange,
+                        onChange: () => {
+                        }
+                      }
+                    )
+                  ] }),
+                  rangeError && jsx("div", { className: cls.errorMsg, children: rangeError })
+                ] })
+              ] })
+            ] }),
+jsxs("div", { className: cls.group, children: [
+jsx("h4", { children: "Feature Toggles" }),
+jsxs("div", { className: cls.section, children: [
+jsxs("div", { className: `${cls.span} ff-chain-block`, children: [
+jsxs("div", { className: `${cls.cell} ${cls.cellCheckbox}`, children: [
+jsx(
+                      "input",
+                      {
+                        id: "chain-button-toggle",
+                        type: "checkbox",
+                        checked: drafts.chainButtonEnabled,
+                        onChange: () => {
+                        }
+                      }
+                    ),
+jsx("label", { htmlFor: "chain-button-toggle", children: "Enable Chain Button (Green FF Button)" })
+                  ] }),
+                  drafts.chainButtonEnabled && jsxs("div", { className: `${cls.section} ${cls.chainSuboptions}`, children: [
+jsxs("div", { className: `${cls.cell} ${cls.chainWide}`, children: [
+jsx("label", { htmlFor: "chain-link-type", children: "Chain button opens:" }),
+jsxs(
+                        "select",
+                        {
+                          id: "chain-link-type",
+                          value: drafts.chainLinkType,
+                          onChange: () => {
+                          },
+                          children: [
+jsx("option", { value: "attack", children: "Attack page" }),
+jsx("option", { value: "profile", children: "Profile page" })
+                          ]
+                        }
+                      )
+                    ] }),
+jsxs("div", { className: `${cls.cell} ${cls.chainWide}`, children: [
+jsx("label", { htmlFor: "chain-tab-type", children: "Open in:" }),
+jsxs(
+                        "select",
+                        {
+                          id: "chain-tab-type",
+                          value: drafts.chainTabType,
+                          onChange: () => {
+                          },
+                          children: [
+jsx("option", { value: "newtab", children: "New tab" }),
+jsx("option", { value: "sametab", children: "Same tab" })
+                          ]
+                        }
+                      )
+                    ] }),
+jsxs("div", { className: cls.cell, children: [
+jsx("label", { htmlFor: "chain-min-level", children: "Min Level:" }),
+jsx(
+                        "input",
+                        {
+                          id: "chain-min-level",
+                          type: "number",
+                          className: cls.number,
+                          placeholder: "No min",
+                          value: drafts.chainMinLevel === null ? "" : drafts.chainMinLevel,
+                          onChange: () => {
+                          }
+                        }
+                      )
+                    ] }),
+jsxs("div", { className: cls.cell, children: [
+jsx("label", { htmlFor: "chain-max-level", children: "Max Level:" }),
+jsx(
+                        "input",
+                        {
+                          id: "chain-max-level",
+                          type: "number",
+                          className: cls.number,
+                          placeholder: "No max",
+                          value: drafts.chainMaxLevel === null ? "" : drafts.chainMaxLevel,
+                          onChange: () => {
+                          }
+                        }
+                      )
+                    ] }),
+jsxs("div", { className: cls.cell, children: [
+jsx("label", { htmlFor: "chain-min-ff", children: "Min FF:" }),
+jsx(
+                        "input",
+                        {
+                          id: "chain-min-ff",
+                          type: "number",
+                          step: "0.1",
+                          className: cls.number,
+                          placeholder: "No min",
+                          value: drafts.chainMinFF === null ? "" : drafts.chainMinFF,
+                          onChange: () => {
+                          }
+                        }
+                      )
+                    ] }),
+jsxs("div", { className: cls.cell, children: [
+jsx("label", { htmlFor: "chain-max-ff", children: "Max FF:" }),
+jsx(
+                        "input",
+                        {
+                          id: "chain-max-ff",
+                          type: "number",
+                          step: "0.1",
+                          className: cls.number,
+                          placeholder: "No max",
+                          value: drafts.chainMaxFF,
+                          onChange: () => {
+                          }
+                        }
+                      )
+                    ] }),
+jsxs(
+                      "div",
+                      {
+                        className: `${cls.cell} ${cls.cellCheckbox} ${cls.chainWide}`,
+                        children: [
+jsx(
+                            "input",
+                            {
+                              id: "chain-inactive",
+                              type: "checkbox",
+                              checked: drafts.chainInactive,
+                              onChange: () => {
+                              }
+                            }
+                          ),
+jsx("label", { htmlFor: "chain-inactive", children: "Inactive Only (14+ days offline)" })
+                        ]
+                      }
+                    ),
+jsxs(
+                      "div",
+                      {
+                        className: `${cls.cell} ${cls.cellCheckbox} ${cls.chainWide}`,
+                        children: [
+jsx(
+                            "input",
+                            {
+                              id: "chain-factionless",
+                              type: "checkbox",
+                              checked: drafts.chainFactionless,
+                              onChange: () => {
+                              }
+                            }
+                          ),
+jsx("label", { htmlFor: "chain-factionless", children: "Factionless Only" })
+                        ]
+                      }
+                    )
+                  ] })
+                ] }),
+jsxs("div", { className: cls.cell, children: [
+jsx("label", { htmlFor: "factions-col-display", children: "Faction Page Shows:" }),
+jsxs(
+                    "select",
+                    {
+                      id: "factions-col-display",
+                      value: drafts.factionsColDisplay,
+                      onChange: () => {
+                      },
+                      children: [
+jsx("option", { value: "fair_fight", children: "FF Score" }),
+jsx("option", { value: "battle_stats", children: "BS Estimate" }),
+jsx("option", { value: "none", children: "None (Hide Column)" })
+                      ]
+                    }
+                  )
+                ] }),
+jsxs("div", { className: cls.cell, children: [
+jsx("label", { htmlFor: "war-col-display", children: "War Page Shows:" }),
+jsxs(
+                    "select",
+                    {
+                      id: "war-col-display",
+                      value: drafts.warColDisplay,
+                      onChange: () => {
+                      },
+                      children: [
+jsx("option", { value: "fair_fight", children: "FF Score" }),
+jsx("option", { value: "battle_stats", children: "BS Estimate" }),
+jsx("option", { value: "none", children: "None (Hide Column)" })
+                      ]
+                    }
+                  )
+                ] }),
+jsxs("div", { className: `${cls.cell} ${cls.cellCheckbox}`, children: [
+jsx(
+                    "input",
+                    {
+                      id: "status-attack-links-toggle",
+                      type: "checkbox",
+                      checked: drafts.statusAttackLinksEnabled,
+                      onChange: () => {
+                      }
+                    }
+                  ),
+jsx("label", { htmlFor: "status-attack-links-toggle", children: "Enable online status indicator quick attack links" })
+                ] }),
+jsxs("div", { className: cls.cell, children: [
+jsx("label", { htmlFor: "war-quick-attack-action", children: "Quick Attack Action:" }),
+jsxs(
+                    "select",
+                    {
+                      id: "war-quick-attack-action",
+                      value: drafts.warQuickAttackAction,
+                      onChange: () => {
+                      },
+                      children: [
+jsx("option", { value: "new_tab", children: "New Tab" }),
+jsx("option", { value: "current", children: "Same Tab" })
+                      ]
+                    }
+                  )
+                ] }),
+jsxs("div", { className: `${cls.cell} ${cls.cellCheckbox}`, children: [
+jsx(
+                    "input",
+                    {
+                      id: "ff-history-toggle",
+                      type: "checkbox",
+                      checked: drafts.ffHistoryEnabled,
+                      onChange: () => {
+                      }
+                    }
+                  ),
+jsx("label", { htmlFor: "ff-history-toggle", children: "Enable FF History button on profile pages" })
+                ] }),
+jsx("div", { className: `${cls.span} ff-deprecation-note`, children: jsxs("span", { children: [
+                  "War Monitor is no longer supported. Use",
+                  " ",
+jsx(
+                    "a",
+                    {
+                      target: "_blank",
+                      href: "https://greasyfork.org/en/scripts/529238-torn-war-stuff-enhanced",
+                      rel: "noreferrer",
+                      children: "Torn War Stuff Enhanced"
+                    }
+                  ),
+                  " ",
+                  "instead."
+                ] }) })
+              ] })
+            ] }),
+jsxs("div", { className: cls.group, children: [
+jsx("h4", { children: "Debug Settings" }),
+jsxs("div", { className: cls.section, children: [
+jsxs("div", { className: `${cls.cell} ${cls.cellCheckbox}`, children: [
+jsx(
+                    "input",
+                    {
+                      id: "debug-logs",
+                      type: "checkbox",
+                      checked: drafts.debugLogs,
+                      onChange: () => {
+                      }
+                    }
+                  ),
+jsx("label", { htmlFor: "debug-logs", children: "Enable debug logging" })
+                ] }),
+jsxs("div", { className: `${cls.cell} ${cls.cellCheckbox}`, children: [
+jsx(
+                    "input",
+                    {
+                      id: "analytics-toggle",
+                      type: "checkbox",
+                      checked: drafts.analyticsEnabled,
+                      onChange: () => {
+                      }
+                    }
+                  ),
+jsx("label", { htmlFor: "analytics-toggle", children: "Enable local analytics logging (last 30 days)" })
+                ] }),
+jsxs("div", { className: `${cls.cell} ${cls.cellCheckbox}`, children: [
+jsx(
+                    "input",
+                    {
+                      id: "network-interception-toggle",
+                      type: "checkbox",
+                      checked: drafts.networkInterceptionEnabled,
+                      onChange: () => {
+                      }
+                    }
+                  ),
+jsx("label", { htmlFor: "network-interception-toggle", children: "Enable network request interception (Fetch/XHR/WS)" })
+                ] }),
+jsxs("div", { className: `${cls.cell} ${cls.cellCheckbox}`, children: [
+jsx(
+                    "input",
+                    {
+                      id: "debug-disable-pda-http",
+                      type: "checkbox",
+                      checked: drafts.debugDisablePdaHttp,
+                      onChange: () => {
+                      }
+                    }
+                  ),
+jsx("label", { htmlFor: "debug-disable-pda-http", children: "Disable PDA native HTTP (use GM_xmlhttpRequest instead)" })
+                ] })
+              ] })
+            ] }),
+jsxs("div", { className: cls.actions, children: [
+jsx("button", { type: "button", className: "torn-btn btn-save", onClick: onSave, children: "Save Settings" }),
+jsx(
+                "button",
+                {
+                  type: "button",
+                  className: "torn-btn btn-secondary",
+                  onClick: onReset,
+                  children: "Reset to Defaults"
+                }
+              ),
+jsx(
+                "button",
+                {
+                  type: "button",
+                  className: "torn-btn btn-secondary",
+                  onClick: onClearCache,
+                  children: "Clear FF Cache"
+                }
+              ),
+              showSavedMessage && jsx("span", { className: cls.savedMsg, children: "✓ Saved!" })
+            ] })
+          ] })
+        ]
+      }
+    );
+  }
+  class FFSettingsPanel extends HTMLElement {
     constructor() {
-      super(...arguments);
-      this.apiKey = "";
-      this.lowRange = CONFIG_DEFAULTS.low_ff_range;
-      this.highRange = CONFIG_DEFAULTS.high_ff_range;
-      this.maxRange = CONFIG_DEFAULTS.max_ff_range;
-      this.chainButtonEnabled = CONFIG_DEFAULTS.chain_button_enabled;
-      this.chainLinkType = CONFIG_DEFAULTS.chain_link_type;
-      this.chainTabType = CONFIG_DEFAULTS.chain_tab_type;
-      this.chainFFTarget = CONFIG_DEFAULTS.chain_ff_target;
-      this.chainMinLevel = CONFIG_DEFAULTS.chain_min_level;
-      this.chainMaxLevel = CONFIG_DEFAULTS.chain_max_level;
-      this.chainInactive = CONFIG_DEFAULTS.chain_inactive;
-      this.chainMinFF = CONFIG_DEFAULTS.chain_min_ff;
-      this.chainMaxFF = CONFIG_DEFAULTS.chain_max_ff;
-      this.chainFactionless = CONFIG_DEFAULTS.chain_factionless;
-      this.ffHistoryEnabled = CONFIG_DEFAULTS.ff_history_enabled;
-      this.factionsColDisplay = CONFIG_DEFAULTS.factions_col_display;
-      this.warColDisplay = CONFIG_DEFAULTS.war_col_display;
-      this.debugLogs = CONFIG_DEFAULTS.debug_logs;
-      this.analyticsEnabled = CONFIG_DEFAULTS.analytics_enabled;
-      this.networkInterceptionEnabled = CONFIG_DEFAULTS.network_interception_enabled;
-      this.gaugeMarkerType = CONFIG_DEFAULTS.gauge_marker_type;
-      this.gaugeMarkerScale = CONFIG_DEFAULTS.gauge_marker_scale;
-      this.gaugeMarkerBorderWidth = CONFIG_DEFAULTS.gauge_marker_border_width;
-      this.colorScheme = CONFIG_DEFAULTS.color_scheme;
-      this.warQuickAttackAction = CONFIG_DEFAULTS.war_quick_attack_action;
-      this.statusAttackLinksEnabled = CONFIG_DEFAULTS.status_attack_links_enabled;
-      this.debugDisablePdaHttp = CONFIG_DEFAULTS.debug_disable_pda_http;
-      this.isPremium = null;
-      this.draftApiKey = "";
-      this.draftLowRange = CONFIG_DEFAULTS.low_ff_range;
-      this.draftHighRange = CONFIG_DEFAULTS.high_ff_range;
-      this.draftMaxRange = CONFIG_DEFAULTS.max_ff_range;
-      this.draftChainButtonEnabled = CONFIG_DEFAULTS.chain_button_enabled;
-      this.draftChainLinkType = CONFIG_DEFAULTS.chain_link_type;
-      this.draftChainTabType = CONFIG_DEFAULTS.chain_tab_type;
-      this.draftChainFFTarget = CONFIG_DEFAULTS.chain_ff_target;
-      this.draftChainMinLevel = CONFIG_DEFAULTS.chain_min_level;
-      this.draftChainMaxLevel = CONFIG_DEFAULTS.chain_max_level;
-      this.draftChainInactive = CONFIG_DEFAULTS.chain_inactive;
-      this.draftChainMinFF = CONFIG_DEFAULTS.chain_min_ff;
-      this.draftChainMaxFF = CONFIG_DEFAULTS.chain_max_ff;
-      this.draftChainFactionless = CONFIG_DEFAULTS.chain_factionless;
-      this.draftFFHistoryEnabled = CONFIG_DEFAULTS.ff_history_enabled;
-      this.draftFactionsColDisplay = CONFIG_DEFAULTS.factions_col_display;
-      this.draftWarColDisplay = CONFIG_DEFAULTS.war_col_display;
-      this.draftDebugLogs = CONFIG_DEFAULTS.debug_logs;
-      this.draftAnalyticsEnabled = CONFIG_DEFAULTS.analytics_enabled;
-      this.draftNetworkInterceptionEnabled = CONFIG_DEFAULTS.network_interception_enabled;
-      this.draftGaugeMarkerType = CONFIG_DEFAULTS.gauge_marker_type;
-      this.draftGaugeMarkerScale = CONFIG_DEFAULTS.gauge_marker_scale;
-      this.draftGaugeMarkerBorderWidth = CONFIG_DEFAULTS.gauge_marker_border_width;
-      this.draftColorScheme = CONFIG_DEFAULTS.color_scheme;
-      this.draftWarQuickAttackAction = CONFIG_DEFAULTS.war_quick_attack_action;
-      this.draftStatusAttackLinksEnabled = CONFIG_DEFAULTS.status_attack_links_enabled;
-      this.draftDebugDisablePdaHttp = CONFIG_DEFAULTS.debug_disable_pda_http;
-      this.rangeError = "";
-      this.showSavedMessage = false;
-    }
-    createRenderRoot() {
-      return this;
-    }
-    connectedCallback() {
-      super.connectedCallback();
+      super();
+      this._props = { ...DEFAULT_VALUES };
+      this._drafts = { ...DEFAULT_VALUES };
+      this._rangeError = "";
+      this._showSavedMessage = false;
+      this._root = null;
+      this._updatePromise = Promise.resolve();
+      this._resolveUpdate = null;
+      this.handleNativeInput = (e) => {
+        const target = e.target;
+        if (!target) return;
+        this._showSavedMessage = false;
+        const id = target.id;
+        if (id === "api-key") {
+          this._drafts.apiKey = target.value;
+        } else if (id === "gauge-marker-scale" || id === "gauge-marker-scale-number") {
+          const raw = Number(target.value);
+          if (!Number.isNaN(raw)) {
+            this._drafts.gaugeMarkerScale = Math.min(200, Math.max(50, raw));
+          }
+        } else if (id === "gauge-marker-border-width" || id === "gauge-marker-border-width-number") {
+          const raw = Number(target.value);
+          if (!Number.isNaN(raw)) {
+            this._drafts.gaugeMarkerBorderWidth = Math.min(3, Math.max(0, raw));
+          }
+        } else if (id === "ff-range-low") {
+          this._drafts.lowRange = Number(target.value);
+        } else if (id === "ff-range-high") {
+          this._drafts.highRange = Number(target.value);
+        } else if (id === "ff-range-max") {
+          this._drafts.maxRange = Number(target.value);
+        } else if (id === "chain-min-level") {
+          this._drafts.chainMinLevel = target.value === "" ? null : Number(target.value);
+        } else if (id === "chain-max-level") {
+          this._drafts.chainMaxLevel = target.value === "" ? null : Number(target.value);
+        } else if (id === "chain-min-ff") {
+          this._drafts.chainMinFF = target.value === "" ? null : Number(target.value);
+        } else if (id === "chain-max-ff") {
+          const num = Number(target.value);
+          this._drafts.chainMaxFF = num;
+          this._drafts.chainFFTarget = num;
+        }
+        this.render();
+      };
+      this.handleNativeChange = (e) => {
+        const target = e.target;
+        if (!target) return;
+        this._showSavedMessage = false;
+        const id = target.id;
+        if (id === "api-key") {
+          const val = target.value.trim();
+          this._drafts.apiKey = val;
+          this.dispatchEvent(
+            new CustomEvent("ff-save-key", {
+              detail: { apiKey: val },
+              bubbles: true,
+              composed: true
+            })
+          );
+        } else if (id === "gauge-marker-type") {
+          this._drafts.gaugeMarkerType = target.value;
+        } else if (id === "color-scheme") {
+          this._drafts.colorScheme = target.value;
+        } else if (id === "chain-link-type") {
+          this._drafts.chainLinkType = target.value;
+        } else if (id === "chain-tab-type") {
+          this._drafts.chainTabType = target.value;
+        } else if (id === "war-quick-attack-action") {
+          this._drafts.warQuickAttackAction = target.value;
+        } else if (id === "factions-col-display") {
+          this._drafts.factionsColDisplay = target.value;
+        } else if (id === "war-col-display") {
+          this._drafts.warColDisplay = target.value;
+        } else if (id === "chain-button-toggle") {
+          this._drafts.chainButtonEnabled = target.checked;
+        } else if (id === "chain-inactive") {
+          this._drafts.chainInactive = target.checked;
+        } else if (id === "chain-factionless") {
+          this._drafts.chainFactionless = target.checked;
+        } else if (id === "status-attack-links-toggle") {
+          this._drafts.statusAttackLinksEnabled = target.checked;
+        } else if (id === "ff-history-toggle") {
+          this._drafts.ffHistoryEnabled = target.checked;
+        } else if (id === "debug-logs") {
+          this._drafts.debugLogs = target.checked;
+        } else if (id === "analytics-toggle") {
+          this._drafts.analyticsEnabled = target.checked;
+        } else if (id === "network-interception-toggle") {
+          this._drafts.networkInterceptionEnabled = target.checked;
+        } else if (id === "debug-disable-pda-http") {
+          this._drafts.debugDisablePdaHttp = target.checked;
+        }
+        this.render();
+      };
       this.resetDrafts();
     }
-    willUpdate(changedProperties) {
-      if (changedProperties.has("apiKey")) this.draftApiKey = this.apiKey;
-      if (changedProperties.has("lowRange")) this.draftLowRange = this.lowRange;
-      if (changedProperties.has("highRange"))
-        this.draftHighRange = this.highRange;
-      if (changedProperties.has("maxRange")) this.draftMaxRange = this.maxRange;
-      if (changedProperties.has("chainButtonEnabled"))
-        this.draftChainButtonEnabled = this.chainButtonEnabled;
-      if (changedProperties.has("chainLinkType"))
-        this.draftChainLinkType = this.chainLinkType;
-      if (changedProperties.has("chainTabType"))
-        this.draftChainTabType = this.chainTabType;
-      if (changedProperties.has("chainFFTarget"))
-        this.draftChainFFTarget = this.chainFFTarget;
-      if (changedProperties.has("chainMinLevel"))
-        this.draftChainMinLevel = this.chainMinLevel;
-      if (changedProperties.has("chainMaxLevel"))
-        this.draftChainMaxLevel = this.chainMaxLevel;
-      if (changedProperties.has("chainInactive"))
-        this.draftChainInactive = this.chainInactive;
-      if (changedProperties.has("chainMinFF"))
-        this.draftChainMinFF = this.chainMinFF;
-      if (changedProperties.has("chainMaxFF"))
-        this.draftChainMaxFF = this.chainMaxFF;
-      if (changedProperties.has("chainFactionless"))
-        this.draftChainFactionless = this.chainFactionless;
-      if (changedProperties.has("ffHistoryEnabled"))
-        this.draftFFHistoryEnabled = this.ffHistoryEnabled;
-      if (changedProperties.has("factionsColDisplay"))
-        this.draftFactionsColDisplay = this.factionsColDisplay;
-      if (changedProperties.has("warColDisplay"))
-        this.draftWarColDisplay = this.warColDisplay;
-      if (changedProperties.has("debugLogs"))
-        this.draftDebugLogs = this.debugLogs;
-      if (changedProperties.has("analyticsEnabled"))
-        this.draftAnalyticsEnabled = this.analyticsEnabled;
-      if (changedProperties.has("networkInterceptionEnabled"))
-        this.draftNetworkInterceptionEnabled = this.networkInterceptionEnabled;
-      if (changedProperties.has("gaugeMarkerType"))
-        this.draftGaugeMarkerType = this.gaugeMarkerType;
-      if (changedProperties.has("gaugeMarkerScale"))
-        this.draftGaugeMarkerScale = this.gaugeMarkerScale;
-      if (changedProperties.has("gaugeMarkerBorderWidth"))
-        this.draftGaugeMarkerBorderWidth = this.gaugeMarkerBorderWidth;
-      if (changedProperties.has("colorScheme"))
-        this.draftColorScheme = this.colorScheme;
-      if (changedProperties.has("warQuickAttackAction"))
-        this.draftWarQuickAttackAction = this.warQuickAttackAction;
-      if (changedProperties.has("statusAttackLinksEnabled"))
-        this.draftStatusAttackLinksEnabled = this.statusAttackLinksEnabled;
-      if (changedProperties.has("debugDisablePdaHttp"))
-        this.draftDebugDisablePdaHttp = this.debugDisablePdaHttp;
+    connectedCallback() {
+      this._root = createRoot(this);
+      this.render();
+      this.addEventListener("input", this.handleNativeInput, { capture: true });
+      this.addEventListener("change", this.handleNativeChange, { capture: true });
+    }
+    disconnectedCallback() {
+      this.removeEventListener("input", this.handleNativeInput, {
+        capture: true
+      });
+      this.removeEventListener("change", this.handleNativeChange, {
+        capture: true
+      });
+      this._root?.unmount();
+      this._root = null;
+    }
+    get updateComplete() {
+      return this._updatePromise;
     }
     resetDrafts() {
-      this.draftApiKey = this.apiKey;
-      this.draftLowRange = this.lowRange;
-      this.draftHighRange = this.highRange;
-      this.draftMaxRange = this.maxRange;
-      this.draftChainButtonEnabled = this.chainButtonEnabled;
-      this.draftChainLinkType = this.chainLinkType;
-      this.draftChainTabType = this.chainTabType;
-      this.draftChainFFTarget = this.chainFFTarget;
-      this.draftChainMinLevel = this.chainMinLevel;
-      this.draftChainMaxLevel = this.chainMaxLevel;
-      this.draftChainInactive = this.chainInactive;
-      this.draftChainMinFF = this.chainMinFF;
-      this.draftChainMaxFF = this.chainMaxFF;
-      this.draftChainFactionless = this.chainFactionless;
-      this.draftFFHistoryEnabled = this.ffHistoryEnabled;
-      this.draftFactionsColDisplay = this.factionsColDisplay;
-      this.draftWarColDisplay = this.warColDisplay;
-      this.draftDebugLogs = this.debugLogs;
-      this.draftAnalyticsEnabled = this.analyticsEnabled;
-      this.draftNetworkInterceptionEnabled = this.networkInterceptionEnabled;
-      this.draftGaugeMarkerType = this.gaugeMarkerType;
-      this.draftGaugeMarkerScale = this.gaugeMarkerScale;
-      this.draftGaugeMarkerBorderWidth = this.gaugeMarkerBorderWidth;
-      this.draftColorScheme = this.colorScheme;
-      this.draftWarQuickAttackAction = this.warQuickAttackAction;
-      this.draftStatusAttackLinksEnabled = this.statusAttackLinksEnabled;
-      this.draftDebugDisablePdaHttp = this.debugDisablePdaHttp;
+      this._drafts = {
+        apiKey: this._props.apiKey,
+        lowRange: this._props.lowRange,
+        highRange: this._props.highRange,
+        maxRange: this._props.maxRange,
+        chainButtonEnabled: this._props.chainButtonEnabled,
+        chainLinkType: this._props.chainLinkType,
+        chainTabType: this._props.chainTabType,
+        chainFFTarget: this._props.chainFFTarget,
+        chainMinLevel: this._props.chainMinLevel,
+        chainMaxLevel: this._props.chainMaxLevel,
+        chainInactive: this._props.chainInactive,
+        chainMinFF: this._props.chainMinFF,
+        chainMaxFF: this._props.chainMaxFF,
+        chainFactionless: this._props.chainFactionless,
+        ffHistoryEnabled: this._props.ffHistoryEnabled,
+        factionsColDisplay: this._props.factionsColDisplay,
+        warColDisplay: this._props.warColDisplay,
+        debugLogs: this._props.debugLogs,
+        analyticsEnabled: this._props.analyticsEnabled,
+        networkInterceptionEnabled: this._props.networkInterceptionEnabled,
+        gaugeMarkerType: this._props.gaugeMarkerType,
+        gaugeMarkerScale: this._props.gaugeMarkerScale,
+        gaugeMarkerBorderWidth: this._props.gaugeMarkerBorderWidth,
+        colorScheme: this._props.colorScheme,
+        warQuickAttackAction: this._props.warQuickAttackAction,
+        statusAttackLinksEnabled: this._props.statusAttackLinksEnabled,
+        debugDisablePdaHttp: this._props.debugDisablePdaHttp
+      };
+    }
+    render() {
+      if (!this._root) return;
+      if (!this._resolveUpdate) {
+        this._updatePromise = new Promise((resolve) => {
+          this._resolveUpdate = resolve;
+        });
+      }
+      this._root.render(
+        createElement(SettingsPanelComponent, {
+          props: this._props,
+          drafts: this._drafts,
+          isPremium: this._props.isPremium,
+          rangeError: this._rangeError,
+          showSavedMessage: this._showSavedMessage,
+          onVerify: () => {
+            this.dispatchEvent(
+              new CustomEvent("ff-verify", {
+                detail: { apiKey: this._drafts.apiKey },
+                bubbles: true,
+                composed: true
+              })
+            );
+          },
+          onSave: () => {
+            this.handleSave();
+          },
+          onReset: () => {
+            if (confirm("Are you sure you want to reset all settings to defaults?")) {
+              this.dispatchEvent(
+                new CustomEvent("ff-reset", {
+                  bubbles: true,
+                  composed: true
+                })
+              );
+            }
+          },
+          onClearCache: () => {
+            if (confirm("Are you sure you want to clear all FF Scouter cache?")) {
+              this.dispatchEvent(
+                new CustomEvent("ff-clear-cache", {
+                  bubbles: true,
+                  composed: true
+                })
+              );
+            }
+          },
+          onRendered: () => {
+            if (this._resolveUpdate) {
+              this._resolveUpdate();
+              this._resolveUpdate = null;
+            }
+          }
+        })
+      );
     }
     handleSave() {
-      const low = this.draftLowRange;
-      const high = this.draftHighRange;
-      const max = this.draftMaxRange;
+      const low = this._drafts.lowRange;
+      const high = this._drafts.highRange;
+      const max = this._drafts.maxRange;
       if (Number.isNaN(low) || Number.isNaN(high) || Number.isNaN(max)) {
-        this.rangeError = "FF ranges must be valid numbers";
+        this._rangeError = "FF ranges must be valid numbers";
+        this.render();
         return;
       }
       if (low <= 0 || high <= 0 || max <= 0) {
-        this.rangeError = "FF ranges must be positive numbers";
+        this._rangeError = "FF ranges must be positive numbers";
+        this.render();
         return;
       }
       if (low >= high || high >= max) {
-        this.rangeError = "FF ranges must be in ascending order: low < high < max";
+        this._rangeError = "FF ranges must be in ascending order: low < high < max";
+        this.render();
         return;
       }
-      this.rangeError = "";
-      this.showSavedMessage = true;
+      this._rangeError = "";
+      this._showSavedMessage = true;
+      this.render();
       setTimeout(() => {
-        this.showSavedMessage = false;
+        this._showSavedMessage = false;
+        this.render();
       }, 3e3);
       this.dispatchEvent(
         new CustomEvent("ff-save", {
           detail: {
-            apiKey: this.draftApiKey,
+            apiKey: this._drafts.apiKey,
             lowRange: low,
             highRange: high,
             maxRange: max,
-            chainButtonEnabled: this.draftChainButtonEnabled,
-            chainLinkType: this.draftChainLinkType,
-            chainTabType: this.draftChainTabType,
-            chainFFTarget: this.draftChainFFTarget,
-            chainMinLevel: this.draftChainMinLevel,
-            chainMaxLevel: this.draftChainMaxLevel,
-            chainInactive: this.draftChainInactive,
-            chainMinFF: this.draftChainMinFF,
-            chainMaxFF: this.draftChainMaxFF,
-            chainFactionless: this.draftChainFactionless,
-            ffHistoryEnabled: this.draftFFHistoryEnabled,
-            factionsColDisplay: this.draftFactionsColDisplay,
-            warColDisplay: this.draftWarColDisplay,
-            debugLogs: this.draftDebugLogs,
-            analyticsEnabled: this.draftAnalyticsEnabled,
-            networkInterceptionEnabled: this.draftNetworkInterceptionEnabled,
-            gaugeMarkerType: this.draftGaugeMarkerType,
-            gaugeMarkerScale: this.draftGaugeMarkerScale,
-            gaugeMarkerBorderWidth: this.draftGaugeMarkerBorderWidth,
-            colorScheme: this.draftColorScheme,
-            warQuickAttackAction: this.draftWarQuickAttackAction,
-            statusAttackLinksEnabled: this.draftStatusAttackLinksEnabled,
-            debugDisablePdaHttp: this.draftDebugDisablePdaHttp
+            chainButtonEnabled: this._drafts.chainButtonEnabled,
+            chainLinkType: this._drafts.chainLinkType,
+            chainTabType: this._drafts.chainTabType,
+            chainFFTarget: this._drafts.chainFFTarget,
+            chainMinLevel: this._drafts.chainMinLevel,
+            chainMaxLevel: this._drafts.chainMaxLevel,
+            chainInactive: this._drafts.chainInactive,
+            chainMinFF: this._drafts.chainMinFF,
+            chainMaxFF: this._drafts.chainMaxFF,
+            chainFactionless: this._drafts.chainFactionless,
+            ffHistoryEnabled: this._drafts.ffHistoryEnabled,
+            factionsColDisplay: this._drafts.factionsColDisplay,
+            warColDisplay: this._drafts.warColDisplay,
+            debugLogs: this._drafts.debugLogs,
+            analyticsEnabled: this._drafts.analyticsEnabled,
+            networkInterceptionEnabled: this._drafts.networkInterceptionEnabled,
+            gaugeMarkerType: this._drafts.gaugeMarkerType,
+            gaugeMarkerScale: this._drafts.gaugeMarkerScale,
+            gaugeMarkerBorderWidth: this._drafts.gaugeMarkerBorderWidth,
+            colorScheme: this._drafts.colorScheme,
+            warQuickAttackAction: this._drafts.warQuickAttackAction,
+            statusAttackLinksEnabled: this._drafts.statusAttackLinksEnabled,
+            debugDisablePdaHttp: this._drafts.debugDisablePdaHttp
           },
           bubbles: true,
           composed: true
         })
       );
     }
-    handleReset() {
-      if (confirm("Are you sure you want to reset all settings to defaults?")) {
-        this.dispatchEvent(
-          new CustomEvent("ff-reset", {
-            bubbles: true,
-            composed: true
-          })
-        );
-      }
+get apiKey() {
+      return this._props.apiKey;
     }
-    handleClearCache() {
-      if (confirm("Are you sure you want to clear all FF Scouter cache?")) {
-        this.dispatchEvent(
-          new CustomEvent("ff-clear-cache", {
-            bubbles: true,
-            composed: true
-          })
-        );
-      }
+    set apiKey(val) {
+      this._props.apiKey = val;
+      this._drafts.apiKey = val;
+      this.render();
     }
-    handleVerify() {
-      this.dispatchEvent(
-        new CustomEvent("ff-verify", {
-          detail: {
-            apiKey: this.draftApiKey
-          },
-          bubbles: true,
-          composed: true
-        })
-      );
+    get lowRange() {
+      return this._props.lowRange;
     }
-    onKeyInput(e2) {
-      this.draftApiKey = e2.target.value;
-      this.showSavedMessage = false;
+    set lowRange(val) {
+      this._props.lowRange = val;
+      this._drafts.lowRange = val;
+      this.render();
     }
-    onKeyChange(e2) {
-      const val = e2.target.value.trim();
-      this.draftApiKey = val;
-      this.dispatchEvent(
-        new CustomEvent("ff-save-key", {
-          detail: { apiKey: val },
-          bubbles: true,
-          composed: true
-        })
-      );
+    get highRange() {
+      return this._props.highRange;
     }
-    onLowRangeInput(e2) {
-      this.draftLowRange = Number(e2.target.value);
-      this.showSavedMessage = false;
+    set highRange(val) {
+      this._props.highRange = val;
+      this._drafts.highRange = val;
+      this.render();
     }
-    onHighRangeInput(e2) {
-      this.draftHighRange = Number(e2.target.value);
-      this.showSavedMessage = false;
+    get maxRange() {
+      return this._props.maxRange;
     }
-    onMaxRangeInput(e2) {
-      this.draftMaxRange = Number(e2.target.value);
-      this.showSavedMessage = false;
+    set maxRange(val) {
+      this._props.maxRange = val;
+      this._drafts.maxRange = val;
+      this.render();
     }
-    onChainButtonChange(e2) {
-      this.draftChainButtonEnabled = e2.target.checked;
-      this.showSavedMessage = false;
+    get chainButtonEnabled() {
+      return this._props.chainButtonEnabled;
     }
-    onChainLinkTypeChange(e2) {
-      this.draftChainLinkType = e2.target.value;
-      this.showSavedMessage = false;
+    set chainButtonEnabled(val) {
+      this._props.chainButtonEnabled = val;
+      this._drafts.chainButtonEnabled = val;
+      this.render();
     }
-    onChainTabTypeChange(e2) {
-      this.draftChainTabType = e2.target.value;
-      this.showSavedMessage = false;
+    get chainLinkType() {
+      return this._props.chainLinkType;
     }
-    onChainMinLevelInput(e2) {
-      const val = e2.target.value;
-      this.draftChainMinLevel = val === "" ? null : Number(val);
-      this.showSavedMessage = false;
+    set chainLinkType(val) {
+      this._props.chainLinkType = val;
+      this._drafts.chainLinkType = val;
+      this.render();
     }
-    onChainMaxLevelInput(e2) {
-      const val = e2.target.value;
-      this.draftChainMaxLevel = val === "" ? null : Number(val);
-      this.showSavedMessage = false;
+    get chainTabType() {
+      return this._props.chainTabType;
     }
-    onChainInactiveChange(e2) {
-      this.draftChainInactive = e2.target.checked;
-      this.showSavedMessage = false;
+    set chainTabType(val) {
+      this._props.chainTabType = val;
+      this._drafts.chainTabType = val;
+      this.render();
     }
-    onChainMinFFInput(e2) {
-      const val = e2.target.value;
-      this.draftChainMinFF = val === "" ? null : Number(val);
-      this.showSavedMessage = false;
+    get chainFFTarget() {
+      return this._props.chainFFTarget;
     }
-    onChainMaxFFInput(e2) {
-      const val = e2.target.value;
-      const num = Number(val);
-      this.draftChainMaxFF = num;
-      this.draftChainFFTarget = num;
-      this.showSavedMessage = false;
+    set chainFFTarget(val) {
+      this._props.chainFFTarget = val;
+      this._drafts.chainFFTarget = val;
+      this.render();
     }
-    onChainFactionlessChange(e2) {
-      this.draftChainFactionless = e2.target.checked;
-      this.showSavedMessage = false;
+    get chainMinLevel() {
+      return this._props.chainMinLevel;
     }
-    onFFHistoryChange(e2) {
-      this.draftFFHistoryEnabled = e2.target.checked;
-      this.showSavedMessage = false;
+    set chainMinLevel(val) {
+      this._props.chainMinLevel = val;
+      this._drafts.chainMinLevel = val;
+      this.render();
     }
-    onFactionsColDisplayChange(e2) {
-      this.draftFactionsColDisplay = e2.target.value;
-      this.showSavedMessage = false;
+    get chainMaxLevel() {
+      return this._props.chainMaxLevel;
     }
-    onWarColDisplayChange(e2) {
-      this.draftWarColDisplay = e2.target.value;
-      this.showSavedMessage = false;
+    set chainMaxLevel(val) {
+      this._props.chainMaxLevel = val;
+      this._drafts.chainMaxLevel = val;
+      this.render();
     }
-    onWarQuickAttackActionChange(e2) {
-      this.draftWarQuickAttackAction = e2.target.value;
-      this.showSavedMessage = false;
+    get chainInactive() {
+      return this._props.chainInactive;
     }
-    onDebugLogsChange(e2) {
-      this.draftDebugLogs = e2.target.checked;
-      this.showSavedMessage = false;
+    set chainInactive(val) {
+      this._props.chainInactive = val;
+      this._drafts.chainInactive = val;
+      this.render();
     }
-    onAnalyticsEnabledChange(e2) {
-      this.draftAnalyticsEnabled = e2.target.checked;
-      this.showSavedMessage = false;
+    get chainMinFF() {
+      return this._props.chainMinFF;
     }
-    onNetworkInterceptionEnabledChange(e2) {
-      this.draftNetworkInterceptionEnabled = e2.target.checked;
-      this.showSavedMessage = false;
+    set chainMinFF(val) {
+      this._props.chainMinFF = val;
+      this._drafts.chainMinFF = val;
+      this.render();
     }
-    onStatusAttackLinksEnabledChange(e2) {
-      this.draftStatusAttackLinksEnabled = e2.target.checked;
-      this.showSavedMessage = false;
+    get chainMaxFF() {
+      return this._props.chainMaxFF;
     }
-    onDebugDisablePdaHttpChange(e2) {
-      this.draftDebugDisablePdaHttp = e2.target.checked;
-      this.showSavedMessage = false;
+    set chainMaxFF(val) {
+      this._props.chainMaxFF = val;
+      this._drafts.chainMaxFF = val;
+      this.render();
     }
-    onGaugeMarkerTypeChange(e2) {
-      this.draftGaugeMarkerType = e2.target.value;
-      this.showSavedMessage = false;
+    get chainFactionless() {
+      return this._props.chainFactionless;
     }
-    onGaugeMarkerScaleInput(e2) {
-      const raw = Number(e2.target.value);
-      if (Number.isNaN(raw)) {
-        return;
-      }
-      this.draftGaugeMarkerScale = Math.min(200, Math.max(50, raw));
-      this.showSavedMessage = false;
+    set chainFactionless(val) {
+      this._props.chainFactionless = val;
+      this._drafts.chainFactionless = val;
+      this.render();
     }
-    onGaugeMarkerBorderWidthInput(e2) {
-      const raw = Number(e2.target.value);
-      if (Number.isNaN(raw)) {
-        return;
-      }
-      this.draftGaugeMarkerBorderWidth = Math.min(3, Math.max(0, raw));
-      this.showSavedMessage = false;
+    get ffHistoryEnabled() {
+      return this._props.ffHistoryEnabled;
     }
-    onColorSchemeChange(e2) {
-      this.draftColorScheme = e2.target.value;
-      this.showSavedMessage = false;
+    set ffHistoryEnabled(val) {
+      this._props.ffHistoryEnabled = val;
+      this._drafts.ffHistoryEnabled = val;
+      this.render();
     }
-    get previewColor() {
-      return get_palette_for_scheme(this.draftColorScheme)[5] ?? "#888888";
+    get factionsColDisplay() {
+      return this._props.factionsColDisplay;
     }
-    render() {
-      return b`
-      <details
-        class="accordion ${!this.apiKey ? "glow" : ""} cont-gray border-round"
-      >
-        <summary style="cursor: pointer; font-weight: bold;">
-          FF Scouter Settings
-        </summary>
-
-        <div style="margin-top: 15px;">
-          <!-- API Key & Premium: visually distinct group, same treatment as
-               the other sections below. -->
-          <div class="ff-settings-group">
-            <h4>API Key &amp; Premium</h4>
-            <div class="ff-settings-section">
-              <div class="ff-api-explanation ff-settings-span">
-                <strong>Important:</strong> You must use the SAME exact API
-                key that you use on
-                <a href="https://ffscouter.com/" target="_blank"
-                  >ffscouter.com</a
-                >. <br /><br />
-                If you're not sure which API key you used, go to
-                <a
-                  href="https://www.torn.com/preferences.php#tab=api"
-                  target="_blank"
-                  >your API preferences</a
-                >
-                and look for "FFScouter3" in your API key history comments.
-              </div>
-
-              <!-- API Key bundle: key input + premium status + verify -->
-              <div class="ff-settings-span ff-api-block">
-                <div class="ff-settings-cell">
-                  <label for="api-key">API Key:</label>
-                  <input
-                    id="api-key"
-                    type="text"
-                    class="${this.apiKey ? "blur-mode" : ""}"
-                    placeholder="Paste your key here..."
-                    .value=${this.draftApiKey}
-                    @input=${this.onKeyInput}
-                    @change=${this.onKeyChange}
-                  />
-                </div>
-                <div class="ff-api-status-row">
-                  <label for="ff-premium-badge">FF Scouter Premium:</label>
-                  <span
-                    id="ff-premium-badge"
-                    class="is_premium_${this.isPremium === null ? "unknown" : this.isPremium ? "enabled" : "disabled"}"
-                    >${this.isPremium === null ? "Unknown" : this.isPremium ? "Enabled" : "Disabled"}</span
-                  >
-                  <button class="torn-btn btn-save" @click=${this.handleVerify}>
-                    Verify
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Gauge Marker Settings: everything that affects the gauge
-               marker (style, size, border, color) and the FF Ranges that
-               position it on the gauge track. Visually distinct from the
-               sections above/below via .ff-settings-group. -->
-          <div class="ff-settings-group">
-            <h4>Gauge Marker Settings</h4>
-            <div class="ff-settings-section">
-              <!-- Gauge Marker Style -->
-              <div class="ff-settings-cell">
-                <label for="gauge-marker-type">Gauge Marker Style:</label>
-                <select
-                  id="gauge-marker-type"
-                  .value=${this.draftGaugeMarkerType}
-                  @change=${this.onGaugeMarkerTypeChange}
-                >
-                  <option value="arrow">Arrow (Default)</option>
-                  <option value="bubble_ff">Bubble (FF Score)</option>
-                  <option value="bubble_estimate">Bubble (BS Estimate)</option>
-                </select>
-              </div>
-
-              <!-- Marker Size and Border Thickness share the live preview -->
-              <div class="ff-settings-span ff-marker-size">
-                <label for="gauge-marker-scale">Marker Size:</label>
-                <div class="ff-marker-size-controls">
-                  <input
-                    id="gauge-marker-scale"
-                    type="range"
-                    min="50"
-                    max="200"
-                    step="5"
-                    .value=${this.draftGaugeMarkerScale.toString()}
-                    @input=${this.onGaugeMarkerScaleInput}
-                  />
-                  <input
-                    id="gauge-marker-scale-number"
-                    type="number"
-                    min="50"
-                    max="200"
-                    step="5"
-                    class="ff-number"
-                    .value=${this.draftGaugeMarkerScale.toString()}
-                    @input=${this.onGaugeMarkerScaleInput}
-                  />
-                  <span>%</span>
-                </div>
-              </div>
-
-              <div class="ff-settings-span ff-marker-border-width">
-                <label for="gauge-marker-border-width">Border Thickness:</label>
-                <div class="ff-marker-size-controls">
-                  <input
-                    id="gauge-marker-border-width"
-                    type="range"
-                    min="0"
-                    max="3"
-                    step="0.5"
-                    .value=${this.draftGaugeMarkerBorderWidth.toString()}
-                    @input=${this.onGaugeMarkerBorderWidthInput}
-                  />
-                  <input
-                    id="gauge-marker-border-width-number"
-                    type="number"
-                    min="0"
-                    max="3"
-                    step="0.5"
-                    class="ff-number"
-                    .value=${this.draftGaugeMarkerBorderWidth.toString()}
-                    @input=${this.onGaugeMarkerBorderWidthInput}
-                  />
-                  <span>px</span>
-                  <div
-                    class="ffscouter-marker-preview"
-                    style="--ffscouter-marker-scale: ${this.draftGaugeMarkerScale / 100};"
-                  >
-                    <svg
-                      class="ffscouter-preview-arrow"
-                      viewBox="${FF_ARROW_VIEWBOX}"
-                    >
-                      <path
-                        fill-rule="evenodd"
-                        fill="${this.previewColor}"
-                        stroke="#000000"
-                        stroke-width="${this.draftGaugeMarkerBorderWidth}"
-                        d="${FF_ARROW_PATH_D}"
-                      ></path>
-                    </svg>
-                    <div
-                      class="ffscouter-preview-bubble"
-                      style="background-color: ${this.previewColor}; color: ${get_contrast_color(
-      this.previewColor
-    )}; border-width: ${this.draftGaugeMarkerBorderWidth * (this.draftGaugeMarkerScale / 100)}px;"
-                    >
-                      2.34
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Color Scheme -->
-              <div class="ff-settings-span ff-color-scheme">
-                <label for="color-scheme">Color Scheme:</label>
-                <div class="ff-color-scheme-controls">
-                  <select
-                    id="color-scheme"
-                    .value=${this.draftColorScheme}
-                    @change=${this.onColorSchemeChange}
-                  >
-                    <option value="classic">Classic (Default)</option>
-                    <option value="cool_diverging">Cool Diverging</option>
-                    <option value="neon">Neon</option>
-                    <option value="colorblind_safe">Colorblind-Safe</option>
-                    <option value="grayscale">Grayscale</option>
-                    <option value="green_yellow_red">Green-Yellow-Red</option>
-                    <option value="blue_yellow_red">Blue-Yellow-Red</option>
-                    <option value="plasma">Plasma</option>
-                  </select>
-                  <div class="ffscouter-swatch-row">
-                    ${get_palette_for_scheme(this.draftColorScheme).map(
-      (color) => b`<svg
-                          class="ffscouter-swatch"
-                          viewBox="${FF_ARROW_VIEWBOX}"
-                        >
-                          <path
-                            fill-rule="evenodd"
-                            fill="${color}"
-                            stroke="#000000"
-                            stroke-width="1.5"
-                            d="${FF_ARROW_PATH_D}"
-                          ></path>
-                        </svg>`
-    )}
-                  </div>
-                </div>
-              </div>
-
-              <!-- Ranges Input -->
-              <div class="input-row ff-settings-span">
-                <label>FF Ranges (Low, High, Max):</label>
-                <div style="display: flex; gap: 10px; align-items: center;">
-                  <input
-                    id="ff-range-low"
-                    type="number"
-                    step="0.1"
-                    class="ff-number"
-                    .value=${this.draftLowRange.toString()}
-                    @input=${this.onLowRangeInput}
-                  />
-                  <span>&lt;</span>
-                  <input
-                    id="ff-range-high"
-                    type="number"
-                    step="0.1"
-                    class="ff-number"
-                    .value=${this.draftHighRange.toString()}
-                    @input=${this.onHighRangeInput}
-                  />
-                  <span>&lt;</span>
-                  <input
-                    id="ff-range-max"
-                    type="number"
-                    step="0.1"
-                    class="ff-number"
-                    .value=${this.draftMaxRange.toString()}
-                    @input=${this.onMaxRangeInput}
-                  />
-                </div>
-                ${this.rangeError ? b`<div class="error-msg">${this.rangeError}</div>` : ""}
-              </div>
-            </div>
-          </div>
-
-          <!-- Feature Toggles: visually distinct group, same treatment as
-               Gauge Marker Settings above. -->
-          <div class="ff-settings-group">
-            <h4>Feature Toggles</h4>
-            <div class="ff-settings-section">
-              <!-- Chain block: toggle + (conditional) nested sub-options grid -->
-              <div class="ff-settings-span ff-chain-block">
-                <div class="ff-settings-cell checkbox-cell">
-                  <input
-                    id="chain-button-toggle"
-                    type="checkbox"
-                    .checked=${this.draftChainButtonEnabled}
-                    @change=${this.onChainButtonChange}
-                  />
-                  <label for="chain-button-toggle"
-                    >Enable Chain Button (Green FF Button)</label
-                  >
-                </div>
-
-                ${this.draftChainButtonEnabled ? b`
-                      <div class="ff-settings-section ff-chain-suboptions">
-                        <div class="ff-settings-cell ff-chain-wide">
-                          <label for="chain-link-type"
-                            >Chain button opens:</label
-                          >
-                          <select
-                            id="chain-link-type"
-                            .value=${this.draftChainLinkType}
-                            @change=${this.onChainLinkTypeChange}
-                          >
-                            <option value="attack">Attack page</option>
-                            <option value="profile">Profile page</option>
-                          </select>
-                        </div>
-
-                        <div class="ff-settings-cell ff-chain-wide">
-                          <label for="chain-tab-type">Open in:</label>
-                          <select
-                            id="chain-tab-type"
-                            .value=${this.draftChainTabType}
-                            @change=${this.onChainTabTypeChange}
-                          >
-                            <option value="newtab">New tab</option>
-                            <option value="sametab">Same tab</option>
-                          </select>
-                        </div>
-
-                        <div class="ff-settings-cell">
-                          <label for="chain-min-level">Min Level:</label>
-                          <input
-                            id="chain-min-level"
-                            type="number"
-                            class="ff-number"
-                            placeholder="No min"
-                            .value=${this.draftChainMinLevel === null ? "" : this.draftChainMinLevel.toString()}
-                            @input=${this.onChainMinLevelInput}
-                          />
-                        </div>
-
-                        <div class="ff-settings-cell">
-                          <label for="chain-max-level">Max Level:</label>
-                          <input
-                            id="chain-max-level"
-                            type="number"
-                            class="ff-number"
-                            placeholder="No max"
-                            .value=${this.draftChainMaxLevel === null ? "" : this.draftChainMaxLevel.toString()}
-                            @input=${this.onChainMaxLevelInput}
-                          />
-                        </div>
-
-                        <div class="ff-settings-cell">
-                          <label for="chain-min-ff">Min FF:</label>
-                          <input
-                            id="chain-min-ff"
-                            type="number"
-                            step="0.1"
-                            class="ff-number"
-                            placeholder="No min"
-                            .value=${this.draftChainMinFF === null ? "" : this.draftChainMinFF.toString()}
-                            @input=${this.onChainMinFFInput}
-                          />
-                        </div>
-
-                        <div class="ff-settings-cell">
-                          <label for="chain-max-ff">Max FF:</label>
-                          <input
-                            id="chain-max-ff"
-                            type="number"
-                            step="0.1"
-                            class="ff-number"
-                            placeholder="No max"
-                            .value=${this.draftChainMaxFF.toString()}
-                            @input=${this.onChainMaxFFInput}
-                          />
-                        </div>
-
-                        <div
-                          class="ff-settings-cell checkbox-cell ff-chain-wide"
-                        >
-                          <input
-                            id="chain-inactive"
-                            type="checkbox"
-                            .checked=${this.draftChainInactive}
-                            @change=${this.onChainInactiveChange}
-                          />
-                          <label for="chain-inactive"
-                            >Inactive Only (14+ days offline)</label
-                          >
-                        </div>
-
-                        <div
-                          class="ff-settings-cell checkbox-cell ff-chain-wide"
-                        >
-                          <input
-                            id="chain-factionless"
-                            type="checkbox"
-                            .checked=${this.draftChainFactionless}
-                            @change=${this.onChainFactionlessChange}
-                          />
-                          <label for="chain-factionless"
-                            >Factionless Only</label
-                          >
-                        </div>
-                      </div>
-                    ` : ""}
-              </div>
-
-              <!-- Single-cell selects & checkboxes (cluster into clean rows) -->
-              <div class="ff-settings-cell">
-                <label for="factions-col-display">Faction Page Shows:</label>
-                <select
-                  id="factions-col-display"
-                  .value=${this.draftFactionsColDisplay}
-                  @change=${this.onFactionsColDisplayChange}
-                >
-                  <option value="fair_fight">FF Score</option>
-                  <option value="battle_stats">BS Estimate</option>
-                  <option value="none">None (Hide Column)</option>
-                </select>
-              </div>
-
-              <div class="ff-settings-cell">
-                <label for="war-col-display">War Page Shows:</label>
-                <select
-                  id="war-col-display"
-                  .value=${this.draftWarColDisplay}
-                  @change=${this.onWarColDisplayChange}
-                >
-                  <option value="fair_fight">FF Score</option>
-                  <option value="battle_stats">BS Estimate</option>
-                  <option value="none">None (Hide Column)</option>
-                </select>
-              </div>
-
-              <div class="ff-settings-cell checkbox-cell">
-                <input
-                  id="status-attack-links-toggle"
-                  type="checkbox"
-                  .checked=${this.draftStatusAttackLinksEnabled}
-                  @change=${this.onStatusAttackLinksEnabledChange}
-                />
-                <label for="status-attack-links-toggle"
-                  >Enable online status indicator quick attack links</label
-                >
-              </div>
-
-              <div class="ff-settings-cell">
-                <label for="war-quick-attack-action"
-                  >Quick Attack Action:</label
-                >
-                <select
-                  id="war-quick-attack-action"
-                  .value=${this.draftWarQuickAttackAction}
-                  @change=${this.onWarQuickAttackActionChange}
-                >
-                  <option value="new_tab">New Tab</option>
-                  <option value="current">Same Tab</option>
-                </select>
-              </div>
-
-              <div class="ff-settings-cell checkbox-cell">
-                <input
-                  id="ff-history-toggle"
-                  type="checkbox"
-                  .checked=${this.draftFFHistoryEnabled}
-                  @change=${this.onFFHistoryChange}
-                />
-                <label for="ff-history-toggle"
-                  >Enable FF History button on profile pages</label
-                >
-              </div>
-
-              <!-- War Monitor deprecation note -->
-              <div class="ff-settings-span ff-deprecation-note">
-                <label
-                  >War Monitor is no longer supported. Use
-                  <a
-                    target="_blank"
-                    href="https://greasyfork.org/en/scripts/529238-torn-war-stuff-enhanced"
-                    >Torn War Stuff Enhanced</a
-                  >
-                  instead.</label
-                >
-              </div>
-            </div>
-          </div>
-
-          <!-- Debug Settings: visually distinct group, same treatment as the
-               other sections above. -->
-          <div class="ff-settings-group">
-            <h4>Debug Settings</h4>
-            <div class="ff-settings-section">
-              <div class="ff-settings-cell checkbox-cell">
-                <input
-                  id="debug-logs"
-                  type="checkbox"
-                  .checked=${this.draftDebugLogs}
-                  @change=${this.onDebugLogsChange}
-                />
-                <label for="debug-logs">Enable debug logging</label>
-              </div>
-
-              <div class="ff-settings-cell checkbox-cell">
-                <input
-                  id="analytics-toggle"
-                  type="checkbox"
-                  .checked=${this.draftAnalyticsEnabled}
-                  @change=${this.onAnalyticsEnabledChange}
-                />
-                <label for="analytics-toggle"
-                  >Enable local analytics logging (last 30 days)</label
-                >
-              </div>
-
-              <div class="ff-settings-cell checkbox-cell">
-                <input
-                  id="network-interception-toggle"
-                  type="checkbox"
-                  .checked=${this.draftNetworkInterceptionEnabled}
-                  @change=${this.onNetworkInterceptionEnabledChange}
-                />
-                <label for="network-interception-toggle"
-                  >Enable network request interception (Fetch/XHR/WS)</label
-                >
-              </div>
-
-              <div class="ff-settings-cell checkbox-cell">
-                <input
-                  id="debug-disable-pda-http"
-                  type="checkbox"
-                  .checked=${this.draftDebugDisablePdaHttp}
-                  @change=${this.onDebugDisablePdaHttpChange}
-                />
-                <label for="debug-disable-pda-http"
-                  >Disable PDA native HTTP (use GM_xmlhttpRequest
-                  instead)</label
-                >
-              </div>
-            </div>
-          </div>
-
-          <!-- Action Buttons Area -->
-          <div
-            style="display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px; margin-top: 20px;"
-          >
-            <button class="torn-btn btn-save" @click=${this.handleSave}>
-              Save Settings
-            </button>
-            <button class="torn-btn btn-secondary" @click=${this.handleReset}>
-              Reset to Defaults
-            </button>
-            <button
-              class="torn-btn btn-secondary"
-              @click=${this.handleClearCache}
-            >
-              Clear FF Cache
-            </button>
-            ${this.showSavedMessage ? b`<span style="color: #4CAF50;">✓ Saved!</span>` : ""}
-          </div>
-        </div>
-      </details>
-    `;
+    set factionsColDisplay(val) {
+      this._props.factionsColDisplay = val;
+      this._drafts.factionsColDisplay = val;
+      this.render();
     }
-  };
-  __decorateClass([
-    n2({ type: String })
-  ], FFSettingsPanel.prototype, "apiKey", 2);
-  __decorateClass([
-    n2({ type: Number })
-  ], FFSettingsPanel.prototype, "lowRange", 2);
-  __decorateClass([
-    n2({ type: Number })
-  ], FFSettingsPanel.prototype, "highRange", 2);
-  __decorateClass([
-    n2({ type: Number })
-  ], FFSettingsPanel.prototype, "maxRange", 2);
-  __decorateClass([
-    n2({ type: Boolean })
-  ], FFSettingsPanel.prototype, "chainButtonEnabled", 2);
-  __decorateClass([
-    n2({ type: String })
-  ], FFSettingsPanel.prototype, "chainLinkType", 2);
-  __decorateClass([
-    n2({ type: String })
-  ], FFSettingsPanel.prototype, "chainTabType", 2);
-  __decorateClass([
-    n2({ type: Number })
-  ], FFSettingsPanel.prototype, "chainFFTarget", 2);
-  __decorateClass([
-    n2({ type: Number })
-  ], FFSettingsPanel.prototype, "chainMinLevel", 2);
-  __decorateClass([
-    n2({ type: Number })
-  ], FFSettingsPanel.prototype, "chainMaxLevel", 2);
-  __decorateClass([
-    n2({ type: Boolean })
-  ], FFSettingsPanel.prototype, "chainInactive", 2);
-  __decorateClass([
-    n2({ type: Number })
-  ], FFSettingsPanel.prototype, "chainMinFF", 2);
-  __decorateClass([
-    n2({ type: Number })
-  ], FFSettingsPanel.prototype, "chainMaxFF", 2);
-  __decorateClass([
-    n2({ type: Boolean })
-  ], FFSettingsPanel.prototype, "chainFactionless", 2);
-  __decorateClass([
-    n2({ type: Boolean })
-  ], FFSettingsPanel.prototype, "ffHistoryEnabled", 2);
-  __decorateClass([
-    n2({ type: String })
-  ], FFSettingsPanel.prototype, "factionsColDisplay", 2);
-  __decorateClass([
-    n2({ type: String })
-  ], FFSettingsPanel.prototype, "warColDisplay", 2);
-  __decorateClass([
-    n2({ type: Boolean })
-  ], FFSettingsPanel.prototype, "debugLogs", 2);
-  __decorateClass([
-    n2({ type: Boolean })
-  ], FFSettingsPanel.prototype, "analyticsEnabled", 2);
-  __decorateClass([
-    n2({ type: Boolean })
-  ], FFSettingsPanel.prototype, "networkInterceptionEnabled", 2);
-  __decorateClass([
-    n2({ type: String })
-  ], FFSettingsPanel.prototype, "gaugeMarkerType", 2);
-  __decorateClass([
-    n2({ type: Number })
-  ], FFSettingsPanel.prototype, "gaugeMarkerScale", 2);
-  __decorateClass([
-    n2({ type: Number })
-  ], FFSettingsPanel.prototype, "gaugeMarkerBorderWidth", 2);
-  __decorateClass([
-    n2({ type: String })
-  ], FFSettingsPanel.prototype, "colorScheme", 2);
-  __decorateClass([
-    n2({ type: String })
-  ], FFSettingsPanel.prototype, "warQuickAttackAction", 2);
-  __decorateClass([
-    n2({ type: Boolean })
-  ], FFSettingsPanel.prototype, "statusAttackLinksEnabled", 2);
-  __decorateClass([
-    n2({ type: Boolean })
-  ], FFSettingsPanel.prototype, "debugDisablePdaHttp", 2);
-  __decorateClass([
-    n2({ attribute: false })
-  ], FFSettingsPanel.prototype, "isPremium", 2);
-  __decorateClass([
-    r()
-  ], FFSettingsPanel.prototype, "draftApiKey", 2);
-  __decorateClass([
-    r()
-  ], FFSettingsPanel.prototype, "draftLowRange", 2);
-  __decorateClass([
-    r()
-  ], FFSettingsPanel.prototype, "draftHighRange", 2);
-  __decorateClass([
-    r()
-  ], FFSettingsPanel.prototype, "draftMaxRange", 2);
-  __decorateClass([
-    r()
-  ], FFSettingsPanel.prototype, "draftChainButtonEnabled", 2);
-  __decorateClass([
-    r()
-  ], FFSettingsPanel.prototype, "draftChainLinkType", 2);
-  __decorateClass([
-    r()
-  ], FFSettingsPanel.prototype, "draftChainTabType", 2);
-  __decorateClass([
-    r()
-  ], FFSettingsPanel.prototype, "draftChainFFTarget", 2);
-  __decorateClass([
-    r()
-  ], FFSettingsPanel.prototype, "draftChainMinLevel", 2);
-  __decorateClass([
-    r()
-  ], FFSettingsPanel.prototype, "draftChainMaxLevel", 2);
-  __decorateClass([
-    r()
-  ], FFSettingsPanel.prototype, "draftChainInactive", 2);
-  __decorateClass([
-    r()
-  ], FFSettingsPanel.prototype, "draftChainMinFF", 2);
-  __decorateClass([
-    r()
-  ], FFSettingsPanel.prototype, "draftChainMaxFF", 2);
-  __decorateClass([
-    r()
-  ], FFSettingsPanel.prototype, "draftChainFactionless", 2);
-  __decorateClass([
-    r()
-  ], FFSettingsPanel.prototype, "draftFFHistoryEnabled", 2);
-  __decorateClass([
-    r()
-  ], FFSettingsPanel.prototype, "draftFactionsColDisplay", 2);
-  __decorateClass([
-    r()
-  ], FFSettingsPanel.prototype, "draftWarColDisplay", 2);
-  __decorateClass([
-    r()
-  ], FFSettingsPanel.prototype, "draftDebugLogs", 2);
-  __decorateClass([
-    r()
-  ], FFSettingsPanel.prototype, "draftAnalyticsEnabled", 2);
-  __decorateClass([
-    r()
-  ], FFSettingsPanel.prototype, "draftNetworkInterceptionEnabled", 2);
-  __decorateClass([
-    r()
-  ], FFSettingsPanel.prototype, "draftGaugeMarkerType", 2);
-  __decorateClass([
-    r()
-  ], FFSettingsPanel.prototype, "draftGaugeMarkerScale", 2);
-  __decorateClass([
-    r()
-  ], FFSettingsPanel.prototype, "draftGaugeMarkerBorderWidth", 2);
-  __decorateClass([
-    r()
-  ], FFSettingsPanel.prototype, "draftColorScheme", 2);
-  __decorateClass([
-    r()
-  ], FFSettingsPanel.prototype, "draftWarQuickAttackAction", 2);
-  __decorateClass([
-    r()
-  ], FFSettingsPanel.prototype, "draftStatusAttackLinksEnabled", 2);
-  __decorateClass([
-    r()
-  ], FFSettingsPanel.prototype, "draftDebugDisablePdaHttp", 2);
-  __decorateClass([
-    r()
-  ], FFSettingsPanel.prototype, "rangeError", 2);
-  __decorateClass([
-    r()
-  ], FFSettingsPanel.prototype, "showSavedMessage", 2);
-  FFSettingsPanel = __decorateClass([
-    t("ff-settings-panel")
-  ], FFSettingsPanel);
+    get warColDisplay() {
+      return this._props.warColDisplay;
+    }
+    set warColDisplay(val) {
+      this._props.warColDisplay = val;
+      this._drafts.warColDisplay = val;
+      this.render();
+    }
+    get debugLogs() {
+      return this._props.debugLogs;
+    }
+    set debugLogs(val) {
+      this._props.debugLogs = val;
+      this._drafts.debugLogs = val;
+      this.render();
+    }
+    get analyticsEnabled() {
+      return this._props.analyticsEnabled;
+    }
+    set analyticsEnabled(val) {
+      this._props.analyticsEnabled = val;
+      this._drafts.analyticsEnabled = val;
+      this.render();
+    }
+    get networkInterceptionEnabled() {
+      return this._props.networkInterceptionEnabled;
+    }
+    set networkInterceptionEnabled(val) {
+      this._props.networkInterceptionEnabled = val;
+      this._drafts.networkInterceptionEnabled = val;
+      this.render();
+    }
+    get gaugeMarkerType() {
+      return this._props.gaugeMarkerType;
+    }
+    set gaugeMarkerType(val) {
+      this._props.gaugeMarkerType = val;
+      this._drafts.gaugeMarkerType = val;
+      this.render();
+    }
+    get gaugeMarkerScale() {
+      return this._props.gaugeMarkerScale;
+    }
+    set gaugeMarkerScale(val) {
+      this._props.gaugeMarkerScale = val;
+      this._drafts.gaugeMarkerScale = val;
+      this.render();
+    }
+    get gaugeMarkerBorderWidth() {
+      return this._props.gaugeMarkerBorderWidth;
+    }
+    set gaugeMarkerBorderWidth(val) {
+      this._props.gaugeMarkerBorderWidth = val;
+      this._drafts.gaugeMarkerBorderWidth = val;
+      this.render();
+    }
+    get colorScheme() {
+      return this._props.colorScheme;
+    }
+    set colorScheme(val) {
+      this._props.colorScheme = val;
+      this._drafts.colorScheme = val;
+      this.render();
+    }
+    get warQuickAttackAction() {
+      return this._props.warQuickAttackAction;
+    }
+    set warQuickAttackAction(val) {
+      this._props.warQuickAttackAction = val;
+      this._drafts.warQuickAttackAction = val;
+      this.render();
+    }
+    get statusAttackLinksEnabled() {
+      return this._props.statusAttackLinksEnabled;
+    }
+    set statusAttackLinksEnabled(val) {
+      this._props.statusAttackLinksEnabled = val;
+      this._drafts.statusAttackLinksEnabled = val;
+      this.render();
+    }
+    get debugDisablePdaHttp() {
+      return this._props.debugDisablePdaHttp;
+    }
+    set debugDisablePdaHttp(val) {
+      this._props.debugDisablePdaHttp = val;
+      this._drafts.debugDisablePdaHttp = val;
+      this.render();
+    }
+    get isPremium() {
+      return this._props.isPremium;
+    }
+    set isPremium(val) {
+      this._props.isPremium = val;
+      this.render();
+    }
+get draftApiKey() {
+      return this._drafts.apiKey;
+    }
+    set draftApiKey(val) {
+      this._drafts.apiKey = val;
+      this.render();
+    }
+    get draftLowRange() {
+      return this._drafts.lowRange;
+    }
+    set draftLowRange(val) {
+      this._drafts.lowRange = val;
+      this.render();
+    }
+    get draftHighRange() {
+      return this._drafts.highRange;
+    }
+    set draftHighRange(val) {
+      this._drafts.highRange = val;
+      this.render();
+    }
+    get draftMaxRange() {
+      return this._drafts.maxRange;
+    }
+    set draftMaxRange(val) {
+      this._drafts.maxRange = val;
+      this.render();
+    }
+    get draftChainButtonEnabled() {
+      return this._drafts.chainButtonEnabled;
+    }
+    set draftChainButtonEnabled(val) {
+      this._drafts.chainButtonEnabled = val;
+      this.render();
+    }
+    get draftChainLinkType() {
+      return this._drafts.chainLinkType;
+    }
+    set draftChainLinkType(val) {
+      this._drafts.chainLinkType = val;
+      this.render();
+    }
+    get draftChainTabType() {
+      return this._drafts.chainTabType;
+    }
+    set draftChainTabType(val) {
+      this._drafts.chainTabType = val;
+      this.render();
+    }
+    get draftChainFFTarget() {
+      return this._drafts.chainFFTarget;
+    }
+    set draftChainFFTarget(val) {
+      this._drafts.chainFFTarget = val;
+      this.render();
+    }
+    get draftChainMinLevel() {
+      return this._drafts.chainMinLevel;
+    }
+    set draftChainMinLevel(val) {
+      this._drafts.chainMinLevel = val;
+      this.render();
+    }
+    get draftChainMaxLevel() {
+      return this._drafts.chainMaxLevel;
+    }
+    set draftChainMaxLevel(val) {
+      this._drafts.chainMaxLevel = val;
+      this.render();
+    }
+    get draftChainInactive() {
+      return this._drafts.chainInactive;
+    }
+    set draftChainInactive(val) {
+      this._drafts.chainInactive = val;
+      this.render();
+    }
+    get draftChainMinFF() {
+      return this._drafts.chainMinFF;
+    }
+    set draftChainMinFF(val) {
+      this._drafts.chainMinFF = val;
+      this.render();
+    }
+    get draftChainMaxFF() {
+      return this._drafts.chainMaxFF;
+    }
+    set draftChainMaxFF(val) {
+      this._drafts.chainMaxFF = val;
+      this.render();
+    }
+    get draftChainFactionless() {
+      return this._drafts.chainFactionless;
+    }
+    set draftChainFactionless(val) {
+      this._drafts.chainFactionless = val;
+      this.render();
+    }
+    get draftFFHistoryEnabled() {
+      return this._drafts.ffHistoryEnabled;
+    }
+    set draftFFHistoryEnabled(val) {
+      this._drafts.ffHistoryEnabled = val;
+      this.render();
+    }
+    get draftFactionsColDisplay() {
+      return this._drafts.factionsColDisplay;
+    }
+    set draftFactionsColDisplay(val) {
+      this._drafts.factionsColDisplay = val;
+      this.render();
+    }
+    get draftWarColDisplay() {
+      return this._drafts.warColDisplay;
+    }
+    set draftWarColDisplay(val) {
+      this._drafts.warColDisplay = val;
+      this.render();
+    }
+    get draftDebugLogs() {
+      return this._drafts.debugLogs;
+    }
+    set draftDebugLogs(val) {
+      this._drafts.debugLogs = val;
+      this.render();
+    }
+    get draftAnalyticsEnabled() {
+      return this._drafts.analyticsEnabled;
+    }
+    set draftAnalyticsEnabled(val) {
+      this._drafts.analyticsEnabled = val;
+      this.render();
+    }
+    get draftNetworkInterceptionEnabled() {
+      return this._drafts.networkInterceptionEnabled;
+    }
+    set draftNetworkInterceptionEnabled(val) {
+      this._drafts.networkInterceptionEnabled = val;
+      this.render();
+    }
+    get draftGaugeMarkerType() {
+      return this._drafts.gaugeMarkerType;
+    }
+    set draftGaugeMarkerType(val) {
+      this._drafts.gaugeMarkerType = val;
+      this.render();
+    }
+    get draftGaugeMarkerScale() {
+      return this._drafts.gaugeMarkerScale;
+    }
+    set draftGaugeMarkerScale(val) {
+      this._drafts.gaugeMarkerScale = val;
+      this.render();
+    }
+    get draftGaugeMarkerBorderWidth() {
+      return this._drafts.gaugeMarkerBorderWidth;
+    }
+    set draftGaugeMarkerBorderWidth(val) {
+      this._drafts.gaugeMarkerBorderWidth = val;
+      this.render();
+    }
+    get draftColorScheme() {
+      return this._drafts.colorScheme;
+    }
+    set draftColorScheme(val) {
+      this._drafts.colorScheme = val;
+      this.render();
+    }
+    get draftWarQuickAttackAction() {
+      return this._drafts.warQuickAttackAction;
+    }
+    set draftWarQuickAttackAction(val) {
+      this._drafts.warQuickAttackAction = val;
+      this.render();
+    }
+    get draftStatusAttackLinksEnabled() {
+      return this._drafts.statusAttackLinksEnabled;
+    }
+    set draftStatusAttackLinksEnabled(val) {
+      this._drafts.statusAttackLinksEnabled = val;
+      this.render();
+    }
+    get draftDebugDisablePdaHttp() {
+      return this._drafts.debugDisablePdaHttp;
+    }
+    set draftDebugDisablePdaHttp(val) {
+      this._drafts.debugDisablePdaHttp = val;
+      this.render();
+    }
+  }
+  customElements.define("ff-settings-panel", FFSettingsPanel);
   const V2_PREFIX = "ffscouterv2-";
   const V3_PREFIX = "ffsv3-config";
   const V2_IDB_NAME = "ffscouter-cache";
@@ -7600,20 +7601,20 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
   }
   function migrate_bool(old_key, new_key) {
     if (v3_has(new_key)) return;
-    const v2 = v2_get(old_key);
-    if (v2 !== null) v3_set(new_key, v2 === "true");
+    const v = v2_get(old_key);
+    if (v !== null) v3_set(new_key, v === "true");
   }
   function migrate_string(old_key, new_key, valid) {
     if (v3_has(new_key)) return;
-    const v2 = v2_get(old_key);
-    if (v2 !== null && valid.includes(v2)) v3_set(new_key, v2);
+    const v = v2_get(old_key);
+    if (v !== null && valid.includes(v)) v3_set(new_key, v);
   }
   function migrate_float(old_key, new_key) {
     if (v3_has(new_key)) return;
-    const v2 = v2_get(old_key);
-    if (v2 !== null) {
-      const n3 = parseFloat(v2);
-      if (!Number.isNaN(n3)) v3_set(new_key, n3);
+    const v = v2_get(old_key);
+    if (v !== null) {
+      const n = parseFloat(v);
+      if (!Number.isNaN(n)) v3_set(new_key, n);
     }
   }
   function run_migration() {
@@ -7658,7 +7659,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
   function clear_v2_data() {
     localStorage.removeItem("limited_key");
     const to_delete = Object.keys(localStorage).filter(
-      (k2) => k2.startsWith(V2_PREFIX)
+      (k) => k.startsWith(V2_PREFIX)
     );
     for (const key of to_delete) {
       localStorage.removeItem(key);
@@ -7711,8 +7712,8 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       panel.warQuickAttackAction = ffconfig.war_quick_attack_action;
       panel.statusAttackLinksEnabled = ffconfig.status_attack_links_enabled;
       panel.debugDisablePdaHttp = ffconfig.debug_disable_pda_http;
-      panel.addEventListener("ff-save", async (e2) => {
-        const detail = e2.detail;
+      panel.addEventListener("ff-save", async (e) => {
+        const detail = e.detail;
         ffconfig.key = detail.apiKey;
         ffconfig.low_ff_range = detail.lowRange;
         ffconfig.high_ff_range = detail.highRange;
@@ -7795,32 +7796,35 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
           clear_v2_data();
           toast("FF Scouter cache cleared successfully!");
         } catch (err) {
-          console.error("Failed to delete IndexedDB cache", err);
+          logger.error("Failed to delete IndexedDB cache", err);
           toast("Failed to clear cache database", TOAST_LEVEL.ERROR);
         }
       });
-      panel.addEventListener("ff-save-key", async (e2) => {
-        const detail = e2.detail;
+      panel.addEventListener("ff-save-key", async (e) => {
+        const detail = e.detail;
         ffconfig.key = detail.apiKey;
         panel.apiKey = detail.apiKey;
         panel.isPremium = await check_key_status.is_premium(true);
         toast("API key saved successfully!");
         window.dispatchEvent(new CustomEvent("ff-config-updated"));
       });
-      panel.addEventListener("ff-verify", async (e2) => {
-        const detail = e2.detail;
+      panel.addEventListener("ff-verify", async (e) => {
+        const detail = e.detail;
         if (!detail.apiKey) {
           toast("Please enter an API key.", TOAST_LEVEL.ERROR);
           return;
         }
+        panel.isPremium = null;
         let result = null;
         try {
           result = await check_key(detail.apiKey);
         } catch (err) {
+          panel.isPremium = null;
           toast(`${err}`, TOAST_LEVEL.ERROR);
           return;
         }
         if (result == null || result.blank) {
+          panel.isPremium = null;
           toast(
             "Problem querying ffscouter.com API. Please wait a few seconds and try again.",
             TOAST_LEVEL.WARNING
@@ -7832,9 +7836,12 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
         if (result.result.is_registered) {
           message = `FF Scouter successfully configured. API key (${result.result.key}) was registered on ${format_timestamp(result.result.registered_at)} and last used ${format_timestamp(result.result.last_used)}.`;
           level = TOAST_LEVEL.INFO;
-          if (detail.apiKey === ffconfig.key) {
-            panel.isPremium = await check_key_status.is_premium(true);
-          }
+          ffconfig.key = detail.apiKey;
+          panel.apiKey = detail.apiKey;
+          panel.isPremium = result.result.is_premium;
+          check_key_status.clear();
+        } else {
+          panel.isPremium = false;
         }
         toast(message, level);
       });
@@ -7921,9 +7928,9 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       log$2.error("Failed to retrieve logged-in user ID", err);
     }
   }
-  function handleStatusClick(e2) {
+  function handleStatusClick(e) {
     if (!ffconfig.status_attack_links_enabled) return;
-    const target = e2.target;
+    const target = e.target;
     const statusEl = target.closest(`
     [class*="userStatusWrap__"],
     li[id^="icon"][id*="-profile-"].user-status-16-Online,
@@ -7987,10 +7994,10 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       log$2.debug("Bypassing click-to-attack: clicked own status icon.");
       return;
     }
-    e2.preventDefault();
-    e2.stopPropagation();
+    e.preventDefault();
+    e.stopPropagation();
     log$2.debug("Initiating attack on user:", playerId);
-    const forceNewTab = e2.ctrlKey || e2.metaKey || e2.button === 1;
+    const forceNewTab = e.ctrlKey || e.metaKey || e.button === 1;
     open_attack_link(playerId, {
       openInNewTab: forceNewTab ? true : void 0
     });
@@ -8082,9 +8089,9 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
   const httpInterceptors = [];
   function registerHttpInterceptor(interceptor) {
     httpInterceptors.push(interceptor);
-    httpInterceptors.sort((a2, b2) => (b2.priority ?? 0) - (a2.priority ?? 0));
+    httpInterceptors.sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0));
   }
-  const stylesCss = ".ffscouter-gauge{position:relative;display:block;padding:0}.ffscouter-arrow,.ffscouter-preview-arrow{width:var(--ffscouter-arrow-width);object-fit:cover;pointer-events:none}.ffscouter-arrow{position:absolute;transform:translate(-50%,-30%);padding:0;top:0;left:calc(var(--ffscouter-arrow-width) / 2 + var(--band-percent) * (100% - var(--ffscouter-arrow-width)) / 100)}.ffscouter-preview-arrow{display:inline-block;vertical-align:middle}.ffscouter-bubble,.ffscouter-preview-bubble{min-width:2.5882em;height:1.6471em;line-height:1.4118;border:1px solid rgba(0,0,0,.4);border-radius:999px;font-size:var(--ffscouter-bubble-font-size);font-weight:700;font-family:Geneva,Arial,sans-serif;text-align:center;padding:0 .4706em;box-sizing:border-box;white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;text-shadow:0 1px 1px rgba(0,0,0,.5);box-shadow:0 1px 2px #0000004d}.ffscouter-bubble{position:absolute;transform:translate(-50%,-30%);top:0;left:calc(var(--ffscouter-arrow-width) / 2 + var(--band-percent) * (100% - var(--ffscouter-arrow-width)) / 100);pointer-events:none;z-index:10}.ffscouter-preview-bubble{vertical-align:middle}.ffscouter-marker-preview{display:inline-flex;align-items:center;gap:10px;--ffscouter-arrow-width: calc(20px * var(--ffscouter-marker-scale));--ffscouter-bubble-font-size: calc(8.5px * var(--ffscouter-marker-scale))}.ffscouter-mini-desc{padding:0 5px}.ffscouter-swatch-row{display:inline-flex;gap:3px}.ffscouter-swatch{display:inline-block;width:20px;height:13px}body{--ffscouter-bg-color: #f0f0f0;--ffscouter-alt-bg-color: #fff;--ffscouter-border-color: #ccc;--ffscouter-input-color: #ccc;--ffscouter-text-color: #000;--ffscouter-hover-color: #ddd;--ffscouter-glow-color: #4caf50;--ffscouter-success-color: #4caf50;--ffscouter-marker-scale: 1;--ffscouter-arrow-width: calc(20px * var(--ffscouter-marker-scale));--ffscouter-bubble-font-size: calc(8.5px * var(--ffscouter-marker-scale))}body.dark-mode{--ffscouter-bg-color: #333;--ffscouter-alt-bg-color: #383838;--ffscouter-border-color: #444;--ffscouter-input-color: #504f4f;--ffscouter-text-color: #ccc;--ffscouter-hover-color: #555;--ffscouter-glow-color: #4caf50;--ffscouter-success-color: #4caf50}.ff-premium-upgrade-line{display:block;margin-top:4px;line-height:1.3;white-space:nowrap;font-size:12px;font-style:normal}@media(max-width:768px){.ff-premium-upgrade-line{margin-top:6px;line-height:1.35;white-space:normal;overflow-wrap:anywhere}}ff-settings-panel{display:block}ff-settings-panel .accordion{margin:10px 0;padding:15px;background-color:var(--ffscouter-bg-color);border:1px solid var(--ffscouter-border-color);border-radius:5px;color:var(--ffscouter-text-color)}ff-settings-panel .accordion.glow{border-color:var(--ffscouter-glow-color);box-shadow:0 0 8px #4caf5080}ff-settings-panel .input-row{display:flex;flex-direction:column;gap:5px;margin-bottom:15px}ff-settings-panel .input-row-inline{display:flex;align-items:center;gap:10px;margin-bottom:15px}ff-settings-panel .blur-mode{filter:blur(4px);transition:filter .2s ease}ff-settings-panel .blur-mode:hover,ff-settings-panel .blur-mode:focus{filter:blur(0)}ff-settings-panel .error-msg{color:#f33;font-size:13px;margin-top:5px}ff-settings-panel input[type=text],ff-settings-panel input[type=number]{box-sizing:border-box!important;text-align:left;vertical-align:top;width:178px;height:34px!important;margin-right:8px;padding:9px 10px;line-height:14px;display:inline-block}ff-settings-panel input[type=number].ff-number{width:80px}ff-settings-panel select{box-sizing:border-box;text-align:left;vertical-align:top;width:178px;height:34px;margin-right:8px;padding:8px 10px;line-height:14px;display:inline-block;border:var(--input-border-color, 1px solid var(--ffscouter-border-color));border-radius:5px;font-family:Arial,serif;color:var(--input-color, var(--ffscouter-text-color));background:var(--input-background-color, var(--ffscouter-alt-bg-color))}:root .dark-mode ff-settings-panel select option{background-color:#000;color:var(--input-color)}ff-settings-panel .ff-api-explanation{color:var(--ffscouter-text-color);margin-bottom:20px;font-size:13px;line-height:1.5}ff-settings-panel a{color:var(--ffscouter-success-color);text-decoration:underline}ff-settings-panel .is_premium_enabled{display:inline-block;background:#4caf50;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;vertical-align:middle}ff-settings-panel .is_premium_disabled{display:inline-block;background:#c62828;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;vertical-align:middle}ff-settings-panel .is_premium_unknown{display:inline-block;background:#f39c12;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;vertical-align:middle}.profile-status{position:relative}ff-flight-profile-status{position:absolute;right:10px;bottom:2px;z-index:2}.ff-scouter-profile-flight-info{display:inline-block;text-align:right;font-size:11px;line-height:1.25;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.85)}.profile-status .ff-scouter-profile-flight-info a{color:#fff;text-decoration:underline}ff-faction-filter-box{display:block}.ff-filter-box,.ff-filter-box *,.ff-filter-box *:before,.ff-filter-box *:after{box-sizing:border-box!important}.ff-filter-box{background-color:var(--ffscouter-bg-color);border:1px solid var(--ffscouter-border-color);border-radius:8px;padding:12px 16px;margin-bottom:16px;color:var(--ffscouter-text-color);font-family:Arial,sans-serif;box-shadow:0 2px 5px #0000000d}.ff-filter-box.no-borders{background-color:var(--default-bg-panel-color);border-top:1px solid var(--ffscouter-border-color);border-bottom:1px solid var(--ffscouter-border-color);border-left:none;border-right:none;border-radius:0;box-shadow:none;padding:12px 10px;margin:0}.ff-filter-box summary{cursor:pointer;font-size:14px;font-weight:700;outline:none;-webkit-user-select:none;user-select:none}.ff-filter-box[open] summary{border-bottom:1px solid var(--ffscouter-border-color);padding-bottom:6px;margin-bottom:12px}.ff-filter-header-actions{display:flex;gap:6px;align-items:center}.ff-filter-box .ff-action-icon-btn{background:var(--ffscouter-alt-bg-color);border:1px solid var(--ffscouter-border-color);border-radius:4px;color:var(--ffscouter-text-color);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;padding:0;transition:background-color .2s,color .2s,opacity .2s}.ff-filter-box .ff-action-icon-btn:hover{background-color:var(--ffscouter-hover-color)}.ff-filter-box .ff-action-icon-btn.active{color:var(--ffscouter-text-color);opacity:1}.ff-filter-box .ff-action-icon-btn.inactive{color:var(--ffscouter-text-color);opacity:.4}.ff-filter-box .ff-action-icon-btn svg{width:14px;height:14px;fill:currentColor}.ff-filter-box .ff-action-icon-btn.reset-btn svg{transition:transform .25s ease-in-out}.ff-filter-box .ff-action-icon-btn.reset-btn:hover svg{transform:rotate(-180deg)}.ff-filter-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.grp-sort{order:1}.grp-level{order:2}.grp-activity{order:3}.grp-status{order:4}.grp-ff{order:5}.grp-stats{order:6}.grp-last-action{order:7}.grp-columns{order:8}@media(min-width:784px){.ff-filter-grid{grid-template-columns:repeat(3,1fr)}.ff-filter-grid>*{order:0}}.ff-filter-group{display:flex;flex-direction:column;gap:2px}.ff-filter-options{display:flex;flex-direction:column}.ff-filter-options label{display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer}.ff-filter-range-inputs{display:flex;align-items:center;gap:4px}.ff-filter-range-inputs input{flex:1;width:0;min-width:30px;max-width:80px;padding:4px;border:1px solid var(--ffscouter-border-color);border-radius:4px;background:var(--ffscouter-alt-bg-color);color:var(--ffscouter-text-color);font-size:11px;text-align:center}.ff-filter-box button{padding:6px 10px;border:1px solid var(--ffscouter-border-color);border-radius:4px;background:var(--ffscouter-alt-bg-color);color:var(--ffscouter-text-color);font-size:12px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;transition:background-color .2s}.ff-filter-box button:hover{background-color:var(--ffscouter-hover-color)}ff-settings-panel .ff-settings-section{display:grid;grid-template-columns:1fr;gap:12px;margin-bottom:15px}@media(min-width:784px){ff-settings-panel .ff-settings-section{grid-template-columns:repeat(3,1fr)}}ff-settings-panel .ff-settings-span{grid-column:1 / -1;margin-bottom:0}ff-settings-panel .ff-settings-cell{display:flex;flex-direction:column;gap:5px;min-width:0;margin-bottom:0}ff-settings-panel .ff-settings-cell.checkbox-cell{flex-direction:row;align-items:flex-start;gap:10px}ff-settings-panel .ff-settings-cell input[type=text]{width:100%;margin-right:0}ff-settings-panel .ff-settings-cell select{width:auto;max-width:100%;margin-right:0}ff-settings-panel .ff-api-block{display:flex;flex-direction:column;gap:10px}ff-settings-panel .ff-api-block .ff-settings-cell input[type=text]{max-width:360px}ff-settings-panel .ff-api-status-row{display:flex;flex-wrap:wrap;align-items:center;gap:10px}ff-settings-panel .ff-chain-suboptions{border-left:2px solid var(--ffscouter-border-color);padding-left:8px;margin-top:10px;grid-template-columns:repeat(2,1fr)}ff-settings-panel .ff-chain-suboptions .ff-chain-wide{grid-column:1 / -1}@media(min-width:784px){ff-settings-panel .ff-chain-suboptions{padding-left:16px;grid-template-columns:repeat(3,1fr)}ff-settings-panel .ff-chain-suboptions .ff-chain-wide{grid-column:auto}}ff-settings-panel .ff-settings-group{background-color:var(--ffscouter-alt-bg-color);border:1px solid var(--ffscouter-border-color);border-radius:5px;padding:12px;margin-bottom:15px}ff-settings-panel .ff-settings-group h4{margin:0 0 12px}ff-settings-panel .ff-marker-size,ff-settings-panel .ff-marker-border-width{display:flex;flex-direction:column;gap:5px}ff-settings-panel .ff-marker-size-controls{display:flex;flex-wrap:wrap;align-items:center;gap:10px}ff-settings-panel .ff-marker-size-controls input[type=range]{flex:1 1 120px;min-width:120px}ff-settings-panel .ff-color-scheme{display:flex;flex-direction:column;gap:5px}ff-settings-panel .ff-color-scheme-controls{display:flex;flex-wrap:wrap;align-items:center;gap:10px}ff-settings-panel .ffscouter-swatch-row{flex-wrap:wrap}.faction-war .ffscouter-cell{float:left!important;width:32px!important;height:20px!important;font-size:11px!important;font-weight:700!important;border-radius:3px!important;box-sizing:border-box!important;margin:7px 4px!important;padding:0!important;text-align:center!important;line-height:20px!important;z-index:10!important}.ffscouter-cell{cursor:pointer!important}.faction-war .ffscouter-header,.table-header .ffscouter-header{float:left!important;width:38px!important;font-size:12px!important;font-weight:700!important;padding:0!important;text-align:center!important;background-color:transparent!important;cursor:pointer!important}.faction-war:has(.ffscouter-header[data-ffscouter-sort]) [class*=sortIcon___]:not(.ffscouter-sort-icon),.members-list:has(.ffscouter-header[data-ffscouter-sort]) [class*=sortIcon___]:not(.ffscouter-sort-icon){visibility:hidden!important}[data-ffscouter-hidden]{display:none!important}.faction-war[data-ffscouter-hide-level=true] .level:not(.ffscouter-cell):not(.ffscouter-header){display:none!important}.faction-war[data-ffscouter-hide-status=true] .status,.faction-war[data-ffscouter-hide-score=true] .points{display:none!important}.faction-war[data-ffscouter-col-display=fair_fight]:not([data-ffscouter-hide-level=true]) .level:not(.ffscouter-cell):not(.ffscouter-header),.faction-war[data-ffscouter-col-display=battle_stats]:not([data-ffscouter-hide-level=true]) .level:not(.ffscouter-cell):not(.ffscouter-header){width:29px!important}.faction-war[data-ffscouter-col-display=fair_fight]:not([data-ffscouter-hide-level=true]) .status,.faction-war[data-ffscouter-col-display=battle_stats]:not([data-ffscouter-hide-level=true]) .status{width:50px!important}.faction-war[data-ffscouter-col-display=fair_fight]:not([data-ffscouter-hide-level=true]) .points,.faction-war[data-ffscouter-col-display=battle_stats]:not([data-ffscouter-hide-level=true]) .points{width:38px!important}.members-list li.enemy:has(>.tt-stats-estimate),.members-list li.your:has(>.tt-stats-estimate),.members-list li.enemy:has(>div.clear~*),.members-list li.your:has(>div.clear~*){padding-bottom:22px!important;position:relative!important}.members-list li.enemy>.tt-stats-estimate,.members-list li.your>.tt-stats-estimate,.members-list li.enemy>div.clear~*,.members-list li.your>div.clear~*{position:absolute!important;bottom:2px!important;left:10px!important;height:18px!important;line-height:18px!important;font-size:11px!important;width:calc(100% - 20px)!important;display:block!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ff-filter-box summary:focus-visible{outline:2px solid var(--ffscouter-glow-color);outline-offset:2px}body[data-ff-status-attack-enabled=true] [class*=userStatusWrap__],body[data-ff-status-attack-enabled=true] li[id^=icon][id*=-profile-].user-status-16-Online,body[data-ff-status-attack-enabled=true] li[id^=icon][id*=-profile-].user-status-16-Away,body[data-ff-status-attack-enabled=true] li[id^=icon][id*=-profile-].user-status-16-Offline,body[data-ff-status-attack-enabled=true] #profile-mini-root li[id^=icon][id*=-mini-profile-].user-status-16-Online,body[data-ff-status-attack-enabled=true] #profile-mini-root li[id^=icon][id*=-mini-profile-].user-status-16-Away,body[data-ff-status-attack-enabled=true] #profile-mini-root li[id^=icon][id*=-mini-profile-].user-status-16-Offline,body[data-ff-status-attack-enabled=true] li[id^=icon][id*=___].iconShow.ffscouter-forum-status{cursor:crosshair!important}.d .job-lists-wrap .item>li.company,.d .job-lists-wrap .item>li.director,.d .job-lists-wrap .item>li.salary,.d .job-lists-wrap .item>li.ranks{margin-bottom:0!important;padding-bottom:0!important}";
+  const stylesCss = ".ffscouter-gauge{position:relative;display:block;padding:0}.ffscouter-arrow,.ffscouter-preview-arrow{width:var(--ffscouter-arrow-width);object-fit:cover;pointer-events:none}.ffscouter-arrow{position:absolute;transform:translate(-50%,-30%);padding:0;top:0;left:calc(var(--ffscouter-arrow-width) / 2 + var(--band-percent) * (100% - var(--ffscouter-arrow-width)) / 100)}.ffscouter-preview-arrow{display:inline-block;vertical-align:middle}.ffscouter-bubble,.ffscouter-preview-bubble{min-width:2.5882em;height:1.6471em;line-height:1.4118;border:1px solid rgba(0,0,0,.4);border-radius:999px;font-size:var(--ffscouter-bubble-font-size);font-weight:700;font-family:Geneva,Arial,sans-serif;text-align:center;padding:0 .4706em;box-sizing:border-box;white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;text-shadow:0 1px 1px rgba(0,0,0,.5);box-shadow:0 1px 2px #0000004d}.ffscouter-bubble{position:absolute;transform:translate(-50%,-30%);top:0;left:calc(var(--ffscouter-arrow-width) / 2 + var(--band-percent) * (100% - var(--ffscouter-arrow-width)) / 100);pointer-events:none;z-index:10}.ffscouter-preview-bubble{vertical-align:middle}.ffscouter-marker-preview{display:inline-flex;align-items:center;gap:10px;--ffscouter-arrow-width: calc(20px * var(--ffscouter-marker-scale));--ffscouter-bubble-font-size: calc(8.5px * var(--ffscouter-marker-scale))}.ffscouter-mini-desc{padding:0 5px}.ffscouter-swatch-row{display:inline-flex;gap:3px}.ffscouter-swatch{display:inline-block;width:20px;height:13px}body{--ffscouter-bg-color: #f0f0f0;--ffscouter-alt-bg-color: #fff;--ffscouter-border-color: #ccc;--ffscouter-input-color: #ccc;--ffscouter-text-color: #000;--ffscouter-hover-color: #ddd;--ffscouter-glow-color: #4caf50;--ffscouter-success-color: #4caf50;--ffscouter-marker-scale: 1;--ffscouter-arrow-width: calc(20px * var(--ffscouter-marker-scale));--ffscouter-bubble-font-size: calc(8.5px * var(--ffscouter-marker-scale))}body.dark-mode{--ffscouter-bg-color: #333;--ffscouter-alt-bg-color: #383838;--ffscouter-border-color: #444;--ffscouter-input-color: #504f4f;--ffscouter-text-color: #ccc;--ffscouter-hover-color: #555;--ffscouter-glow-color: #4caf50;--ffscouter-success-color: #4caf50}ff-settings-panel{display:block}.profile-status{position:relative}.ff-flight-element{position:absolute;right:10px;bottom:2px;z-index:2}.ff-scouter-profile-flight-info{display:inline-block;text-align:right;font-size:11px;line-height:1.25;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.85)}.profile-status .ff-scouter-profile-flight-info a{color:#fff;text-decoration:underline}.faction-war .ffscouter-cell{float:left!important;width:32px!important;height:20px!important;font-size:11px!important;font-weight:700!important;border-radius:3px!important;box-sizing:border-box!important;margin:7px 4px!important;padding:0!important;text-align:center!important;line-height:20px!important;z-index:10!important}.ffscouter-cell{cursor:pointer!important}.faction-war .ffscouter-header,.table-header .ffscouter-header{float:left!important;width:38px!important;font-size:12px!important;font-weight:700!important;padding:0!important;text-align:center!important;background-color:transparent!important;cursor:pointer!important}.faction-war:has(.ffscouter-header[data-ffscouter-sort]) [class*=sortIcon___]:not(.ffscouter-sort-icon),.members-list:has(.ffscouter-header[data-ffscouter-sort]) [class*=sortIcon___]:not(.ffscouter-sort-icon){visibility:hidden!important}[data-ffscouter-hidden]{display:none!important}.faction-war[data-ffscouter-hide-level=true] .level:not(.ffscouter-cell):not(.ffscouter-header){display:none!important}.faction-war[data-ffscouter-hide-status=true] .status,.faction-war[data-ffscouter-hide-score=true] .points{display:none!important}.faction-war[data-ffscouter-col-display=fair_fight]:not([data-ffscouter-hide-level=true]) .level:not(.ffscouter-cell):not(.ffscouter-header),.faction-war[data-ffscouter-col-display=battle_stats]:not([data-ffscouter-hide-level=true]) .level:not(.ffscouter-cell):not(.ffscouter-header){width:29px!important}.faction-war[data-ffscouter-col-display=fair_fight]:not([data-ffscouter-hide-level=true]) .status,.faction-war[data-ffscouter-col-display=battle_stats]:not([data-ffscouter-hide-level=true]) .status{width:50px!important}.faction-war[data-ffscouter-col-display=fair_fight]:not([data-ffscouter-hide-level=true]) .points,.faction-war[data-ffscouter-col-display=battle_stats]:not([data-ffscouter-hide-level=true]) .points{width:38px!important}.members-list li.enemy:has(>.tt-stats-estimate),.members-list li.your:has(>.tt-stats-estimate),.members-list li.enemy:has(>div.clear~*),.members-list li.your:has(>div.clear~*){padding-bottom:22px!important;position:relative!important}.members-list li.enemy>.tt-stats-estimate,.members-list li.your>.tt-stats-estimate,.members-list li.enemy>div.clear~*,.members-list li.your>div.clear~*{position:absolute!important;bottom:2px!important;left:10px!important;height:18px!important;line-height:18px!important;font-size:11px!important;width:calc(100% - 20px)!important;display:block!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}body[data-ff-status-attack-enabled=true] [class*=userStatusWrap__],body[data-ff-status-attack-enabled=true] li[id^=icon][id*=-profile-].user-status-16-Online,body[data-ff-status-attack-enabled=true] li[id^=icon][id*=-profile-].user-status-16-Away,body[data-ff-status-attack-enabled=true] li[id^=icon][id*=-profile-].user-status-16-Offline,body[data-ff-status-attack-enabled=true] #profile-mini-root li[id^=icon][id*=-mini-profile-].user-status-16-Online,body[data-ff-status-attack-enabled=true] #profile-mini-root li[id^=icon][id*=-mini-profile-].user-status-16-Away,body[data-ff-status-attack-enabled=true] #profile-mini-root li[id^=icon][id*=-mini-profile-].user-status-16-Offline,body[data-ff-status-attack-enabled=true] li[id^=icon][id*=___].iconShow.ffscouter-forum-status{cursor:crosshair!important}.d .job-lists-wrap .item>li.company,.d .job-lists-wrap .item>li.director,.d .job-lists-wrap .item>li.salary,.d .job-lists-wrap .item>li.ranks{margin-bottom:0!important;padding-bottom:0!important}";
   importCSS(stylesCss);
   const log = logger.child("boot");
   const INJECTION_KEY = "__FF_SCOUTER_V2_INJECTED__";
@@ -8107,7 +8114,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       return;
     }
     document.documentElement.setAttribute(INJECTION_KEY, "1");
-    log.info("Initializing", "3.0-beta13");
+    log.info("Initializing", "3.0-beta14");
     run_migration();
     if (ffscouter.analytics_enabled) {
       if (typeof unsafeWindow !== "undefined") {
