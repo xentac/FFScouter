@@ -175,14 +175,17 @@ export default {
         toast("Please enter an API key.", TOAST_LEVEL.ERROR);
         return;
       }
+      panel.isPremium = null;
       let result: FFApiCheckResponse | null = null;
       try {
         result = await check_key(detail.apiKey);
       } catch (err) {
+        panel.isPremium = null;
         toast(`${err}`, TOAST_LEVEL.ERROR);
         return;
       }
       if (result == null || result.blank) {
+        panel.isPremium = null;
         toast(
           "Problem querying ffscouter.com API. Please wait a few seconds and try again.",
           TOAST_LEVEL.WARNING,
@@ -196,9 +199,12 @@ export default {
         message = `FF Scouter successfully configured. API key (${result.result.key}) was registered on ${format_timestamp(result.result.registered_at)} and last used ${format_timestamp(result.result.last_used)}.`;
         level = TOAST_LEVEL.INFO;
 
-        if (detail.apiKey === ffconfig.key) {
-          panel.isPremium = await check_key_status.is_premium(true);
-        }
+        ffconfig.key = detail.apiKey;
+        panel.apiKey = detail.apiKey;
+        panel.isPremium = result.result.is_premium;
+        check_key_status.clear();
+      } else {
+        panel.isPremium = false;
       }
       toast(message, level);
     });

@@ -17,7 +17,7 @@ beforeEach(() => {
 
 afterEach(async () => {
   // Let React scheduler finish rendering inside JSDOM before environment teardown
-  await new Promise((resolve) => setTimeout(resolve, 50));
+  await new Promise((resolve) => setTimeout(resolve, 150));
 });
 
 function buildMiniRoot(travelling: boolean) {

@@ -266,8 +266,11 @@ export const query_stats = async (
 };
 
 const parse_limit_headers = (
-  responseHeaders: string,
+  responseHeaders?: unknown,
 ): FFApiRateLimits | undefined => {
+  if (typeof responseHeaders !== "string") {
+    return undefined;
+  }
   const headerLines = responseHeaders.split("\n");
   const headers: Map<string, string> = new Map();
   for (const line of headerLines) {
