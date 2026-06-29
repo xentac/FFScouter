@@ -79,7 +79,7 @@ export const CONFIG_DEFAULTS = {
   chain_factionless: false,
   gauge_marker_type: GaugeMarkerType.ARROW,
   gauge_marker_scale: 100,
-  gauge_marker_border_width: 1.5,
+  gauge_marker_border_width: 1,
   war_quick_attack_action: WarQuickAttackAction.NEW_TAB,
   network_interception_enabled: false,
   status_attack_links_enabled: true,

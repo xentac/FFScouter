@@ -181,8 +181,8 @@ test("ff-settings-panel syncs the border-thickness slider and number input, clam
   ) as HTMLInputElement;
   expect(range).not.toBeNull();
   expect(number).not.toBeNull();
-  expect(range.value).toBe("1.5");
-  expect(number.value).toBe("1.5");
+  expect(range.value).toBe("1");
+  expect(number.value).toBe("1");
 
   // Moving the slider updates the synced number input
   range.value = "2";
@@ -238,8 +238,8 @@ test("ff-settings-panel renders a live marker-size preview that updates with the
   expect(previewBubble.style.backgroundColor).not.toBe(classicBubbleColor);
 
   // Border thickness also drives the preview, scaled by the draft marker size
-  expect(previewArrow?.getAttribute("stroke-width")).toBe("1.5");
-  expect(previewBubble.style.borderWidth).toBe("1.5px");
+  expect(previewArrow?.getAttribute("stroke-width")).toBe("1");
+  expect(previewBubble.style.borderWidth).toBe("1px");
 
   const borderRange = el.querySelector(
     "#gauge-marker-border-width",
