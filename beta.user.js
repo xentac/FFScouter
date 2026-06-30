@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FF Scouter V2 beta
 // @namespace    xentac-beta
-// @version      3.0-beta14
+// @version      3.0-beta15
 // @author       xentac [3354782], MAVRI [2402357], rDacted [2670953], Weav3r [1853324], Glasnost [1844049]
 // @description  Shows the expected Fair Fight score against targets and faction war status
 // @license      GPLv3
@@ -905,7 +905,7 @@ clearAll() {
   const ffconfig = new FFConfig("ffsv3-config");
   const FF_SCOUTER_BASE_URL = "https://ffscouter.com/api/v1";
   new TornApiClient({
-    defaultComment: `FFScouterV2-${"3.0-beta14"}`,
+    defaultComment: `FFScouterV2-${"3.0-beta15"}`,
     defaultTimeout: 30
 });
   async function gmRequest(options) {
@@ -6272,6 +6272,8 @@ jsx("br", {}),
     isPremium,
     rangeError,
     showSavedMessage,
+    onChange,
+    onApiKeyBlur,
     onVerify,
     onSave,
     onReset,
@@ -6325,8 +6327,8 @@ jsx(
                         className: props.apiKey ? cls.blur : "",
                         placeholder: "Paste your key here...",
                         value: drafts.apiKey,
-                        onChange: () => {
-                        }
+                        onChange,
+                        onBlur: onApiKeyBlur
                       }
                     )
                   ] }),
@@ -6363,8 +6365,7 @@ jsxs(
                     {
                       id: "gauge-marker-type",
                       value: drafts.gaugeMarkerType,
-                      onChange: () => {
-                      },
+                      onChange,
                       children: [
 jsx("option", { value: "arrow", children: "Arrow (Default)" }),
 jsx("option", { value: "bubble_ff", children: "Bubble (FF Score)" }),
@@ -6385,8 +6386,7 @@ jsx(
                         max: "200",
                         step: "5",
                         value: drafts.gaugeMarkerScale,
-                        onChange: () => {
-                        }
+                        onChange
                       }
                     ),
 jsx(
@@ -6399,8 +6399,7 @@ jsx(
                         step: "5",
                         className: cls.number,
                         value: drafts.gaugeMarkerScale,
-                        onChange: () => {
-                        }
+                        onChange
                       }
                     ),
 jsx("span", { children: "%" })
@@ -6418,8 +6417,7 @@ jsx(
                         max: "3",
                         step: "0.5",
                         value: drafts.gaugeMarkerBorderWidth,
-                        onChange: () => {
-                        }
+                        onChange
                       }
                     ),
 jsx(
@@ -6432,8 +6430,7 @@ jsx(
                         step: "0.5",
                         className: cls.number,
                         value: drafts.gaugeMarkerBorderWidth,
-                        onChange: () => {
-                        }
+                        onChange
                       }
                     ),
 jsx("span", { children: "px" }),
@@ -6490,8 +6487,7 @@ jsxs(
                       {
                         id: "color-scheme",
                         value: drafts.colorScheme,
-                        onChange: () => {
-                        },
+                        onChange,
                         children: [
 jsx("option", { value: "classic", children: "Classic (Default)" }),
 jsx("option", { value: "cool_diverging", children: "Cool Diverging" }),
@@ -6541,8 +6537,7 @@ jsx(
                         step: "0.1",
                         className: cls.number,
                         value: drafts.lowRange,
-                        onChange: () => {
-                        }
+                        onChange
                       }
                     ),
 jsx("span", { children: "<" }),
@@ -6554,8 +6549,7 @@ jsx(
                         step: "0.1",
                         className: cls.number,
                         value: drafts.highRange,
-                        onChange: () => {
-                        }
+                        onChange
                       }
                     ),
 jsx("span", { children: "<" }),
@@ -6567,8 +6561,7 @@ jsx(
                         step: "0.1",
                         className: cls.number,
                         value: drafts.maxRange,
-                        onChange: () => {
-                        }
+                        onChange
                       }
                     )
                   ] }),
@@ -6587,8 +6580,7 @@ jsx(
                         id: "chain-button-toggle",
                         type: "checkbox",
                         checked: drafts.chainButtonEnabled,
-                        onChange: () => {
-                        }
+                        onChange
                       }
                     ),
 jsx("label", { htmlFor: "chain-button-toggle", children: "Enable Chain Button (Green FF Button)" })
@@ -6601,8 +6593,7 @@ jsxs(
                         {
                           id: "chain-link-type",
                           value: drafts.chainLinkType,
-                          onChange: () => {
-                          },
+                          onChange,
                           children: [
 jsx("option", { value: "attack", children: "Attack page" }),
 jsx("option", { value: "profile", children: "Profile page" })
@@ -6617,8 +6608,7 @@ jsxs(
                         {
                           id: "chain-tab-type",
                           value: drafts.chainTabType,
-                          onChange: () => {
-                          },
+                          onChange,
                           children: [
 jsx("option", { value: "newtab", children: "New tab" }),
 jsx("option", { value: "sametab", children: "Same tab" })
@@ -6636,8 +6626,7 @@ jsx(
                           className: cls.number,
                           placeholder: "No min",
                           value: drafts.chainMinLevel === null ? "" : drafts.chainMinLevel,
-                          onChange: () => {
-                          }
+                          onChange
                         }
                       )
                     ] }),
@@ -6651,8 +6640,7 @@ jsx(
                           className: cls.number,
                           placeholder: "No max",
                           value: drafts.chainMaxLevel === null ? "" : drafts.chainMaxLevel,
-                          onChange: () => {
-                          }
+                          onChange
                         }
                       )
                     ] }),
@@ -6667,8 +6655,7 @@ jsx(
                           className: cls.number,
                           placeholder: "No min",
                           value: drafts.chainMinFF === null ? "" : drafts.chainMinFF,
-                          onChange: () => {
-                          }
+                          onChange
                         }
                       )
                     ] }),
@@ -6683,8 +6670,7 @@ jsx(
                           className: cls.number,
                           placeholder: "No max",
                           value: drafts.chainMaxFF,
-                          onChange: () => {
-                          }
+                          onChange
                         }
                       )
                     ] }),
@@ -6699,8 +6685,7 @@ jsx(
                               id: "chain-inactive",
                               type: "checkbox",
                               checked: drafts.chainInactive,
-                              onChange: () => {
-                              }
+                              onChange
                             }
                           ),
 jsx("label", { htmlFor: "chain-inactive", children: "Inactive Only (14+ days offline)" })
@@ -6718,8 +6703,7 @@ jsx(
                               id: "chain-factionless",
                               type: "checkbox",
                               checked: drafts.chainFactionless,
-                              onChange: () => {
-                              }
+                              onChange
                             }
                           ),
 jsx("label", { htmlFor: "chain-factionless", children: "Factionless Only" })
@@ -6735,8 +6719,7 @@ jsxs(
                     {
                       id: "factions-col-display",
                       value: drafts.factionsColDisplay,
-                      onChange: () => {
-                      },
+                      onChange,
                       children: [
 jsx("option", { value: "fair_fight", children: "FF Score" }),
 jsx("option", { value: "battle_stats", children: "BS Estimate" }),
@@ -6752,8 +6735,7 @@ jsxs(
                     {
                       id: "war-col-display",
                       value: drafts.warColDisplay,
-                      onChange: () => {
-                      },
+                      onChange,
                       children: [
 jsx("option", { value: "fair_fight", children: "FF Score" }),
 jsx("option", { value: "battle_stats", children: "BS Estimate" }),
@@ -6769,8 +6751,7 @@ jsx(
                       id: "status-attack-links-toggle",
                       type: "checkbox",
                       checked: drafts.statusAttackLinksEnabled,
-                      onChange: () => {
-                      }
+                      onChange
                     }
                   ),
 jsx("label", { htmlFor: "status-attack-links-toggle", children: "Enable online status indicator quick attack links" })
@@ -6782,8 +6763,7 @@ jsxs(
                     {
                       id: "war-quick-attack-action",
                       value: drafts.warQuickAttackAction,
-                      onChange: () => {
-                      },
+                      onChange,
                       children: [
 jsx("option", { value: "new_tab", children: "New Tab" }),
 jsx("option", { value: "current", children: "Same Tab" })
@@ -6798,8 +6778,7 @@ jsx(
                       id: "ff-history-toggle",
                       type: "checkbox",
                       checked: drafts.ffHistoryEnabled,
-                      onChange: () => {
-                      }
+                      onChange
                     }
                   ),
 jsx("label", { htmlFor: "ff-history-toggle", children: "Enable FF History button on profile pages" })
@@ -6831,8 +6810,7 @@ jsx(
                       id: "debug-logs",
                       type: "checkbox",
                       checked: drafts.debugLogs,
-                      onChange: () => {
-                      }
+                      onChange
                     }
                   ),
 jsx("label", { htmlFor: "debug-logs", children: "Enable debug logging" })
@@ -6844,8 +6822,7 @@ jsx(
                       id: "analytics-toggle",
                       type: "checkbox",
                       checked: drafts.analyticsEnabled,
-                      onChange: () => {
-                      }
+                      onChange
                     }
                   ),
 jsx("label", { htmlFor: "analytics-toggle", children: "Enable local analytics logging (last 30 days)" })
@@ -6857,8 +6834,7 @@ jsx(
                       id: "network-interception-toggle",
                       type: "checkbox",
                       checked: drafts.networkInterceptionEnabled,
-                      onChange: () => {
-                      }
+                      onChange
                     }
                   ),
 jsx("label", { htmlFor: "network-interception-toggle", children: "Enable network request interception (Fetch/XHR/WS)" })
@@ -6870,8 +6846,7 @@ jsx(
                       id: "debug-disable-pda-http",
                       type: "checkbox",
                       checked: drafts.debugDisablePdaHttp,
-                      onChange: () => {
-                      }
+                      onChange
                     }
                   ),
 jsx("label", { htmlFor: "debug-disable-pda-http", children: "Disable PDA native HTTP (use GM_xmlhttpRequest instead)" })
@@ -6915,7 +6890,7 @@ jsx(
       this._root = null;
       this._updatePromise = Promise.resolve();
       this._resolveUpdate = null;
-      this.handleNativeInput = (e) => {
+      this.handleChange = (e) => {
         const target = e.target;
         if (!target) return;
         this._showSavedMessage = false;
@@ -6948,24 +6923,6 @@ jsx(
           const num = Number(target.value);
           this._drafts.chainMaxFF = num;
           this._drafts.chainFFTarget = num;
-        }
-        this.render();
-      };
-      this.handleNativeChange = (e) => {
-        const target = e.target;
-        if (!target) return;
-        this._showSavedMessage = false;
-        const id = target.id;
-        if (id === "api-key") {
-          const val = target.value.trim();
-          this._drafts.apiKey = val;
-          this.dispatchEvent(
-            new CustomEvent("ff-save-key", {
-              detail: { apiKey: val },
-              bubbles: true,
-              composed: true
-            })
-          );
         } else if (id === "gauge-marker-type") {
           this._drafts.gaugeMarkerType = target.value;
         } else if (id === "color-scheme") {
@@ -7001,21 +6958,26 @@ jsx(
         }
         this.render();
       };
+      this.handleApiKeyBlur = (e) => {
+        this._showSavedMessage = false;
+        const val = e.target.value.trim();
+        this._drafts.apiKey = val;
+        this.dispatchEvent(
+          new CustomEvent("ff-save-key", {
+            detail: { apiKey: val },
+            bubbles: true,
+            composed: true
+          })
+        );
+        this.render();
+      };
       this.resetDrafts();
     }
     connectedCallback() {
       this._root = createRoot(this);
       this.render();
-      this.addEventListener("input", this.handleNativeInput, { capture: true });
-      this.addEventListener("change", this.handleNativeChange, { capture: true });
     }
     disconnectedCallback() {
-      this.removeEventListener("input", this.handleNativeInput, {
-        capture: true
-      });
-      this.removeEventListener("change", this.handleNativeChange, {
-        capture: true
-      });
       this._root?.unmount();
       this._root = null;
     }
@@ -7067,6 +7029,8 @@ jsx(
           isPremium: this._props.isPremium,
           rangeError: this._rangeError,
           showSavedMessage: this._showSavedMessage,
+          onChange: this.handleChange,
+          onApiKeyBlur: this.handleApiKeyBlur,
           onVerify: () => {
             this.dispatchEvent(
               new CustomEvent("ff-verify", {
@@ -8114,7 +8078,7 @@ get draftApiKey() {
       return;
     }
     document.documentElement.setAttribute(INJECTION_KEY, "1");
-    log.info("Initializing", "3.0-beta14");
+    log.info("Initializing", "3.0-beta15");
     run_migration();
     if (ffscouter.analytics_enabled) {
       if (typeof unsafeWindow !== "undefined") {
