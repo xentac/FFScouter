@@ -88,6 +88,10 @@ type SettingsPanelComponentProps = {
   isPremium: boolean | null;
   rangeError: string;
   showSavedMessage: boolean;
+  onChange: (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+  ) => void;
+  onApiKeyBlur: (e: React.FocusEvent<HTMLInputElement>) => void;
   onVerify: () => void;
   onSave: () => void;
   onReset: () => void;
@@ -101,6 +105,8 @@ export function SettingsPanelComponent({
   isPremium,
   rangeError,
   showSavedMessage,
+  onChange,
+  onApiKeyBlur,
   onVerify,
   onSave,
   onReset,
@@ -153,7 +159,8 @@ export function SettingsPanelComponent({
                   className={props.apiKey ? cls.blur : ""}
                   placeholder="Paste your key here..."
                   value={drafts.apiKey}
-                  onChange={() => {}}
+                  onChange={onChange}
+                  onBlur={onApiKeyBlur}
                 />
               </div>
               <div className={cls.apiStatusRow}>
@@ -195,7 +202,7 @@ export function SettingsPanelComponent({
               <select
                 id="gauge-marker-type"
                 value={drafts.gaugeMarkerType}
-                onChange={() => {}}
+                onChange={onChange}
               >
                 <option value="arrow">Arrow (Default)</option>
                 <option value="bubble_ff">Bubble (FF Score)</option>
@@ -213,7 +220,7 @@ export function SettingsPanelComponent({
                   max="200"
                   step="5"
                   value={drafts.gaugeMarkerScale}
-                  onChange={() => {}}
+                  onChange={onChange}
                 />
                 <input
                   id="gauge-marker-scale-number"
@@ -223,7 +230,7 @@ export function SettingsPanelComponent({
                   step="5"
                   className={cls.number}
                   value={drafts.gaugeMarkerScale}
-                  onChange={() => {}}
+                  onChange={onChange}
                 />
                 <span>%</span>
               </div>
@@ -241,7 +248,7 @@ export function SettingsPanelComponent({
                   max="3"
                   step="0.5"
                   value={drafts.gaugeMarkerBorderWidth}
-                  onChange={() => {}}
+                  onChange={onChange}
                 />
                 <input
                   id="gauge-marker-border-width-number"
@@ -251,7 +258,7 @@ export function SettingsPanelComponent({
                   step="0.5"
                   className={cls.number}
                   value={drafts.gaugeMarkerBorderWidth}
-                  onChange={() => {}}
+                  onChange={onChange}
                 />
                 <span>px</span>
                 <div
@@ -298,7 +305,7 @@ export function SettingsPanelComponent({
                 <select
                   id="color-scheme"
                   value={drafts.colorScheme}
-                  onChange={() => {}}
+                  onChange={onChange}
                 >
                   <option value="classic">Classic (Default)</option>
                   <option value="cool_diverging">Cool Diverging</option>
@@ -339,7 +346,7 @@ export function SettingsPanelComponent({
                   step="0.1"
                   className={cls.number}
                   value={drafts.lowRange}
-                  onChange={() => {}}
+                  onChange={onChange}
                 />
                 <span>&lt;</span>
                 <input
@@ -348,7 +355,7 @@ export function SettingsPanelComponent({
                   step="0.1"
                   className={cls.number}
                   value={drafts.highRange}
-                  onChange={() => {}}
+                  onChange={onChange}
                 />
                 <span>&lt;</span>
                 <input
@@ -357,7 +364,7 @@ export function SettingsPanelComponent({
                   step="0.1"
                   className={cls.number}
                   value={drafts.maxRange}
-                  onChange={() => {}}
+                  onChange={onChange}
                 />
               </div>
               {rangeError && <div className={cls.errorMsg}>{rangeError}</div>}
@@ -375,7 +382,7 @@ export function SettingsPanelComponent({
                   id="chain-button-toggle"
                   type="checkbox"
                   checked={drafts.chainButtonEnabled}
-                  onChange={() => {}}
+                  onChange={onChange}
                 />
                 <label htmlFor="chain-button-toggle">
                   Enable Chain Button (Green FF Button)
@@ -389,7 +396,7 @@ export function SettingsPanelComponent({
                     <select
                       id="chain-link-type"
                       value={drafts.chainLinkType}
-                      onChange={() => {}}
+                      onChange={onChange}
                     >
                       <option value="attack">Attack page</option>
                       <option value="profile">Profile page</option>
@@ -401,7 +408,7 @@ export function SettingsPanelComponent({
                     <select
                       id="chain-tab-type"
                       value={drafts.chainTabType}
-                      onChange={() => {}}
+                      onChange={onChange}
                     >
                       <option value="newtab">New tab</option>
                       <option value="sametab">Same tab</option>
@@ -420,7 +427,7 @@ export function SettingsPanelComponent({
                           ? ""
                           : drafts.chainMinLevel
                       }
-                      onChange={() => {}}
+                      onChange={onChange}
                     />
                   </div>
 
@@ -436,7 +443,7 @@ export function SettingsPanelComponent({
                           ? ""
                           : drafts.chainMaxLevel
                       }
-                      onChange={() => {}}
+                      onChange={onChange}
                     />
                   </div>
 
@@ -451,7 +458,7 @@ export function SettingsPanelComponent({
                       value={
                         drafts.chainMinFF === null ? "" : drafts.chainMinFF
                       }
-                      onChange={() => {}}
+                      onChange={onChange}
                     />
                   </div>
 
@@ -464,7 +471,7 @@ export function SettingsPanelComponent({
                       className={cls.number}
                       placeholder="No max"
                       value={drafts.chainMaxFF}
-                      onChange={() => {}}
+                      onChange={onChange}
                     />
                   </div>
 
@@ -475,7 +482,7 @@ export function SettingsPanelComponent({
                       id="chain-inactive"
                       type="checkbox"
                       checked={drafts.chainInactive}
-                      onChange={() => {}}
+                      onChange={onChange}
                     />
                     <label htmlFor="chain-inactive">
                       Inactive Only (14+ days offline)
@@ -489,7 +496,7 @@ export function SettingsPanelComponent({
                       id="chain-factionless"
                       type="checkbox"
                       checked={drafts.chainFactionless}
-                      onChange={() => {}}
+                      onChange={onChange}
                     />
                     <label htmlFor="chain-factionless">Factionless Only</label>
                   </div>
@@ -502,7 +509,7 @@ export function SettingsPanelComponent({
               <select
                 id="factions-col-display"
                 value={drafts.factionsColDisplay}
-                onChange={() => {}}
+                onChange={onChange}
               >
                 <option value="fair_fight">FF Score</option>
                 <option value="battle_stats">BS Estimate</option>
@@ -515,7 +522,7 @@ export function SettingsPanelComponent({
               <select
                 id="war-col-display"
                 value={drafts.warColDisplay}
-                onChange={() => {}}
+                onChange={onChange}
               >
                 <option value="fair_fight">FF Score</option>
                 <option value="battle_stats">BS Estimate</option>
@@ -528,7 +535,7 @@ export function SettingsPanelComponent({
                 id="status-attack-links-toggle"
                 type="checkbox"
                 checked={drafts.statusAttackLinksEnabled}
-                onChange={() => {}}
+                onChange={onChange}
               />
               <label htmlFor="status-attack-links-toggle">
                 Enable online status indicator quick attack links
@@ -542,7 +549,7 @@ export function SettingsPanelComponent({
               <select
                 id="war-quick-attack-action"
                 value={drafts.warQuickAttackAction}
-                onChange={() => {}}
+                onChange={onChange}
               >
                 <option value="new_tab">New Tab</option>
                 <option value="current">Same Tab</option>
@@ -554,7 +561,7 @@ export function SettingsPanelComponent({
                 id="ff-history-toggle"
                 type="checkbox"
                 checked={drafts.ffHistoryEnabled}
-                onChange={() => {}}
+                onChange={onChange}
               />
               <label htmlFor="ff-history-toggle">
                 Enable FF History button on profile pages
@@ -586,7 +593,7 @@ export function SettingsPanelComponent({
                 id="debug-logs"
                 type="checkbox"
                 checked={drafts.debugLogs}
-                onChange={() => {}}
+                onChange={onChange}
               />
               <label htmlFor="debug-logs">Enable debug logging</label>
             </div>
@@ -596,7 +603,7 @@ export function SettingsPanelComponent({
                 id="analytics-toggle"
                 type="checkbox"
                 checked={drafts.analyticsEnabled}
-                onChange={() => {}}
+                onChange={onChange}
               />
               <label htmlFor="analytics-toggle">
                 Enable local analytics logging (last 30 days)
@@ -608,7 +615,7 @@ export function SettingsPanelComponent({
                 id="network-interception-toggle"
                 type="checkbox"
                 checked={drafts.networkInterceptionEnabled}
-                onChange={() => {}}
+                onChange={onChange}
               />
               <label htmlFor="network-interception-toggle">
                 Enable network request interception (Fetch/XHR/WS)
@@ -620,7 +627,7 @@ export function SettingsPanelComponent({
                 id="debug-disable-pda-http"
                 type="checkbox"
                 checked={drafts.debugDisablePdaHttp}
-                onChange={() => {}}
+                onChange={onChange}
               />
               <label htmlFor="debug-disable-pda-http">
                 Disable PDA native HTTP (use GM_xmlhttpRequest instead)
@@ -672,18 +679,9 @@ export class FFSettingsPanel extends HTMLElement {
   connectedCallback() {
     this._root = createRoot(this);
     this.render();
-
-    this.addEventListener("input", this.handleNativeInput, { capture: true });
-    this.addEventListener("change", this.handleNativeChange, { capture: true });
   }
 
   disconnectedCallback() {
-    this.removeEventListener("input", this.handleNativeInput, {
-      capture: true,
-    });
-    this.removeEventListener("change", this.handleNativeChange, {
-      capture: true,
-    });
     this._root?.unmount();
     this._root = null;
   }
@@ -740,6 +738,8 @@ export class FFSettingsPanel extends HTMLElement {
         isPremium: this._props.isPremium,
         rangeError: this._rangeError,
         showSavedMessage: this._showSavedMessage,
+        onChange: this.handleChange,
+        onApiKeyBlur: this.handleApiKeyBlur,
         onVerify: () => {
           this.dispatchEvent(
             new CustomEvent("ff-verify", {
@@ -851,8 +851,16 @@ export class FFSettingsPanel extends HTMLElement {
     );
   }
 
-  private handleNativeInput = (e: Event) => {
-    const target = e.target as HTMLInputElement;
+  // Single React onChange handler for every control. React's onChange fires on
+  // each edit for text/number/range inputs (native "input" semantics) and on
+  // selection for selects/checkboxes (native "change" semantics), so the input-
+  // vs-change split the old native capture listeners maintained collapses into
+  // one switch keyed by element id. The API key's commit-time trim/dispatch is
+  // the lone exception, handled separately on blur (see handleApiKeyBlur).
+  private handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+  ) => {
+    const target = e.target;
     if (!target) return;
 
     this._showSavedMessage = false;
@@ -895,28 +903,6 @@ export class FFSettingsPanel extends HTMLElement {
       const num = Number(target.value);
       this._drafts.chainMaxFF = num;
       this._drafts.chainFFTarget = num;
-    }
-
-    this.render();
-  };
-
-  private handleNativeChange = (e: Event) => {
-    const target = e.target as HTMLInputElement | HTMLSelectElement;
-    if (!target) return;
-
-    this._showSavedMessage = false;
-
-    const id = target.id;
-    if (id === "api-key") {
-      const val = target.value.trim();
-      this._drafts.apiKey = val;
-      this.dispatchEvent(
-        new CustomEvent("ff-save-key", {
-          detail: { apiKey: val },
-          bubbles: true,
-          composed: true,
-        }),
-      );
     } else if (id === "gauge-marker-type") {
       this._drafts.gaugeMarkerType = target.value as GaugeMarkerType;
     } else if (id === "color-scheme") {
@@ -955,6 +941,23 @@ export class FFSettingsPanel extends HTMLElement {
       this._drafts.debugDisablePdaHttp = (target as HTMLInputElement).checked;
     }
 
+    this.render();
+  };
+
+  // The API key commits when the field loses focus: trim it and notify the
+  // parent so a freshly pasted key is persisted/verified without waiting for an
+  // explicit Save. Keystroke-by-keystroke updates go through handleChange.
+  private handleApiKeyBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    this._showSavedMessage = false;
+    const val = e.target.value.trim();
+    this._drafts.apiKey = val;
+    this.dispatchEvent(
+      new CustomEvent("ff-save-key", {
+        detail: { apiKey: val },
+        bubbles: true,
+        composed: true,
+      }),
+    );
     this.render();
   };
 

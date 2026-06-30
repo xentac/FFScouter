@@ -8,6 +8,20 @@ beforeEach(() => {
   document.body.innerHTML = "";
 });
 
+// Simulate a real user edit: the browser sets the input's value natively
+// (outside React's value tracker) and fires a bubbling "input" event, which is
+// what React's onChange listens for. Assigning `.value` directly in JS goes
+// through React's tracker, so React would treat it as a no-op and never fire
+// onChange -- the same controlled-input machinery this panel's bug was about.
+function userInput(el: HTMLInputElement, value: string) {
+  const setter = Object.getOwnPropertyDescriptor(
+    HTMLInputElement.prototype,
+    "value",
+  )?.set;
+  setter?.call(el, value);
+  el.dispatchEvent(new Event("input", { bubbles: true }));
+}
+
 test("ff-settings-panel dispatches ff-save-key on change event of the API key input", async () => {
   const el = document.createElement("ff-settings-panel") as FFSettingsPanel;
   document.body.appendChild(el);
@@ -21,9 +35,10 @@ test("ff-settings-panel dispatches ff-save-key on change event of the API key in
   const apiKeyInput = el.querySelector("#api-key") as HTMLInputElement;
   expect(apiKeyInput).not.toBeNull();
 
-  // Change input value and dispatch change event
+  // Type the key (input) then commit it by blurring the field (focusout).
   apiKeyInput.value = "test-api-key-123";
-  apiKeyInput.dispatchEvent(new Event("change"));
+  apiKeyInput.dispatchEvent(new Event("input", { bubbles: true }));
+  apiKeyInput.dispatchEvent(new Event("focusout", { bubbles: true }));
 
   expect(events.length).toBe(1);
   expect(events[0]).toBeDefined();
@@ -45,7 +60,7 @@ test("ff-settings-panel dispatches ff-save event with correct gaugeMarkerType wh
 
   // Change selection to bubble_ff
   select.value = "bubble_ff";
-  select.dispatchEvent(new Event("change"));
+  select.dispatchEvent(new Event("change", { bubbles: true }));
 
   const saveBtn = Array.from(el.querySelectorAll("button")).find(
     (btn) => btn.textContent?.trim() === "Save Settings",
@@ -71,10 +86,12 @@ test("ff-settings-panel dispatches ff-save event with correct networkInterceptio
     "#network-interception-toggle",
   ) as HTMLInputElement;
   expect(checkbox).not.toBeNull();
+  // Default is off; a real click toggles it on.
+  expect(checkbox.checked).toBe(false);
 
-  // Toggle checkbox
-  checkbox.checked = false;
-  checkbox.dispatchEvent(new Event("change"));
+  checkbox.click();
+  await el.updateComplete;
+  expect(checkbox.checked).toBe(true);
 
   const saveBtn = Array.from(el.querySelectorAll("button")).find(
     (btn) => btn.textContent?.trim() === "Save Settings",
@@ -83,7 +100,7 @@ test("ff-settings-panel dispatches ff-save event with correct networkInterceptio
   saveBtn.click();
 
   expect(saveEvents.length).toBe(1);
-  expect(saveEvents[0]?.detail?.networkInterceptionEnabled).toBe(false);
+  expect(saveEvents[0]?.detail?.networkInterceptionEnabled).toBe(true);
 });
 
 test("ff-settings-panel dispatches ff-save event with correct statusAttackLinksEnabled when saved", async () => {
@@ -100,10 +117,12 @@ test("ff-settings-panel dispatches ff-save event with correct statusAttackLinksE
     "#status-attack-links-toggle",
   ) as HTMLInputElement;
   expect(checkbox).not.toBeNull();
+  // Default is on; a real click toggles it off.
+  expect(checkbox.checked).toBe(true);
 
-  // Toggle checkbox
-  checkbox.checked = false;
-  checkbox.dispatchEvent(new Event("change"));
+  checkbox.click();
+  await el.updateComplete;
+  expect(checkbox.checked).toBe(false);
 
   const saveBtn = Array.from(el.querySelectorAll("button")).find(
     (btn) => btn.textContent?.trim() === "Save Settings",
@@ -135,21 +154,18 @@ test("ff-settings-panel syncs the marker-size slider and number input, clamps ou
   expect(number.value).toBe("100");
 
   // Moving the slider updates the synced number input
-  range.value = "150";
-  range.dispatchEvent(new Event("input"));
+  userInput(range, "150");
   await el.updateComplete;
   expect(number.value).toBe("150");
 
   // Typing an out-of-range value into the number input clamps to the max
-  number.value = "999";
-  number.dispatchEvent(new Event("input"));
+  userInput(number, "999");
   await el.updateComplete;
   expect(range.value).toBe("200");
   expect(number.value).toBe("200");
 
   // Typing below the minimum clamps to the min
-  number.value = "10";
-  number.dispatchEvent(new Event("input"));
+  userInput(number, "10");
   await el.updateComplete;
   expect(range.value).toBe("50");
   expect(number.value).toBe("50");
@@ -185,21 +201,18 @@ test("ff-settings-panel syncs the border-thickness slider and number input, clam
   expect(number.value).toBe("1");
 
   // Moving the slider updates the synced number input
-  range.value = "2";
-  range.dispatchEvent(new Event("input"));
+  userInput(range, "2");
   await el.updateComplete;
   expect(number.value).toBe("2");
 
   // Typing an out-of-range value into the number input clamps to the max
-  number.value = "999";
-  number.dispatchEvent(new Event("input"));
+  userInput(number, "999");
   await el.updateComplete;
   expect(range.value).toBe("3");
   expect(number.value).toBe("3");
 
   // Typing below the minimum clamps to the min
-  number.value = "-1";
-  number.dispatchEvent(new Event("input"));
+  userInput(number, "-1");
   await el.updateComplete;
   expect(range.value).toBe("0");
   expect(number.value).toBe("0");
@@ -231,7 +244,7 @@ test("ff-settings-panel renders a live marker-size preview that updates with the
 
   const select = el.querySelector("#color-scheme") as HTMLSelectElement;
   select.value = "grayscale";
-  select.dispatchEvent(new Event("change"));
+  select.dispatchEvent(new Event("change", { bubbles: true }));
   await el.updateComplete;
 
   expect(previewArrow?.getAttribute("fill")).toBe("#808080");
@@ -244,8 +257,7 @@ test("ff-settings-panel renders a live marker-size preview that updates with the
   const borderRange = el.querySelector(
     "#gauge-marker-border-width",
   ) as HTMLInputElement;
-  borderRange.value = "3";
-  borderRange.dispatchEvent(new Event("input"));
+  userInput(borderRange, "3");
   await el.updateComplete;
 
   expect(previewArrow?.getAttribute("stroke-width")).toBe("3");
@@ -268,7 +280,7 @@ test("ff-settings-panel renders a live swatch preview that updates with the colo
   );
 
   select.value = "grayscale";
-  select.dispatchEvent(new Event("change"));
+  select.dispatchEvent(new Event("change", { bubbles: true }));
   await el.updateComplete;
 
   const grayscaleSwatches = el.querySelectorAll(".ffscouter-swatch");
@@ -278,7 +290,7 @@ test("ff-settings-panel renders a live swatch preview that updates with the colo
   ).toBe("#f0f0f0");
 
   select.value = "plasma";
-  select.dispatchEvent(new Event("change"));
+  select.dispatchEvent(new Event("change", { bubbles: true }));
   await el.updateComplete;
 
   const plasmaSwatches = el.querySelectorAll(".ffscouter-swatch");
@@ -376,8 +388,7 @@ test("ff-settings-panel renders chain sub-options as a nested grid only when ena
 
   // Enabling the chain button reveals the nested sub-options grid
   const toggle = el.querySelector("#chain-button-toggle") as HTMLInputElement;
-  toggle.checked = true;
-  toggle.dispatchEvent(new Event("change"));
+  toggle.click();
   await el.updateComplete;
 
   const suboptions = el.querySelector(".ff-settings-panel__chain-suboptions");
