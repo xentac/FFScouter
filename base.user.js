@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FF Scouter V2
-// @namespace    xentac
-// @version      3.0
+// @namespace    Violentmonkey Scripts
+// @version      3.0.1
 // @author       xentac [3354782], MAVRI [2402357], rDacted [2670953], Weav3r [1853324], Glasnost [1844049]
 // @description  Shows the expected Fair Fight score against targets and faction war status
 // @license      GPLv3
@@ -905,7 +905,7 @@ clearAll() {
   const ffconfig = new FFConfig("ffsv3-config");
   const FF_SCOUTER_BASE_URL = "https://ffscouter.com/api/v1";
   new TornApiClient({
-    defaultComment: `FFScouterV2-${"3.0"}`,
+    defaultComment: `FFScouterV2-${"3.0.1"}`,
     defaultTimeout: 30
 });
   async function gmRequest(options) {
@@ -8083,7 +8083,7 @@ get draftApiKey() {
       return;
     }
     document.documentElement.setAttribute(INJECTION_KEY, "1");
-    log.info("Initializing", "3.0");
+    log.info("Initializing", "3.0.1");
     run_migration();
     if (ffscouter.analytics_enabled) {
       if (typeof unsafeWindow !== "undefined") {
