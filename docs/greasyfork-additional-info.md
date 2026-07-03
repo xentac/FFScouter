@@ -23,13 +23,13 @@ We recommend creating a **Custom** key by following the [sign up directions](htt
 
 ## Screenshots
 
-![Screenshot showing faction war box with Est columns and FF bubbles](https://github.com/xentac/FFScouter/tree/main/docs/screenshots/Faction%20War.png)
-![Screenshot of faction filter settings](https://github.com/xentac/FFScouter/tree/main/docs/screenshots/Filter.png)
-![Screenshot showing Plasma colour theme with arrows](https://github.com/xentac/FFScouter/tree/main/docs/screenshots/Arrows.png)
-![Screenshot of mini profile showing flight tracking and FF estimate](https://github.com/xentac/FFScouter/tree/main/docs/screenshots/Mini%20profile.png)
-![Screenshot of premium estimates on profile pages](https://github.com/xentac/FFScouter/tree/main/docs/screenshots/Premium%20estimates.png)
-![Screenshot showing FF gauge settings](https://github.com/xentac/FFScouter/tree/main/docs/screenshots/Gauge%20settings.png)
-![Screenshot showing feature settings](https://github.com/xentac/FFScouter/tree/main/docs/screenshots/Feature%20settings.png)
+![Screenshot showing faction war box with Est columns and FF bubbles](https://raw.githubusercontent.com/xentac/FFScouter/refs/heads/main/docs/screenshots/Faction%20War.png)
+![Screenshot of faction filter settings](https://raw.githubusercontent.com/xentac/FFScouter/refs/heads/main/docs/screenshots/Filter.png)
+![Screenshot showing Plasma colour theme with arrows](https://raw.githubusercontent.com/xentac/FFScouter/refs/heads/main/docs/screenshots/Arrows.png)
+![Screenshot of mini profile showing flight tracking and FF estimate](https://raw.githubusercontent.com/xentac/FFScouter/refs/heads/main/docs/screenshots/Mini%20profile.png)
+![Screenshot of premium estimates on profile pages](https://raw.githubusercontent.com/xentac/FFScouter/refs/heads/main/docs/screenshots/Premium%20estimates.png)
+![Screenshot showing FF gauge settings](https://raw.githubusercontent.com/xentac/FFScouter/refs/heads/main/docs/screenshots/Gauge%20settings.png)
+![Screenshot showing feature settings](https://raw.githubusercontent.com/xentac/FFScouter/refs/heads/main/docs/screenshots/Feature%20settings.png)
 
 ## Privacy & Torn API Terms of Service
 
