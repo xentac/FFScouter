@@ -35,6 +35,9 @@ The `ff-faction-filter-box` LitElement component (`src/ui/faction-filter-box.ts`
 ### Sort State
 `"ff-asc" | "ff-desc" | "none"` — the current sort direction for the FF/Est column. Owned by the [[Filter Box]] and persisted to config. `"none"` means no FF sort is active (Torn's native sort is uninterrupted).
 
+### Filter Collapse State
+Whether the [[Filter Box]]'s `<details>` is collapsed, persisted per mode to config (`faction_filter_collapsed` / `war_filter_collapsed`). Owned by the [[Filter Box]] and seeded synchronously from config in the `useState` initializer so the first render already matches — correcting it in a mount effect instead forces an `open → closed` flip whose real-browser `toggle` event races `onToggle`'s write-back (see `docs/adr/0004-filter-collapse-sync-init.md`).
+
 ### Torn Sort Classes
 Torn's CSS-module-hashed class names controlling the native column sort icon: `sortIcon___*` (the icon container), `desc___*` / `asc___*` (direction), `activeIcon___*` (currently active sort). These hashes change on Torn releases and should never be hardcoded.
 

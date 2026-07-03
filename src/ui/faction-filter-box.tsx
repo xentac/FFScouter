@@ -176,7 +176,17 @@ export function FFFactionFilterBox({
   const [filterState, setFilterState] = useState<FactionFilterState>(
     () => DEFAULT_STATE,
   );
-  const [collapsed, setCollapsed] = useState(false);
+  // Seed from ffconfig synchronously so the first committed render already
+  // matches the saved state. Correcting this in the mount effect instead forces
+  // an open→closed flip, and real browsers (unlike jsdom) fire a `toggle` event
+  // on programmatic `open` changes — that flip's toggle raced onToggle's
+  // write-back and persisted the wrong value, so collapse never survived a
+  // refresh. See docs/adr/0004-filter-collapse-sync-init.md.
+  const [collapsed, setCollapsed] = useState(() =>
+    mode === "war"
+      ? ffconfig.war_filter_collapsed
+      : ffconfig.faction_filter_collapsed,
+  );
   const [colDisplay, setColDisplay] = useState<FactionsColDisplay>(
     FactionsColDisplay.FAIR_FIGHT,
   );
@@ -187,6 +197,8 @@ export function FFFactionFilterBox({
   // Refs for async-safe access from debounce callbacks and the imperative handle.
   const filterStateRef = useRef(filterState);
   filterStateRef.current = filterState;
+  const collapsedRef = useRef(collapsed);
+  collapsedRef.current = collapsed;
   const hasLastActionDataRef = useRef(hasLastActionData);
   hasLastActionDataRef.current = hasLastActionData;
   const modeRef = useRef(mode);
@@ -441,6 +453,10 @@ export function FFFactionFilterBox({
 
   const onToggle = (e: React.SyntheticEvent<HTMLDetailsElement>) => {
     const newCollapsed = !e.currentTarget.open;
+    // Ignore echo toggles: a programmatic `open` change always matches our
+    // current intent, while a genuine user gesture flips away from it. Guards
+    // against persisting a spurious mount/reload toggle. See ADR 0004.
+    if (newCollapsed === collapsedRef.current) return;
     setCollapsed(newCollapsed);
     if (mode === "war") {
       ffconfig.war_filter_collapsed = newCollapsed;

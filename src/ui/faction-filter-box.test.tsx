@@ -130,12 +130,19 @@ test("supports toggle expand/collapse state saving to localStorage", async () =>
   });
 
   const details = container.querySelector("details") as HTMLDetailsElement;
-  details.open = true;
-  details.dispatchEvent(new Event("toggle"));
+  // act() flushes the setCollapsed re-render between toggles so collapsedRef is
+  // current on the next dispatch — real browsers commit a render between two
+  // user toggles, so the echo guard (see onToggle) sees fresh state there too.
+  await act(async () => {
+    details.open = true;
+    details.dispatchEvent(new Event("toggle"));
+  });
   expect(ffconfig.faction_filter_collapsed).toBe(false);
 
-  details.open = false;
-  details.dispatchEvent(new Event("toggle"));
+  await act(async () => {
+    details.open = false;
+    details.dispatchEvent(new Event("toggle"));
+  });
   expect(ffconfig.faction_filter_collapsed).toBe(true);
 });
 
