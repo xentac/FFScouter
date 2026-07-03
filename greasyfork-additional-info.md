@@ -1,4 +1,4 @@
-FF Scouter overlays Fair Fight ("FF") or estimated Battle Stat ("Est") values for players on every Torn City page, computed by the [FFScouter service](https://ffscouter.com) from data Torn's own API exposes about you and the players you attack.
+FF Scouter overlays Fair Fight ("FF") or estimated Battle Stat ("Est") values for players on every Torn City page, computed by the [FFScouter service](https://ffscouter.com) using data Torn's own API exposes about you and the players you attack.
 
 ## Features
 
@@ -20,6 +20,29 @@ Install both [FF Scouter](https://greasyfork.org/en/scripts/535292-ff-scouter-v2
 FF Scouter needs your Torn API key to query [FFScouter](https://ffscouter.com) for Fair Fight / Battle Stat estimates. Open the FF Scouter Settings panel on your profile page and paste your key into the **API Key** field. If you're not sure which key you've already given it, check your [API preferences](https://www.torn.com/preferences.php#tab=api) for a key with "FFScouter3" in its comment history.
 
 We recommend creating a **Custom** key by following the [sign up directions](https://ffscouter.com/#get-started) to limit unnecessary permissions being shared with [FFScouter](https://ffscouter.com).
+
+## Screenshots
+
+![Screenshot showing faction war box with Est columns and FF bubbles](https://raw.githubusercontent.com/xentac/FFScouter/refs/heads/main/docs/screenshots/Faction%20War.png)
+_Faction war box with Est columns and FF bubbles_
+
+![Screenshot of faction filter settings](https://raw.githubusercontent.com/xentac/FFScouter/refs/heads/main/docs/screenshots/Filter.png)
+_Faction filter settings_
+
+![Screenshot showing Plasma colour theme with arrows](https://raw.githubusercontent.com/xentac/FFScouter/refs/heads/main/docs/screenshots/Arrows.png)
+_Plasma colour theme with arrows_
+
+![Screenshot of mini profile showing flight tracking and FF estimate](https://raw.githubusercontent.com/xentac/FFScouter/refs/heads/main/docs/screenshots/Mini%20profile.png)
+_Mini profile showing flight tracking and FF estimate_
+
+![Screenshot of premium estimates on profile pages](https://raw.githubusercontent.com/xentac/FFScouter/refs/heads/main/docs/screenshots/Premium%20estimates.png)
+_Premium estimates on profile pages_
+
+![Screenshot showing FF gauge settings](https://raw.githubusercontent.com/xentac/FFScouter/refs/heads/main/docs/screenshots/Gauge%20settings.png)
+_FF gauge settings_
+
+![Screenshot showing feature settings](https://raw.githubusercontent.com/xentac/FFScouter/refs/heads/main/docs/screenshots/Feature%20settings.png)
+_Feature settings_
 
 ## Privacy & Torn API Terms of Service
 
