@@ -24,12 +24,25 @@ We recommend creating a **Custom** key by following the [sign up directions](htt
 ## Screenshots
 
 ![Screenshot showing faction war box with Est columns and FF bubbles](https://raw.githubusercontent.com/xentac/FFScouter/refs/heads/main/docs/screenshots/Faction%20War.png)
+Faction war box with Est columns and FF bubbles
+
 ![Screenshot of faction filter settings](https://raw.githubusercontent.com/xentac/FFScouter/refs/heads/main/docs/screenshots/Filter.png)
+Faction filter settings
+
 ![Screenshot showing Plasma colour theme with arrows](https://raw.githubusercontent.com/xentac/FFScouter/refs/heads/main/docs/screenshots/Arrows.png)
+Plasma colour theme with arrows
+
 ![Screenshot of mini profile showing flight tracking and FF estimate](https://raw.githubusercontent.com/xentac/FFScouter/refs/heads/main/docs/screenshots/Mini%20profile.png)
+Mini profile showing flight tracking and FF estimate
+
 ![Screenshot of premium estimates on profile pages](https://raw.githubusercontent.com/xentac/FFScouter/refs/heads/main/docs/screenshots/Premium%20estimates.png)
+Premium estimates on profile pages
+
 ![Screenshot showing FF gauge settings](https://raw.githubusercontent.com/xentac/FFScouter/refs/heads/main/docs/screenshots/Gauge%20settings.png)
+FF gauge settings
+
 ![Screenshot showing feature settings](https://raw.githubusercontent.com/xentac/FFScouter/refs/heads/main/docs/screenshots/Feature%20settings.png)
+Feature settings
 
 ## Privacy & Torn API Terms of Service
 
