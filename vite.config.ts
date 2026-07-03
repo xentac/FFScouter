@@ -8,7 +8,7 @@ const EDITIONS = {
   standard: {
     name: "FF Scouter V2",
     fileName: "base.user.js",
-    namespace: "xentac",
+    namespace: "Violentmonkey Scripts",
   },
   beta: {
     name: "FF Scouter V2 beta",
