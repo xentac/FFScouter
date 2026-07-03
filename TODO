@@ -2,3 +2,62 @@
 
 - Configure positioning of FF chain button (fixed floating, relative to other elements, etc)
 - Add better error messages for when you have a bad key (specifically that the key provided to ff scouter script isn't valid or is not registered)
+
+# React Doctor follow-ups (re-run: v0.5.8, after CSS-modules migration + Fedded/Fallen)
+
+60 warnings total (Bugs 9, Performance 16, Accessibility 14, Maintainability 21).
+Run `bun run react-doctor` to re-check. The prop-sync bug
+(no-adjust-state-on-prop-change in flight-status) is already fixed. Line numbers
+below are post-CSS-modules; confirm each against the code before acting.
+
+Resolved since last baseline (by the CSS-modules migration): `no-inline-exhaustive-style`
+on the faction-filter-box `<select>` and that select's `no-tiny-text` (11px) — both moved
+into `faction-filter-box.module.css`.
+
+## Maintainability
+- Decompose `FFFactionFilterBox` (`src/ui/faction-filter-box.tsx:169`, ~735 lines) and
+  `SettingsPanelComponent` (`src/ui/settings-panel.tsx:98`) into section sub-components —
+  the deferred decomposition work.
+- `only-export-components` ×3: faction-filter-box exports non-components
+  (`getFilterBoxHandle`, `DEFAULT_STATE`) and settings-panel exports the `FFSettingsPanel`
+  host class — only hurts Fast Refresh, which the userscript build doesn't use. Low priority.
+- FALSE POSITIVE — `unused-export: default` ×16 on feature modules: the `default`
+  exports are consumed by the `import.meta.glob` discovery in `src/features/index.ts`,
+  which react-doctor's static analysis can't see. Do not remove.
+- FALSE POSITIVE — `unused-dev-dependency: react-doctor`: it's a CLI tool, not imported.
+
+## Bugs (all warnings, behavior currently correct)
+- FALSE POSITIVE — `exhaustive-deps` at `src/shims/react.ts:45,50,86`: these are the
+  lazy hook *wrapper* functions in the React shim, not real hook call sites.
+- `exhaustive-deps` at `faction-filter-box.tsx:357,388`: real mount-only effects with
+  intentional empty deps (suppressed via biome-ignore); review if logic changes.
+- `no-initialize-state` at `faction-filter-box.tsx:358`: `collapsed` is seeded from the
+  mount effect (loadState) rather than useState initializer — causes one extra render.
+- `prefer-useReducer` / `no-cascading-set-state`: `flight-status.tsx:45,57` and
+  `info-line.tsx:43` have several related useState/setState calls that could be grouped
+  into a reducer.
+
+## Performance
+- `rerender-lazy-ref-init` at `faction-filter-box.tsx:198`: `useRef(isMobileView())`
+  recomputes every render — use `useRef<…>(null)` + lazy init or `useState(() => …)`.
+- `js-combine-iterations` at `faction-filter-box.tsx:766`: the status-options
+  `.filter(...).map(...)` (added for the war-mode Fallen exclusion) loops twice over a
+  7-element array — trivial; combine into one pass if touching this code.
+- `js-batch-dom-css` at `column-population.ts:246-247,266-267`: batch the sequential
+  `element.style.*` writes (cssText / class) to avoid repeated layout.
+- `js-set-map-lookups` at `ffscouter.ts:67`, `js-combine-iterations` at `storage.ts:128`,
+  `async-await-in-loop` (faction/index.ts:540, index.ts:67/83, dom.ts:384, ffcache.ts:277/293):
+  pre-existing non-React hot-path nits; low priority.
+
+## Accessibility
+- `control-has-associated-label` ×13 (faction-filter-box checkboxes/inputs at
+  680,796,803,815,823,836,843,856,864; settings-panel at 218,246,345,354):
+  add aria-labels to controls whose visible text isn't programmatically associated.
+- `no-tiny-text` ×1 (`info-line.tsx:138`): 11px "Est. Stats" text; bump to ≥12px if it
+  doesn't break the Torn-page layout.
+
+# Before releasing version 3.0
+
+- Make exposed summary function which, given a timeframe, returns the number of page/hash and which feature found or was ignored for the arrow
+  - That way we can use the table to monitor migration progress
+- Add support for flight tracking during raids

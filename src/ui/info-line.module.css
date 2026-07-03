@@ -1,0 +1,31 @@
+.ffscouter-info-line__label {
+  font-weight: bold;
+  margin-right: 6px;
+}
+
+/* Shared box styling for the FF score and "No data" pills; the background and
+   text colour stay inline since the FF score pill computes them per-target. */
+.ffscouter-info-line__badge {
+  font-weight: bold;
+  padding: 2px 6px;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+.ffscouter-info-line__premium-upgrade {
+  display: block;
+  margin-top: 4px;
+  line-height: 1.3;
+  white-space: nowrap;
+  font-size: 12px;
+  font-style: normal;
+}
+
+@media (max-width: 768px) {
+  .ffscouter-info-line__premium-upgrade {
+    margin-top: 6px;
+    line-height: 1.35;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+}

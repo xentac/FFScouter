@@ -1,0 +1,314 @@
+.ffscouter-gauge {
+  position: relative;
+  display: block;
+  padding: 0;
+}
+
+.ffscouter-arrow,
+.ffscouter-preview-arrow {
+  width: var(--ffscouter-arrow-width);
+  object-fit: cover;
+  pointer-events: none;
+}
+
+.ffscouter-arrow {
+  position: absolute;
+  transform: translate(-50%, -30%);
+  padding: 0;
+  top: 0;
+  left: calc(
+    var(--ffscouter-arrow-width) /
+    2 +
+    var(--band-percent) *
+    (100% - var(--ffscouter-arrow-width)) /
+    100
+  );
+}
+
+.ffscouter-preview-arrow {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.ffscouter-bubble,
+.ffscouter-preview-bubble {
+  min-width: 2.5882em;
+  height: 1.6471em;
+  line-height: 1.4118;
+  border: 1px solid rgba(0, 0, 0, 0.4);
+  border-radius: 999px;
+  font-size: var(--ffscouter-bubble-font-size);
+  font-weight: bold;
+  font-family: Geneva, Arial, sans-serif;
+  text-align: center;
+  padding: 0 0.4706em;
+  box-sizing: border-box;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.ffscouter-bubble {
+  position: absolute;
+  transform: translate(-50%, -30%);
+  top: 0;
+  left: calc(
+    var(--ffscouter-arrow-width) /
+    2 +
+    var(--band-percent) *
+    (100% - var(--ffscouter-arrow-width)) /
+    100
+  );
+  pointer-events: none;
+  z-index: 10;
+}
+
+.ffscouter-preview-bubble {
+  vertical-align: middle;
+}
+
+.ffscouter-marker-preview {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  /* --ffscouter-marker-scale is overridden inline per the draft (unsaved) value;
+     --ffscouter-arrow-width/--ffscouter-bubble-font-size must be recomputed here too,
+     since custom properties inherit their already-resolved value from body,
+     not the calc() formula itself. */
+  --ffscouter-arrow-width: calc(20px * var(--ffscouter-marker-scale));
+  --ffscouter-bubble-font-size: calc(8.5px * var(--ffscouter-marker-scale));
+}
+
+.ffscouter-mini-desc {
+  padding: 0 5px;
+}
+
+.ffscouter-swatch-row {
+  display: inline-flex;
+  gap: 3px;
+}
+
+.ffscouter-swatch {
+  display: inline-block;
+  width: 20px;
+  height: 13px;
+}
+
+body {
+  --ffscouter-bg-color: #f0f0f0;
+  --ffscouter-alt-bg-color: #fff;
+  --ffscouter-border-color: #ccc;
+  --ffscouter-input-color: #ccc;
+  --ffscouter-text-color: #000;
+  --ffscouter-hover-color: #ddd;
+  --ffscouter-glow-color: #4caf50;
+  --ffscouter-success-color: #4caf50;
+  --ffscouter-marker-scale: 1;
+  --ffscouter-arrow-width: calc(20px * var(--ffscouter-marker-scale));
+  --ffscouter-bubble-font-size: calc(8.5px * var(--ffscouter-marker-scale));
+}
+
+body.dark-mode {
+  --ffscouter-bg-color: #333;
+  --ffscouter-alt-bg-color: #383838;
+  --ffscouter-border-color: #444;
+  --ffscouter-input-color: #504f4f;
+  --ffscouter-text-color: #ccc;
+  --ffscouter-hover-color: #555;
+  --ffscouter-glow-color: #4caf50;
+  --ffscouter-success-color: #4caf50;
+}
+
+ff-settings-panel {
+  display: block;
+}
+
+.profile-status {
+  position: relative;
+}
+
+.ff-flight-element {
+  position: absolute;
+  right: 10px;
+  bottom: 2px;
+  z-index: 2;
+}
+
+.ff-scouter-profile-flight-info {
+  display: inline-block;
+  text-align: right;
+  font-size: 11px;
+  line-height: 1.25;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85);
+}
+
+.profile-status .ff-scouter-profile-flight-info a {
+  color: #fff;
+  text-decoration: underline;
+}
+
+/* Real DOM FF/Est columns inside faction war lists */
+.faction-war .ffscouter-cell {
+  float: left !important;
+  width: 32px !important;
+  height: 20px !important;
+  font-size: 11px !important;
+  font-weight: bold !important;
+  border-radius: 3px !important;
+  box-sizing: border-box !important;
+  margin: 7px 4px !important;
+  padding: 0 !important;
+  text-align: center !important;
+  line-height: 20px !important;
+  z-index: 10 !important;
+}
+
+.ffscouter-cell {
+  cursor: pointer !important;
+}
+
+.faction-war .ffscouter-header,
+.table-header .ffscouter-header {
+  float: left !important;
+  width: 38px !important;
+  font-size: 12px !important;
+  font-weight: bold !important;
+  padding: 0 !important;
+  text-align: center !important;
+  background-color: transparent !important;
+  cursor: pointer !important;
+}
+
+/* Hide native column sort icons while FF/Est sort is active, but not our own */
+.faction-war:has(.ffscouter-header[data-ffscouter-sort])
+[class*="sortIcon___"]:not(.ffscouter-sort-icon),
+.members-list:has(.ffscouter-header[data-ffscouter-sort])
+  [class*="sortIcon___"]:not(.ffscouter-sort-icon) {
+  visibility: hidden !important;
+}
+
+/* ============================================================================
+   ROW VISIBILITY (Filter Engine)
+   ============================================================================ */
+
+[data-ffscouter-hidden] {
+  display: none !important;
+}
+
+/* ============================================================================
+   COLUMN VISIBILITY TOGGLES (Ranked War)
+   ============================================================================ */
+
+/* 1. Level Column & Header (Excluding our injected columns) */
+.faction-war[data-ffscouter-hide-level="true"]
+.level:not(.ffscouter-cell):not(.ffscouter-header) {
+  display: none !important;
+}
+
+/* 2. Status Column & Header */
+.faction-war[data-ffscouter-hide-status="true"] .status {
+  display: none !important;
+}
+
+/* 3. Score Column & Header */
+.faction-war[data-ffscouter-hide-score="true"] .points {
+  display: none !important;
+}
+
+/* 4. Column Width Reductions to accommodate custom columns without overflow */
+.faction-war[data-ffscouter-col-display="fair_fight"]:not(
+  [data-ffscouter-hide-level="true"]
+)
+.level:not(.ffscouter-cell):not(.ffscouter-header),
+.faction-war[data-ffscouter-col-display="battle_stats"]:not(
+    [data-ffscouter-hide-level="true"]
+  )
+  .level:not(.ffscouter-cell):not(.ffscouter-header) {
+  width: 29px !important;
+}
+
+.faction-war[data-ffscouter-col-display="fair_fight"]:not(
+    [data-ffscouter-hide-level="true"]
+  )
+  .status,
+.faction-war[data-ffscouter-col-display="battle_stats"]:not(
+    [data-ffscouter-hide-level="true"]
+  )
+  .status {
+  width: 50px !important;
+}
+
+.faction-war[data-ffscouter-col-display="fair_fight"]:not(
+    [data-ffscouter-hide-level="true"]
+  )
+  .points,
+.faction-war[data-ffscouter-col-display="battle_stats"]:not(
+    [data-ffscouter-hide-level="true"]
+  )
+  .points {
+  width: 38px !important;
+}
+
+/* Ensure space is reserved when TornTools adds estimate rows */
+.members-list li.enemy:has(> .tt-stats-estimate),
+.members-list li.your:has(> .tt-stats-estimate),
+.members-list li.enemy:has(> div.clear ~ *),
+.members-list li.your:has(> div.clear ~ *) {
+  padding-bottom: 22px !important;
+  position: relative !important;
+}
+
+/* Absolute position TornTools estimate rows so they don't break flex layout flow */
+.members-list li.enemy > .tt-stats-estimate,
+.members-list li.your > .tt-stats-estimate,
+.members-list li.enemy > div.clear ~ *,
+.members-list li.your > div.clear ~ * {
+  position: absolute !important;
+  bottom: 2px !important;
+  left: 10px !important;
+  height: 18px !important;
+  line-height: 18px !important;
+  font-size: 11px !important;
+  width: calc(100% - 20px) !important;
+  display: block !important;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ============================================================================
+   ONLINE STATUS QUICK-ATTACK LINKS
+   ============================================================================ */
+body[data-ff-status-attack-enabled="true"] [class*="userStatusWrap__"],
+body[data-ff-status-attack-enabled="true"]
+  li[id^="icon"][id*="-profile-"].user-status-16-Online,
+body[data-ff-status-attack-enabled="true"]
+  li[id^="icon"][id*="-profile-"].user-status-16-Away,
+body[data-ff-status-attack-enabled="true"]
+  li[id^="icon"][id*="-profile-"].user-status-16-Offline,
+body[data-ff-status-attack-enabled="true"]
+  #profile-mini-root
+  li[id^="icon"][id*="-mini-profile-"].user-status-16-Online,
+body[data-ff-status-attack-enabled="true"]
+  #profile-mini-root
+  li[id^="icon"][id*="-mini-profile-"].user-status-16-Away,
+body[data-ff-status-attack-enabled="true"]
+  #profile-mini-root
+  li[id^="icon"][id*="-mini-profile-"].user-status-16-Offline,
+body[data-ff-status-attack-enabled="true"]
+  li[id^="icon"][id*="___"].iconShow.ffscouter-forum-status {
+  cursor: crosshair !important;
+}
+
+/* Override Torn's shitty layout to make director links clickable if they don't have an estimate */
+.d .job-lists-wrap .item > li.company,
+.d .job-lists-wrap .item > li.director,
+.d .job-lists-wrap .item > li.salary,
+.d .job-lists-wrap .item > li.ranks {
+  margin-bottom: 0 !important;
+  padding-bottom: 0 !important;
+}

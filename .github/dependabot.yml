@@ -1,0 +1,28 @@
+version: 2
+updates:
+  # JavaScript/TypeScript dependencies (bun.lock / package.json).
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 10
+    # Group routine minor/patch bumps into two PRs to cut review noise; major
+    # bumps and security fixes still come through as individual PRs.
+    groups:
+      production-minor-patch:
+        dependency-type: production
+        update-types:
+          - minor
+          - patch
+      development-minor-patch:
+        dependency-type: development
+        update-types:
+          - minor
+          - patch
+
+  # Keep the GitHub Actions used in the workflows above up to date.
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5

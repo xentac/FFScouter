@@ -1,0 +1,6 @@
+/dist
+/dist-release
+node_modules/
+/coverage
+/dummy-non-existing-folder
+.antigravitycli

@@ -1,0 +1,306 @@
+.ff-settings-panel__accordion {
+  margin: 10px 0;
+  padding: 15px;
+  background-color: var(--ffscouter-bg-color);
+  border: 1px solid var(--ffscouter-border-color);
+  border-radius: 5px;
+  color: var(--ffscouter-text-color);
+}
+
+.ff-settings-panel__accordion.ff-settings-panel__accordion--glow {
+  border-color: var(--ffscouter-glow-color);
+  box-shadow: 0 0 8px rgba(76, 175, 80, 0.5);
+}
+
+.ff-settings-panel__accordion summary {
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.ff-settings-panel__body {
+  margin-top: 15px;
+}
+
+.ff-settings-panel__input-row {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-bottom: 15px;
+}
+
+/* Horizontal row of the three FF range number inputs separated by "<". */
+.ff-settings-panel__range-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.ff-settings-panel__blur {
+  filter: blur(4px);
+  transition: filter 0.2s ease;
+}
+
+.ff-settings-panel__blur:hover,
+.ff-settings-panel__blur:focus {
+  filter: blur(0);
+}
+
+.ff-settings-panel__error-msg {
+  color: #ff3333;
+  font-size: 13px;
+  margin-top: 5px;
+}
+
+.ff-settings-panel__accordion input[type="text"],
+.ff-settings-panel__accordion input[type="number"] {
+  box-sizing: border-box !important;
+  text-align: left;
+  vertical-align: top;
+  width: 178px;
+  height: 34px !important;
+  margin-right: 8px;
+  padding: 9px 10px;
+  line-height: 14px;
+  display: inline-block;
+}
+
+.ff-settings-panel__accordion input[type="number"].ff-settings-panel__number {
+  width: 80px;
+}
+
+.ff-settings-panel__accordion select {
+  box-sizing: border-box;
+  text-align: left;
+  vertical-align: top;
+  width: 178px;
+  height: 34px;
+  margin-right: 8px;
+  padding: 8px 10px;
+  line-height: 14px;
+  display: inline-block;
+
+  border: var(--input-border-color, 1px solid var(--ffscouter-border-color));
+  border-radius: 5px;
+  font-family: Arial, serif;
+  color: var(--input-color, var(--ffscouter-text-color));
+  background: var(--input-background-color, var(--ffscouter-alt-bg-color));
+}
+
+:global(.dark-mode) .ff-settings-panel__accordion select option {
+  background-color: rgb(0, 0, 0);
+  color: var(--input-color);
+}
+
+.ff-settings-panel__api-explanation {
+  color: var(--ffscouter-text-color);
+  margin-bottom: 20px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.ff-settings-panel__accordion a {
+  color: var(--ffscouter-success-color);
+  text-decoration: underline;
+}
+
+/* Premium status badge: shared box styling, background colour per state. */
+.ff-settings-panel__premium-badge {
+  display: inline-block;
+  color: #fff;
+  font-size: 11px;
+  font-weight: bold;
+  padding: 2px 8px;
+  border-radius: 4px;
+  vertical-align: middle;
+}
+
+.ff-settings-panel__premium-badge--enabled {
+  background: #4caf50;
+}
+
+.ff-settings-panel__premium-badge--disabled {
+  background: #c62828;
+}
+
+.ff-settings-panel__premium-badge--unknown {
+  background: #f39c12;
+}
+
+/* ============================================================================
+   SETTINGS PANEL GRID LAYOUT
+
+   The panel lays each <h3> section out as its own CSS grid that reflows safely
+   within Torn's .content-wrapper at its three discrete widths (784 / 386 / 320).
+   Only 784px is an actual breakpoint; 386 and 320 both fall in the single-column
+   "narrow" bucket. See CONTEXT.md "Content Wrapper Width" and "Settings Panel".
+   ============================================================================ */
+
+.ff-settings-panel__section {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  margin-bottom: 15px;
+}
+
+@media (min-width: 784px) {
+  .ff-settings-panel__section {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Multi-control bundles (and prose) span the full grid width as their own row */
+.ff-settings-panel__span {
+  grid-column: 1 / -1;
+  margin-bottom: 0;
+}
+
+/* A single setting: stacked label-above-control by default. min-width:0 lets the
+   cell shrink below its content's intrinsic width so a wide control/option can
+   never force the track (and the panel) to overflow. */
+.ff-settings-panel__cell {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+  margin-bottom: 0;
+}
+
+/* Checkboxes stay inline control-first; label text wraps within the cell */
+.ff-settings-panel__cell.ff-settings-panel__cell--checkbox {
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+/* Stacked text inputs fill their cell (the API key input is capped separately).
+   Compact .ff-settings-panel__number inputs (FF ranges, chain min/max) keep
+   their own width. */
+.ff-settings-panel__cell input[type="text"] {
+  width: 100%;
+  margin-right: 0;
+}
+
+/* Selects size to their content (not a fixed 178px) so the native dropdown arrow
+   sits right next to the selected text instead of far out at the cell's edge.
+   max-width keeps them from ever overflowing a narrow cell. */
+.ff-settings-panel__cell select {
+  width: auto;
+  max-width: 100%;
+  margin-right: 0;
+}
+
+/* API key bundle: stacked key input (capped width) + a status/verify row */
+.ff-settings-panel__api-block {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ff-settings-panel__api-block .ff-settings-panel__cell input[type="text"] {
+  max-width: 360px;
+}
+
+.ff-settings-panel__api-status-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Chain sub-options: nested grid with a left-border nesting cue. Indent is small
+   when narrow and a touch wider on desktop, so inner controls keep full width at
+   the 320/386 sizes. */
+.ff-settings-panel__chain-suboptions {
+  border-left: 2px solid var(--ffscouter-border-color);
+  padding-left: 8px;
+  margin-top: 10px;
+  /* Narrow: pack the compact min/max number fields 2-up. Selects and checkboxes
+     are marked .ff-settings-panel__chain-wide and span the full nested row for
+     label readability. */
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.ff-settings-panel__chain-suboptions .ff-settings-panel__chain-wide {
+  grid-column: 1 / -1;
+}
+
+@media (min-width: 784px) {
+  .ff-settings-panel__chain-suboptions {
+    padding-left: 16px;
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  /* Desktop has room for everything single-cell, 3-up */
+  .ff-settings-panel__chain-suboptions .ff-settings-panel__chain-wide {
+    grid-column: auto;
+  }
+}
+
+/* Generic visually-distinct grouping box, nested one level inside the accordion
+   panel. Currently used for Gauge Marker Settings; written generically so other
+   sections (e.g. Feature Toggles) can reuse it later. */
+.ff-settings-panel__group {
+  background-color: var(--ffscouter-alt-bg-color);
+  border: 1px solid var(--ffscouter-border-color);
+  border-radius: 5px;
+  padding: 12px;
+  margin-bottom: 15px;
+}
+
+.ff-settings-panel__group h4 {
+  margin: 0 0 12px;
+}
+
+/* Marker size / border thickness: label above a wrapping row of
+   slider + number + suffix (+ live preview, on the border thickness row) */
+.ff-settings-panel__marker-size,
+.ff-settings-panel__marker-border-width {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.ff-settings-panel__marker-size-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.ff-settings-panel__marker-size-controls input[type="range"] {
+  flex: 1 1 120px;
+  min-width: 120px;
+}
+
+/* Color scheme: label above a wrapping row of the select + swatch preview */
+.ff-settings-panel__color-scheme {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.ff-settings-panel__color-scheme-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+/* The shared swatch row wraps when shown inside the settings panel. */
+.ff-settings-panel__accordion :global(.ffscouter-swatch-row) {
+  flex-wrap: wrap;
+}
+
+/* Action buttons row at the bottom of the panel. */
+.ff-settings-panel__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.ff-settings-panel__saved-msg {
+  color: #4caf50;
+}
