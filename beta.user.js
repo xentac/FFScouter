@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FF Scouter V2 beta
 // @namespace    xentac-beta
-// @version      3.0-beta15
+// @version      3.0-beta16
 // @author       xentac [3354782], MAVRI [2402357], rDacted [2670953], Weav3r [1853324], Glasnost [1844049]
 // @description  Shows the expected Fair Fight score against targets and faction war status
 // @license      GPLv3
@@ -905,7 +905,7 @@ clearAll() {
   const ffconfig = new FFConfig("ffsv3-config");
   const FF_SCOUTER_BASE_URL = "https://ffscouter.com/api/v1";
   new TornApiClient({
-    defaultComment: `FFScouterV2-${"3.0-beta15"}`,
+    defaultComment: `FFScouterV2-${"3.0-beta16"}`,
     defaultTimeout: 30
 });
   async function gmRequest(options) {
@@ -3507,7 +3507,9 @@ jsx("span", { children: data.bs_estimate_human })
     const [filterState, setFilterState] = useState(
       () => DEFAULT_STATE
     );
-    const [collapsed, setCollapsed] = useState(false);
+    const [collapsed, setCollapsed] = useState(
+      () => mode === "war" ? ffconfig.war_filter_collapsed : ffconfig.faction_filter_collapsed
+    );
     const [colDisplay, setColDisplay] = useState(
       FactionsColDisplay.FAIR_FIGHT
     );
@@ -3516,6 +3518,8 @@ jsx("span", { children: data.bs_estimate_human })
     );
     const filterStateRef = useRef(filterState);
     filterStateRef.current = filterState;
+    const collapsedRef = useRef(collapsed);
+    collapsedRef.current = collapsed;
     const hasLastActionDataRef = useRef(hasLastActionData);
     hasLastActionDataRef.current = hasLastActionData;
     const modeRef = useRef(mode);
@@ -3712,6 +3716,7 @@ status: modeRef.current === "war" ? { ...s2.status, fallen: false } : s2.status,
     );
     const onToggle = (e) => {
       const newCollapsed = !e.currentTarget.open;
+      if (newCollapsed === collapsedRef.current) return;
       setCollapsed(newCollapsed);
       if (mode === "war") {
         ffconfig.war_filter_collapsed = newCollapsed;
@@ -8078,7 +8083,7 @@ get draftApiKey() {
       return;
     }
     document.documentElement.setAttribute(INJECTION_KEY, "1");
-    log.info("Initializing", "3.0-beta15");
+    log.info("Initializing", "3.0-beta16");
     run_migration();
     if (ffscouter.analytics_enabled) {
       if (typeof unsafeWindow !== "undefined") {
