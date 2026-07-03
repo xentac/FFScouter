@@ -23,25 +23,25 @@ We recommend creating a **Custom** key by following the [sign up directions](htt
 
 ## Screenshots
 
-![Screenshot showing faction war box with Est columns and FF bubbles](https://raw.githubusercontent.com/xentac/FFScouter/refs/heads/main/docs/screenshots/Faction%20War.png)
+![Screenshot showing faction war box with Est columns and FF bubbles](https://raw.githubusercontent.com/xentac/FFScouter/refs/heads/main/docs/screenshots/Faction%20War.png)<br>
 _Faction war box with Est columns and FF bubbles_
 
-![Screenshot of faction filter settings](https://raw.githubusercontent.com/xentac/FFScouter/refs/heads/main/docs/screenshots/Filter.png)
+![Screenshot of faction filter settings](https://raw.githubusercontent.com/xentac/FFScouter/refs/heads/main/docs/screenshots/Filter.png)<br>
 _Faction filter settings_
 
-![Screenshot showing Plasma colour theme with arrows](https://raw.githubusercontent.com/xentac/FFScouter/refs/heads/main/docs/screenshots/Arrows.png)
+![Screenshot showing Plasma colour theme with arrows](https://raw.githubusercontent.com/xentac/FFScouter/refs/heads/main/docs/screenshots/Arrows.png)<br>
 _Plasma colour theme with arrows_
 
-![Screenshot of mini profile showing flight tracking and FF estimate](https://raw.githubusercontent.com/xentac/FFScouter/refs/heads/main/docs/screenshots/Mini%20profile.png)
+![Screenshot of mini profile showing flight tracking and FF estimate](https://raw.githubusercontent.com/xentac/FFScouter/refs/heads/main/docs/screenshots/Mini%20profile.png)<br>
 _Mini profile showing flight tracking and FF estimate_
 
-![Screenshot of premium estimates on profile pages](https://raw.githubusercontent.com/xentac/FFScouter/refs/heads/main/docs/screenshots/Premium%20estimates.png)
+![Screenshot of premium estimates on profile pages](https://raw.githubusercontent.com/xentac/FFScouter/refs/heads/main/docs/screenshots/Premium%20estimates.png)<br>
 _Premium estimates on profile pages_
 
-![Screenshot showing FF gauge settings](https://raw.githubusercontent.com/xentac/FFScouter/refs/heads/main/docs/screenshots/Gauge%20settings.png)
+![Screenshot showing FF gauge settings](https://raw.githubusercontent.com/xentac/FFScouter/refs/heads/main/docs/screenshots/Gauge%20settings.png)<br>
 _FF gauge settings_
 
-![Screenshot showing feature settings](https://raw.githubusercontent.com/xentac/FFScouter/refs/heads/main/docs/screenshots/Feature%20settings.png)
+![Screenshot showing feature settings](https://raw.githubusercontent.com/xentac/FFScouter/refs/heads/main/docs/screenshots/Feature%20settings.png)<br>
 _Feature settings_
 
 ## Privacy & Torn API Terms of Service
