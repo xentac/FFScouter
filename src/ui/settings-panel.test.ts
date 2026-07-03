@@ -242,6 +242,17 @@ test("ff-settings-panel renders a live marker-size preview that updates with the
   const classicBubbleColor = previewBubble.style.backgroundColor;
   expect(classicBubbleColor).not.toBe("");
 
+  // Preview also demos the source-marker badge (always "spy") so users can see
+  // how it scales with Marker Scale without needing a live Torn page.
+  const markerBadges = el.querySelectorAll(".ffscouter-source-marker");
+  expect(markerBadges).toHaveLength(2);
+  for (const badge of markerBadges) {
+    expect(badge.tagName.toLowerCase()).toBe("svg");
+    expect(badge.getAttribute("aria-label")).toBe("Faction spy data");
+    expect(badge.querySelector("title")?.textContent).toBe("Faction spy data");
+    expect(badge.querySelector("circle")).not.toBeNull();
+  }
+
   const select = el.querySelector("#color-scheme") as HTMLSelectElement;
   select.value = "grayscale";
   select.dispatchEvent(new Event("change", { bubbles: true }));

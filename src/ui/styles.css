@@ -12,9 +12,24 @@
 }
 
 .ffscouter-arrow {
-  position: absolute;
-  transform: translate(-50%, -30%);
+  display: block;
   padding: 0;
+}
+
+.ffscouter-preview-arrow {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+/* Absolutely positions whichever marker (arrow or bubble) is placed inside it
+   along the gauge track — the position math used to live on .ffscouter-arrow/
+   .ffscouter-bubble directly, but both need to share one containing block so
+   the .ffscouter-source-marker badge can anchor to "the marker's own corner"
+   regardless of which shape (fixed-width arrow vs variable-width bubble) is
+   active, rather than approximating the bubble's variable width from outside. */
+.ffscouter-marker-wrapper {
+  position: absolute;
+  display: inline-block;
   top: 0;
   left: calc(
     var(--ffscouter-arrow-width) /
@@ -23,11 +38,8 @@
     (100% - var(--ffscouter-arrow-width)) /
     100
   );
-}
-
-.ffscouter-preview-arrow {
-  display: inline-block;
-  vertical-align: middle;
+  transform: translate(-50%, -30%);
+  z-index: 10;
 }
 
 .ffscouter-bubble,
@@ -52,22 +64,57 @@
 }
 
 .ffscouter-bubble {
-  position: absolute;
-  transform: translate(-50%, -30%);
-  top: 0;
-  left: calc(
-    var(--ffscouter-arrow-width) /
-    2 +
-    var(--band-percent) *
-    (100% - var(--ffscouter-arrow-width)) /
-    100
-  );
   pointer-events: none;
-  z-index: 10;
 }
 
 .ffscouter-preview-bubble {
   vertical-align: middle;
+}
+
+/* Small outline+solid-fill SVG badge indicating which EstimateSource an
+   estimate came from (see get_source_marker in strings.ts) — floats over the
+   marker's own top-right corner, so it must be a child of
+   .ffscouter-marker-wrapper (live gauge) or .ffscouter-preview-marker-slot
+   (Settings Panel preview), not a sibling positioned by approximating the
+   marker's width from outside. */
+.ffscouter-source-marker {
+  position: absolute;
+  top: calc(-0.35 * var(--ffscouter-source-marker-size));
+  right: calc(-0.35 * var(--ffscouter-source-marker-size));
+  width: var(--ffscouter-source-marker-size);
+  height: var(--ffscouter-source-marker-size);
+  pointer-events: auto;
+  overflow: visible;
+}
+
+.ffscouter-preview-marker-slot {
+  position: relative;
+  display: inline-block;
+}
+
+/* Inline (non-floating) variant for Info Line and Mini Profile, where the
+   marker sits in normal text flow right after the FF value rather than
+   overlaying a gauge marker's corner. Fixed pixel size, not `em`: Mini
+   Profile's ".last-action" is Torn's own markup with a much larger ambient
+   font-size than Info Line's context, so sizing off 1em rendered huge and
+   overlapping there — a fixed size renders identically regardless of
+   whatever font-size the surrounding Torn markup happens to have. There's no
+   Marker Scale setting to track here either way, since that only applies to
+   the gauge context.
+   !important throughout: Mini Profile's ".last-action" is Torn's own markup,
+   which apparently has its own icon-tray CSS targeting bare `svg` elements
+   (width/float included) — the same "injected element fighting the host
+   page's native CSS" problem the faction/war list columns already solve this
+   way (see .faction-war .ffscouter-cell below). A single-class selector alone
+   isn't specific enough to reliably win against page-native rules. */
+.ffscouter-inline-source-marker {
+  display: inline-block !important;
+  float: none !important;
+  position: static !important;
+  width: 16px !important;
+  height: 16px !important;
+  vertical-align: middle !important;
+  margin: 0 0 0 4px !important;
 }
 
 .ffscouter-marker-preview {
@@ -80,6 +127,7 @@
      not the calc() formula itself. */
   --ffscouter-arrow-width: calc(20px * var(--ffscouter-marker-scale));
   --ffscouter-bubble-font-size: calc(8.5px * var(--ffscouter-marker-scale));
+  --ffscouter-source-marker-size: calc(12px * var(--ffscouter-marker-scale));
 }
 
 .ffscouter-mini-desc {
@@ -109,6 +157,7 @@ body {
   --ffscouter-marker-scale: 1;
   --ffscouter-arrow-width: calc(20px * var(--ffscouter-marker-scale));
   --ffscouter-bubble-font-size: calc(8.5px * var(--ffscouter-marker-scale));
+  --ffscouter-source-marker-size: calc(12px * var(--ffscouter-marker-scale));
 }
 
 body.dark-mode {

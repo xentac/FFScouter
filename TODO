@@ -5,7 +5,7 @@
 
 # React Doctor follow-ups (re-run: v0.5.8, after CSS-modules migration + Fedded/Fallen)
 
-60 warnings total (Bugs 9, Performance 16, Accessibility 14, Maintainability 21).
+59 warnings total (Bugs 9, Performance 16, Accessibility 14, Maintainability 20).
 Run `bun run react-doctor` to re-check. The prop-sync bug
 (no-adjust-state-on-prop-change in flight-status) is already fixed. Line numbers
 below are post-CSS-modules; confirm each against the code before acting.

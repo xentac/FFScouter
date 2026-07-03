@@ -45,13 +45,21 @@ function mock_ff_data(
     bs_estimate: number;
     bs_estimate_human: string;
     bss_public: number;
+    source: "bss" | "premium" | "spies";
   }> = {},
 ) {
   const fair_fight = overrides.fair_fight ?? 3.5;
   const bs_estimate = overrides.bs_estimate ?? 1000;
   const bs_estimate_human = overrides.bs_estimate_human ?? "1k";
   const bss_public = overrides.bss_public ?? 10;
+  const source = overrides.source ?? "bss";
   const last_updated = Date.now() / 1000;
+  const candidate = {
+    bs_estimate,
+    bs_estimate_human,
+    last_updated,
+    fair_fight,
+  };
   return {
     player_id: 123,
     no_data: false as const,
@@ -60,18 +68,12 @@ function mock_ff_data(
     bs_estimate,
     bs_estimate_human,
     bss_public,
-    source: "bss" as const,
+    source,
     premium_insights_available: false,
     available_estimates: {
-      bss: {
-        bss_public,
-        bs_estimate,
-        bs_estimate_human,
-        last_updated,
-        fair_fight,
-      },
-      premium: null,
-      spies: null,
+      bss: source === "bss" ? { ...candidate, bss_public } : null,
+      premium: source === "premium" ? candidate : null,
+      spies: source === "spies" ? candidate : null,
     },
     spies: [],
   };
@@ -211,6 +213,45 @@ test("add_ff_arrow fetches data and inserts gauge arrow SVG to elements", async 
   const svg = anchor.querySelector(".ffscouter-arrow");
   expect(svg).not.toBeNull();
   expect(svg?.tagName.toLowerCase()).toEqual("svg");
+
+  // "bss" is the ordinary source — no source-marker badge.
+  expect(anchor.querySelector(".ffscouter-source-marker")).toBeNull();
+});
+
+test("add_ff_arrow adds a source-marker badge for spy and premium data, but not bss", async () => {
+  const spyAnchor = document.createElement("a");
+  spyAnchor.href = "https://www.torn.com/profiles.php?XID=123";
+  document.body.appendChild(spyAnchor);
+
+  vi.mocked(ffscouter.get).mockResolvedValue(mock_ff_data({ source: "spies" }));
+  add_ff_arrow(spyAnchor);
+  await new Promise((resolve) => setTimeout(resolve, 10));
+
+  const spyBadge = spyAnchor.querySelector(".ffscouter-source-marker");
+  expect(spyBadge?.tagName.toLowerCase()).toEqual("svg");
+  expect(spyBadge?.querySelector("title")?.textContent).toEqual(
+    "Faction spy data",
+  );
+  expect(spyBadge?.getAttribute("aria-label")).toEqual("Faction spy data");
+  expect(spyBadge?.getAttribute("role")).toEqual("img");
+  expect(spyBadge?.querySelector("circle")).not.toBeNull();
+  expect(spyBadge?.querySelector("line")).not.toBeNull();
+
+  const premiumAnchor = document.createElement("a");
+  premiumAnchor.href = "https://www.torn.com/profiles.php?XID=456";
+  document.body.appendChild(premiumAnchor);
+
+  vi.mocked(ffscouter.get).mockResolvedValue(
+    mock_ff_data({ source: "premium" }),
+  );
+  add_ff_arrow(premiumAnchor);
+  await new Promise((resolve) => setTimeout(resolve, 10));
+
+  const premiumBadge = premiumAnchor.querySelector(".ffscouter-source-marker");
+  expect(premiumBadge?.querySelector("title")?.textContent).toEqual(
+    "Premium data",
+  );
+  expect(premiumBadge?.querySelector("path")).not.toBeNull();
 });
 
 test("add_ff_arrow draws the arrow's stroke-width from gauge_marker_border_width config", async () => {

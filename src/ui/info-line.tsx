@@ -2,6 +2,7 @@ import { check_key_status } from "@utils/check_key";
 import {
   extract_bs_estimate_human,
   extract_last_updated,
+  extract_source,
 } from "@utils/estimate";
 import { ffscouter } from "@utils/ffscouter";
 import logger from "@utils/logger";
@@ -11,10 +12,12 @@ import {
   format_relative_time,
   get_contrast_color,
   get_ff_colour,
+  get_source_marker,
 } from "@utils/strings";
 import type { FFData, PlayerId } from "@utils/types";
 import { useEffect, useState } from "react";
 import styles from "./info-line.module.css";
+import { SourceMarkerIcon } from "./source-marker-icon";
 
 const log = logger.child("ui");
 
@@ -92,6 +95,7 @@ export function FFHeaderLine({ playerId }: Props) {
   const fresh = format_relative_time(extract_last_updated(data));
   const backgroundColor = get_ff_colour(data);
   const textColor = get_contrast_color(backgroundColor);
+  const sourceMarker = get_source_marker(extract_source(data));
 
   let extraDetailsLine: React.ReactNode = null;
   if (data.distribution?.distribution_human) {
@@ -137,6 +141,7 @@ export function FFHeaderLine({ playerId }: Props) {
       >
         {ffString} ({difficulty}) {fresh}
       </span>
+      {sourceMarker && <SourceMarkerIcon marker={sourceMarker} />}
       <span
         style={{
           fontSize: "11px",

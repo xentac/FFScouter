@@ -18,7 +18,13 @@ type ResolvedEstimate = {
 // null value for that particular field — we always want to give the caller
 // something rather than nothing.
 function resolve_estimate(data: FFDataComplete): ResolvedEstimate {
-  const candidate = data.available_estimates[data.source];
+  // Optional chaining, not a direct index: `available_estimates` is typed as
+  // required, but IndexedDB may still hold FFDataComplete records cached by a
+  // pre-available_estimates build (cache TTL is 1 hour, so this is transient
+  // but real) — those records have no such field at runtime, and indexing
+  // into undefined would throw instead of falling through to the field-level
+  // fallbacks below.
+  const candidate = data.available_estimates?.[data.source];
   return {
     source: data.source,
     bs_estimate: candidate?.bs_estimate ?? data.bs_estimate,

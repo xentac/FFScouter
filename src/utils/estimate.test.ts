@@ -81,3 +81,17 @@ test("extract_* fall back to top-level fields per-field when the candidate has n
   expect(extract_bs_estimate_human(data)).toEqual(data.bs_estimate_human);
   expect(extract_last_updated(data)).toEqual(data.last_updated);
 });
+
+test("extract_* fall back to top-level fields instead of throwing when available_estimates is missing entirely", () => {
+  // Simulates an FFDataComplete cached by a pre-available_estimates build,
+  // still sitting in IndexedDB (up to 1h TTL) after an update ships.
+  const data = make_data();
+  delete (data as { available_estimates?: unknown }).available_estimates;
+
+  expect(() => extract_ff(data)).not.toThrow();
+  expect(extract_ff(data)).toEqual(data.fair_fight);
+  expect(extract_bs_estimate(data)).toEqual(data.bs_estimate);
+  expect(extract_bs_estimate_human(data)).toEqual(data.bs_estimate_human);
+  expect(extract_last_updated(data)).toEqual(data.last_updated);
+  expect(extract_source(data)).toEqual(data.source);
+});

@@ -1,4 +1,8 @@
-import { extract_bs_estimate_human, extract_ff } from "./estimate";
+import {
+  extract_bs_estimate_human,
+  extract_ff,
+  extract_source,
+} from "./estimate";
 import { ffconfig, GaugeMarkerType } from "./ffconfig";
 import { ffscouter } from "./ffscouter";
 import logger from "./logger";
@@ -8,6 +12,14 @@ import {
   ff_to_percent,
   get_contrast_color,
   get_ff_arrow_colour,
+  get_source_marker,
+  PREMIUM_ICON_COLOR,
+  PREMIUM_ICON_PATH_D,
+  SOURCE_MARKER_VIEWBOX,
+  type SourceMarker,
+  SPY_ICON_COLOR,
+  SPY_ICON_HANDLE,
+  SPY_ICON_LENS,
 } from "./strings";
 import type { FFDataComplete, PlayerId } from "./types";
 
@@ -108,8 +120,52 @@ function make_arrow(d: FFDataComplete): SVGElement {
   return svg;
 }
 
-function make_marker(d: FFDataComplete): HTMLElement | SVGElement {
+// Builds the outline+solid-fill SVG icon for a SourceMarker (see get_source_marker
+// in strings.ts), for use by raw-DOM consumers (this module's Gauge Marker, and
+// Mini Profile). Exported so both share one implementation rather than each
+// hand-building the same SVG markup; React consumers (Info Line, Settings Panel
+// preview) build their own JSX from the same shared geometry constants via
+// SourceMarkerIcon (src/ui/source-marker-icon.tsx), since a raw SVGElement can't
+// be dropped into JSX directly.
+export function make_source_marker_svg(
+  marker: SourceMarker,
+  className: string,
+): SVGElement {
+  const div = document.createElement("div");
+  const inner =
+    marker.icon === "spy"
+      ? `<circle cx="${SPY_ICON_LENS.cx}" cy="${SPY_ICON_LENS.cy}" r="${SPY_ICON_LENS.r}" fill="${SPY_ICON_COLOR}" stroke="#000000" stroke-width="1.5" />
+         <line x1="${SPY_ICON_HANDLE.x1}" y1="${SPY_ICON_HANDLE.y1}" x2="${SPY_ICON_HANDLE.x2}" y2="${SPY_ICON_HANDLE.y2}" stroke="#000000" stroke-width="2.5" stroke-linecap="round" />`
+      : `<path d="${PREMIUM_ICON_PATH_D}" fill="${PREMIUM_ICON_COLOR}" stroke="#000000" stroke-width="1.2" stroke-linejoin="round" />`;
+
+  div.innerHTML = `<svg class="${className}" viewBox="${SOURCE_MARKER_VIEWBOX}" role="img" aria-label="${marker.label}">
+    <title>${marker.label}</title>
+    ${inner}
+  </svg>`;
+
+  if (!div.firstChild || !(div.firstChild instanceof SVGElement)) {
+    throw new Error(
+      "Wasn't able to extract source marker SVG out of div element",
+    );
+  }
+  return div.firstChild;
+}
+
+// Floats over the marker's top-right corner to show which EstimateSource the
+// estimate came from — null (no badge) for the ordinary "bss" source.
+function make_source_marker_badge(d: FFDataComplete): SVGElement | null {
+  const marker = get_source_marker(extract_source(d));
+  if (!marker) {
+    return null;
+  }
+
+  return make_source_marker_svg(marker, "ffscouter-source-marker");
+}
+
+function make_marker(d: FFDataComplete): HTMLElement {
   const markerType = ffconfig.gauge_marker_type;
+
+  let shape: HTMLElement | SVGElement;
   if (
     markerType === GaugeMarkerType.BUBBLE_FF ||
     markerType === GaugeMarkerType.BUBBLE_ESTIMATE
@@ -130,10 +186,24 @@ function make_marker(d: FFDataComplete): HTMLElement | SVGElement {
       bubble.textContent = extract_bs_estimate_human(d) || "N/A";
     }
 
-    return bubble;
+    shape = bubble;
+  } else {
+    shape = make_arrow(d);
   }
 
-  return make_arrow(d);
+  // Wraps the arrow/bubble so the source-marker badge below can anchor to
+  // "this marker's own corner" via a shared containing block, regardless of
+  // whether the shape is the fixed-width arrow or the variable-width bubble.
+  const wrapper = document.createElement("div");
+  wrapper.classList.add("ffscouter-marker-wrapper");
+  wrapper.appendChild(shape);
+
+  const badge = make_source_marker_badge(d);
+  if (badge) {
+    wrapper.appendChild(badge);
+  }
+
+  return wrapper;
 }
 
 export function add_ff_arrow(element: HTMLElement, featureName = "Unknown") {
@@ -171,9 +241,9 @@ export function add_ff_arrow(element: HTMLElement, featureName = "Unknown") {
       `${ffconfig.gauge_marker_scale / 100}`,
     );
 
-    const a = element.querySelector(".ffscouter-arrow, .ffscouter-bubble");
-    if (a) {
-      a.remove();
+    const existing = element.querySelector(".ffscouter-marker-wrapper");
+    if (existing) {
+      existing.remove();
     }
 
     element.appendChild(make_marker(d));

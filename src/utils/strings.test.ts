@@ -10,6 +10,7 @@ import {
   get_contrast_color,
   get_ff_arrow_colour,
   get_ff_colour,
+  get_source_marker,
   parse_duration_to_seconds,
   parse_suffix_number,
 } from "./strings";
@@ -269,6 +270,18 @@ test("parse_suffix_number parses numeric suffixes correctly", () => {
   expect(parse_suffix_number("1,000")).toEqual(1000);
   expect(parse_suffix_number("1,500k")).toEqual(1500000);
   expect(parse_suffix_number("1,000,000m")).toEqual(1000000000000);
+});
+
+test("get_source_marker returns an icon descriptor for spies and premium, and null for bss", () => {
+  expect(get_source_marker("spies")).toEqual({
+    icon: "spy",
+    label: "Faction spy data",
+  });
+  expect(get_source_marker("premium")).toEqual({
+    icon: "premium",
+    label: "Premium data",
+  });
+  expect(get_source_marker("bss")).toBeNull();
 });
 
 test("parse_duration_to_seconds parses compound and word-form durations", () => {

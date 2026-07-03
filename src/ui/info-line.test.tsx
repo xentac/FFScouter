@@ -68,6 +68,46 @@ test("renders basic stats for non-premium user when premium is not available", a
   expect(container.innerHTML).toContain("Est. Stats:");
   expect(container.textContent).toContain("5k");
   expect(container.innerHTML).not.toContain("Premium Data Available");
+  // "bss" is the ordinary source — no source-marker icon.
+  expect(container.querySelector(".ffscouter-inline-source-marker")).toBeNull();
+});
+
+test("renders a source-marker icon next to the FF badge for spy data", async () => {
+  vi.mocked(check_key_status.is_premium).mockResolvedValue(false);
+  vi.mocked(ffscouter.get).mockResolvedValue({
+    player_id: 123,
+    no_data: false,
+    fair_fight: 4.1,
+    last_updated: nowSec() - 100,
+    bs_estimate: 8000,
+    bs_estimate_human: "8k",
+    bss_public: 20,
+    source: "spies",
+    premium_insights_available: false,
+    available_estimates: {
+      bss: null,
+      premium: null,
+      spies: {
+        bs_estimate: 8000,
+        bs_estimate_human: "8k",
+        last_updated: nowSec() - 100,
+        source: "tornstats",
+        fair_fight: 4.1,
+      },
+    },
+    spies: [],
+  });
+
+  const { container } = render(<FFHeaderLine playerId={123} />);
+
+  await waitFor(() => expect(container.textContent).toContain("4.10"));
+  const badge = container.querySelector(".ffscouter-inline-source-marker");
+  expect(badge).not.toBeNull();
+  expect(badge?.getAttribute("aria-label")).toEqual("Faction spy data");
+  expect(badge?.querySelector("title")?.textContent).toEqual(
+    "Faction spy data",
+  );
+  expect(badge?.querySelector("circle")).not.toBeNull();
 });
 
 test("renders premium upgrade link for non-premium user when premium insights are available", async () => {

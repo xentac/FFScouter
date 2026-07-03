@@ -12,10 +12,12 @@ import {
   FF_ARROW_VIEWBOX,
   get_contrast_color,
   get_palette_for_scheme,
+  get_source_marker,
 } from "@utils/strings";
 import { createElement, useEffect } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import styles from "./settings-panel.module.css";
+import { SourceMarkerIcon } from "./source-marker-icon";
 
 // Local aliases for the BEM module classes. The keys are hyphenated, so they are
 // bracket-accessed once here and referenced by short name in the render below.
@@ -119,6 +121,9 @@ export function SettingsPanelComponent({
 
   const previewColor =
     get_palette_for_scheme(drafts.colorScheme)[5] ?? "#888888";
+  // Always shown as "spy" in the preview purely to demonstrate how the badge
+  // scales with Marker Scale — not meant to reflect real per-target data.
+  const previewSourceMarker = get_source_marker("spies");
 
   return (
     <details
@@ -269,32 +274,48 @@ export function SettingsPanelComponent({
                     } as React.CSSProperties
                   }
                 >
-                  <svg
-                    className="ffscouter-preview-arrow"
-                    viewBox={FF_ARROW_VIEWBOX}
-                  >
-                    <title>Preview Gauge Marker</title>
-                    <path
-                      fillRule="evenodd"
-                      fill={previewColor}
-                      stroke="#000000"
-                      strokeWidth={drafts.gaugeMarkerBorderWidth}
-                      d={FF_ARROW_PATH_D}
-                    />
-                  </svg>
-                  <div
-                    className="ffscouter-preview-bubble"
-                    style={{
-                      backgroundColor: previewColor,
-                      color: get_contrast_color(previewColor),
-                      borderWidth: `${
-                        drafts.gaugeMarkerBorderWidth *
-                        (drafts.gaugeMarkerScale / 100)
-                      }px`,
-                    }}
-                  >
-                    2.34
-                  </div>
+                  <span className="ffscouter-preview-marker-slot">
+                    <svg
+                      className="ffscouter-preview-arrow"
+                      viewBox={FF_ARROW_VIEWBOX}
+                    >
+                      <title>Preview Gauge Marker</title>
+                      <path
+                        fillRule="evenodd"
+                        fill={previewColor}
+                        stroke="#000000"
+                        strokeWidth={drafts.gaugeMarkerBorderWidth}
+                        d={FF_ARROW_PATH_D}
+                      />
+                    </svg>
+                    {previewSourceMarker && (
+                      <SourceMarkerIcon
+                        marker={previewSourceMarker}
+                        className="ffscouter-source-marker"
+                      />
+                    )}
+                  </span>
+                  <span className="ffscouter-preview-marker-slot">
+                    <div
+                      className="ffscouter-preview-bubble"
+                      style={{
+                        backgroundColor: previewColor,
+                        color: get_contrast_color(previewColor),
+                        borderWidth: `${
+                          drafts.gaugeMarkerBorderWidth *
+                          (drafts.gaugeMarkerScale / 100)
+                        }px`,
+                      }}
+                    >
+                      2.34
+                    </div>
+                    {previewSourceMarker && (
+                      <SourceMarkerIcon
+                        marker={previewSourceMarker}
+                        className="ffscouter-source-marker"
+                      />
+                    )}
+                  </span>
                 </div>
               </div>
             </div>

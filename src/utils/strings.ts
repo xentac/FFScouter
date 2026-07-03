@@ -1,12 +1,58 @@
 import parseDuration from "parse-duration";
 import { extract_ff, extract_last_updated } from "./estimate";
 import { ColorScheme, ffconfig } from "./ffconfig";
-import type { FFData, FFDataComplete, TimestampSec } from "./types";
+import type {
+  EstimateSource,
+  FFData,
+  FFDataComplete,
+  TimestampSec,
+} from "./types";
 
 const HOUR = 60 * 60;
 const DAY = HOUR * 24;
 
 const OLD_ESTIMATE_INTERVAL = 14 * DAY; // sec
+
+export type EstimateSourceIcon = "spy" | "premium";
+
+export type SourceMarker = { icon: EstimateSourceIcon; label: string };
+
+// The one place an EstimateSource maps to a visual marker. "bss" (the ordinary,
+// default source) deliberately gets no marker — absence-of-marker-means-normal,
+// same convention as no_data vs normal data elsewhere.
+export function get_source_marker(source: EstimateSource): SourceMarker | null {
+  switch (source) {
+    case "spies":
+      return { icon: "spy", label: "Faction spy data" };
+    case "premium":
+      return { icon: "premium", label: "Premium data" };
+    case "bss":
+      return null;
+  }
+}
+
+// Shared geometry/color for the two Source Marker icons: an outline (fixed
+// black stroke) around a solid fill, the same visual language as the FF arrow
+// marker above. Deliberately hand-drawn shapes instead of emoji — an emoji's
+// color and shape depend on the OS/browser's emoji font, which is exactly what
+// made the previous glyphs read as "busy" and clash unpredictably with
+// whatever Torn page background they sat over; a fixed solid fill sidesteps
+// both problems. Consumed by dom.ts/mini-profile (raw DOM, via innerHTML) and
+// SourceMarkerIcon (React, in src/ui/source-marker-icon.tsx) independently,
+// each building their own markup from these same constants — the same split
+// FF_ARROW_PATH_D already has between dom.ts's make_arrow and the JSX preview
+// arrow in settings-panel.tsx.
+export const SOURCE_MARKER_VIEWBOX = "0 0 20 20";
+export const SPY_ICON_LENS = { cx: 8, cy: 8, r: 5 };
+export const SPY_ICON_HANDLE = { x1: 12, y1: 12, x2: 18, y2: 18 };
+export const SPY_ICON_COLOR = "#4a90d9";
+// Classic 5-point star, one point up: 5 outer vertices (r=9) alternating with
+// 5 inner vertices (r=4.2, ~0.47 of outer) around center (10,10) — a fatter
+// inner/outer ratio than a mathematically "pure" pentagram (~0.382), chosen
+// because fatter points stay legible at the tiny sizes this renders at.
+export const PREMIUM_ICON_PATH_D =
+  "M10,1 L12.47,6.6 L18.56,7.22 L13.99,11.3 L15.29,17.28 L10,14.2 L4.71,17.28 L6.01,11.3 L1.44,7.22 L7.53,6.6 Z";
+export const PREMIUM_ICON_COLOR = "#d4af37";
 
 export function format_ff_score(d: FFDataComplete) {
   const ff = extract_ff(d).toFixed(2);

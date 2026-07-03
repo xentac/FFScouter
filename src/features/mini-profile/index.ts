@@ -1,8 +1,16 @@
-import { apply_ff_gauge, get_player_id_in_element } from "@utils/dom";
-import { extract_last_updated } from "@utils/estimate";
+import {
+  apply_ff_gauge,
+  get_player_id_in_element,
+  make_source_marker_svg,
+} from "@utils/dom";
+import { extract_last_updated, extract_source } from "@utils/estimate";
 import { ffscouter } from "@utils/ffscouter";
 import logger from "@utils/logger";
-import { format_ff_score, format_relative_time } from "@utils/strings";
+import {
+  format_ff_score,
+  format_relative_time,
+  get_source_marker,
+} from "@utils/strings";
 import type { FFData } from "@utils/types";
 import { type Feature, StartTime } from "../feature";
 
@@ -92,15 +100,24 @@ const setup_mini_observer = () => {
       }
       miniroot.querySelector(".ffscouter-mini-desc")?.remove();
 
-      // Minimal, text-only Fair Fight string for mini-profiles
+      // Minimal, text-only Fair Fight line for mini-profiles. Built from
+      // child nodes rather than one innerText string so the source-marker
+      // glyph (if any) can carry its own title for a desktop tooltip.
       const ff_string = format_ff_score(d);
       const fresh = format_relative_time(extract_last_updated(d));
-      const message = `FF ${ff_string} ${fresh}`;
+      const marker = get_source_marker(extract_source(d));
 
-      const lastaction = miniroot.querySelector(".last-action");
       const desc = document.createElement("span");
       desc.classList.add("ffscouter-mini-desc");
-      desc.innerText = message;
+      desc.append(`FF ${ff_string}`);
+      if (marker) {
+        desc.appendChild(
+          make_source_marker_svg(marker, "ffscouter-inline-source-marker"),
+        );
+      }
+      desc.append(` ${fresh}`);
+
+      const lastaction = miniroot.querySelector(".last-action");
       lastaction?.appendChild(document.createElement("br"));
       lastaction?.appendChild(desc);
     });
