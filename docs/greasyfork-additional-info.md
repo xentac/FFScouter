@@ -1,4 +1,4 @@
-FF Scouter overlays Fair Fight ("FF") or estimated Battle Stat ("Est") values for players on every Torn City page, computed by the [FFScouter service](https://ffscouter.com) from data Torn's own API exposes about you and the players you attack.
+FF Scouter overlays Fair Fight ("FF") or estimated Battle Stat ("Est") values for players on every Torn City page, computed by the [FFScouter service](https://ffscouter.com) using data Torn's own API exposes about you and the players you attack.
 
 ## Features
 
@@ -20,6 +20,16 @@ Install both [FF Scouter](https://greasyfork.org/en/scripts/535292-ff-scouter-v2
 FF Scouter needs your Torn API key to query [FFScouter](https://ffscouter.com) for Fair Fight / Battle Stat estimates. Open the FF Scouter Settings panel on your profile page and paste your key into the **API Key** field. If you're not sure which key you've already given it, check your [API preferences](https://www.torn.com/preferences.php#tab=api) for a key with "FFScouter3" in its comment history.
 
 We recommend creating a **Custom** key by following the [sign up directions](https://ffscouter.com/#get-started) to limit unnecessary permissions being shared with [FFScouter](https://ffscouter.com).
+
+## Screenshots
+
+![Screenshot showing faction war box with Est columns and FF bubbles](https://github.com/xentac/FFScouter/tree/main/docs/screenshots/Faction%20War.png)
+![Screenshot of faction filter settings](https://github.com/xentac/FFScouter/tree/main/docs/screenshots/Filter.png)
+![Screenshot showing Plasma colour theme with arrows](https://github.com/xentac/FFScouter/tree/main/docs/screenshots/Arrows.png)
+![Screenshot of mini profile showing flight tracking and FF estimate](https://github.com/xentac/FFScouter/tree/main/docs/screenshots/Mini%20profile.png)
+![Screenshot of premium estimates on profile pages](https://github.com/xentac/FFScouter/tree/main/docs/screenshots/Premium%20estimates.png)
+![Screenshot showing FF gauge settings](https://github.com/xentac/FFScouter/tree/main/docs/screenshots/Gauge%20settings.png)
+![Screenshot showing feature settings](https://github.com/xentac/FFScouter/tree/main/docs/screenshots/Feature%20settings.png)
 
 ## Privacy & Torn API Terms of Service
 
