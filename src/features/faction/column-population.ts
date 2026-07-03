@@ -1,6 +1,11 @@
 import { getFilterBoxHandle } from "@ui/faction-filter-box";
 import { check_key_status } from "@utils/check_key";
 import { get_player_id_in_element, open_attack_link } from "@utils/dom";
+import {
+  extract_bs_estimate,
+  extract_bs_estimate_human,
+  extract_ff,
+} from "@utils/estimate";
 import { FactionsColDisplay, ffconfig } from "@utils/ffconfig";
 import { ffscouter } from "@utils/ffscouter";
 import logger from "@utils/logger";
@@ -233,12 +238,14 @@ export async function apply_ff_columns(membersList: HTMLElement) {
     if (data && !data.no_data) {
       // Store values on data-attributes for fast, local filtering and sorting operations
       // biome-ignore lint/complexity/useLiteralKeys: tsc requires index signature lookup
-      rp.row.dataset["ffValue"] = String(data.fair_fight);
+      rp.row.dataset["ffValue"] = String(extract_ff(data));
       // biome-ignore lint/complexity/useLiteralKeys: tsc requires index signature lookup
-      rp.row.dataset["estValue"] = String(data.bs_estimate);
+      rp.row.dataset["estValue"] = String(extract_bs_estimate(data));
 
       if (cell) {
-        const text = isEst ? data.bs_estimate_human : format_ff_score(data);
+        const text = isEst
+          ? extract_bs_estimate_human(data)
+          : format_ff_score(data);
         const bg_color = get_ff_colour(data);
         const text_color = get_contrast_color(bg_color);
 

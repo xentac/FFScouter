@@ -9,7 +9,7 @@ import {
   WarQuickAttackAction,
 } from "@utils/ffconfig";
 import { ffscouter } from "@utils/ffscouter";
-import type { PlayerId } from "@utils/types";
+import type { FFDataComplete, PlayerId } from "@utils/types";
 import { beforeEach, expect, test, vi } from "vitest";
 import { apply_ff_columns, poll_traveling_flights } from "./column-population";
 
@@ -38,6 +38,38 @@ beforeEach(() => {
   localStorage.clear();
 });
 
+// Minimal FFDataComplete fixture for tests that only assert on FF/estimate
+// rendering, not on any other field.
+function mock_ff_data(
+  fair_fight: number,
+  bs_estimate: number,
+  bs_estimate_human: string,
+): FFDataComplete {
+  return {
+    player_id: 111 as PlayerId,
+    no_data: false,
+    fair_fight,
+    last_updated: Date.now() / 1000,
+    bs_estimate,
+    bs_estimate_human,
+    bss_public: 1,
+    source: "bss",
+    premium_insights_available: false,
+    available_estimates: {
+      bss: {
+        bss_public: 1,
+        bs_estimate,
+        bs_estimate_human,
+        last_updated: Date.now() / 1000,
+        fair_fight,
+      },
+      premium: null,
+      spies: null,
+    },
+    spies: [],
+  };
+}
+
 test("apply_ff_columns injects FF column header and cells when configured to FAIR_FIGHT", async () => {
   ffconfig.factions_col_display = FactionsColDisplay.FAIR_FIGHT;
 
@@ -51,8 +83,20 @@ test("apply_ff_columns injects FF column header and cells when configured to FAI
         bs_estimate: 1000000,
         bs_estimate_human: "1M",
         bss_public: 1,
-        source: "api",
+        source: "bss",
         premium_insights_available: false,
+        available_estimates: {
+          bss: {
+            bss_public: 1,
+            bs_estimate: 1000000,
+            bs_estimate_human: "1M",
+            last_updated: Date.now() / 1000,
+            fair_fight: 2.5,
+          },
+          premium: null,
+          spies: null,
+        },
+        spies: [],
       };
     }
     return {
@@ -111,8 +155,20 @@ test("apply_ff_columns injects Est column header and cells with distribution too
         bs_estimate: 2000000,
         bs_estimate_human: "2M",
         bss_public: 1,
-        source: "api",
+        source: "bss",
         premium_insights_available: true,
+        available_estimates: {
+          bss: {
+            bss_public: 1,
+            bs_estimate: 2000000,
+            bs_estimate_human: "2M",
+            last_updated: Date.now() / 1000,
+            fair_fight: 4.5,
+          },
+          premium: null,
+          spies: null,
+        },
+        spies: [],
         distribution: {
           last_updated: Date.now() / 1000,
           distribution_human: "Strength: 50%, Speed: 20%",
@@ -159,13 +215,7 @@ test("apply_ff_columns injects Est column header and cells with distribution too
 test("faction features react to ff-config-updated events", async () => {
   ffconfig.factions_col_display = FactionsColDisplay.FAIR_FIGHT;
 
-  vi.mocked(ffscouter.get).mockResolvedValue({
-    player_id: 111 as PlayerId,
-    no_data: false,
-    fair_fight: 3.2,
-    bs_estimate: 4000000,
-    bs_estimate_human: "4M",
-  } as any);
+  vi.mocked(ffscouter.get).mockResolvedValue(mock_ff_data(3.2, 4000000, "4M"));
 
   const container = document.createElement("div");
   container.className = "members-list";
@@ -214,13 +264,7 @@ test("faction features react to ff-config-updated events", async () => {
 test("apply_ff_columns removes elements when configured to NONE but populates datasets for sorting", async () => {
   ffconfig.factions_col_display = FactionsColDisplay.NONE;
 
-  vi.mocked(ffscouter.get).mockResolvedValue({
-    player_id: 111 as PlayerId,
-    no_data: false,
-    fair_fight: 3.5,
-    bs_estimate: 5000000,
-    bs_estimate_human: "5M",
-  } as any);
+  vi.mocked(ffscouter.get).mockResolvedValue(mock_ff_data(3.5, 5000000, "5M"));
 
   const container = document.createElement("div");
   container.className = "members-list";
@@ -277,13 +321,7 @@ test("apply_ff_columns supports configurable display via real DOM elements when 
   ffconfig.war_col_display = FactionsColDisplay.FAIR_FIGHT;
   ffconfig.war_quick_attack_action = WarQuickAttackAction.NEW_TAB;
 
-  vi.mocked(ffscouter.get).mockResolvedValue({
-    player_id: 111 as PlayerId,
-    no_data: false,
-    fair_fight: 3.5,
-    bs_estimate: 5000000,
-    bs_estimate_human: "5M",
-  } as any);
+  vi.mocked(ffscouter.get).mockResolvedValue(mock_ff_data(3.5, 5000000, "5M"));
 
   const factionWar = document.createElement("div");
   factionWar.className = "faction-war";
@@ -432,13 +470,7 @@ test("columns are correctly hidden via display none when data-attributes are set
   // 2. Configured to display FAIR_FIGHT war columns by default
   ffconfig.war_col_display = FactionsColDisplay.FAIR_FIGHT;
 
-  vi.mocked(ffscouter.get).mockResolvedValue({
-    player_id: 111 as PlayerId,
-    no_data: false,
-    fair_fight: 3.5,
-    bs_estimate: 5000000,
-    bs_estimate_human: "5M",
-  } as any);
+  vi.mocked(ffscouter.get).mockResolvedValue(mock_ff_data(3.5, 5000000, "5M"));
 
   // 3. Create the table inside faction-war wrapper
   const factionWar = document.createElement("div");

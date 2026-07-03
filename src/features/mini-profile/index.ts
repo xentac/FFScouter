@@ -1,4 +1,5 @@
 import { apply_ff_gauge, get_player_id_in_element } from "@utils/dom";
+import { extract_last_updated } from "@utils/estimate";
 import { ffscouter } from "@utils/ffscouter";
 import logger from "@utils/logger";
 import { format_ff_score, format_relative_time } from "@utils/strings";
@@ -93,7 +94,7 @@ const setup_mini_observer = () => {
 
       // Minimal, text-only Fair Fight string for mini-profiles
       const ff_string = format_ff_score(d);
-      const fresh = format_relative_time(d.last_updated);
+      const fresh = format_relative_time(extract_last_updated(d));
       const message = `FF ${ff_string} ${fresh}`;
 
       const lastaction = miniroot.querySelector(".last-action");

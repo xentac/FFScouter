@@ -18,6 +18,34 @@ import type { FFDataComplete } from "./types";
 const HOUR = 60 * 60;
 const DAY = HOUR * 24;
 
+// Minimal fixture for tests that only care about `fair_fight` (e.g. color/gauge
+// math) — fills the rest of FFDataComplete with inert values.
+function ff_only(fair_fight: number): FFDataComplete {
+  return {
+    player_id: 2,
+    no_data: false,
+    fair_fight,
+    last_updated: 0,
+    bs_estimate: 0,
+    bs_estimate_human: "",
+    bss_public: 0,
+    source: "bss",
+    premium_insights_available: false,
+    available_estimates: {
+      bss: {
+        bss_public: 0,
+        bs_estimate: 0,
+        bs_estimate_human: "",
+        last_updated: 0,
+        fair_fight,
+      },
+      premium: null,
+      spies: null,
+    },
+    spies: [],
+  };
+}
+
 beforeEach(() => {
   vi.useFakeTimers();
   // Set current time to a fixed timestamp: 2026-05-20T00:00:00Z
@@ -44,6 +72,18 @@ test("format_ff_score formats scores with age check", () => {
     bss_public: 10,
     source: "bss",
     premium_insights_available: false,
+    available_estimates: {
+      bss: {
+        bss_public: 10,
+        bs_estimate: 1000,
+        bs_estimate_human: "1k",
+        last_updated: nowSec - 5 * DAY,
+        fair_fight: 2.3456,
+      },
+      premium: null,
+      spies: null,
+    },
+    spies: [],
   };
   expect(format_ff_score(freshData)).toEqual("2.35");
 
@@ -57,22 +97,24 @@ test("format_ff_score formats scores with age check", () => {
     bss_public: 20,
     source: "bss",
     premium_insights_available: false,
+    available_estimates: {
+      bss: {
+        bss_public: 20,
+        bs_estimate: 2000,
+        bs_estimate_human: "2k",
+        last_updated: nowSec - 15 * DAY,
+        fair_fight: 4.1234,
+      },
+      premium: null,
+      spies: null,
+    },
+    spies: [],
   };
   expect(format_ff_score(oldData)).toEqual("4.12?");
 });
 
 test("format_difficulty_text returns correct strings based on fair_fight score", () => {
-  const baseData = (ff: number): FFDataComplete => ({
-    player_id: 1,
-    no_data: false,
-    fair_fight: ff,
-    last_updated: Date.now() / 1000,
-    bs_estimate: 100,
-    bs_estimate_human: "100",
-    bss_public: 10,
-    source: "bss",
-    premium_insights_available: false,
-  });
+  const baseData = (ff: number): FFDataComplete => ff_only(ff);
 
   expect(format_difficulty_text(baseData(0.5))).toEqual("Extremely easy");
   expect(format_difficulty_text(baseData(1.0))).toEqual("Extremely easy");
@@ -105,67 +147,27 @@ test("get_ff_arrow_colour returns correct hex colors with clamping", () => {
 
   // arrow_gradient3 is used:
   // Low score (1.0) maps to index 0: "#1734e8"
-  expect(
-    get_ff_arrow_colour({
-      player_id: 2,
-      no_data: false,
-      fair_fight: 1.0,
-    } as any),
-  ).toEqual("#1734e8");
+  expect(get_ff_arrow_colour(ff_only(1.0))).toEqual("#1734e8");
 
   // Clamping below 1
-  expect(
-    get_ff_arrow_colour({
-      player_id: 2,
-      no_data: false,
-      fair_fight: 0.5,
-    } as any),
-  ).toEqual("#1734e8");
+  expect(get_ff_arrow_colour(ff_only(0.5))).toEqual("#1734e8");
 
   // High score (5.0) maps to index 10: "#e81734"
-  expect(
-    get_ff_arrow_colour({
-      player_id: 2,
-      no_data: false,
-      fair_fight: 5.0,
-    } as any),
-  ).toEqual("#e81734");
+  expect(get_ff_arrow_colour(ff_only(5.0))).toEqual("#e81734");
 
   // Clamping above 5
-  expect(
-    get_ff_arrow_colour({
-      player_id: 2,
-      no_data: false,
-      fair_fight: 6.0,
-    } as any),
-  ).toEqual("#e81734");
+  expect(get_ff_arrow_colour(ff_only(6.0))).toEqual("#e81734");
 
   // Middle score (3.0) maps to index 5: "#34e817"
-  expect(
-    get_ff_arrow_colour({
-      player_id: 2,
-      no_data: false,
-      fair_fight: 3.0,
-    } as any),
-  ).toEqual("#34e817");
+  expect(get_ff_arrow_colour(ff_only(3.0))).toEqual("#34e817");
 
   // get_ff_colour is an alias for get_ff_arrow_colour
-  const comp: FFDataComplete = {
-    player_id: 3,
-    no_data: false,
-    fair_fight: 3.0,
-    last_updated: Date.now() / 1000,
-    bs_estimate: 100,
-    bs_estimate_human: "100",
-    bss_public: 10,
-    source: "bss",
-    premium_insights_available: false,
-  };
+  const comp: FFDataComplete = ff_only(3.0);
   expect(get_ff_colour(comp)).toEqual("#34e817");
 });
 
 test("get_ff_arrow_colour switches palette based on ffconfig.color_scheme", () => {
-  const data = { player_id: 1, no_data: false, fair_fight: 1.0 } as any;
+  const data = ff_only(1.0);
 
   ffconfig.color_scheme = ColorScheme.GRAYSCALE;
   expect(get_ff_arrow_colour(data)).toEqual("#f0f0f0");
@@ -189,7 +191,7 @@ test("get_ff_arrow_colour switches palette based on ffconfig.color_scheme", () =
 });
 
 test("get_ff_arrow_colour falls back to classic when custom scheme has no valid custom_colors", () => {
-  const data = { player_id: 1, no_data: false, fair_fight: 1.0 } as any;
+  const data = ff_only(1.0);
 
   ffconfig.color_scheme = ColorScheme.CUSTOM;
   ffconfig.custom_colors = null;
@@ -213,17 +215,7 @@ test("get_contrast_color determines black or white based on background brightnes
 test("ff_to_percent computes expected percentage relative to configured ranges", () => {
   // CONFIG_DEFAULTS low_ff_range: 2, high_ff_range: 4, max_ff_range: 8
   // low_mid_percent = 33, mid_high_percent = 66
-  const data = (ff: number): FFDataComplete => ({
-    player_id: 1,
-    no_data: false,
-    fair_fight: ff,
-    last_updated: Date.now() / 1000,
-    bs_estimate: 100,
-    bs_estimate_human: "100",
-    bss_public: 10,
-    source: "bss",
-    premium_insights_available: false,
-  });
+  const data = (ff: number): FFDataComplete => ff_only(ff);
 
   // Since low_ff_range is 2:
   // If fair_fight is 1.5, percent = ((1.5 - 1) / (2 - 1)) * 33 = 0.5 * 33 = 16.5

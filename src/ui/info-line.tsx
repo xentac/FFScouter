@@ -1,4 +1,8 @@
 import { check_key_status } from "@utils/check_key";
+import {
+  extract_bs_estimate_human,
+  extract_last_updated,
+} from "@utils/estimate";
 import { ffscouter } from "@utils/ffscouter";
 import logger from "@utils/logger";
 import {
@@ -85,7 +89,7 @@ export function FFHeaderLine({ playerId }: Props) {
 
   const ffString = format_ff_score(data);
   const difficulty = format_difficulty_text(data);
-  const fresh = format_relative_time(data.last_updated);
+  const fresh = format_relative_time(extract_last_updated(data));
   const backgroundColor = get_ff_colour(data);
   const textColor = get_contrast_color(backgroundColor);
 
@@ -142,7 +146,7 @@ export function FFHeaderLine({ playerId }: Props) {
           fontStyle: "italic",
         }}
       >
-        Est. Stats: <span>{data.bs_estimate_human}</span>
+        Est. Stats: <span>{extract_bs_estimate_human(data)}</span>
       </span>
       {extraDetailsLine}
     </>

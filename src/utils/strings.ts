@@ -1,4 +1,5 @@
 import parseDuration from "parse-duration";
+import { extract_ff, extract_last_updated } from "./estimate";
 import { ColorScheme, ffconfig } from "./ffconfig";
 import type { FFData, FFDataComplete, TimestampSec } from "./types";
 
@@ -8,10 +9,10 @@ const DAY = HOUR * 24;
 const OLD_ESTIMATE_INTERVAL = 14 * DAY; // sec
 
 export function format_ff_score(d: FFDataComplete) {
-  const ff = d.fair_fight.toFixed(2);
+  const ff = extract_ff(d).toFixed(2);
 
   const now: TimestampSec = Date.now() / 1000;
-  const age = now - d.last_updated;
+  const age = now - extract_last_updated(d);
 
   var suffix = "";
   if (age > OLD_ESTIMATE_INTERVAL) {
@@ -22,13 +23,14 @@ export function format_ff_score(d: FFDataComplete) {
 }
 
 export function format_difficulty_text(d: FFDataComplete) {
-  if (d.fair_fight <= 1) {
+  const ff = extract_ff(d);
+  if (ff <= 1) {
     return "Extremely easy";
-  } else if (d.fair_fight <= 2) {
+  } else if (ff <= 2) {
     return "Easy";
-  } else if (d.fair_fight <= 3.5) {
+  } else if (ff <= 3.5) {
     return "Moderately difficult";
-  } else if (d.fair_fight <= 4.5) {
+  } else if (ff <= 4.5) {
     return "Difficult";
   } else {
     return "May be impossible";
@@ -238,7 +240,7 @@ export function get_ff_arrow_colour(d: FFData) {
   }
 
   // Calculate where on the 11 step gradient we are from 1.0 - 5.0
-  let ff = d.fair_fight;
+  let ff = extract_ff(d);
   if (ff < 1) {
     ff = 1;
   } else if (ff > 5) {
@@ -270,7 +272,7 @@ export function ff_to_percent(d: FFDataComplete) {
   const max_ff = ffconfig.max_ff_range;
   const low_mid_percent = 33;
   const mid_high_percent = 66;
-  const ff_lower = Math.min(d.fair_fight, max_ff);
+  const ff_lower = Math.min(extract_ff(d), max_ff);
 
   let percent: number;
   if (ff_lower < low_ff) {

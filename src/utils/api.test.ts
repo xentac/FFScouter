@@ -344,6 +344,8 @@ x-ratelimit-remaining: 118\n",
               dexterity: undefined,
             },
           },
+          available_estimates: { bss: null, premium: null, spies: null },
+          spies: [],
         },
       ],
     ]),
@@ -355,6 +357,87 @@ x-ratelimit-remaining: 118\n",
       this_minute: 2,
     },
   });
+});
+
+test("success carries available_estimates and spies through to FFDataComplete", async () => {
+  const success: typeof gmRequest = vi.fn().mockResolvedValue({
+    responseHeaders: "",
+    readyState: 4,
+    response: "",
+    responseText: JSON.stringify([
+      {
+        player_id: 234,
+        fair_fight: 6.4,
+        last_updated: 1328080860,
+        bs_estimate: 234000,
+        bs_estimate_human: "234k",
+        bss_public: 2340,
+        source: "spies",
+        premium_insights_available: true,
+        distribution: null,
+        available_estimates: {
+          bss: {
+            bss_public: 2340,
+            bs_estimate: 200000,
+            bs_estimate_human: "200k",
+            last_updated: 1328000000,
+            fair_fight: 5.0,
+          },
+          premium: null,
+          spies: {
+            bs_estimate: 234000,
+            bs_estimate_human: "234k",
+            last_updated: 1328080860,
+            source: "tornstats",
+            fair_fight: 6.4,
+          },
+        },
+        spies: [
+          {
+            strength: 100,
+            speed: 200,
+            defense: 300,
+            dexterity: 400,
+            total: 1000,
+            last_updated: 1328080860,
+            source: "tornstats",
+            source_faction_id: 999,
+          },
+        ],
+      },
+    ]),
+    responseXML: null,
+    status: 200,
+    statusText: "",
+    finalUrl: "",
+    context: {},
+  });
+
+  const { result } = await query_stats("a", [234], success);
+  const data = result.get(234);
+  expect(data?.no_data).toBe(false);
+  if (data?.no_data === false) {
+    expect(data.available_estimates.spies).toEqual({
+      bs_estimate: 234000,
+      bs_estimate_human: "234k",
+      last_updated: 1328080860,
+      source: "tornstats",
+      fair_fight: 6.4,
+    });
+    expect(data.available_estimates.premium).toBeNull();
+    expect(data.spies).toEqual([
+      {
+        strength: 100,
+        speed: 200,
+        defense: 300,
+        dexterity: 400,
+        total: 1000,
+        last_updated: 1328080860,
+        source: "tornstats",
+        source_faction_id: 999,
+      },
+    ]);
+  }
 });
 
 test("make_flights_url generates proper url", () => {

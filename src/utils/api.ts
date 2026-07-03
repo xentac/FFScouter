@@ -3,10 +3,13 @@ import { ffconfig } from "./ffconfig";
 import logger from "./logger";
 import { isInPDA } from "./pda";
 import type {
+  AvailableEstimates,
+  EstimateSource,
   FFData,
   FFDataDistribution,
   PlayerFlightsResponse,
   PlayerId,
+  SpySnapshot,
   TornApiKey,
 } from "./types";
 
@@ -64,7 +67,7 @@ export type FFSuccess = {
   bs_estimate_human: string | null;
   bss_public: number | null;
   last_updated: number | null;
-  source: string;
+  source: EstimateSource;
   premium_insights_available: boolean;
   distribution: {
     last_updated: number;
@@ -76,6 +79,17 @@ export type FFSuccess = {
       dexterity?: number;
     } | null;
   };
+  available_estimates?: AvailableEstimates;
+  spies?: SpySnapshot[];
+};
+
+// Fallback for responses missing the newer available_estimates/spies fields
+// (e.g. a stale cached response shape) — keeps FFDataComplete's fields required
+// without rejecting the rest of an otherwise-valid record.
+const EMPTY_AVAILABLE_ESTIMATES: AvailableEstimates = {
+  bss: null,
+  premium: null,
+  spies: null,
 };
 
 export type FFError = {
@@ -246,6 +260,9 @@ export const query_stats = async (
           premium_insights_available:
             result.premium_insights_available ?? false,
           distribution: distribution,
+          available_estimates:
+            result.available_estimates ?? EMPTY_AVAILABLE_ESTIMATES,
+          spies: result.spies ?? [],
           player_id: result.player_id,
         });
       }

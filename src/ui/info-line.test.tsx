@@ -45,6 +45,18 @@ test("renders basic stats for non-premium user when premium is not available", a
     bss_public: 20,
     source: "bss",
     premium_insights_available: false,
+    available_estimates: {
+      bss: {
+        bss_public: 20,
+        bs_estimate: 5000,
+        bs_estimate_human: "5k",
+        last_updated: nowSec() - 100,
+        fair_fight: 2.5,
+      },
+      premium: null,
+      spies: null,
+    },
+    spies: [],
   });
 
   const { container } = render(<FFHeaderLine playerId={123} />);
@@ -70,6 +82,18 @@ test("renders premium upgrade link for non-premium user when premium insights ar
     bss_public: 30,
     source: "bss",
     premium_insights_available: true,
+    available_estimates: {
+      bss: {
+        bss_public: 30,
+        bs_estimate: 10000,
+        bs_estimate_human: "10k",
+        last_updated: nowSec() - 100,
+        fair_fight: 3.2,
+      },
+      premium: null,
+      spies: null,
+    },
+    spies: [],
   });
 
   const { container } = render(<FFHeaderLine playerId={123} />);
@@ -95,6 +119,18 @@ test("renders top stats and distribution for premium user", async () => {
     bss_public: 50,
     source: "bss",
     premium_insights_available: true,
+    available_estimates: {
+      bss: {
+        bss_public: 50,
+        bs_estimate: 25000,
+        bs_estimate_human: "25k",
+        last_updated: nowSec() - 100,
+        fair_fight: 4.5,
+      },
+      premium: null,
+      spies: null,
+    },
+    spies: [],
     distribution: {
       last_updated: nowSec() - 50,
       distribution_human: "STR: 40%, SPD: 30%",

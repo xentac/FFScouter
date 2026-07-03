@@ -1,3 +1,4 @@
+import { extract_bs_estimate_human, extract_ff } from "./estimate";
 import { ffconfig, GaugeMarkerType } from "./ffconfig";
 import { ffscouter } from "./ffscouter";
 import logger from "./logger";
@@ -124,9 +125,9 @@ function make_marker(d: FFDataComplete): HTMLElement | SVGElement {
     }px`;
 
     if (markerType === GaugeMarkerType.BUBBLE_FF) {
-      bubble.textContent = d.fair_fight.toFixed(2);
+      bubble.textContent = extract_ff(d).toFixed(2);
     } else {
-      bubble.textContent = d.bs_estimate_human || "N/A";
+      bubble.textContent = extract_bs_estimate_human(d) || "N/A";
     }
 
     return bubble;

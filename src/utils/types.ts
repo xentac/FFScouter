@@ -21,6 +21,42 @@ export type FFDataDistribution = {
   };
 };
 
+// Which of the three estimate sources FFScouter's own merge picked as `source`,
+// and the key each is filed under in `available_estimates`.
+export type EstimateSource = "bss" | "premium" | "spies";
+
+// One candidate estimate inside `available_estimates`. Not every field applies
+// to every source: `bss_public` only appears on the "bss" candidate, and
+// `source` only appears on the "spies" candidate (the raw per-spy data source,
+// e.g. "tornstats" — distinct from the outer EstimateSource key).
+export type EstimateCandidate = {
+  bs_estimate: number | null;
+  bs_estimate_human: string | null;
+  last_updated: TimestampSec | null;
+  fair_fight: number | null;
+  bss_public?: number | null;
+  source?: string;
+};
+
+// The three estimate candidates FFScouter computed, keyed by EstimateSource,
+// so a priority policy can pick among them without refetching. A null value
+// means that source had no data to offer (e.g. `premium` for a non-premium key).
+export type AvailableEstimates = Record<
+  EstimateSource,
+  EstimateCandidate | null
+>;
+
+export type SpySnapshot = {
+  strength: number;
+  speed: number;
+  defense: number;
+  dexterity: number;
+  total: number;
+  last_updated: TimestampSec;
+  source: string;
+  source_faction_id: number;
+};
+
 export type FFDataComplete = {
   no_data: false;
   fair_fight: number;
@@ -28,9 +64,11 @@ export type FFDataComplete = {
   bs_estimate: number;
   bs_estimate_human: string;
   bss_public: number;
-  source: string;
+  source: EstimateSource;
   premium_insights_available: boolean;
   distribution?: FFDataDistribution;
+  available_estimates: AvailableEstimates;
+  spies: SpySnapshot[];
   player_id: PlayerId;
 };
 

@@ -37,6 +37,46 @@ vi.mock("./ffscouter", () => {
   };
 });
 
+// Shared fixture for the `add_ff_arrow` tests below, which all mock the same
+// FFDataComplete shape and only vary a field or two.
+function mock_ff_data(
+  overrides: Partial<{
+    fair_fight: number;
+    bs_estimate: number;
+    bs_estimate_human: string;
+    bss_public: number;
+  }> = {},
+) {
+  const fair_fight = overrides.fair_fight ?? 3.5;
+  const bs_estimate = overrides.bs_estimate ?? 1000;
+  const bs_estimate_human = overrides.bs_estimate_human ?? "1k";
+  const bss_public = overrides.bss_public ?? 10;
+  const last_updated = Date.now() / 1000;
+  return {
+    player_id: 123,
+    no_data: false as const,
+    fair_fight,
+    last_updated,
+    bs_estimate,
+    bs_estimate_human,
+    bss_public,
+    source: "bss" as const,
+    premium_insights_available: false,
+    available_estimates: {
+      bss: {
+        bss_public,
+        bs_estimate,
+        bs_estimate_human,
+        last_updated,
+        fair_fight,
+      },
+      premium: null,
+      spies: null,
+    },
+    spies: [],
+  };
+}
+
 beforeEach(() => {
   document.body.innerHTML = "";
   ffconfig.reset();
@@ -153,17 +193,7 @@ test("get_player_id_in_element extracts player IDs from child or parent anchors"
 });
 
 test("add_ff_arrow fetches data and inserts gauge arrow SVG to elements", async () => {
-  const mockGet = vi.mocked(ffscouter.get).mockResolvedValue({
-    player_id: 123,
-    no_data: false,
-    fair_fight: 3.5,
-    last_updated: Date.now() / 1000,
-    bs_estimate: 1000,
-    bs_estimate_human: "1k",
-    bss_public: 10,
-    source: "bss",
-    premium_insights_available: false,
-  });
+  const mockGet = vi.mocked(ffscouter.get).mockResolvedValue(mock_ff_data());
 
   const anchor = document.createElement("a");
   anchor.href = "https://www.torn.com/profiles.php?XID=123";
@@ -185,17 +215,7 @@ test("add_ff_arrow fetches data and inserts gauge arrow SVG to elements", async 
 
 test("add_ff_arrow draws the arrow's stroke-width from gauge_marker_border_width config", async () => {
   ffconfig.gauge_marker_border_width = 3;
-  vi.mocked(ffscouter.get).mockResolvedValue({
-    player_id: 123,
-    no_data: false,
-    fair_fight: 3.5,
-    last_updated: Date.now() / 1000,
-    bs_estimate: 1000,
-    bs_estimate_human: "1k",
-    bss_public: 10,
-    source: "bss",
-    premium_insights_available: false,
-  });
+  vi.mocked(ffscouter.get).mockResolvedValue(mock_ff_data());
 
   const anchor = document.createElement("a");
   anchor.href = "https://www.torn.com/profiles.php?XID=123";
@@ -212,17 +232,7 @@ test("add_ff_arrow sizes the bubble's border-width from gauge_marker_border_widt
   ffconfig.gauge_marker_type = GaugeMarkerType.BUBBLE_FF;
   ffconfig.gauge_marker_border_width = 2;
   ffconfig.gauge_marker_scale = 150;
-  vi.mocked(ffscouter.get).mockResolvedValue({
-    player_id: 123,
-    no_data: false,
-    fair_fight: 3.5,
-    last_updated: Date.now() / 1000,
-    bs_estimate: 1000,
-    bs_estimate_human: "1k",
-    bss_public: 10,
-    source: "bss",
-    premium_insights_available: false,
-  });
+  vi.mocked(ffscouter.get).mockResolvedValue(mock_ff_data());
 
   const anchor = document.createElement("a");
   anchor.href = "https://www.torn.com/profiles.php?XID=123";
@@ -237,17 +247,7 @@ test("add_ff_arrow sizes the bubble's border-width from gauge_marker_border_widt
 
 test("add_ff_arrow sets the shared marker-scale CSS var from config", async () => {
   ffconfig.gauge_marker_scale = 150;
-  vi.mocked(ffscouter.get).mockResolvedValue({
-    player_id: 123,
-    no_data: false,
-    fair_fight: 3.5,
-    last_updated: Date.now() / 1000,
-    bs_estimate: 1000,
-    bs_estimate_human: "1k",
-    bss_public: 10,
-    source: "bss",
-    premium_insights_available: false,
-  });
+  vi.mocked(ffscouter.get).mockResolvedValue(mock_ff_data());
 
   const anchor = document.createElement("a");
   anchor.href = "https://www.torn.com/profiles.php?XID=123";
@@ -263,17 +263,9 @@ test("add_ff_arrow sets the shared marker-scale CSS var from config", async () =
 
 test("add_ff_arrow renders bubble with FF number when configured", async () => {
   ffconfig.gauge_marker_type = GaugeMarkerType.BUBBLE_FF;
-  vi.mocked(ffscouter.get).mockResolvedValue({
-    player_id: 123,
-    no_data: false,
-    fair_fight: 3.52,
-    last_updated: Date.now() / 1000,
-    bs_estimate: 1000,
-    bs_estimate_human: "1k",
-    bss_public: 10,
-    source: "bss",
-    premium_insights_available: false,
-  });
+  vi.mocked(ffscouter.get).mockResolvedValue(
+    mock_ff_data({ fair_fight: 3.52 }),
+  );
 
   const anchor = document.createElement("a");
   anchor.href = "https://www.torn.com/profiles.php?XID=123";
@@ -290,17 +282,9 @@ test("add_ff_arrow renders bubble with FF number when configured", async () => {
 
 test("add_ff_arrow renders bubble with stat estimate when configured", async () => {
   ffconfig.gauge_marker_type = GaugeMarkerType.BUBBLE_ESTIMATE;
-  vi.mocked(ffscouter.get).mockResolvedValue({
-    player_id: 123,
-    no_data: false,
-    fair_fight: 3.52,
-    last_updated: Date.now() / 1000,
-    bs_estimate: 1000,
-    bs_estimate_human: "1.2b",
-    bss_public: 10,
-    source: "bss",
-    premium_insights_available: false,
-  });
+  vi.mocked(ffscouter.get).mockResolvedValue(
+    mock_ff_data({ fair_fight: 3.52, bs_estimate_human: "1.2b" }),
+  );
 
   const anchor = document.createElement("a");
   anchor.href = "https://www.torn.com/profiles.php?XID=123";
