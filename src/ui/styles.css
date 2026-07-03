@@ -30,7 +30,28 @@
 .ffscouter-marker-wrapper {
   position: absolute;
   display: inline-block;
-  top: 0;
+  /* line-height: 0 kills the CSS "strut": a block box with only inline-level
+     children (the arrow/bubble) still reserves a full line-box height from
+     its *inherited* line-height even when that's taller than the content
+     itself. This wrapper never set its own line-height, so on pages without
+     an honor bar (e.g. bounties, hospital, job listings — see
+     fallback/index.ts) it silently inherited whatever line-height the
+     fallback container happens to use (e.g. 30px for a `.user.name` row),
+     making the wrapper's own box 30px tall instead of the ~14-19px the arrow/
+     bubble actually render at — confirmed via computed-style inspection on a
+     real page. Reset to 0 so the wrapper always shrinks to its real content
+     height regardless of the ambient line-height it's dropped into. */
+  line-height: 0;
+  /* Anchored to the gauge container's vertical center rather than its top
+     edge. On the same no-honor-bar pages, .ffscouter-gauge lands on a much
+     taller general-purpose wrapper than the ~19px honor-bar-image box this
+     was tuned against; anchoring to "top: 0" of that taller box pinned the
+     marker (and especially the source-marker badge riding its corner) well
+     above the row instead of on it. The center is stable across container
+     heights, so -80% (50% center-offset + the original 30% hover-above
+     amount) reproduces the exact prior pixel position when the container is
+     honor-bar-sized, while degrading gracefully for taller ones. */
+  top: 50%;
   left: calc(
     var(--ffscouter-arrow-width) /
     2 +
@@ -38,7 +59,7 @@
     (100% - var(--ffscouter-arrow-width)) /
     100
   );
-  transform: translate(-50%, -30%);
+  transform: translate(-50%, -80%);
   z-index: 10;
 }
 
