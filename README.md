@@ -75,6 +75,6 @@ The release branches contain only the built, single-file userscripts in their ro
 
 ## Git Branching Workflow
 
-- **`modernize`**: Main development branch for all editions.
+- **`main`**: Main development branch for all editions.
 - ~~**`alternative_torn_pda`**: Integration branch for the Xentac edition.~~
-- **Feature Branches**: Branch off `modernize` to work on features, then merge back into `modernize` and release.
+- **Feature Branches**: Branch off `main` to work on features, then merge back into `main` and release.
