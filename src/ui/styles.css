@@ -453,3 +453,20 @@ body[data-ff-status-attack-enabled="true"]
   margin-bottom: 0 !important;
   padding-bottom: 0 !important;
 }
+
+/* Same class of bug on jailview.php/hospitalview.php: Torn draws a
+   border-left divider on .user-wrap (and sibling .time/.level/.reason/.bye/
+   .bust columns) via padding-top/bottom: 250px exactly cancelled by
+   margin-top/bottom: -250px — layout-neutral only for *inline* boxes, where
+   vertical margin is ignored and vertical padding doesn't affect line
+   height. .ffscouter-gauge sets display: block on whatever it's attached
+   to, and the fallback attach here lands directly on .user-wrap, flipping
+   it out of inline layout so the 250px stops cancelling and blows the row
+   out top and bottom. Reset just .user-wrap, since we never attach to
+   .time/.level/.reason/.bye/.bust and they keep working as Torn intended. */
+.d .users-list.links .user-wrap.ffscouter-gauge {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
