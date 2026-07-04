@@ -3,7 +3,7 @@
 - Configure positioning of FF chain button (fixed floating, relative to other elements, etc)
 - Add better error messages for when you have a bad key (specifically that the key provided to ff scouter script isn't valid or is not registered)
 - Add support for flight tracking during raids
-- Bubbles are more likely to go farther than 100%, they should be fixed
+- Let users configure whether they settings to show on every profile page or just their own
 
 # React Doctor follow-ups (re-run: v0.5.8, after CSS-modules migration + Fedded/Fallen)
 
