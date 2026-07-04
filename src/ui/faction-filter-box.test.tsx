@@ -338,7 +338,7 @@ test("compare activity button opens correct URL when links are inside the contai
   expect(url.pathname).toBe("/faction-activity-comparison");
   expect(url.searchParams.get("faction_id_1")).toBe("9524");
   expect(url.searchParams.get("faction_id_2")).toBe("22295");
-  expect(url.searchParams.get("bucket_minutes")).toBe("5");
+  expect(url.searchParams.get("bucket_minutes")).toBe("60");
   const startAt = url.searchParams.get("start_at")!;
   const endAt = url.searchParams.get("end_at")!;
   expect(
