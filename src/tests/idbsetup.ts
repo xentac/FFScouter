@@ -52,6 +52,24 @@ const ReactDOMFull = { ...ReactDOM, ...ReactDOMClient };
 
 setup();
 
+// jsdom doesn't implement a real canvas 2D context without the native
+// `canvas` npm package — getContext("2d") returns null and logs a "not
+// implemented" warning. dom.ts's bubble-width measurement already handles a
+// null context, so tests pass either way, but polyfill a minimal
+// measureText so the canvas path actually runs under test and the warning
+// doesn't spam every test that renders a bubble marker.
+if (typeof HTMLCanvasElement !== "undefined") {
+  HTMLCanvasElement.prototype.getContext = ((contextId: string) => {
+    if (contextId === "2d") {
+      return {
+        font: "",
+        measureText: (text: string) => ({ width: text.length * 5 }),
+      } as unknown as CanvasRenderingContext2D;
+    }
+    return null;
+  }) as typeof HTMLCanvasElement.prototype.getContext;
+}
+
 if (typeof globalThis.BroadcastChannel === "undefined") {
   globalThis.BroadcastChannel = NodeBroadcastChannel as any;
 }

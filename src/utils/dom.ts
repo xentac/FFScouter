@@ -170,6 +170,81 @@ function make_source_marker_badge(d: FFDataComplete): SVGElement | null {
   return make_source_marker_svg(marker, "ffscouter-source-marker");
 }
 
+// A bubble's rendered width is a pure function of its text plus the two
+// Settings values that feed its box model (scale, border width) — see
+// .ffscouter-bubble in styles.css: min-width/padding/font-size are all `em`,
+// i.e. relative to font-size, which itself scales with
+// --ffscouter-marker-scale. Neither Settings value can change mid-page (both
+// require a refresh to take effect — see the note in add_ff_arrow below), so
+// the same text always measures to the same width for the lifetime of a
+// page. Measuring via a <canvas> 2D context's measureText rather than
+// inserting a real DOM element and reading offsetWidth means this never
+// touches document layout at all — no forced reflow, however many times or
+// however many distinct values get measured — so unlike the offsetWidth
+// approach this doesn't need batching to avoid layout thrashing, and the
+// in-memory cache below only exists to skip re-running the trig, not to
+// avoid an expensive DOM read.
+const BUBBLE_FONT_SIZE_PX = 8.5; // matches --ffscouter-bubble-font-size's 8.5px base
+const BUBBLE_MIN_WIDTH_EM = 2.5882; // matches .ffscouter-bubble min-width
+const BUBBLE_PADDING_EM = 0.4706; // matches .ffscouter-bubble padding, each side
+const BUBBLE_FONT_FAMILY = "Geneva, Arial, sans-serif"; // matches .ffscouter-bubble font-family
+// Small fixed buffer covering the (typically sub-pixel) difference between
+// canvas text shaping and the real layout engine's — cheap insurance for a
+// feature whose explicit goal is "never overflow," not "pixel-perfect."
+const BUBBLE_WIDTH_SAFETY_PX = 1;
+
+let measure_canvas_ctx: CanvasRenderingContext2D | null | undefined;
+
+function get_measure_canvas_ctx(): CanvasRenderingContext2D | null {
+  if (measure_canvas_ctx === undefined) {
+    measure_canvas_ctx = document.createElement("canvas").getContext("2d");
+  }
+  return measure_canvas_ctx;
+}
+
+const bubble_width_cache = new Map<string, number>();
+
+function measure_bubble_width(text: string): number {
+  const scale = ffconfig.gauge_marker_scale / 100;
+  const border_width = ffconfig.gauge_marker_border_width * scale;
+  const cache_key = `${text}|${scale}|${border_width}`;
+
+  const cached = bubble_width_cache.get(cache_key);
+  if (cached !== undefined) {
+    return cached;
+  }
+
+  const font_size = BUBBLE_FONT_SIZE_PX * scale;
+  const ctx = get_measure_canvas_ctx();
+  let text_width = 0;
+  if (ctx) {
+    ctx.font = `bold ${font_size}px ${BUBBLE_FONT_FAMILY}`;
+    text_width = ctx.measureText(text).width;
+  }
+
+  const padding = BUBBLE_PADDING_EM * font_size;
+  const min_width = BUBBLE_MIN_WIDTH_EM * font_size;
+  const width =
+    Math.max(min_width, text_width + padding * 2) +
+    border_width * 2 +
+    BUBBLE_WIDTH_SAFETY_PX;
+
+  bubble_width_cache.set(cache_key, width);
+  return width;
+}
+
+// Arrows are always exactly --ffscouter-arrow-width (already the CSS
+// fallback used when no --ffscouter-marker-actual-width is set), so only
+// bubbles need measuring at all.
+function measure_marker_width(marker: HTMLElement): number | null {
+  const bubble = marker.querySelector<HTMLElement>(".ffscouter-bubble");
+  if (!bubble) {
+    return null;
+  }
+
+  return measure_bubble_width(bubble.textContent ?? "");
+}
+
 function make_marker(d: FFDataComplete): HTMLElement {
   const markerType = ffconfig.gauge_marker_type;
 
@@ -265,7 +340,28 @@ export function add_ff_arrow(
         existing.remove();
       }
 
-      element.appendChild(make_marker(d));
+      const marker = element.appendChild(make_marker(d));
+      // The horizontal clamp formulas (styles.css) need the marker's real
+      // rendered width, not the nominal --ffscouter-arrow-width: a bubble is
+      // wider than the arrow and its width varies with content length (e.g.
+      // "957m" vs "29.5b"), so a fixed nominal width under-reserves the edge
+      // and the bubble overflows past whichever side it's closest to. Arrows
+      // skip this entirely (measure_marker_width returns null) since their
+      // width is always exactly --ffscouter-arrow-width, which is already
+      // the CSS fallback below. measure_marker_width computes the bubble
+      // case via canvas text metrics rather than reading this element back
+      // out of the DOM, so this never forces a layout — a later live Marker
+      // Scale change (Settings save) won't retroactively resize markers
+      // already on the page, same as before, but now because
+      // measure_bubble_width's cache key includes scale rather than because
+      // remeasuring would be expensive.
+      const width = measure_marker_width(marker);
+      if (width !== null) {
+        element.style.setProperty(
+          "--ffscouter-marker-actual-width",
+          `${width}px`,
+        );
+      }
       ffscouter.add_analytics_entry(featureName, player_id, "applied");
     })
     .catch((err: unknown) => {

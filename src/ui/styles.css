@@ -69,17 +69,24 @@
   z-index: 10;
 }
 
-/* HORIZONTAL: which edge of the track the marker is anchored from.
-   band-percent <= 50 anchors from the left, same formula as always — the
-   left edge never overflows in practice (fallback attach targets are
-   deliberately picked to have a consistent width, so the arrow/bubble box
-   itself always fits). */
+/* HORIZONTAL: which edge of the track the marker is anchored from. Both
+   formulas key off --ffscouter-marker-actual-width (set once in add_ff_arrow
+   via offsetWidth), not --ffscouter-arrow-width: that nominal width is only
+   ever correct for the arrow shape. A bubble is wider, and variable-width
+   with content (e.g. "957m" vs "29.5b"), so using the nominal width
+   under-reserves the edge and the bubble overflows past whichever side it's
+   closest to — this used to only be visible on the right in practice, but
+   turned out to affect the left edge too in enough places (bounties,
+   faction members) that both formulas need the real measured width. */
 .ffscouter-gauge[data-ffscouter-band-side="left"] > .ffscouter-marker-wrapper {
   left: calc(
-    var(--ffscouter-arrow-width) /
+    var(--ffscouter-marker-actual-width, var(--ffscouter-arrow-width)) /
     2 +
     var(--band-percent) *
-    (100% - var(--ffscouter-arrow-width)) /
+    (
+      100% -
+      var(--ffscouter-marker-actual-width, var(--ffscouter-arrow-width))
+    ) /
     100
   );
   --ffscouter-marker-tx: -50%;
@@ -89,20 +96,23 @@
    formula but with an extra reserved margin equal to the source-marker
    badge's own overhang (see .ffscouter-source-marker below): the badge
    floats past the wrapper's top-right corner, outside the wrapper's own box
-   entirely, so it's invisible to the plain arrow/bubble width used above and
-   was overflowing past the track's right edge on bubbles carrying a spy/
-   premium badge. This only needs to apply on the right — the badge never
-   overhangs left or bottom. A small (few px) mismatch against the left
-   formula right at band-percent === 50 is expected and accepted: reserving
-   the badge's margin gradually instead would require a continuous formula,
-   which was deliberately traded away for a hard split with zero compromise
-   away from the boundary. */
+   entirely, so it's invisible to the measured width above and would
+   otherwise still overflow past the track's right edge on bubbles carrying
+   a spy/premium badge. This only needs to apply on the right — the badge
+   never overhangs left or bottom. A small (few px) mismatch against the
+   left formula right at band-percent === 50 is expected and accepted:
+   reserving the badge's margin gradually instead would require a continuous
+   formula, which was deliberately traded away for a hard split with zero
+   compromise away from the boundary. */
 .ffscouter-gauge[data-ffscouter-band-side="right"] > .ffscouter-marker-wrapper {
   right: calc(
-    var(--ffscouter-arrow-width) /
+    var(--ffscouter-marker-actual-width, var(--ffscouter-arrow-width)) /
     2 +
     (100 - var(--band-percent)) *
-    (100% - var(--ffscouter-arrow-width)) /
+    (
+      100% -
+      var(--ffscouter-marker-actual-width, var(--ffscouter-arrow-width))
+    ) /
     100 +
     0.35 *
     var(--ffscouter-source-marker-size)
