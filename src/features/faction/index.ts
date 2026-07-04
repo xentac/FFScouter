@@ -6,6 +6,7 @@ import {
 } from "@ui/faction-filter-box";
 import {
   apply_ff_gauge_selector,
+  GaugeAttachMode,
   on_navigation,
   torn_page,
   wait_for_element,
@@ -392,8 +393,13 @@ const apply_ff_members_list = (root: HTMLElement = document.body) => {
   apply_ff_gauge_selector(
     root.querySelectorAll(".honor-text-wrap"),
     FEATURE_NAME,
+    GaugeAttachMode.HONOR_BAR,
   );
-  apply_ff_gauge_selector(root.querySelectorAll(".member"), FEATURE_NAME);
+  apply_ff_gauge_selector(
+    root.querySelectorAll(".member"),
+    FEATURE_NAME,
+    GaugeAttachMode.FALLBACK,
+  );
   for (const l of root.querySelectorAll(".members-list, .chain-attacks-list")) {
     if (l instanceof HTMLElement) {
       apply_ff_members_list(l);

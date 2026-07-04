@@ -1,5 +1,6 @@
 import {
   apply_ff_gauge_selector,
+  GaugeAttachMode,
   on_navigation,
   torn_page,
   wait_for_body,
@@ -214,12 +215,17 @@ export default {
       ) as NodeListOf<HTMLElement>;
 
       if (honor_bars.length > 0) {
-        apply_ff_gauge_selector(honor_bars, FEATURE_NAME_HONOR_BAR);
+        apply_ff_gauge_selector(
+          honor_bars,
+          FEATURE_NAME_HONOR_BAR,
+          GaugeAttachMode.HONOR_BAR,
+        );
       } else if (current_config.has_page_specific) {
         for (const selector of current_config.page_specific_selectors) {
           apply_ff_gauge_selector(
             node.querySelectorAll(selector),
             FEATURE_NAME,
+            GaugeAttachMode.FALLBACK,
           );
         }
       } else {
@@ -227,14 +233,22 @@ export default {
           ".user-wrap.user-name",
         ) as NodeListOf<HTMLElement>;
         if (userwrap.length > 0) {
-          apply_ff_gauge_selector(userwrap, FEATURE_NAME_USER_NAME);
+          apply_ff_gauge_selector(
+            userwrap,
+            FEATURE_NAME_USER_NAME,
+            GaugeAttachMode.FALLBACK,
+          );
           return;
         }
         const username = node.querySelectorAll(
           ".user.name",
         ) as NodeListOf<HTMLElement>;
         if (username.length > 0) {
-          apply_ff_gauge_selector(username, FEATURE_NAME_USER_NAME);
+          apply_ff_gauge_selector(
+            username,
+            FEATURE_NAME_USER_NAME,
+            GaugeAttachMode.FALLBACK,
+          );
         }
       }
 

@@ -1,5 +1,6 @@
 import {
   apply_ff_gauge,
+  GaugeAttachMode,
   type HandlerFnOptions,
   MonitorElements,
   torn_page,
@@ -39,14 +40,18 @@ export default {
       }
       const honor_bar = options.added.querySelector(".honor-text-wrap");
       if (honor_bar) {
-        apply_ff_gauge(honor_bar, FEATURE_NAME);
+        apply_ff_gauge(honor_bar, FEATURE_NAME, GaugeAttachMode.HONOR_BAR);
         return;
       }
       const user_info_wrapper = options.added.querySelector(
         '[class*="userInfoBlock__"]',
       );
       if (user_info_wrapper) {
-        apply_ff_gauge(user_info_wrapper, FEATURE_NAME);
+        apply_ff_gauge(
+          user_info_wrapper,
+          FEATURE_NAME,
+          GaugeAttachMode.FALLBACK,
+        );
         return;
       }
     };

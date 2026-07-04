@@ -1,5 +1,6 @@
 import {
   apply_ff_gauge_selector,
+  GaugeAttachMode,
   torn_page,
   wait_for_element,
 } from "@utils/dom";
@@ -34,27 +35,32 @@ export default {
           "div.bazaar-listing-card div:first-child div:first-child > a",
         ),
         FEATURE_NAME,
+        GaugeAttachMode.FALLBACK,
       );
 
       // Support Bazaar + TE Info Final (Integrated & Fixed) (https://greasyfork.org/en/scripts/554659-bazaar-te-info-final-integrated-fixed)
       apply_ff_gauge_selector(
         root.querySelectorAll(".bazaar-card a"),
         FEATURE_NAME,
+        GaugeAttachMode.FALLBACK,
       );
 
       // Support Bazaar + TE Info PDA Version (https://greasyfork.org/en/scripts/554658-bazaar-te-info-pda-version)
       apply_ff_gauge_selector(
         root.querySelectorAll(".bazaar-card .bazaar-card-name"),
         FEATURE_NAME,
+        GaugeAttachMode.FALLBACK,
       );
 
       apply_ff_gauge_selector(
         root.querySelectorAll(".honor-text-wrap"),
         FEATURE_NAME,
+        GaugeAttachMode.HONOR_BAR,
       );
       apply_ff_gauge_selector(
         root.querySelectorAll('[class*="userInfoWrapper__"]'),
         FEATURE_NAME,
+        GaugeAttachMode.FALLBACK,
       );
     };
 

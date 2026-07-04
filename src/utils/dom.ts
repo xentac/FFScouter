@@ -27,6 +27,14 @@ const log = logger.child("dom");
 
 const ID_PARAMS = ["XID", "user2ID"];
 
+// Which shape of host element a Gauge Marker is being attached to — see
+// [[Gauge Attach Mode]] in CONTEXT.md / ADR 0006. Governs vertical
+// positioning only; the horizontal gauge-track math is shared by both.
+export enum GaugeAttachMode {
+  HONOR_BAR = "honor-bar",
+  FALLBACK = "fallback",
+}
+
 export function extract_id_from_url(url: string): PlayerId | null {
   const parsed = new URL(url);
   const search = new URLSearchParams(parsed.search);
@@ -206,7 +214,11 @@ function make_marker(d: FFDataComplete): HTMLElement {
   return wrapper;
 }
 
-export function add_ff_arrow(element: HTMLElement, featureName = "Unknown") {
+export function add_ff_arrow(
+  element: HTMLElement,
+  featureName: string,
+  attachMode: GaugeAttachMode,
+) {
   const player_id = get_player_id_in_element(element);
   if (!player_id) {
     return;
@@ -238,6 +250,11 @@ export function add_ff_arrow(element: HTMLElement, featureName = "Unknown") {
       const percent = ff_to_percent(d);
       element.classList.add("ffscouter-gauge");
       element.style.setProperty("--band-percent", `${percent}`);
+      element.setAttribute("data-ffscouter-attach-mode", attachMode);
+      element.setAttribute(
+        "data-ffscouter-band-side",
+        percent > 50 ? "right" : "left",
+      );
       document.body.style.setProperty(
         "--ffscouter-marker-scale",
         `${ffconfig.gauge_marker_scale / 100}`,
@@ -365,21 +382,23 @@ export function get_activity_status(
 
 export function apply_ff_gauge_selector(
   node_list: NodeListOf<HTMLElement>,
-  featureName = "Unknown",
+  featureName: string,
+  attachMode: GaugeAttachMode,
 ): void {
   for (const node of node_list) {
-    add_ff_arrow(node, featureName);
+    add_ff_arrow(node, featureName, attachMode);
   }
 }
 
 export function apply_ff_gauge(
   element: Element,
-  featureName = "Unknown",
+  featureName: string,
+  attachMode: GaugeAttachMode,
 ): void {
   if (!(element instanceof HTMLElement)) {
     return;
   }
-  add_ff_arrow(element, featureName);
+  add_ff_arrow(element, featureName, attachMode);
 }
 
 /**

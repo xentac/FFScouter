@@ -26,7 +26,16 @@
    .ffscouter-bubble directly, but both need to share one containing block so
    the .ffscouter-source-marker badge can anchor to "the marker's own corner"
    regardless of which shape (fixed-width arrow vs variable-width bubble) is
-   active, rather than approximating the bubble's variable width from outside. */
+   active, rather than approximating the bubble's variable width from outside.
+
+   The host element this wrapper is appended to (the one carrying
+   .ffscouter-gauge) is not one shape — see [[Gauge Attach Mode]] in
+   CONTEXT.md / ADR 0006. data-ffscouter-attach-mode picks the *vertical*
+   treatment (honor-bar vs fallback, below); data-ffscouter-band-side picks
+   which edge the *horizontal* position is anchored from. Both are stamped
+   onto the host by add_ff_arrow (dom.ts), and each only ever sets its own
+   half of the transform via --ffscouter-marker-tx/-ty so the two axes can't
+   stomp on each other regardless of which pair of rules matches. */
 .ffscouter-marker-wrapper {
   position: absolute;
   display: inline-block;
@@ -42,16 +51,19 @@
      real page. Reset to 0 so the wrapper always shrinks to its real content
      height regardless of the ambient line-height it's dropped into. */
   line-height: 0;
-  /* Anchored to the gauge container's vertical center rather than its top
-     edge. On the same no-honor-bar pages, .ffscouter-gauge lands on a much
-     taller general-purpose wrapper than the ~19px honor-bar-image box this
-     was tuned against; anchoring to "top: 0" of that taller box pinned the
-     marker (and especially the source-marker badge riding its corner) well
-     above the row instead of on it. The center is stable across container
-     heights, so -80% (50% center-offset + the original 30% hover-above
-     amount) reproduces the exact prior pixel position when the container is
-     honor-bar-sized, while degrading gracefully for taller ones. */
-  top: 50%;
+  transform: translate(
+    var(--ffscouter-marker-tx, -50%),
+    var(--ffscouter-marker-ty, -30%)
+  );
+  z-index: 10;
+}
+
+/* HORIZONTAL: which edge of the track the marker is anchored from.
+   band-percent <= 50 anchors from the left, same formula as always — the
+   left edge never overflows in practice (fallback attach targets are
+   deliberately picked to have a consistent width, so the arrow/bubble box
+   itself always fits). */
+.ffscouter-gauge[data-ffscouter-band-side="left"] > .ffscouter-marker-wrapper {
   left: calc(
     var(--ffscouter-arrow-width) /
     2 +
@@ -59,8 +71,56 @@
     (100% - var(--ffscouter-arrow-width)) /
     100
   );
-  transform: translate(-50%, -80%);
-  z-index: 10;
+  --ffscouter-marker-tx: -50%;
+}
+
+/* band-percent > 50 anchors from the right instead, mirroring the left
+   formula but with an extra reserved margin equal to the source-marker
+   badge's own overhang (see .ffscouter-source-marker below): the badge
+   floats past the wrapper's top-right corner, outside the wrapper's own box
+   entirely, so it's invisible to the plain arrow/bubble width used above and
+   was overflowing past the track's right edge on bubbles carrying a spy/
+   premium badge. This only needs to apply on the right — the badge never
+   overhangs left or bottom. A small (few px) mismatch against the left
+   formula right at band-percent === 50 is expected and accepted: reserving
+   the badge's margin gradually instead would require a continuous formula,
+   which was deliberately traded away for a hard split with zero compromise
+   away from the boundary. */
+.ffscouter-gauge[data-ffscouter-band-side="right"] > .ffscouter-marker-wrapper {
+  right: calc(
+    var(--ffscouter-arrow-width) /
+    2 +
+    (100 - var(--band-percent)) *
+    (100% - var(--ffscouter-arrow-width)) /
+    100 +
+    0.35 *
+    var(--ffscouter-source-marker-size)
+  );
+  --ffscouter-marker-tx: 50%;
+}
+
+/* VERTICAL: honor-bar hovers the marker above the bar graphic it's riding —
+   a fixed cosmetic offset, not a centering computation, since a real bar
+   graphic (unlike the fallback case below) has a stable, predictable
+   height to tune against. */
+.ffscouter-gauge[data-ffscouter-attach-mode="honor-bar"]
+> .ffscouter-marker-wrapper {
+  top: 0;
+  --ffscouter-marker-ty: -30%;
+}
+
+/* Fallback hosts aren't bars at all, and aren't guaranteed a consistent
+   height even across rows matching the same selector (see [[Gauge Attach
+   Mode]]), so there's no fixed offset to tune. top/bottom: 0 with
+   margin: auto 0 centers the wrapper vertically within whatever height the
+   host actually renders at, with no measurement needed and no cosmetic
+   hover bias — there's no bar to hover above. */
+.ffscouter-gauge[data-ffscouter-attach-mode="fallback"]
+> .ffscouter-marker-wrapper {
+  top: 0;
+  bottom: 0;
+  margin: auto 0;
+  --ffscouter-marker-ty: 0%;
 }
 
 .ffscouter-bubble,

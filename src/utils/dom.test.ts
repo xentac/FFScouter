@@ -12,6 +12,7 @@ import {
   create_ff_element,
   create_info_line,
   extract_id_from_url,
+  GaugeAttachMode,
   get_activity_status,
   get_attack_url,
   get_player_id_in_element,
@@ -201,7 +202,7 @@ test("add_ff_arrow fetches data and inserts gauge arrow SVG to elements", async 
   anchor.href = "https://www.torn.com/profiles.php?XID=123";
   document.body.appendChild(anchor);
 
-  add_ff_arrow(anchor);
+  add_ff_arrow(anchor, "test", GaugeAttachMode.FALLBACK);
 
   // Await microtasks for promise resolution
   await new Promise((resolve) => setTimeout(resolve, 10));
@@ -224,7 +225,7 @@ test("add_ff_arrow adds a source-marker badge for spy and premium data, but not 
   document.body.appendChild(spyAnchor);
 
   vi.mocked(ffscouter.get).mockResolvedValue(mock_ff_data({ source: "spies" }));
-  add_ff_arrow(spyAnchor);
+  add_ff_arrow(spyAnchor, "test", GaugeAttachMode.FALLBACK);
   await new Promise((resolve) => setTimeout(resolve, 10));
 
   const spyBadge = spyAnchor.querySelector(".ffscouter-source-marker");
@@ -244,7 +245,7 @@ test("add_ff_arrow adds a source-marker badge for spy and premium data, but not 
   vi.mocked(ffscouter.get).mockResolvedValue(
     mock_ff_data({ source: "premium" }),
   );
-  add_ff_arrow(premiumAnchor);
+  add_ff_arrow(premiumAnchor, "test", GaugeAttachMode.FALLBACK);
   await new Promise((resolve) => setTimeout(resolve, 10));
 
   const premiumBadge = premiumAnchor.querySelector(".ffscouter-source-marker");
@@ -262,7 +263,7 @@ test("add_ff_arrow draws the arrow's stroke-width from gauge_marker_border_width
   anchor.href = "https://www.torn.com/profiles.php?XID=123";
   document.body.appendChild(anchor);
 
-  add_ff_arrow(anchor);
+  add_ff_arrow(anchor, "test", GaugeAttachMode.FALLBACK);
   await new Promise((resolve) => setTimeout(resolve, 10));
 
   const path = anchor.querySelector(".ffscouter-arrow path");
@@ -279,7 +280,7 @@ test("add_ff_arrow sizes the bubble's border-width from gauge_marker_border_widt
   anchor.href = "https://www.torn.com/profiles.php?XID=123";
   document.body.appendChild(anchor);
 
-  add_ff_arrow(anchor);
+  add_ff_arrow(anchor, "test", GaugeAttachMode.FALLBACK);
   await new Promise((resolve) => setTimeout(resolve, 10));
 
   const bubble = anchor.querySelector(".ffscouter-bubble") as HTMLElement;
@@ -294,7 +295,7 @@ test("add_ff_arrow sets the shared marker-scale CSS var from config", async () =
   anchor.href = "https://www.torn.com/profiles.php?XID=123";
   document.body.appendChild(anchor);
 
-  add_ff_arrow(anchor);
+  add_ff_arrow(anchor, "test", GaugeAttachMode.FALLBACK);
   await new Promise((resolve) => setTimeout(resolve, 10));
 
   expect(document.body.style.getPropertyValue("--ffscouter-marker-scale")).toBe(
@@ -312,7 +313,7 @@ test("add_ff_arrow renders bubble with FF number when configured", async () => {
   anchor.href = "https://www.torn.com/profiles.php?XID=123";
   document.body.appendChild(anchor);
 
-  add_ff_arrow(anchor);
+  add_ff_arrow(anchor, "test", GaugeAttachMode.FALLBACK);
   await new Promise((resolve) => setTimeout(resolve, 10));
 
   const bubble = anchor.querySelector(".ffscouter-bubble");
@@ -331,7 +332,7 @@ test("add_ff_arrow renders bubble with stat estimate when configured", async () 
   anchor.href = "https://www.torn.com/profiles.php?XID=123";
   document.body.appendChild(anchor);
 
-  add_ff_arrow(anchor);
+  add_ff_arrow(anchor, "test", GaugeAttachMode.FALLBACK);
   await new Promise((resolve) => setTimeout(resolve, 10));
 
   const bubble = anchor.querySelector(".ffscouter-bubble");
@@ -350,7 +351,7 @@ test("apply_ff_gauge invokes add_ff_arrow if element is valid", async () => {
   a.href = "https://www.torn.com/profiles.php?XID=456";
   div.appendChild(a);
 
-  apply_ff_gauge(div);
+  apply_ff_gauge(div, "test", GaugeAttachMode.FALLBACK);
 
   await new Promise((resolve) => setTimeout(resolve, 10));
   expect(mockGet).toHaveBeenCalledWith(456);

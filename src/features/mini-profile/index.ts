@@ -1,5 +1,6 @@
 import {
   apply_ff_gauge,
+  GaugeAttachMode,
   get_player_id_in_element,
   make_source_marker_svg,
 } from "@utils/dom";
@@ -98,7 +99,7 @@ const setup_mini_observer = () => {
 
         // Render arrow
         for (const bar of miniroot.querySelectorAll(".honor-text-wrap")) {
-          apply_ff_gauge(bar, FEATURE_NAME);
+          apply_ff_gauge(bar, FEATURE_NAME, GaugeAttachMode.HONOR_BAR);
         }
         miniroot.querySelector(".ffscouter-mini-desc")?.remove();
 
