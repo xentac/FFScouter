@@ -220,35 +220,40 @@ export function add_ff_arrow(element: HTMLElement, featureName = "Unknown") {
     return;
   }
 
-  ffscouter.get(player_id).then((d) => {
-    if (d.no_data) {
-      return;
-    }
+  ffscouter
+    .get(player_id)
+    .then((d) => {
+      if (d.no_data) {
+        return;
+      }
 
-    if (
-      element.querySelector(".ffscouter-gauge") ||
-      element.classList.contains("ffscouter-gauge")
-    ) {
-      ffscouter.add_analytics_entry(featureName, player_id, "ignored");
-      return;
-    }
+      if (
+        element.querySelector(".ffscouter-gauge") ||
+        element.classList.contains("ffscouter-gauge")
+      ) {
+        ffscouter.add_analytics_entry(featureName, player_id, "ignored");
+        return;
+      }
 
-    const percent = ff_to_percent(d);
-    element.classList.add("ffscouter-gauge");
-    element.style.setProperty("--band-percent", `${percent}`);
-    document.body.style.setProperty(
-      "--ffscouter-marker-scale",
-      `${ffconfig.gauge_marker_scale / 100}`,
-    );
+      const percent = ff_to_percent(d);
+      element.classList.add("ffscouter-gauge");
+      element.style.setProperty("--band-percent", `${percent}`);
+      document.body.style.setProperty(
+        "--ffscouter-marker-scale",
+        `${ffconfig.gauge_marker_scale / 100}`,
+      );
 
-    const existing = element.querySelector(".ffscouter-marker-wrapper");
-    if (existing) {
-      existing.remove();
-    }
+      const existing = element.querySelector(".ffscouter-marker-wrapper");
+      if (existing) {
+        existing.remove();
+      }
 
-    element.appendChild(make_marker(d));
-    ffscouter.add_analytics_entry(featureName, player_id, "applied");
-  });
+      element.appendChild(make_marker(d));
+      ffscouter.add_analytics_entry(featureName, player_id, "applied");
+    })
+    .catch((err: unknown) => {
+      log.error(err);
+    });
 }
 
 function has_href(el: Element | null): el is HTMLAnchorElement {

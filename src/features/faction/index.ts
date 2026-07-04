@@ -312,7 +312,9 @@ export function initialize_features(membersList: HTMLElement) {
 
   inject_filter_box(membersList);
   setup_header_click(membersList, ".table-header", "[role='button']");
-  apply_ff_columns(membersList);
+  apply_ff_columns(membersList).catch((err: unknown) => {
+    log.error(err);
+  });
 
   const target = membersList.querySelector(".table-body") || membersList;
   setup_reapply_watcher(
@@ -495,7 +497,9 @@ function setup_war_list(list: HTMLElement) {
 
 function initialize_war_list(list: HTMLElement) {
   setup_header_click(list, ".white-grad", "[class*='tab___']");
-  apply_ff_columns(list);
+  apply_ff_columns(list).catch((err: unknown) => {
+    log.error(err);
+  });
 
   setup_reapply_watcher(list, list, () => ffconfig.war_col_display);
 }
@@ -505,63 +509,85 @@ function initialize_war_list(list: HTMLElement) {
 // The main page navigation observer, selector router, and extension hooks for Torn Factions step page loads.
 // ============================================================================
 const process_page = () => {
-  wait_for_element(".members-list", 10_000).then((node) => {
-    if (node instanceof HTMLElement) {
-      log.debug("Found members-list!");
-      monitor_member_list(node);
-    }
-  });
+  wait_for_element(".members-list", 10_000)
+    .then((node) => {
+      if (node instanceof HTMLElement) {
+        log.debug("Found members-list!");
+        monitor_member_list(node);
+      }
+    })
+    .catch((err: unknown) => {
+      log.error(err);
+    });
 
-  wait_for_element(".chain-attacks-list", 10_000).then((node) => {
-    if (node instanceof HTMLElement) {
-      log.debug("Found chain-attacks-list!");
-      monitor_member_list(node, true);
-    }
-  });
+  wait_for_element(".chain-attacks-list", 10_000)
+    .then((node) => {
+      if (node instanceof HTMLElement) {
+        log.debug("Found chain-attacks-list!");
+        monitor_member_list(node, true);
+      }
+    })
+    .catch((err: unknown) => {
+      log.error(err);
+    });
 
   // TODO: Support #faction-info and #faction-main swapping on personal faction page
 
-  wait_for_element("#faction_war_list_id", 10_000).then(async (node) => {
-    if (!node) {
-      return;
-    }
-    log.debug("Found faction_war_list_id");
-    const descriptions_observer = new MutationObserver(async (mutations) => {
-      for (const mutation of mutations) {
-        for (const node of mutation.addedNodes) {
-          if (
-            node instanceof HTMLElement &&
-            node.classList.contains("descriptions")
-          ) {
-            log.debug(
-              "Observed mutation that included adding descriptions",
-              node,
-            );
-            const faction_war = await wait_for_element(".faction-war", 10_000);
-            if (faction_war instanceof HTMLElement) {
-              setup_war_features(faction_war);
+  wait_for_element("#faction_war_list_id", 10_000)
+    .then(async (node) => {
+      if (!node) {
+        return;
+      }
+      log.debug("Found faction_war_list_id");
+      const descriptions_observer = new MutationObserver(async (mutations) => {
+        // MutationObserver callbacks aren't awaited by the browser, so a
+        // rejection here would otherwise surface as an unhandled promise
+        // rejection instead of being routed through our logger.
+        try {
+          for (const mutation of mutations) {
+            for (const node of mutation.addedNodes) {
+              if (
+                node instanceof HTMLElement &&
+                node.classList.contains("descriptions")
+              ) {
+                log.debug(
+                  "Observed mutation that included adding descriptions",
+                  node,
+                );
+                const faction_war = await wait_for_element(
+                  ".faction-war",
+                  10_000,
+                );
+                if (faction_war instanceof HTMLElement) {
+                  setup_war_features(faction_war);
+                }
+              }
             }
           }
+        } catch (err) {
+          log.error(err);
+        }
+      });
+      descriptions_observer.observe(node, { childList: true });
+      log.debug(
+        `Set up descriptions observer on <${node.tagName.toLowerCase()}> .${[...node.classList].join(".")}`,
+      );
+
+      const existing_descriptions = node.querySelector(".descriptions");
+      if (existing_descriptions) {
+        const faction_war = await wait_for_element(
+          " .faction-war",
+          10_000,
+          existing_descriptions,
+        );
+        if (faction_war instanceof HTMLElement) {
+          setup_war_features(faction_war);
         }
       }
+    })
+    .catch((err: unknown) => {
+      log.error(err);
     });
-    descriptions_observer.observe(node, { childList: true });
-    log.debug(
-      `Set up descriptions observer on <${node.tagName.toLowerCase()}> .${[...node.classList].join(".")}`,
-    );
-
-    const existing_descriptions = node.querySelector(".descriptions");
-    if (existing_descriptions) {
-      const faction_war = await wait_for_element(
-        " .faction-war",
-        10_000,
-        existing_descriptions,
-      );
-      if (faction_war instanceof HTMLElement) {
-        setup_war_features(faction_war);
-      }
-    }
-  });
 };
 
 export function should_run_faction(): boolean {
@@ -606,7 +632,9 @@ export default {
         );
         for (const list of lists) {
           if (list instanceof HTMLElement) {
-            apply_ff_columns(list);
+            apply_ff_columns(list).catch((err: unknown) => {
+              log.error(err);
+            });
           }
         }
       }

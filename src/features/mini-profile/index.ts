@@ -81,46 +81,51 @@ const setup_mini_observer = () => {
     lastPlayerId = player_id;
 
     // Get FF Scouter data
-    ffscouter.get(player_id).then(async (d: FFData) => {
-      // Discard if the profile opened a different player in the meantime
-      const current_player_id = get_player_id_in_element(miniroot);
-      if (current_player_id !== player_id) {
-        return;
-      }
+    ffscouter
+      .get(player_id)
+      .then(async (d: FFData) => {
+        // Discard if the profile opened a different player in the meantime
+        const current_player_id = get_player_id_in_element(miniroot);
+        if (current_player_id !== player_id) {
+          return;
+        }
 
-      if (d.no_data) {
-        return;
-      }
+        if (d.no_data) {
+          return;
+        }
 
-      log.debug(`Found mini profile update for ${player_id}, adding ff data`);
+        log.debug(`Found mini profile update for ${player_id}, adding ff data`);
 
-      // Render arrow
-      for (const bar of miniroot.querySelectorAll(".honor-text-wrap")) {
-        apply_ff_gauge(bar, FEATURE_NAME);
-      }
-      miniroot.querySelector(".ffscouter-mini-desc")?.remove();
+        // Render arrow
+        for (const bar of miniroot.querySelectorAll(".honor-text-wrap")) {
+          apply_ff_gauge(bar, FEATURE_NAME);
+        }
+        miniroot.querySelector(".ffscouter-mini-desc")?.remove();
 
-      // Minimal, text-only Fair Fight line for mini-profiles. Built from
-      // child nodes rather than one innerText string so the source-marker
-      // glyph (if any) can carry its own title for a desktop tooltip.
-      const ff_string = format_ff_score(d);
-      const fresh = format_relative_time(extract_last_updated(d));
-      const marker = get_source_marker(extract_source(d));
+        // Minimal, text-only Fair Fight line for mini-profiles. Built from
+        // child nodes rather than one innerText string so the source-marker
+        // glyph (if any) can carry its own title for a desktop tooltip.
+        const ff_string = format_ff_score(d);
+        const fresh = format_relative_time(extract_last_updated(d));
+        const marker = get_source_marker(extract_source(d));
 
-      const desc = document.createElement("span");
-      desc.classList.add("ffscouter-mini-desc");
-      desc.append(`FF ${ff_string}`);
-      if (marker) {
-        desc.appendChild(
-          make_source_marker_svg(marker, "ffscouter-inline-source-marker"),
-        );
-      }
-      desc.append(` ${fresh}`);
+        const desc = document.createElement("span");
+        desc.classList.add("ffscouter-mini-desc");
+        desc.append(`FF ${ff_string}`);
+        if (marker) {
+          desc.appendChild(
+            make_source_marker_svg(marker, "ffscouter-inline-source-marker"),
+          );
+        }
+        desc.append(` ${fresh}`);
 
-      const lastaction = miniroot.querySelector(".last-action");
-      lastaction?.appendChild(document.createElement("br"));
-      lastaction?.appendChild(desc);
-    });
+        const lastaction = miniroot.querySelector(".last-action");
+        lastaction?.appendChild(document.createElement("br"));
+        lastaction?.appendChild(desc);
+      })
+      .catch((err: unknown) => {
+        log.error(err);
+      });
     ffscouter.complete();
   });
 

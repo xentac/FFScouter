@@ -462,7 +462,9 @@ export class FFScouter {
   };
 
   clear_cache = () => {
-    this.cache.delete_db();
+    this.cache.delete_db().catch((err: unknown) => {
+      log.error("Failed to delete IndexedDB cache", err);
+    });
     check_key_status.clear();
   };
 
@@ -556,7 +558,11 @@ export class FFScouter {
     this.schedule_api(next_run);
 
     // At the end of every queue processing, clean expired stats
-    await this.cache.clean_expired();
+    try {
+      await this.cache.clean_expired();
+    } catch (err) {
+      log.error("Failed to clean expired cache entries", err);
+    }
   };
 
   calculate_next_api_run = (limits: FFApiRateLimits): number => {
