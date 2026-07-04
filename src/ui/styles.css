@@ -39,6 +39,17 @@
 .ffscouter-marker-wrapper {
   position: absolute;
   display: inline-block;
+  /* Regression fix: this used to live on .ffscouter-arrow/.ffscouter-bubble
+     directly (both still set it today, redundantly), back when they carried
+     their own absolute positioning. Commit 0207c166 moved the positioning
+     onto this wrapper (to give the new source-marker badge a shared
+     containing block) but left pointer-events behind on the child shapes,
+     so the *actually positioned* box silently started capturing clicks again
+     — blocking the profile link/status-attack quick-click underneath
+     whenever a fallback-attached marker's box happens to sit over them.
+     .ffscouter-source-marker below explicitly opts back into pointer-events:
+     auto, so the badge's own hover tooltip still works. */
+  pointer-events: none;
   /* line-height: 0 kills the CSS "strut": a block box with only inline-level
      children (the arrow/bubble) still reserves a full line-box height from
      its *inherited* line-height even when that's taller than the content
