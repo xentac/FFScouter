@@ -2,6 +2,8 @@
 
 - Configure positioning of FF chain button (fixed floating, relative to other elements, etc)
 - Add better error messages for when you have a bad key (specifically that the key provided to ff scouter script isn't valid or is not registered)
+- Add support for flight tracking during raids
+- Bubbles are more likely to go farther than 100%, they should be fixed
 
 # React Doctor follow-ups (re-run: v0.5.8, after CSS-modules migration + Fedded/Fallen)
 
@@ -55,9 +57,3 @@ into `faction-filter-box.module.css`.
   add aria-labels to controls whose visible text isn't programmatically associated.
 - `no-tiny-text` ×1 (`info-line.tsx:138`): 11px "Est. Stats" text; bump to ≥12px if it
   doesn't break the Torn-page layout.
-
-# Before releasing version 3.0
-
-- Make exposed summary function which, given a timeframe, returns the number of page/hash and which feature found or was ignored for the arrow
-  - That way we can use the table to monitor migration progress
-- Add support for flight tracking during raids
