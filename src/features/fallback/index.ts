@@ -152,7 +152,6 @@ export default {
       } else if (
         torn_page("messages") ||
         torn_page("index") ||
-        torn_page("hospitalview") ||
         torn_page("page", { sid: "UserList" })
       ) {
         page_specific = [".name"];
@@ -190,7 +189,7 @@ export default {
       return {
         has_page_specific: false,
         page_specific_selectors: [],
-        combined_selector: ".honor-text-wrap, .user.name",
+        combined_selector: ".honor-text-wrap, .user-wrap.user-name, .user.name",
       };
     };
 
@@ -224,11 +223,18 @@ export default {
           );
         }
       } else {
-        const name_elems = node.querySelectorAll(
+        const userwrap = node.querySelectorAll(
+          ".user-wrap.user-name",
+        ) as NodeListOf<HTMLElement>;
+        if (userwrap.length > 0) {
+          apply_ff_gauge_selector(userwrap, FEATURE_NAME_USER_NAME);
+          return;
+        }
+        const username = node.querySelectorAll(
           ".user.name",
         ) as NodeListOf<HTMLElement>;
-        if (name_elems.length > 0) {
-          apply_ff_gauge_selector(name_elems, FEATURE_NAME_USER_NAME);
+        if (username.length > 0) {
+          apply_ff_gauge_selector(username, FEATURE_NAME_USER_NAME);
         }
       }
 
