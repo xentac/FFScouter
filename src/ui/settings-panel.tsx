@@ -1452,7 +1452,14 @@ export class FFSettingsPanel extends HTMLElement {
   }
 }
 
-customElements.define("ff-settings-panel", FFSettingsPanel);
+// Guard against redefinition: the script's module graph can be evaluated more
+// than once in the same document (duplicate injection into multiple isolated
+// realms, or environments like Torn PDA that inject directly into page
+// context with no per-injection realm isolation at all), and
+// customElements.define throws NotSupportedError on a second registration.
+if (!customElements.get("ff-settings-panel")) {
+  customElements.define("ff-settings-panel", FFSettingsPanel);
+}
 
 declare global {
   interface HTMLElementTagNameMap {
