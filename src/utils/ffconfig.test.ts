@@ -48,6 +48,9 @@ test("FFConfig gets default values when storage is empty", () => {
   expect(config.gauge_marker_border_width).toEqual(
     CONFIG_DEFAULTS.gauge_marker_border_width,
   );
+  expect(config.settings_panel_own_profile_only).toEqual(
+    CONFIG_DEFAULTS.settings_panel_own_profile_only,
+  );
 });
 
 test("FFConfig sets and gets custom configuration values", () => {
@@ -136,6 +139,7 @@ test("FFConfig.reset resets values to their default states except the api key", 
   config.chain_target_index = 2;
   config.gauge_marker_scale = 150;
   config.gauge_marker_border_width = 3;
+  config.settings_panel_own_profile_only = true;
 
   config.reset();
 
@@ -164,5 +168,8 @@ test("FFConfig.reset resets values to their default states except the api key", 
   expect(config.gauge_marker_scale).toEqual(CONFIG_DEFAULTS.gauge_marker_scale);
   expect(config.gauge_marker_border_width).toEqual(
     CONFIG_DEFAULTS.gauge_marker_border_width,
+  );
+  expect(config.settings_panel_own_profile_only).toEqual(
+    CONFIG_DEFAULTS.settings_panel_own_profile_only,
   );
 });

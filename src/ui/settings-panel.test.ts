@@ -134,6 +134,37 @@ test("ff-settings-panel dispatches ff-save event with correct statusAttackLinksE
   expect(saveEvents[0]?.detail?.statusAttackLinksEnabled).toBe(false);
 });
 
+test("ff-settings-panel dispatches ff-save event with correct settingsPanelOwnProfileOnly when saved", async () => {
+  const el = document.createElement("ff-settings-panel") as FFSettingsPanel;
+  document.body.appendChild(el);
+  await el.updateComplete;
+
+  const saveEvents: CustomEvent[] = [];
+  el.addEventListener("ff-save", (e: Event) => {
+    saveEvents.push(e as CustomEvent);
+  });
+
+  const checkbox = el.querySelector(
+    "#settings-panel-own-profile-only-toggle",
+  ) as HTMLInputElement;
+  expect(checkbox).not.toBeNull();
+  // Default is off; a real click toggles it on.
+  expect(checkbox.checked).toBe(false);
+
+  checkbox.click();
+  await el.updateComplete;
+  expect(checkbox.checked).toBe(true);
+
+  const saveBtn = Array.from(el.querySelectorAll("button")).find(
+    (btn) => btn.textContent?.trim() === "Save Settings",
+  ) as HTMLButtonElement;
+  expect(saveBtn).not.toBeNull();
+  saveBtn.click();
+
+  expect(saveEvents.length).toBe(1);
+  expect(saveEvents[0]?.detail?.settingsPanelOwnProfileOnly).toBe(true);
+});
+
 test("ff-settings-panel syncs the marker-size slider and number input, clamps out-of-range values, and dispatches gaugeMarkerScale on save", async () => {
   const el = document.createElement("ff-settings-panel") as FFSettingsPanel;
   document.body.appendChild(el);

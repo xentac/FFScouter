@@ -4,7 +4,13 @@ import "@ui/settings-panel";
 import { TOAST_LEVEL, toast } from "@ui/toast";
 import { check_key, type FFApiCheckResponse } from "@utils/api";
 import { check_key_status } from "@utils/check_key";
-import { create_ff_element, torn_page, wait_for_element } from "@utils/dom";
+import {
+  create_ff_element,
+  extract_id_from_url,
+  getLocalUserId,
+  torn_page,
+  wait_for_element,
+} from "@utils/dom";
 import { ffscouter } from "@utils/ffscouter";
 import logger, { LogLevel } from "@utils/logger";
 import { clear_v2_data } from "@utils/migrate";
@@ -22,6 +28,29 @@ export default {
   },
 
   async run() {
+    // Own-profile-only is opt-in and checked here rather than in shouldRun():
+    // getLocalUserId() can wait up to 15s for the native settings-menu link to
+    // appear, and shouldRun() is awaited sequentially for every feature in the
+    // boot loop (src/index.ts) — a slow lookup there would stall every feature
+    // queued after this one. See ADR 0008.
+    if (ffconfig.settings_panel_own_profile_only) {
+      const viewedId = extract_id_from_url(window.location.href);
+      if (viewedId === null) {
+        // No XID on the profile page at all means Torn is showing its own
+        // "profile not found" error state, not an implicit self-view.
+        return;
+      }
+
+      const localIdStr = await getLocalUserId();
+      const localId = localIdStr !== null ? parseInt(localIdStr, 10) : null;
+      // Fail open when the logged-in user's own id can't be determined
+      // (localId null/NaN): an opt-in restriction silently hiding the whole
+      // panel is worse than it occasionally not applying.
+      if (localId !== null && !Number.isNaN(localId) && viewedId !== localId) {
+        return;
+      }
+    }
+
     const panel = await create_ff_element("ff-settings-panel");
     if (!panel) {
       toast(
@@ -60,6 +89,8 @@ export default {
     panel.statusAttackLinksEnabled = ffconfig.status_attack_links_enabled;
     panel.debugDisablePdaHttp = ffconfig.debug_disable_pda_http;
     panel.debugForceReactFallback = ffconfig.debug_force_react_fallback;
+    panel.settingsPanelOwnProfileOnly =
+      ffconfig.settings_panel_own_profile_only;
     // isPremium starts as null (Unknown) and is resolved asynchronously after injection
 
     // Listen for the custom save event
@@ -102,6 +133,8 @@ export default {
       ffconfig.status_attack_links_enabled = detail.statusAttackLinksEnabled;
       ffconfig.debug_disable_pda_http = detail.debugDisablePdaHttp;
       ffconfig.debug_force_react_fallback = detail.debugForceReactFallback;
+      ffconfig.settings_panel_own_profile_only =
+        detail.settingsPanelOwnProfileOnly;
       panel.isPremium = await check_key_status.is_premium(true);
       toast("Settings saved successfully!");
       window.dispatchEvent(new CustomEvent("ff-config-updated"));
@@ -144,6 +177,8 @@ export default {
       panel.statusAttackLinksEnabled = ffconfig.status_attack_links_enabled;
       panel.debugDisablePdaHttp = ffconfig.debug_disable_pda_http;
       panel.debugForceReactFallback = ffconfig.debug_force_react_fallback;
+      panel.settingsPanelOwnProfileOnly =
+        ffconfig.settings_panel_own_profile_only;
 
       toast("Settings reset to defaults!");
       window.dispatchEvent(new CustomEvent("ff-config-updated"));

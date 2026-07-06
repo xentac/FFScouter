@@ -87,6 +87,7 @@ export const CONFIG_DEFAULTS = {
   debug_force_react_fallback: false,
   color_scheme: ColorScheme.CLASSIC,
   custom_colors: null as string[] | null,
+  settings_panel_own_profile_only: false,
 } as const;
 
 enum CONFIG {
@@ -125,6 +126,7 @@ enum CONFIG {
   DEBUG_FORCE_REACT_FALLBACK = "debug_force_react_fallback",
   COLOR_SCHEME = "color_scheme",
   CUSTOM_COLORS = "custom_colors",
+  SETTINGS_PANEL_OWN_PROFILE_ONLY = "settings_panel_own_profile_only",
 }
 
 export class FFConfig {
@@ -383,6 +385,17 @@ export class FFConfig {
     this.storage.set(CONFIG.STATUS_ATTACK_LINKS_ENABLED, val);
   }
 
+  get settings_panel_own_profile_only(): boolean {
+    return (
+      this.storage.get(CONFIG.SETTINGS_PANEL_OWN_PROFILE_ONLY) ??
+      CONFIG_DEFAULTS.settings_panel_own_profile_only
+    );
+  }
+
+  set settings_panel_own_profile_only(val: boolean) {
+    this.storage.set(CONFIG.SETTINGS_PANEL_OWN_PROFILE_ONLY, val);
+  }
+
   get debug_disable_pda_http(): boolean {
     return (
       this.storage.get(CONFIG.DEBUG_DISABLE_PDA_HTTP) ??
@@ -549,6 +562,7 @@ export class FFConfig {
     this.storage.remove(CONFIG.DEBUG_FORCE_REACT_FALLBACK);
     this.storage.remove(CONFIG.COLOR_SCHEME);
     this.storage.remove(CONFIG.CUSTOM_COLORS);
+    this.storage.remove(CONFIG.SETTINGS_PANEL_OWN_PROFILE_ONLY);
   }
 }
 

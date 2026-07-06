@@ -82,6 +82,7 @@ const DEFAULT_VALUES = {
   statusAttackLinksEnabled: CONFIG_DEFAULTS.status_attack_links_enabled,
   debugDisablePdaHttp: CONFIG_DEFAULTS.debug_disable_pda_http,
   debugForceReactFallback: CONFIG_DEFAULTS.debug_force_react_fallback,
+  settingsPanelOwnProfileOnly: CONFIG_DEFAULTS.settings_panel_own_profile_only,
   isPremium: null as boolean | null,
 };
 
@@ -590,6 +591,18 @@ export function SettingsPanelComponent({
               </label>
             </div>
 
+            <div className={`${cls.cell} ${cls.cellCheckbox}`}>
+              <input
+                id="settings-panel-own-profile-only-toggle"
+                type="checkbox"
+                checked={drafts.settingsPanelOwnProfileOnly}
+                onChange={onChange}
+              />
+              <label htmlFor="settings-panel-own-profile-only-toggle">
+                Only show FF Scouter Settings on my own profile
+              </label>
+            </div>
+
             <div className={`${cls.span} ff-deprecation-note`}>
               <span>
                 War Monitor is no longer supported. Use{" "}
@@ -755,6 +768,7 @@ export class FFSettingsPanel extends HTMLElement {
       statusAttackLinksEnabled: this._props.statusAttackLinksEnabled,
       debugDisablePdaHttp: this._props.debugDisablePdaHttp,
       debugForceReactFallback: this._props.debugForceReactFallback,
+      settingsPanelOwnProfileOnly: this._props.settingsPanelOwnProfileOnly,
     };
   }
 
@@ -881,6 +895,7 @@ export class FFSettingsPanel extends HTMLElement {
           statusAttackLinksEnabled: this._drafts.statusAttackLinksEnabled,
           debugDisablePdaHttp: this._drafts.debugDisablePdaHttp,
           debugForceReactFallback: this._drafts.debugForceReactFallback,
+          settingsPanelOwnProfileOnly: this._drafts.settingsPanelOwnProfileOnly,
         },
         bubbles: true,
         composed: true,
@@ -978,6 +993,10 @@ export class FFSettingsPanel extends HTMLElement {
       this._drafts.debugDisablePdaHttp = (target as HTMLInputElement).checked;
     } else if (id === "debug-force-react-fallback") {
       this._drafts.debugForceReactFallback = (
+        target as HTMLInputElement
+      ).checked;
+    } else if (id === "settings-panel-own-profile-only-toggle") {
+      this._drafts.settingsPanelOwnProfileOnly = (
         target as HTMLInputElement
       ).checked;
     }
@@ -1237,6 +1256,15 @@ export class FFSettingsPanel extends HTMLElement {
     this.render();
   }
 
+  get settingsPanelOwnProfileOnly() {
+    return this._props.settingsPanelOwnProfileOnly;
+  }
+  set settingsPanelOwnProfileOnly(val) {
+    this._props.settingsPanelOwnProfileOnly = val;
+    this._drafts.settingsPanelOwnProfileOnly = val;
+    this.render();
+  }
+
   get debugDisablePdaHttp() {
     return this._props.debugDisablePdaHttp;
   }
@@ -1485,6 +1513,14 @@ export class FFSettingsPanel extends HTMLElement {
   }
   set draftDebugForceReactFallback(val) {
     this._drafts.debugForceReactFallback = val;
+    this.render();
+  }
+
+  get draftSettingsPanelOwnProfileOnly() {
+    return this._drafts.settingsPanelOwnProfileOnly;
+  }
+  set draftSettingsPanelOwnProfileOnly(val) {
+    this._drafts.settingsPanelOwnProfileOnly = val;
     this.render();
   }
 }
