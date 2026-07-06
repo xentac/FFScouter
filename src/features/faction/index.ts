@@ -76,7 +76,15 @@ function mountFilterBox(
   onFilterChange: (snapshot: FactionFilterSnapshot) => void,
 ): HTMLElement {
   const container = document.createElement("div");
-  container.style.display = "contents";
+  // When the mode's Settings toggle is off, mount the box hidden instead of
+  // skipping it: both FF/Est sort triggers (the box's Sort button and native
+  // header clicks) need a live handle, and losing sort with the box was ruled
+  // out. Filtering is neutralized via the filteringDisabled prop below.
+  const filteringDisabled =
+    mode === "war"
+      ? !ffconfig.war_filter_enabled
+      : !ffconfig.faction_filter_enabled;
+  container.style.display = filteringDisabled ? "none" : "contents";
   container.setAttribute("data-ff-filter-box", "true");
   container.setAttribute("data-mode", mode);
 
@@ -134,7 +142,7 @@ function mountFilterBox(
         ? ref.current.getFilterSnapshot()
         : {
             sortBy: "none",
-            filterEnabled: true,
+            filterEnabled: !filteringDisabled,
             activity: { online: true, idle: true, offline: true },
             status: {
               okay: true,
@@ -171,6 +179,7 @@ function mountFilterBox(
       onFilterChange,
       ref,
       initialHasLastActionData: hasLastActionDataProp,
+      filteringDisabled,
       onReady,
     }),
   );

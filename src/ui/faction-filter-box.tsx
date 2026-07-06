@@ -160,6 +160,13 @@ type Props = {
   onFilterChange: (snapshot: FactionFilterSnapshot) => void;
   ref?: Ref<FactionFilterBoxHandle | null>;
   initialHasLastActionData?: boolean;
+  // Set when the Settings-panel "Show ... filter box" toggle for this mode is
+  // off. Every snapshot then reports filterEnabled: false (riding the engine's
+  // existing filterEnabled short-circuit) while the stored filter state is left
+  // untouched, so re-enabling in Settings restores the user's prior filters.
+  // Sort still applies — the box stays mounted (hidden) so header-click sort
+  // keeps working.
+  filteringDisabled?: boolean;
   // Fired once, at the end of the mount effect (after loadState's initial
   // onFilterChange). The mount owner uses this to replay buffered imperative
   // calls so they aren't clobbered by the initial loadState dispatch.
@@ -171,6 +178,7 @@ export function FFFactionFilterBox({
   onFilterChange,
   ref,
   initialHasLastActionData = false,
+  filteringDisabled = false,
   onReady,
 }: Props) {
   const [filterState, setFilterState] = useState<FactionFilterState>(
@@ -203,6 +211,8 @@ export function FFFactionFilterBox({
   hasLastActionDataRef.current = hasLastActionData;
   const modeRef = useRef(mode);
   modeRef.current = mode;
+  const filteringDisabledRef = useRef(filteringDisabled);
+  filteringDisabledRef.current = filteringDisabled;
   const onFilterChangeRef = useRef(onFilterChange);
   onFilterChangeRef.current = onFilterChange;
 
@@ -221,7 +231,7 @@ export function FFFactionFilterBox({
     const s = filterStateRef.current;
     return {
       sortBy: s.sortBy,
-      filterEnabled: s.filterEnabled,
+      filterEnabled: filteringDisabledRef.current ? false : s.filterEnabled,
       activity: s.activity,
       // War lists never contain fallen members and the Fallen checkbox is hidden
       // in war mode, so force it off there; otherwise its (unreachable) default

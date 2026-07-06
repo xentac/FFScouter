@@ -83,6 +83,8 @@ const DEFAULT_VALUES = {
   debugDisablePdaHttp: CONFIG_DEFAULTS.debug_disable_pda_http,
   debugForceReactFallback: CONFIG_DEFAULTS.debug_force_react_fallback,
   settingsPanelOwnProfileOnly: CONFIG_DEFAULTS.settings_panel_own_profile_only,
+  factionFilterEnabled: CONFIG_DEFAULTS.faction_filter_enabled,
+  warFilterEnabled: CONFIG_DEFAULTS.war_filter_enabled,
   isPremium: null as boolean | null,
 };
 
@@ -540,6 +542,18 @@ export function SettingsPanelComponent({
               </select>
             </div>
 
+            <div className={`${cls.cell} ${cls.cellCheckbox}`}>
+              <input
+                id="faction-filter-toggle"
+                type="checkbox"
+                checked={drafts.factionFilterEnabled}
+                onChange={onChange}
+              />
+              <label htmlFor="faction-filter-toggle">
+                Show faction filter box
+              </label>
+            </div>
+
             <div className={cls.cell}>
               <label htmlFor="war-col-display">War Page Shows:</label>
               <select
@@ -551,6 +565,16 @@ export function SettingsPanelComponent({
                 <option value="battle_stats">BS Estimate</option>
                 <option value="none">None (Hide Column)</option>
               </select>
+            </div>
+
+            <div className={`${cls.cell} ${cls.cellCheckbox}`}>
+              <input
+                id="war-filter-toggle"
+                type="checkbox"
+                checked={drafts.warFilterEnabled}
+                onChange={onChange}
+              />
+              <label htmlFor="war-filter-toggle">Show war filter box</label>
             </div>
 
             <div className={`${cls.cell} ${cls.cellCheckbox}`}>
@@ -769,6 +793,8 @@ export class FFSettingsPanel extends HTMLElement {
       debugDisablePdaHttp: this._props.debugDisablePdaHttp,
       debugForceReactFallback: this._props.debugForceReactFallback,
       settingsPanelOwnProfileOnly: this._props.settingsPanelOwnProfileOnly,
+      factionFilterEnabled: this._props.factionFilterEnabled,
+      warFilterEnabled: this._props.warFilterEnabled,
     };
   }
 
@@ -896,6 +922,8 @@ export class FFSettingsPanel extends HTMLElement {
           debugDisablePdaHttp: this._drafts.debugDisablePdaHttp,
           debugForceReactFallback: this._drafts.debugForceReactFallback,
           settingsPanelOwnProfileOnly: this._drafts.settingsPanelOwnProfileOnly,
+          factionFilterEnabled: this._drafts.factionFilterEnabled,
+          warFilterEnabled: this._drafts.warFilterEnabled,
         },
         bubbles: true,
         composed: true,
@@ -999,6 +1027,10 @@ export class FFSettingsPanel extends HTMLElement {
       this._drafts.settingsPanelOwnProfileOnly = (
         target as HTMLInputElement
       ).checked;
+    } else if (id === "faction-filter-toggle") {
+      this._drafts.factionFilterEnabled = (target as HTMLInputElement).checked;
+    } else if (id === "war-filter-toggle") {
+      this._drafts.warFilterEnabled = (target as HTMLInputElement).checked;
     }
 
     this.render();
@@ -1265,6 +1297,24 @@ export class FFSettingsPanel extends HTMLElement {
     this.render();
   }
 
+  get factionFilterEnabled() {
+    return this._props.factionFilterEnabled;
+  }
+  set factionFilterEnabled(val) {
+    this._props.factionFilterEnabled = val;
+    this._drafts.factionFilterEnabled = val;
+    this.render();
+  }
+
+  get warFilterEnabled() {
+    return this._props.warFilterEnabled;
+  }
+  set warFilterEnabled(val) {
+    this._props.warFilterEnabled = val;
+    this._drafts.warFilterEnabled = val;
+    this.render();
+  }
+
   get debugDisablePdaHttp() {
     return this._props.debugDisablePdaHttp;
   }
@@ -1521,6 +1571,22 @@ export class FFSettingsPanel extends HTMLElement {
   }
   set draftSettingsPanelOwnProfileOnly(val) {
     this._drafts.settingsPanelOwnProfileOnly = val;
+    this.render();
+  }
+
+  get draftFactionFilterEnabled() {
+    return this._drafts.factionFilterEnabled;
+  }
+  set draftFactionFilterEnabled(val) {
+    this._drafts.factionFilterEnabled = val;
+    this.render();
+  }
+
+  get draftWarFilterEnabled() {
+    return this._drafts.warFilterEnabled;
+  }
+  set draftWarFilterEnabled(val) {
+    this._drafts.warFilterEnabled = val;
     this.render();
   }
 }

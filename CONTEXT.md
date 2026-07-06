@@ -33,7 +33,7 @@ The `.white-grad` element inside a [[War List]] containing the native Torn colum
 The `<div class="ffscouter-header">` injected by `apply_ff_columns()` into the [[White-Grad Header]]. Displays "FF" or "Est" depending on the configured column display mode. Does not use Torn's CSS module classes.
 
 ### Filter Box
-The `FFFactionFilterBox` React component (`src/ui/faction-filter-box.tsx`), mounted into a plain container div via [[Page React]] (not a LitElement/custom element), that renders sort and filter controls. In war mode, a single shared instance sits at the top of the [[War Box]] and drives both [[War List]]s. Holds `sortBy` as its source of truth for sort state.
+The `FFFactionFilterBox` React component (`src/ui/faction-filter-box.tsx`), mounted into a plain container div via [[Page React]] (not a LitElement/custom element), that renders sort and filter controls. In war mode, a single shared instance sits at the top of the [[War Box]] and drives both [[War List]]s. Holds `sortBy` as its source of truth for sort state. Can be disabled per mode from the Settings panel (`faction_filter_enabled` / `war_filter_enabled`, default on); disabled means mounted-but-hidden with every snapshot forcing `filterEnabled: false` — not unmounted, since both FF/Est sort triggers need the live handle, and stored filter state is left untouched (see `docs/adr/0009-filter-box-disable-hidden-mount.md`).
 
 ### Sort State
 `"ff-asc" | "ff-desc" | "none"` — the current sort direction for the FF/Est column. Owned by the [[Filter Box]] and persisted to config. `"none"` means no FF sort is active (Torn's native sort is uninterrupted).

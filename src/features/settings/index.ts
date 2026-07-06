@@ -91,6 +91,8 @@ export default {
     panel.debugForceReactFallback = ffconfig.debug_force_react_fallback;
     panel.settingsPanelOwnProfileOnly =
       ffconfig.settings_panel_own_profile_only;
+    panel.factionFilterEnabled = ffconfig.faction_filter_enabled;
+    panel.warFilterEnabled = ffconfig.war_filter_enabled;
     // isPremium starts as null (Unknown) and is resolved asynchronously after injection
 
     // Listen for the custom save event
@@ -135,6 +137,8 @@ export default {
       ffconfig.debug_force_react_fallback = detail.debugForceReactFallback;
       ffconfig.settings_panel_own_profile_only =
         detail.settingsPanelOwnProfileOnly;
+      ffconfig.faction_filter_enabled = detail.factionFilterEnabled;
+      ffconfig.war_filter_enabled = detail.warFilterEnabled;
       panel.isPremium = await check_key_status.is_premium(true);
       toast("Settings saved successfully!");
       window.dispatchEvent(new CustomEvent("ff-config-updated"));
@@ -179,6 +183,8 @@ export default {
       panel.debugForceReactFallback = ffconfig.debug_force_react_fallback;
       panel.settingsPanelOwnProfileOnly =
         ffconfig.settings_panel_own_profile_only;
+      panel.factionFilterEnabled = ffconfig.faction_filter_enabled;
+      panel.warFilterEnabled = ffconfig.war_filter_enabled;
 
       toast("Settings reset to defaults!");
       window.dispatchEvent(new CustomEvent("ff-config-updated"));

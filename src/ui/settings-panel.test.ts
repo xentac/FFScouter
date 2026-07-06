@@ -165,6 +165,44 @@ test("ff-settings-panel dispatches ff-save event with correct settingsPanelOwnPr
   expect(saveEvents[0]?.detail?.settingsPanelOwnProfileOnly).toBe(true);
 });
 
+test("ff-settings-panel dispatches ff-save event with correct factionFilterEnabled and warFilterEnabled when saved", async () => {
+  const el = document.createElement("ff-settings-panel") as FFSettingsPanel;
+  document.body.appendChild(el);
+  await el.updateComplete;
+
+  const saveEvents: CustomEvent[] = [];
+  el.addEventListener("ff-save", (e: Event) => {
+    saveEvents.push(e as CustomEvent);
+  });
+
+  const factionCheckbox = el.querySelector(
+    "#faction-filter-toggle",
+  ) as HTMLInputElement;
+  const warCheckbox = el.querySelector(
+    "#war-filter-toggle",
+  ) as HTMLInputElement;
+  expect(factionCheckbox).not.toBeNull();
+  expect(warCheckbox).not.toBeNull();
+  // Both default to on; a real click toggles the war one off.
+  expect(factionCheckbox.checked).toBe(true);
+  expect(warCheckbox.checked).toBe(true);
+
+  warCheckbox.click();
+  await el.updateComplete;
+  expect(warCheckbox.checked).toBe(false);
+  expect(factionCheckbox.checked).toBe(true);
+
+  const saveBtn = Array.from(el.querySelectorAll("button")).find(
+    (btn) => btn.textContent?.trim() === "Save Settings",
+  ) as HTMLButtonElement;
+  expect(saveBtn).not.toBeNull();
+  saveBtn.click();
+
+  expect(saveEvents.length).toBe(1);
+  expect(saveEvents[0]?.detail?.warFilterEnabled).toBe(false);
+  expect(saveEvents[0]?.detail?.factionFilterEnabled).toBe(true);
+});
+
 test("ff-settings-panel syncs the marker-size slider and number input, clamps out-of-range values, and dispatches gaugeMarkerScale on save", async () => {
   const el = document.createElement("ff-settings-panel") as FFSettingsPanel;
   document.body.appendChild(el);

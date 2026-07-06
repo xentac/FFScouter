@@ -2,6 +2,7 @@
 
 import type { FactionFilterBoxHandle } from "@ui/faction-filter-box";
 import { on_navigation } from "@utils/dom";
+import { ffconfig } from "@utils/ffconfig";
 import { ffscouter } from "@utils/ffscouter";
 import type { PlayerId } from "@utils/types";
 import { beforeEach, describe, expect, test, vi } from "vitest";
@@ -587,6 +588,144 @@ test("war header sort indicator attribute tracks sort state changes", async () =
   expect(ffHeader.getAttribute("data-ffscouter-sort")).toBeNull();
 
   factionWar.remove();
+});
+
+test("faction filter disabled in settings: box mounts hidden, saved filters don't apply, sort still works", async () => {
+  vi.mocked(ffscouter.get).mockResolvedValue({
+    player_id: 111 as PlayerId,
+    no_data: true,
+  } as any);
+
+  ffconfig.faction_filter_enabled = false;
+  // Saved state that would hide the traveling row if filtering applied
+  ffconfig.faction_filter_state = {
+    filterEnabled: true,
+    status: {
+      okay: true,
+      traveling: false,
+      hospital: false,
+      jail: false,
+      abroad: false,
+      federal: false,
+      fallen: false,
+    },
+  };
+
+  const container = document.createElement("div");
+  container.className = "members-list";
+  container.innerHTML = `
+    <ul class="table-header">
+      <li class="member">Member</li>
+      <li class="lvl">Lvl</li>
+    </ul>
+    <div class="table-body">
+      <div class="table-row" id="row-1">
+        <div class="member"><a href="/profiles.php?XID=111">Player 111</a></div>
+        <div class="lvl">50</div>
+        <div class="status traveling">Traveling</div>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(container);
+
+  initialize_features(container);
+
+  const filterBoxEl = container.parentNode?.querySelector(
+    "[data-ff-filter-box]",
+  ) as HTMLElement;
+  expect(filterBoxEl).not.toBeNull();
+  const filterBox = getFilterBoxHandle(filterBoxEl)!;
+  await waitForFilterBox(filterBox);
+
+  // Box is mounted (so its handle stays alive for sorting) but hidden
+  expect(filterBoxEl.style.display).toBe("none");
+
+  // Snapshots report filtering off, so the traveling row stays visible
+  expect(filterBox.getFilterSnapshot().filterEnabled).toBe(false);
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  const row = container.querySelector("#row-1") as HTMLElement;
+  expect(row.hasAttribute("data-ffscouter-hidden")).toBe(false);
+
+  // Stored filter state is untouched by the override
+  expect(ffconfig.faction_filter_state?.filterEnabled).toBe(true);
+  expect(ffconfig.faction_filter_state?.status?.traveling).toBe(false);
+
+  // FF/Est sort still works through the live handle (the header-click path)
+  filterBox.setSortBy("ff-desc");
+  expect(filterBox.sortBy).toBe("ff-desc");
+  const ffHeader = container.querySelector(".ffscouter-header") as HTMLElement;
+  expect(ffHeader).not.toBeNull();
+  expect(ffHeader.getAttribute("data-ffscouter-sort")).toBe("desc");
+
+  container.remove();
+});
+
+test("war filter disabled in settings hides only the war box, not the faction box", async () => {
+  vi.mocked(ffscouter.get).mockResolvedValue({
+    player_id: 111 as PlayerId,
+    no_data: true,
+  } as any);
+
+  ffconfig.war_filter_enabled = false;
+
+  const factionWar = document.createElement("div");
+  factionWar.className = "faction-war";
+  const enemyList = document.createElement("ul");
+  enemyList.className = "enemy-faction";
+  enemyList.innerHTML = `
+    <li class="table-header"><div class="lvl">Lvl</div></li>
+    <li class="enemy" id="enemy-1">
+      <div class="member"><a href="/profiles.php?XID=111">Enemy 111</a></div>
+      <div class="lvl">50</div>
+    </li>
+  `;
+  factionWar.appendChild(enemyList);
+  document.body.appendChild(factionWar);
+
+  setup_war_features(factionWar);
+  await new Promise((resolve) => setTimeout(resolve, 0));
+
+  const warBoxEl = factionWar.querySelector(
+    "[data-ff-filter-box][data-mode='war']",
+  ) as HTMLElement;
+  expect(warBoxEl).not.toBeNull();
+  expect(warBoxEl.style.display).toBe("none");
+  const warBox = getFilterBoxHandle(warBoxEl)!;
+  await waitForFilterBox(warBox);
+  expect(warBox.getFilterSnapshot().filterEnabled).toBe(false);
+
+  // Own wrapper so inject_filter_box's duplicate-guard doesn't see the war box
+  const wrapper = document.createElement("div");
+  const membersList = document.createElement("div");
+  membersList.className = "members-list";
+  membersList.innerHTML = `
+    <ul class="table-header">
+      <li class="member">Member</li>
+      <li class="lvl">Lvl</li>
+    </ul>
+    <div class="table-body">
+      <div class="table-row" id="row-1">
+        <div class="member"><a href="/profiles.php?XID=222">Player 222</a></div>
+        <div class="lvl">60</div>
+        <div class="status okay">Okay</div>
+      </div>
+    </div>
+  `;
+  wrapper.appendChild(membersList);
+  document.body.appendChild(wrapper);
+
+  initialize_features(membersList);
+
+  const factionBoxEl = wrapper.querySelector(
+    "[data-ff-filter-box][data-mode='faction']",
+  ) as HTMLElement;
+  expect(factionBoxEl).not.toBeNull();
+  expect(factionBoxEl.style.display).toBe("contents");
+  // Wait for the mount to settle so no React work is queued at teardown
+  await waitForFilterBox(getFilterBoxHandle(factionBoxEl)!);
+
+  factionWar.remove();
+  wrapper.remove();
 });
 
 describe("should_run_faction URL and hash matching", () => {

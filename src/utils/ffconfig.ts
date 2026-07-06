@@ -88,6 +88,8 @@ export const CONFIG_DEFAULTS = {
   color_scheme: ColorScheme.CLASSIC,
   custom_colors: null as string[] | null,
   settings_panel_own_profile_only: false,
+  faction_filter_enabled: true,
+  war_filter_enabled: true,
 } as const;
 
 enum CONFIG {
@@ -127,6 +129,8 @@ enum CONFIG {
   COLOR_SCHEME = "color_scheme",
   CUSTOM_COLORS = "custom_colors",
   SETTINGS_PANEL_OWN_PROFILE_ONLY = "settings_panel_own_profile_only",
+  FACTION_FILTER_ENABLED = "faction_filter_enabled",
+  WAR_FILTER_ENABLED = "war_filter_enabled",
 }
 
 export class FFConfig {
@@ -396,6 +400,28 @@ export class FFConfig {
     this.storage.set(CONFIG.SETTINGS_PANEL_OWN_PROFILE_ONLY, val);
   }
 
+  get faction_filter_enabled(): boolean {
+    return (
+      this.storage.get(CONFIG.FACTION_FILTER_ENABLED) ??
+      CONFIG_DEFAULTS.faction_filter_enabled
+    );
+  }
+
+  set faction_filter_enabled(val: boolean) {
+    this.storage.set(CONFIG.FACTION_FILTER_ENABLED, val);
+  }
+
+  get war_filter_enabled(): boolean {
+    return (
+      this.storage.get(CONFIG.WAR_FILTER_ENABLED) ??
+      CONFIG_DEFAULTS.war_filter_enabled
+    );
+  }
+
+  set war_filter_enabled(val: boolean) {
+    this.storage.set(CONFIG.WAR_FILTER_ENABLED, val);
+  }
+
   get debug_disable_pda_http(): boolean {
     return (
       this.storage.get(CONFIG.DEBUG_DISABLE_PDA_HTTP) ??
@@ -563,6 +589,8 @@ export class FFConfig {
     this.storage.remove(CONFIG.COLOR_SCHEME);
     this.storage.remove(CONFIG.CUSTOM_COLORS);
     this.storage.remove(CONFIG.SETTINGS_PANEL_OWN_PROFILE_ONLY);
+    this.storage.remove(CONFIG.FACTION_FILTER_ENABLED);
+    this.storage.remove(CONFIG.WAR_FILTER_ENABLED);
   }
 }
 
