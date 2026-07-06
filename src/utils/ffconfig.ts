@@ -84,6 +84,7 @@ export const CONFIG_DEFAULTS = {
   network_interception_enabled: false,
   status_attack_links_enabled: true,
   debug_disable_pda_http: false,
+  debug_force_react_fallback: false,
   color_scheme: ColorScheme.CLASSIC,
   custom_colors: null as string[] | null,
 } as const;
@@ -121,6 +122,7 @@ enum CONFIG {
   NETWORK_INTERCEPTION_ENABLED = "network_interception_enabled",
   STATUS_ATTACK_LINKS_ENABLED = "status_attack_links_enabled",
   DEBUG_DISABLE_PDA_HTTP = "debug_disable_pda_http",
+  DEBUG_FORCE_REACT_FALLBACK = "debug_force_react_fallback",
   COLOR_SCHEME = "color_scheme",
   CUSTOM_COLORS = "custom_colors",
 }
@@ -392,6 +394,17 @@ export class FFConfig {
     this.storage.set(CONFIG.DEBUG_DISABLE_PDA_HTTP, val);
   }
 
+  get debug_force_react_fallback(): boolean {
+    return (
+      this.storage.get(CONFIG.DEBUG_FORCE_REACT_FALLBACK) ??
+      CONFIG_DEFAULTS.debug_force_react_fallback
+    );
+  }
+
+  set debug_force_react_fallback(val: boolean) {
+    this.storage.set(CONFIG.DEBUG_FORCE_REACT_FALLBACK, val);
+  }
+
   get gauge_marker_type(): GaugeMarkerType {
     return (
       this.storage.get(CONFIG.GAUGE_MARKER_TYPE) ??
@@ -533,6 +546,7 @@ export class FFConfig {
     this.storage.remove(CONFIG.WAR_QUICK_ATTACK_ACTION);
     this.storage.remove(CONFIG.STATUS_ATTACK_LINKS_ENABLED);
     this.storage.remove(CONFIG.DEBUG_DISABLE_PDA_HTTP);
+    this.storage.remove(CONFIG.DEBUG_FORCE_REACT_FALLBACK);
     this.storage.remove(CONFIG.COLOR_SCHEME);
     this.storage.remove(CONFIG.CUSTOM_COLORS);
   }

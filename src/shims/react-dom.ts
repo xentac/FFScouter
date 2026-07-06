@@ -1,16 +1,10 @@
 import type * as ReactDOMTypes from "react-dom";
 import type * as ReactDOMClientTypes from "react-dom/client";
+import { getReactDOM } from "./react-loader";
 
 type ReactDOMFull = typeof ReactDOMTypes & typeof ReactDOMClientTypes;
 
-let _reactDOM: ReactDOMFull | undefined;
-function getReactDOM(): ReactDOMFull {
-  // biome-ignore lint/suspicious/noAssignInExpressions: lazy init
-  return (_reactDOM ??= (unsafeWindow as unknown as { ReactDOM: ReactDOMFull })
-    .ReactDOM);
-}
-
-// Proxy so every property access reads from unsafeWindow.ReactDOM at call
+// Proxy so every property access reads from getReactDOM() at call
 // time, not at module evaluation time (before ReactDOM is on the window).
 const ReactDOMProxy = new Proxy({} as ReactDOMFull, {
   get(_, prop: string) {

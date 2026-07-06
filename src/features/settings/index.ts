@@ -59,6 +59,7 @@ export default {
     panel.warQuickAttackAction = ffconfig.war_quick_attack_action;
     panel.statusAttackLinksEnabled = ffconfig.status_attack_links_enabled;
     panel.debugDisablePdaHttp = ffconfig.debug_disable_pda_http;
+    panel.debugForceReactFallback = ffconfig.debug_force_react_fallback;
     // isPremium starts as null (Unknown) and is resolved asynchronously after injection
 
     // Listen for the custom save event
@@ -100,6 +101,7 @@ export default {
       ffconfig.war_quick_attack_action = detail.warQuickAttackAction;
       ffconfig.status_attack_links_enabled = detail.statusAttackLinksEnabled;
       ffconfig.debug_disable_pda_http = detail.debugDisablePdaHttp;
+      ffconfig.debug_force_react_fallback = detail.debugForceReactFallback;
       panel.isPremium = await check_key_status.is_premium(true);
       toast("Settings saved successfully!");
       window.dispatchEvent(new CustomEvent("ff-config-updated"));
@@ -141,6 +143,7 @@ export default {
       panel.warQuickAttackAction = ffconfig.war_quick_attack_action;
       panel.statusAttackLinksEnabled = ffconfig.status_attack_links_enabled;
       panel.debugDisablePdaHttp = ffconfig.debug_disable_pda_http;
+      panel.debugForceReactFallback = ffconfig.debug_force_react_fallback;
 
       toast("Settings reset to defaults!");
       window.dispatchEvent(new CustomEvent("ff-config-updated"));

@@ -81,6 +81,7 @@ const DEFAULT_VALUES = {
   warQuickAttackAction: CONFIG_DEFAULTS.war_quick_attack_action,
   statusAttackLinksEnabled: CONFIG_DEFAULTS.status_attack_links_enabled,
   debugDisablePdaHttp: CONFIG_DEFAULTS.debug_disable_pda_http,
+  debugForceReactFallback: CONFIG_DEFAULTS.debug_force_react_fallback,
   isPremium: null as boolean | null,
 };
 
@@ -654,6 +655,19 @@ export function SettingsPanelComponent({
                 Disable PDA native HTTP (use GM_xmlhttpRequest instead)
               </label>
             </div>
+
+            <div className={`${cls.cell} ${cls.cellCheckbox}`}>
+              <input
+                id="debug-force-react-fallback"
+                type="checkbox"
+                checked={drafts.debugForceReactFallback}
+                onChange={onChange}
+              />
+              <label htmlFor="debug-force-react-fallback">
+                Force React fallback (fetch/evaluate Torn's own react-dom bundle
+                instead of using unsafeWindow.React/ReactDOM)
+              </label>
+            </div>
           </div>
         </div>
 
@@ -740,6 +754,7 @@ export class FFSettingsPanel extends HTMLElement {
       warQuickAttackAction: this._props.warQuickAttackAction,
       statusAttackLinksEnabled: this._props.statusAttackLinksEnabled,
       debugDisablePdaHttp: this._props.debugDisablePdaHttp,
+      debugForceReactFallback: this._props.debugForceReactFallback,
     };
   }
 
@@ -865,6 +880,7 @@ export class FFSettingsPanel extends HTMLElement {
           warQuickAttackAction: this._drafts.warQuickAttackAction,
           statusAttackLinksEnabled: this._drafts.statusAttackLinksEnabled,
           debugDisablePdaHttp: this._drafts.debugDisablePdaHttp,
+          debugForceReactFallback: this._drafts.debugForceReactFallback,
         },
         bubbles: true,
         composed: true,
@@ -960,6 +976,10 @@ export class FFSettingsPanel extends HTMLElement {
       ).checked;
     } else if (id === "debug-disable-pda-http") {
       this._drafts.debugDisablePdaHttp = (target as HTMLInputElement).checked;
+    } else if (id === "debug-force-react-fallback") {
+      this._drafts.debugForceReactFallback = (
+        target as HTMLInputElement
+      ).checked;
     }
 
     this.render();
@@ -1226,6 +1246,15 @@ export class FFSettingsPanel extends HTMLElement {
     this.render();
   }
 
+  get debugForceReactFallback() {
+    return this._props.debugForceReactFallback;
+  }
+  set debugForceReactFallback(val) {
+    this._props.debugForceReactFallback = val;
+    this._drafts.debugForceReactFallback = val;
+    this.render();
+  }
+
   get isPremium() {
     return this._props.isPremium;
   }
@@ -1448,6 +1477,14 @@ export class FFSettingsPanel extends HTMLElement {
   }
   set draftDebugDisablePdaHttp(val) {
     this._drafts.debugDisablePdaHttp = val;
+    this.render();
+  }
+
+  get draftDebugForceReactFallback() {
+    return this._drafts.debugForceReactFallback;
+  }
+  set draftDebugForceReactFallback(val) {
+    this._drafts.debugForceReactFallback = val;
     this.render();
   }
 }

@@ -1,15 +1,10 @@
 import type * as ReactTypes from "react";
+import { getReact } from "./react-loader";
 
 type UnsafeReact = typeof ReactTypes;
 
-let _react: UnsafeReact | undefined;
-function getReact(): UnsafeReact {
-  // biome-ignore lint/suspicious/noAssignInExpressions: lazy init
-  return (_react ??= (unsafeWindow as unknown as { React: UnsafeReact }).React);
-}
-
-// Proxy so every property access reads from unsafeWindow.React at call time,
-// not at module evaluation time (which would be before React is on the window).
+// Proxy so every property access reads from getReact() at call time, not at
+// module evaluation time (which would be before React is on the window).
 const ReactProxy = new Proxy({} as UnsafeReact, {
   get(_, prop: string) {
     return getReact()[prop as keyof UnsafeReact];

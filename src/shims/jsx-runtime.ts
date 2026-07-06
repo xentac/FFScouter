@@ -1,19 +1,5 @@
 import type { JSX } from "react";
-
-type PageReact = {
-  createElement: (
-    type: unknown,
-    props: unknown,
-    ...children: unknown[]
-  ) => JSX.Element;
-  Fragment: symbol;
-};
-
-let _react: PageReact | undefined;
-function getReact(): PageReact {
-  // biome-ignore lint/suspicious/noAssignInExpressions: lazy init
-  return (_react ??= (unsafeWindow as unknown as { React: PageReact }).React);
-}
+import { getReact } from "./react-loader";
 
 // A sentinel exported as Fragment. The real React.Fragment is swapped in
 // lazily inside jsx/jsxs at call time, when React is guaranteed to be loaded.
@@ -26,17 +12,20 @@ export function jsx(
   key?: string,
 ): React.ReactNode {
   const R = getReact();
+  // createElement's overloads are too strict for a runtime-resolved
+  // type/props pair; this shim intentionally bypasses them, same as before.
+  const createElement = R.createElement as (...args: any[]) => React.ReactNode;
   const realType = type === FRAGMENT_SENTINEL ? R.Fragment : type;
 
   if (key !== undefined) (props as any).key = key;
 
   if (children === undefined) {
-    return R.createElement(realType, props);
+    return createElement(realType, props);
   }
 
   return Array.isArray(children)
-    ? R.createElement(realType, props, ...children)
-    : R.createElement(realType, props, children);
+    ? createElement(realType, props, ...children)
+    : createElement(realType, props, children);
 }
 
 export const jsxs = jsx;
