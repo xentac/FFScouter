@@ -952,6 +952,8 @@ export class FFSettingsPanel extends HTMLElement {
           debugForceReactFallback: this._drafts.debugForceReactFallback,
           settingsPanelOwnProfileOnly: this._drafts.settingsPanelOwnProfileOnly,
           factionFilterEnabled: this._drafts.factionFilterEnabled,
+		  colorEstimatesEnabled: this._drafts.colorEstimatesEnabled,
+		  colorEstimatesThreshold: this._drafts.colorEstimatesThreshold,
           warFilterEnabled: this._drafts.warFilterEnabled,
         },
         bubbles: true,
@@ -1061,7 +1063,7 @@ export class FFSettingsPanel extends HTMLElement {
     } else if (id === "color-estimates-toggle") {
       this._drafts.colorEstimatesEnabled = (target as HTMLInputElement).checked;
     } else if (id === "color-estimates-threshold") {
-      this._drafts.color-estimates-threshold = Number(target.value);
+      this._drafts.colorEstimatesThreshold = Number(target.value);
     } else if (id === "war-filter-toggle") {
       this._drafts.warFilterEnabled = (target as HTMLInputElement).checked;
     }
