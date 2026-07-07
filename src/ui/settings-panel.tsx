@@ -569,7 +569,7 @@ export function SettingsPanelComponent({
             </div>
 			
 			<div className={cls.cell}>
-                    <label htmlFor="color-estimates-threshold">Max FF:</label>
+                    <label htmlFor="color-estimates-threshold">Whore stat % Threshold for color:</label>
                     <input
                       id="color-estimates-threshold"
                       type="number"
