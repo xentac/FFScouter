@@ -84,6 +84,8 @@ const DEFAULT_VALUES = {
   debugForceReactFallback: CONFIG_DEFAULTS.debug_force_react_fallback,
   settingsPanelOwnProfileOnly: CONFIG_DEFAULTS.settings_panel_own_profile_only,
   factionFilterEnabled: CONFIG_DEFAULTS.faction_filter_enabled,
+  colorEstimatesEnabled: CONFIG_DEFAULTS.color_estimates_enabled,
+  colorEstimatesThreshold: CONFIG_DEFAULTS.color_estimates_threshold,
   warFilterEnabled: CONFIG_DEFAULTS.war_filter_enabled,
   isPremium: null as boolean | null,
 };
@@ -553,6 +555,31 @@ export function SettingsPanelComponent({
                 Show faction filter box
               </label>
             </div>
+			
+			<div className={`${cls.cell} ${cls.cellCheckbox}`}>
+              <input
+                id="color-estimates-toggle"
+                type="checkbox"
+                checked={drafts.colorEstimatesEnabled}
+                onChange={onChange}
+              />
+              <label htmlFor="color-estimates-toggle">
+                Color estimates based on whore stat
+              </label>
+            </div>
+			
+			<div className={cls.cell}>
+                    <label htmlFor="color-estimates-threshold">Max FF:</label>
+                    <input
+                      id="color-estimates-threshold"
+                      type="number"
+                      step="1"
+                      className={cls.number}
+                      placeholder="No max"
+                      value={drafts.colorEstimatesThreshold}
+                      onChange={onChange}
+                    />
+            </div>
 
             <div className={cls.cell}>
               <label htmlFor="war-col-display">War Page Shows:</label>
@@ -794,6 +821,8 @@ export class FFSettingsPanel extends HTMLElement {
       debugForceReactFallback: this._props.debugForceReactFallback,
       settingsPanelOwnProfileOnly: this._props.settingsPanelOwnProfileOnly,
       factionFilterEnabled: this._props.factionFilterEnabled,
+	  colorEstimatesEnabled: this._props.colorEstimatesEnabled,
+	  colorEstimatesThreshold: this._props.colorEstimatesThreshold,
       warFilterEnabled: this._props.warFilterEnabled,
     };
   }
@@ -1029,6 +1058,10 @@ export class FFSettingsPanel extends HTMLElement {
       ).checked;
     } else if (id === "faction-filter-toggle") {
       this._drafts.factionFilterEnabled = (target as HTMLInputElement).checked;
+    } else if (id === "color-estimates-toggle") {
+      this._drafts.colorEstimatesEnabled = (target as HTMLInputElement).checked;
+    } else if (id === "color-estimates-threshold") {
+      this._drafts.color-estimates-threshold = Number(target.value);
     } else if (id === "war-filter-toggle") {
       this._drafts.warFilterEnabled = (target as HTMLInputElement).checked;
     }
