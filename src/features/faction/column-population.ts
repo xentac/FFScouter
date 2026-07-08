@@ -253,10 +253,9 @@ export async function apply_ff_columns(membersList: HTMLElement) {
 			cell.style.textShadow = "1px 0 0 #000, 0 -1px 0 #000, 0 1px 0 #000, -1px 0 0 #000";
 			let highestIndex = 1;
 			try{
-				var distrib = data.distribution.distribution_human.split(' ');
-				var distrib2 = [data.spies[0]["strength"], data.spies[0]["defense"], data.spies[0]["speed"], data.spies[0]["dexterity"]];
-				highestIndex = distrib2.reduce((maxIdx, val, idx, arr) => +val > +arr[maxIdx] ? idx : maxIdx, 0) + 1;
-				if (parseFloat(distrib[1].replace('(', ''))>=ffconfig.color_estimates_threshold){
+				var distrib = [data.spies[0]["strength"], data.spies[0]["defense"], data.spies[0]["speed"], data.spies[0]["dexterity"]];
+				highestIndex = distrib.reduce((maxIdx, val, idx, arr) => +val > +arr[maxIdx] ? idx : maxIdx, 0) + 1;
+				if (Math.max(...Object.values(data.distribution.stats_percentage).filter(v => typeof v === "number"))>=ffconfig.color_estimates_threshold){
 					switch(highestIndex) {
 						case 1:
 						cell.style.color = "#ad7c5c";
