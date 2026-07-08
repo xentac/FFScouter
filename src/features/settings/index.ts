@@ -92,6 +92,8 @@ export default {
     panel.settingsPanelOwnProfileOnly =
       ffconfig.settings_panel_own_profile_only;
     panel.factionFilterEnabled = ffconfig.faction_filter_enabled;
+	panel.colorEstimatesEnabled = ffconfig.color_estimates_enabled;
+	panel.colorEstimatesThreshold = ffconfig.color_estimates_threshold;
     panel.warFilterEnabled = ffconfig.war_filter_enabled;
     // isPremium starts as null (Unknown) and is resolved asynchronously after injection
 
@@ -138,6 +140,8 @@ export default {
       ffconfig.settings_panel_own_profile_only =
         detail.settingsPanelOwnProfileOnly;
       ffconfig.faction_filter_enabled = detail.factionFilterEnabled;
+	  ffconfig.color_estimates_enabled = detail.colorEstimatesEnabled;
+	  ffconfig.color_estimates_threshold = detail.colorEstimatesThreshold;
       ffconfig.war_filter_enabled = detail.warFilterEnabled;
       panel.isPremium = await check_key_status.is_premium(true);
       toast("Settings saved successfully!");
@@ -184,6 +188,8 @@ export default {
       panel.settingsPanelOwnProfileOnly =
         ffconfig.settings_panel_own_profile_only;
       panel.factionFilterEnabled = ffconfig.faction_filter_enabled;
+	  panel.colorEstimatesEnabled = ffconfig.color_estimates_enabled;
+	  panel.colorEstimatesThreshold = ffconfig.color_estimates_threshold;
       panel.warFilterEnabled = ffconfig.war_filter_enabled;
 
       toast("Settings reset to defaults!");

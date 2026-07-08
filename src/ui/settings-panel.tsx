@@ -84,6 +84,8 @@ const DEFAULT_VALUES = {
   debugForceReactFallback: CONFIG_DEFAULTS.debug_force_react_fallback,
   settingsPanelOwnProfileOnly: CONFIG_DEFAULTS.settings_panel_own_profile_only,
   factionFilterEnabled: CONFIG_DEFAULTS.faction_filter_enabled,
+  colorEstimatesEnabled: CONFIG_DEFAULTS.color_estimates_enabled,
+  colorEstimatesThreshold: CONFIG_DEFAULTS.color_estimates_threshold,
   warFilterEnabled: CONFIG_DEFAULTS.war_filter_enabled,
   isPremium: null as boolean | null,
 };
@@ -553,6 +555,31 @@ export function SettingsPanelComponent({
                 Show faction filter box
               </label>
             </div>
+			
+			<div className={`${cls.cell} ${cls.cellCheckbox}`}>
+              <input
+                id="color-estimates-toggle"
+                type="checkbox"
+                checked={drafts.colorEstimatesEnabled}
+                onChange={onChange}
+              />
+              <label htmlFor="color-estimates-toggle">
+                Color estimates based on whore stat
+              </label>
+            </div>
+			
+			<div className={cls.cell}>
+                    <label htmlFor="color-estimates-threshold">Whore stat % Threshold for color:</label>
+                    <input
+                      id="color-estimates-threshold"
+                      type="number"
+                      step="1"
+                      className={cls.number}
+                      placeholder="No max"
+                      value={drafts.colorEstimatesThreshold}
+                      onChange={onChange}
+                    />
+            </div>
 
             <div className={cls.cell}>
               <label htmlFor="war-col-display">War Page Shows:</label>
@@ -794,6 +821,8 @@ export class FFSettingsPanel extends HTMLElement {
       debugForceReactFallback: this._props.debugForceReactFallback,
       settingsPanelOwnProfileOnly: this._props.settingsPanelOwnProfileOnly,
       factionFilterEnabled: this._props.factionFilterEnabled,
+	  colorEstimatesEnabled: this._props.colorEstimatesEnabled,
+	  colorEstimatesThreshold: this._props.colorEstimatesThreshold,
       warFilterEnabled: this._props.warFilterEnabled,
     };
   }
@@ -923,6 +952,8 @@ export class FFSettingsPanel extends HTMLElement {
           debugForceReactFallback: this._drafts.debugForceReactFallback,
           settingsPanelOwnProfileOnly: this._drafts.settingsPanelOwnProfileOnly,
           factionFilterEnabled: this._drafts.factionFilterEnabled,
+		  colorEstimatesEnabled: this._drafts.colorEstimatesEnabled,
+		  colorEstimatesThreshold: this._drafts.colorEstimatesThreshold,
           warFilterEnabled: this._drafts.warFilterEnabled,
         },
         bubbles: true,
@@ -1029,6 +1060,10 @@ export class FFSettingsPanel extends HTMLElement {
       ).checked;
     } else if (id === "faction-filter-toggle") {
       this._drafts.factionFilterEnabled = (target as HTMLInputElement).checked;
+    } else if (id === "color-estimates-toggle") {
+      this._drafts.colorEstimatesEnabled = (target as HTMLInputElement).checked;
+    } else if (id === "color-estimates-threshold") {
+      this._drafts.colorEstimatesThreshold = Number(target.value);
     } else if (id === "war-filter-toggle") {
       this._drafts.warFilterEnabled = (target as HTMLInputElement).checked;
     }
@@ -1305,6 +1340,24 @@ export class FFSettingsPanel extends HTMLElement {
     this._drafts.factionFilterEnabled = val;
     this.render();
   }
+  
+  get colorEstimatesEnabled() {
+    return this._props.colorEstimatesEnabled;
+  }
+  set colorEstimatesEnabled(val) {
+    this._props.colorEstimatesEnabled = val;
+    this._drafts.colorEstimatesEnabled = val;
+    this.render();
+  }
+  
+  get colorEstimatesThreshold() {
+    return this._props.colorEstimatesThreshold;
+  }
+  set colorEstimatesThreshold(val) {
+    this._props.colorEstimatesThreshold = val;
+    this._drafts.colorEstimatesThreshold = val;
+    this.render();
+  }
 
   get warFilterEnabled() {
     return this._props.warFilterEnabled;
@@ -1579,6 +1632,22 @@ export class FFSettingsPanel extends HTMLElement {
   }
   set draftFactionFilterEnabled(val) {
     this._drafts.factionFilterEnabled = val;
+    this.render();
+  }
+  
+  get draftColorEstimatesEnabled() {
+    return this._drafts.colorEstimatesEnabled;
+  }
+  set draftColorEstimatesEnabled(val) {
+    this._drafts.colorEstimatesEnabled = val;
+    this.render();
+  }
+  
+  get draftColorEstimatesThreshold() {
+    return this._drafts.colorEstimatesThreshold;
+  }
+  set draftColorEstimatesThreshold(val) {
+    this._drafts.colorEstimatesThreshold = val;
     this.render();
   }
 

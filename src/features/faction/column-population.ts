@@ -247,10 +247,50 @@ export async function apply_ff_columns(membersList: HTMLElement) {
           ? extract_bs_estimate_human(data)
           : format_ff_score(data);
         const bg_color = get_ff_colour(data);
-        const text_color = get_contrast_color(bg_color);
+		
+		if(ffconfig.color_estimates_enabled===true){
+			const text_color = "white";
+			cell.style.textShadow = "1px 0 0 #000, 0 -1px 0 #000, 0 1px 0 #000, -1px 0 0 #000";
+			let highestIndex = 1;
+			var distrib = [
+				Number(data?.spies?.[0]?.strength ?? 0),
+				Number(data?.spies?.[0]?.defense ?? 0),
+				Number(data?.spies?.[0]?.speed ?? 0),
+				Number(data?.spies?.[0]?.dexterity ?? 0)
+			];
+			highestIndex = distrib.reduce((maxIdx, val, idx, arr) => +val > +arr[maxIdx] ? idx : maxIdx, 0) + 1;
+			if (Math.max(0, ...Object.values(data?.distribution?.stats_percentage ?? {}).filter((v) => typeof v === "number"))>=ffconfig.color_estimates_threshold){
+				switch(highestIndex) {
+					case 1:
+					cell.style.color = "#ad7c5c";
+					//cell.style.color = ffconfig.colorDef;
+					break;
+					case 2:
+					cell.style.color = "#6ea9a9";
+					//cell.style.color = ffconfig.colorDex;
+					break;
+					case 3:
+					cell.style.color = "#807b54";
+					//cell.style.color = ffconfig.colorStr; 
+					break;
+					case 4:
+					cell.style.color = "#ae67bb";
+					//cell.style.color = ffconfig.colorSpd;
+					break;
+					default:
+					cell.style.color = text_color;
+				}
+			}
+			else{
+				cell.style.color = text_color;
+			}
+		}
+		else{
+			const text_color = get_contrast_color(bg_color);
+			cell.style.backgroundColor = bg_color;
+			cell.style.color = text_color;
+		}
 
-        cell.style.backgroundColor = bg_color;
-        cell.style.color = text_color;
         cell.style.fontWeight = "bold";
         cell.textContent = text;
 

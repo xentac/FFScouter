@@ -89,6 +89,8 @@ export const CONFIG_DEFAULTS = {
   custom_colors: null as string[] | null,
   settings_panel_own_profile_only: false,
   faction_filter_enabled: true,
+  color_estimates_enabled: false,
+  color_estimates_threshold: 30,
   war_filter_enabled: true,
 } as const;
 
@@ -130,6 +132,8 @@ enum CONFIG {
   CUSTOM_COLORS = "custom_colors",
   SETTINGS_PANEL_OWN_PROFILE_ONLY = "settings_panel_own_profile_only",
   FACTION_FILTER_ENABLED = "faction_filter_enabled",
+  COLOR_ESTIMATES_ENABLED = "color_estimates_enabled",
+  COLOR_ESTIMATES_THRESHOLD = "color_estimates_threshold",
   WAR_FILTER_ENABLED = "war_filter_enabled",
 }
 
@@ -410,6 +414,28 @@ export class FFConfig {
   set faction_filter_enabled(val: boolean) {
     this.storage.set(CONFIG.FACTION_FILTER_ENABLED, val);
   }
+  
+  get color_estimates_enabled(): boolean {
+    return (
+      this.storage.get(CONFIG.COLOR_ESTIMATES_ENABLED) ??
+      CONFIG_DEFAULTS.color_estimates_enabled
+    );
+  }
+
+  set color_estimates_enabled(val: boolean) {
+    this.storage.set(CONFIG.COLOR_ESTIMATES_ENABLED, val);
+  }
+  
+  get color_estimates_threshold(): boolean {
+    return (
+      this.storage.get(CONFIG.COLOR_ESTIMATES_THRESHOLD) ??
+      CONFIG_DEFAULTS.color_estimates_threshold
+    );
+  }
+
+  set color_estimates_threshold(val: boolean) {
+    this.storage.set(CONFIG.COLOR_ESTIMATES_THRESHOLD, val);
+  }
 
   get war_filter_enabled(): boolean {
     return (
@@ -590,6 +616,8 @@ export class FFConfig {
     this.storage.remove(CONFIG.CUSTOM_COLORS);
     this.storage.remove(CONFIG.SETTINGS_PANEL_OWN_PROFILE_ONLY);
     this.storage.remove(CONFIG.FACTION_FILTER_ENABLED);
+	this.storage.remove(CONFIG.COLOR_ESTIMATES_ENABLED);
+	this.storage.remove(CONFIG.COLOR_ESTIMATES_THRESHOLD);
     this.storage.remove(CONFIG.WAR_FILTER_ENABLED);
   }
 }
