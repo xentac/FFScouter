@@ -1340,6 +1340,24 @@ export class FFSettingsPanel extends HTMLElement {
     this._drafts.factionFilterEnabled = val;
     this.render();
   }
+  
+  get colorEstimatesEnabled() {
+    return this._props.colorEstimatesEnabled;
+  }
+  set colorEstimatesEnabled(val) {
+    this._props.colorEstimatesEnabled = val;
+    this._drafts.colorEstimatesEnabled = val;
+    this.render();
+  }
+  
+  get colorEstimatesThreshold() {
+    return this._props.colorEstimatesThreshold;
+  }
+  set colorEstimatesThreshold(val) {
+    this._props.colorEstimatesThreshold = val;
+    this._drafts.colorEstimatesThreshold = val;
+    this.render();
+  }
 
   get warFilterEnabled() {
     return this._props.warFilterEnabled;
@@ -1614,6 +1632,22 @@ export class FFSettingsPanel extends HTMLElement {
   }
   set draftFactionFilterEnabled(val) {
     this._drafts.factionFilterEnabled = val;
+    this.render();
+  }
+  
+  get draftColorEstimatesEnabled() {
+    return this._drafts.colorEstimatesEnabled;
+  }
+  set draftColorEstimatesEnabled(val) {
+    this._drafts.colorEstimatesEnabled = val;
+    this.render();
+  }
+  
+  get draftColorEstimatesThreshold() {
+    return this._drafts.colorEstimatesThreshold;
+  }
+  set draftColorEstimatesThreshold(val) {
+    this._drafts.colorEstimatesThreshold = val;
     this.render();
   }
 
