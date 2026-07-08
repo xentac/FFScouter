@@ -252,7 +252,12 @@ export async function apply_ff_columns(membersList: HTMLElement) {
 			const text_color = "white";
 			cell.style.textShadow = "1px 0 0 #000, 0 -1px 0 #000, 0 1px 0 #000, -1px 0 0 #000";
 			let highestIndex = 1;
-			var distrib = [data.spies[0]["strength"], data.spies[0]["defense"], data.spies[0]["speed"], data.spies[0]["dexterity"]];
+			var distrib = [
+				Number(data?.spies?.[0]?.strength ?? 0),
+				Number(data?.spies?.[0]?.defense ?? 0),
+				Number(data?.spies?.[0]?.speed ?? 0),
+				Number(data?.spies?.[0]?.dexterity ?? 0)
+			];
 			highestIndex = distrib.reduce((maxIdx, val, idx, arr) => +val > +arr[maxIdx] ? idx : maxIdx, 0) + 1;
 			if (Math.max(...Object.values(data.distribution.stats_percentage).filter(v => typeof v === "number"))>=ffconfig.color_estimates_threshold){
 				switch(highestIndex) {
