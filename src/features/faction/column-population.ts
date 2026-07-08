@@ -259,7 +259,7 @@ export async function apply_ff_columns(membersList: HTMLElement) {
 				Number(data?.spies?.[0]?.dexterity ?? 0)
 			];
 			highestIndex = distrib.reduce((maxIdx, val, idx, arr) => +val > +arr[maxIdx] ? idx : maxIdx, 0) + 1;
-			if (Math.max(...Object.values(data.distribution.stats_percentage).filter(v => typeof v === "number"))>=ffconfig.color_estimates_threshold){
+			if (Math.max(0, ...Object.values(data?.distribution?.stats_percentage ?? {}).filter((v) => typeof v === "number"))>=ffconfig.color_estimates_threshold){
 				switch(highestIndex) {
 					case 1:
 					cell.style.color = "#ad7c5c";
