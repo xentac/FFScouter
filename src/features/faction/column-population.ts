@@ -252,38 +252,35 @@ export async function apply_ff_columns(membersList: HTMLElement) {
 			const text_color = "white";
 			cell.style.textShadow = "1px 0 0 #000, 0 -1px 0 #000, 0 1px 0 #000, -1px 0 0 #000";
 			let highestIndex = 1;
-			try{
-				var distrib = [data.spies[0]["strength"], data.spies[0]["defense"], data.spies[0]["speed"], data.spies[0]["dexterity"]];
-				highestIndex = distrib.reduce((maxIdx, val, idx, arr) => +val > +arr[maxIdx] ? idx : maxIdx, 0) + 1;
-				if (Math.max(...Object.values(data.distribution.stats_percentage).filter(v => typeof v === "number"))>=ffconfig.color_estimates_threshold){
-					switch(highestIndex) {
-						case 1:
-						cell.style.color = "#ad7c5c";
-						//cell.style.color = ffconfig.colorDef;
-						break;
-						case 2:
-						cell.style.color = "#6ea9a9";
-						//cell.style.color = ffconfig.colorDex;
-						break;
-						case 3:
-						cell.style.color = "#807b54";
-						//cell.style.color = ffconfig.colorStr; 
-						break;
-						case 4:
-						cell.style.color = "#ae67bb";
-						//cell.style.color = ffconfig.colorSpd;
-						break;
-						default:
-						cell.style.color = text_color;
-					}
-				}
-				else{
+			var distrib = [data.spies[0]["strength"], data.spies[0]["defense"], data.spies[0]["speed"], data.spies[0]["dexterity"]];
+			highestIndex = distrib.reduce((maxIdx, val, idx, arr) => +val > +arr[maxIdx] ? idx : maxIdx, 0) + 1;
+			if (Math.max(...Object.values(data.distribution.stats_percentage).filter(v => typeof v === "number"))>=ffconfig.color_estimates_threshold){
+				switch(highestIndex) {
+					case 1:
+					cell.style.color = "#ad7c5c";
+					//cell.style.color = ffconfig.colorDef;
+					break;
+					case 2:
+					cell.style.color = "#6ea9a9";
+					//cell.style.color = ffconfig.colorDex;
+					break;
+					case 3:
+					cell.style.color = "#807b54";
+					//cell.style.color = ffconfig.colorStr; 
+					break;
+					case 4:
+					cell.style.color = "#ae67bb";
+					//cell.style.color = ffconfig.colorSpd;
+					break;
+					default:
 					cell.style.color = text_color;
 				}
 			}
-			catch(err){
+			else{
+				cell.style.color = text_color;
 			}
-		}else{
+		}
+		else{
 			const text_color = get_contrast_color(bg_color);
 			cell.style.backgroundColor = bg_color;
 			cell.style.color = text_color;
