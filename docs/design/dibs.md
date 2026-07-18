@@ -155,6 +155,9 @@ An **Eligible Requester** is a current member of a faction in an active ranked w
   holds, and checks membership live. A bare Discord identity is never enough — allocation ranks on
   per-player war data, so the system must know *which Torn player* clicked.
 
+Participation additionally requires premium on that player ID — reads don't; see
+[Premium model](#premium-model).
+
 Outsiders (allies, mercs, alts) are categorically ineligible. Mid-war membership churn is not a
 handled state: Torn locks faction membership during a ranked war. If no one in a faction is
 registered, dibs is vacuously unavailable — which is fine, because then no one can call dibs
@@ -275,3 +278,93 @@ stale UI returns "already claimed by X," never a wrong grant.
 - Hit attribution, fulfillment rates, poach naming — all gated on the optional v2 faction AA key.
 - Cross-war fairness memory.
 - Mechanical enforcement of dibs. Not possible in Torn; permanently a non-goal.
+
+## Relationship to the existing Hit Calling API
+
+ffscouter.com already ships a "Hit Calling" API (`/api/v1/hit-calling/*`: `claims`, `claim`,
+`unclaim`, `wipe` — see https://ffscouter.com/api-docs#hit-calling). **This design replaces it.**
+As far as we know nobody is using it, so there is no migration story — the endpoints are retired
+in favor of the dibs protocol. This section records what it was and why the replacement is not
+just a rewrite but a different answer to the problem.
+
+### What Hit Calling is
+
+Chat dibs with a database. Any premium faction member may claim any Torn target at any time;
+multiple members' claims on one target form a FIFO queue ordered by arrival ("call order"), with a
+`position` per claim; claims expire on a faction-configured TTL (30s–15min) counted from claim
+*creation*; all claims, claimer names, and positions are fully visible to the whole faction (and
+sealed from non-members). It fixes the record-keeping failures of chat — there is one shared
+ordering, an unambiguous holder, and an auditable trail — and both systems share that fix's
+foundation: server-authoritative state, scoped to the faction.
+
+### The fundamental difference
+
+Hit Calling resolves contention by **arrival order**. That is first-past-the-chat relocated into
+an API: faster connections and faster fingers still win, just with a UUID attached. This design's
+core invariant — *all requests within a window are identical; arrival order is never an allocator
+input* — is a direct rejection of that model. Contention is resolved by a sealed request window
+and a deterministic fairness allocator instead of by who clicked first. Everything else that
+differs follows from that choice plus war-scoping:
+
+| Dimension | Hit Calling (retired) | Dibs (this design) |
+|---|---|---|
+| Contention | FIFO queue by arrival, `position` 1..n | Sealed window, ranked-factor allocation; one holder |
+| Anchor | None — claim any target, any time | Hospital exit timestamp drives the lifecycle |
+| Expiry | TTL from claim *creation* | Grace after *natural exit*; early exit voids |
+| War awareness | None | War is the unit of all state |
+| Fairness data | None | Least-recently-won ledger + war score |
+| Concurrent claims | Up to 30/player; same target claimable repeatedly | Unlimited requests (a set, not a queue); soft cap on *held* dibs |
+| Intra-faction visibility | Fully transparent, names and positions | Sealed-bid: count only until allocation |
+| Handoff | Unclaim → next queue position inherits | Release → allocator re-runs over survivors |
+
+The one structural idea Hit Calling got right survives here in a different form: its queue —
+multiple standing claims per target, one effective winner, inheritance on release — is the
+ancestor of this design's surviving request pool. The difference is that theirs inherits by
+arrival order and ours by fairness.
+
+### How the retired model gets abused
+
+The FIFO-with-TTL model is not just unfair at the margins; it is trivially farmable:
+
+- **Mass pre-claiming.** One player can hold 30 simultaneous claims across 30 targets, placed the
+  moment each target enters hospital. War hospital stays run ~20–30 minutes minimum, and the
+  maximum TTL is 15 minutes — so a claim placed at hospitalization can be *refreshed once* and
+  still hold position 1 at exit. A single sufficiently-online player (or a trivial script — the
+  API is scriptable by design) locks up every upcoming exit and starves the rest of the faction
+  indefinitely. There is no fairness factor to push back; it is first come, first served, forever.
+- **Queue stuffing.** Repeat claims by the same member on the same target each append a new queue
+  entry, so one player can occupy positions 1 *and* 3 of the same target's queue — even the
+  "next in line inherits" consolation is capturable.
+- **Racing rewarded.** Because position is arrival order, the rational play is exactly the chat
+  pathology: automate claiming as fast as possible. The system's own rate limits (30 claims/min)
+  are the only brake, and they are generous enough to sustain the mass-pre-claim strategy.
+
+The dibs design closes each of these structurally rather than with limits: requests are a **set**
+(no stuffing — a second request on the same target is a no-op), arrival order confers **nothing**
+(no racing — a request at 1:59 and 1:31 are identical), and the allocator's least-recently-won
+factor plus the soft cap make sustained monopolization self-defeating — every win pushes you to
+the back of the fairness order, so the mass-claimer converges on winning only what nobody else
+wants. Starvation of active requesters is impossible by construction, not discouraged by policy.
+
+### Premium model
+
+Dibs stays premium, like the Hit Calling API it replaces — but the gate splits by operation:
+
+- **Writes (request, withdraw, release — i.e. participation) require premium.** Premium hangs on
+  the **Torn player ID**, not on an API key, which is what lets the keyless Discord-only user
+  participate: their Discord verification resolves to a player ID, and that ID either has premium
+  or doesn't. In practice the system is only really useful to factions that buy premium for all
+  their members; that faction-wide purchase is the expected adoption unit.
+- **Reads are open to every verified faction member,** premium or not: the badge, claim counts,
+  and "held by X." Discord forces this anyway — lifecycle messages sit in a channel any member can
+  read — and a script that hides badges from non-premium members would make them poach blind while
+  the Discord lurker knows better. A member who can see "held by X" can respect it; one who can't
+  is a poaching accident generating exactly the disputes the system exists to kill. The visible
+  badge is also, frankly, the upsell.
+
+Acknowledged trade-off: this is a raw deal for the *individual* non-premium member in a mixed
+faction. They are bound by the social contract — poach a claimed target and the faction is still
+mad — while having no access to its protections, and no way to claim cover for themselves. The
+design accepts this asymmetry deliberately: it is the pressure that makes "buy premium for
+everyone" the coherent faction-level decision, and the alternative (gating reads too) converts the
+asymmetry into blind poaching, which is worse for everyone including the premium members.
