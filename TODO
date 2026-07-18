@@ -3,7 +3,10 @@
 - Configure positioning of FF chain button (fixed floating, relative to other elements, etc)
 - Add better error messages for when you have a bad key (specifically that the key provided to ff scouter script isn't valid or is not registered)
 - Add support for flight tracking during raids
-- Let users configure whether they settings to show on every profile page or just their own
+- When scaling markers < 100%, the arrow doesn't stay at the top of the row
+  - Elements are not scaled proportionally with stars and spies no matter what
+- On profile and attack pages "Est" should say "Spy" if using tornstats
+- Add marker or icon to FF/Est to signify which stat is the high stat for a premium/spy estimate
 
 # React Doctor follow-ups (re-run: v0.5.8, after CSS-modules migration + Fedded/Fallen)
 
