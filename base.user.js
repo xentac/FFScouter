@@ -1,12 +1,13 @@
 // ==UserScript==
 // @name         FF Scouter V2
 // @namespace    Violentmonkey Scripts
-// @version      3.0.1
+// @version      3.1
 // @author       xentac [3354782], MAVRI [2402357], rDacted [2670953], Weav3r [1853324], Glasnost [1844049]
 // @description  Shows the expected Fair Fight score against targets and faction war status
 // @license      GPLv3
 // @copyright    2026, xentac
 // @match        https://www.torn.com/*
+// @require      https://www.torn.com/builds/react-umd/react-dom.19.2.0.93c06d8e.production.js
 // @connect      ffscouter.com
 // @grant        GM_xmlhttpRequest
 // @grant        unsafeWindow
@@ -26,22 +27,6 @@
     StartTime2[StartTime2["DocumentEnd"] = 2] = "DocumentEnd";
     return StartTime2;
   })(StartTime || {});
-  let _react$1;
-  function getReact$1() {
-    return _react$1 ??= unsafeWindow.React;
-  }
-  const FRAGMENT_SENTINEL = Symbol("ReactFragment");
-  const Fragment = FRAGMENT_SENTINEL;
-  function jsx(type, { children, ...props }, key) {
-    const R = getReact$1();
-    const realType = type === FRAGMENT_SENTINEL ? R.Fragment : type;
-    if (key !== void 0) props.key = key;
-    if (children === void 0) {
-      return R.createElement(realType, props);
-    }
-    return Array.isArray(children) ? R.createElement(realType, props, ...children) : R.createElement(realType, props, children);
-  }
-  const jsxs = jsx;
   function isInPDA() {
     return typeof window !== "undefined" && typeof window.PDA_httpGet === "function";
   }
@@ -281,160 +266,6 @@ clearAll() {
       }
     }
   }
-  var TornApiError;
-  (function(TornApiError2) {
-    TornApiError2[TornApiError2["UNKNOWN_ERROR"] = 0] = "UNKNOWN_ERROR";
-    TornApiError2[TornApiError2["KEY_EMPTY"] = 1] = "KEY_EMPTY";
-    TornApiError2[TornApiError2["INCORRECT_KEY"] = 2] = "INCORRECT_KEY";
-    TornApiError2[TornApiError2["WRONG_TYPE"] = 3] = "WRONG_TYPE";
-    TornApiError2[TornApiError2["WRONG_FIELDS"] = 4] = "WRONG_FIELDS";
-    TornApiError2[TornApiError2["TOO_MANY_REQUESTS"] = 5] = "TOO_MANY_REQUESTS";
-    TornApiError2[TornApiError2["INCORRECT_ID"] = 6] = "INCORRECT_ID";
-    TornApiError2[TornApiError2["INCORRECT_RELATION"] = 7] = "INCORRECT_RELATION";
-    TornApiError2[TornApiError2["IP_BLOCK"] = 8] = "IP_BLOCK";
-    TornApiError2[TornApiError2["API_DISABLED"] = 9] = "API_DISABLED";
-    TornApiError2[TornApiError2["KEY_FEDERAL_JAIL"] = 10] = "KEY_FEDERAL_JAIL";
-    TornApiError2[TornApiError2["KEY_CHANGE_ERROR"] = 11] = "KEY_CHANGE_ERROR";
-    TornApiError2[TornApiError2["KEY_READ_ERROR"] = 12] = "KEY_READ_ERROR";
-    TornApiError2[TornApiError2["KEY_TEMPORARILY_DISABLED_TO_INACTIVITY"] = 13] = "KEY_TEMPORARILY_DISABLED_TO_INACTIVITY";
-    TornApiError2[TornApiError2["DAILY_READ_LIMIT_REACHED"] = 14] = "DAILY_READ_LIMIT_REACHED";
-    TornApiError2[TornApiError2["TEMPORARY_ERROR"] = 15] = "TEMPORARY_ERROR";
-    TornApiError2[TornApiError2["ACCESS_LEVEL_KEY_NOT_HIGH"] = 16] = "ACCESS_LEVEL_KEY_NOT_HIGH";
-    TornApiError2[TornApiError2["BACKEND_ERROR_OCCURRED"] = 17] = "BACKEND_ERROR_OCCURRED";
-    TornApiError2[TornApiError2["API_KEY_HAS_BEEN_PAUSED"] = 18] = "API_KEY_HAS_BEEN_PAUSED";
-    TornApiError2[TornApiError2["MUST_BE_MIGRATED_TO_CRIMES"] = 19] = "MUST_BE_MIGRATED_TO_CRIMES";
-    TornApiError2[TornApiError2["RACE_NOT_YET_FINISHED"] = 20] = "RACE_NOT_YET_FINISHED";
-    TornApiError2[TornApiError2["INCORRECT_CATEGORY"] = 21] = "INCORRECT_CATEGORY";
-    TornApiError2[TornApiError2["SELECTION_ONLY_AVAILABLE_API_V1"] = 22] = "SELECTION_ONLY_AVAILABLE_API_V1";
-    TornApiError2[TornApiError2["SELECTION_ONLY_AVAILABLE_API_V2"] = 23] = "SELECTION_ONLY_AVAILABLE_API_V2";
-    TornApiError2[TornApiError2["CLOSED_TEMPORARILY"] = 24] = "CLOSED_TEMPORARILY";
-    TornApiError2[TornApiError2["INVALID_STAT_REQUESTED"] = 25] = "INVALID_STAT_REQUESTED";
-    TornApiError2[TornApiError2["ONLY_CATEGORY_OR_STATS_CAN"] = 26] = "ONLY_CATEGORY_OR_STATS_CAN";
-    TornApiError2[TornApiError2["MUST_BE_MIGRATED_TO_ORGANIZED"] = 27] = "MUST_BE_MIGRATED_TO_ORGANIZED";
-    TornApiError2[TornApiError2["INCORRECT_LOG_ID"] = 28] = "INCORRECT_LOG_ID";
-    TornApiError2[TornApiError2["CATEGORY_SELECTION_NOT_AVAILABLE_FOR"] = 29] = "CATEGORY_SELECTION_NOT_AVAILABLE_FOR";
-  })(TornApiError || (TornApiError = {}));
-  class HTTPClient {
-    canAbort() {
-      return false;
-    }
-  }
-  class AbortableHTTPClient extends HTTPClient {
-    canAbort() {
-      return true;
-    }
-  }
-  class FetchHTTPClient extends AbortableHTTPClient {
-    async getJson(url, timeout = void 0) {
-      let response;
-      if (timeout !== void 0) {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), timeout);
-        response = await fetch(url, { signal: controller.signal });
-        clearTimeout(timeoutId);
-      } else {
-        response = await fetch(url);
-      }
-      return await response.json();
-    }
-  }
-  class TornApiClient {
-    httpClient;
-    defaultComment;
-    defaultTimeout;
-    constructor(options = {}) {
-      this.httpClient = options.httpClient ?? new FetchHTTPClient();
-      this.defaultComment = options.defaultComment;
-      this.defaultTimeout = options.defaultTimeout;
-    }
-    async getV1({ section, selections, id, params = {}, key, comment, cache, expiry, timeout }) {
-      const cached = await cache?.get({
-        section,
-        selections,
-        id,
-        params,
-        key
-      });
-      if (cached)
-        return cached;
-      let url = `https://api.torn.com/${section}/${id ?? ""}`;
-      url = this.populateUrl(url, key, selections ?? [], comment, params ?? {});
-      if (this.httpClient.canAbort() && typeof timeout === "number") {
-        return this.httpClient.getJson(url, timeout).then(addToCache).catch(this.handleError);
-      } else {
-        return this.httpClient.getJson(url).then(addToCache).catch(this.handleError);
-      }
-      function addToCache(response) {
-        if ("error" in response)
-          return response;
-        cache?.set({
-          section,
-          selections,
-          id,
-          params,
-          key
-        }, response, expiry ?? Date.now() + 3e4);
-        return response;
-      }
-    }
-    async getV2({ section, selections, id, params = {}, key, comment, cache, expiry, timeout }) {
-      const cached = await cache?.get({
-        section,
-        selections,
-        id,
-        params,
-        key
-      });
-      if (cached)
-        return cached;
-      let url = `https://api.torn.com/v2/${section}/${id ?? ""}`;
-      url = this.populateUrl(url, key, selections ?? [], comment, params ?? {});
-      if (this.httpClient.canAbort() && typeof timeout === "number") {
-        return this.httpClient.getJson(url, timeout).then(addToCache).catch(this.handleError);
-      } else {
-        return this.httpClient.getJson(url).then(addToCache).catch(this.handleError);
-      }
-      function addToCache(response) {
-        if ("error" in response)
-          return response;
-        cache?.set({
-          section,
-          selections,
-          id,
-          params,
-          key
-        }, response, expiry ?? Date.now() + 3e4);
-        return response;
-      }
-    }
-    handleError(error) {
-      console.error(error);
-      return { error: { code: -1, error: generateErrorString(error) } };
-      function generateErrorString(e) {
-        switch (typeof e) {
-          case "string":
-            return e;
-          case "object": {
-            if (e instanceof Error)
-              return e.message;
-            return JSON.stringify(e);
-          }
-          default:
-            return e.toString();
-        }
-      }
-    }
-    populateUrl(url, key, selections, comment, params) {
-      const allParams = {
-        key,
-        comment: comment ?? this.defaultComment,
-        selections: selections.length ? selections.join(",") : void 0,
-        ...params
-      };
-      const query = Object.entries(allParams).filter((entry) => !!entry[1]).map(([key2, value]) => `${key2}=${value}`).join("&");
-      return `${url}?${query}`;
-    }
-  }
   var FactionsColDisplay = ((FactionsColDisplay2) => {
     FactionsColDisplay2["FAIR_FIGHT"] = "fair_fight";
     FactionsColDisplay2["BATTLE_STATS"] = "battle_stats";
@@ -485,8 +316,12 @@ clearAll() {
     network_interception_enabled: false,
     status_attack_links_enabled: true,
     debug_disable_pda_http: false,
+    debug_force_react_fallback: false,
     color_scheme: "classic",
-    custom_colors: null
+    custom_colors: null,
+    settings_panel_own_profile_only: false,
+    faction_filter_enabled: true,
+    war_filter_enabled: true
   };
   class FFConfig {
     constructor(name) {
@@ -692,6 +527,30 @@ clearAll() {
     set status_attack_links_enabled(val) {
       this.storage.set("status_attack_links_enabled", val);
     }
+    get settings_panel_own_profile_only() {
+      return this.storage.get(
+        "settings_panel_own_profile_only"
+) ?? CONFIG_DEFAULTS.settings_panel_own_profile_only;
+    }
+    set settings_panel_own_profile_only(val) {
+      this.storage.set("settings_panel_own_profile_only", val);
+    }
+    get faction_filter_enabled() {
+      return this.storage.get(
+        "faction_filter_enabled"
+) ?? CONFIG_DEFAULTS.faction_filter_enabled;
+    }
+    set faction_filter_enabled(val) {
+      this.storage.set("faction_filter_enabled", val);
+    }
+    get war_filter_enabled() {
+      return this.storage.get(
+        "war_filter_enabled"
+) ?? CONFIG_DEFAULTS.war_filter_enabled;
+    }
+    set war_filter_enabled(val) {
+      this.storage.set("war_filter_enabled", val);
+    }
     get debug_disable_pda_http() {
       return this.storage.get(
         "debug_disable_pda_http"
@@ -699,6 +558,14 @@ clearAll() {
     }
     set debug_disable_pda_http(val) {
       this.storage.set("debug_disable_pda_http", val);
+    }
+    get debug_force_react_fallback() {
+      return this.storage.get(
+        "debug_force_react_fallback"
+) ?? CONFIG_DEFAULTS.debug_force_react_fallback;
+    }
+    set debug_force_react_fallback(val) {
+      this.storage.set("debug_force_react_fallback", val);
     }
     get gauge_marker_type() {
       return this.storage.get(
@@ -895,17 +762,218 @@ clearAll() {
         "debug_disable_pda_http"
 );
       this.storage.remove(
+        "debug_force_react_fallback"
+);
+      this.storage.remove(
         "color_scheme"
 );
       this.storage.remove(
         "custom_colors"
 );
+      this.storage.remove(
+        "settings_panel_own_profile_only"
+);
+      this.storage.remove(
+        "faction_filter_enabled"
+);
+      this.storage.remove(
+        "war_filter_enabled"
+);
     }
   }
   const ffconfig = new FFConfig("ffsv3-config");
+  function unsafeWindowReact() {
+    return unsafeWindow;
+  }
+  function requiredReact() {
+    return globalThis;
+  }
+  function hasWorkingUnsafeWindowReact() {
+    const w = unsafeWindowReact();
+    return Boolean(w.React && w.ReactDOM);
+  }
+  function getReact() {
+    if (!ffconfig.debug_force_react_fallback && hasWorkingUnsafeWindowReact()) {
+      return unsafeWindowReact().React;
+    }
+    return requiredReact().React;
+  }
+  function getReactDOM() {
+    if (!ffconfig.debug_force_react_fallback && hasWorkingUnsafeWindowReact()) {
+      return unsafeWindowReact().ReactDOM;
+    }
+    return requiredReact().ReactDOM;
+  }
+  const FRAGMENT_SENTINEL = Symbol("ReactFragment");
+  const Fragment = FRAGMENT_SENTINEL;
+  function jsx(type, { children, ...props }, key) {
+    const R = getReact();
+    const createElement2 = R.createElement;
+    const realType = type === FRAGMENT_SENTINEL ? R.Fragment : type;
+    if (key !== void 0) props.key = key;
+    if (children === void 0) {
+      return createElement2(realType, props);
+    }
+    return Array.isArray(children) ? createElement2(realType, props, ...children) : createElement2(realType, props, children);
+  }
+  const jsxs = jsx;
+  var TornApiError;
+  (function(TornApiError2) {
+    TornApiError2[TornApiError2["UNKNOWN_ERROR"] = 0] = "UNKNOWN_ERROR";
+    TornApiError2[TornApiError2["KEY_EMPTY"] = 1] = "KEY_EMPTY";
+    TornApiError2[TornApiError2["INCORRECT_KEY"] = 2] = "INCORRECT_KEY";
+    TornApiError2[TornApiError2["WRONG_TYPE"] = 3] = "WRONG_TYPE";
+    TornApiError2[TornApiError2["WRONG_FIELDS"] = 4] = "WRONG_FIELDS";
+    TornApiError2[TornApiError2["TOO_MANY_REQUESTS"] = 5] = "TOO_MANY_REQUESTS";
+    TornApiError2[TornApiError2["INCORRECT_ID"] = 6] = "INCORRECT_ID";
+    TornApiError2[TornApiError2["INCORRECT_RELATION"] = 7] = "INCORRECT_RELATION";
+    TornApiError2[TornApiError2["IP_BLOCK"] = 8] = "IP_BLOCK";
+    TornApiError2[TornApiError2["API_DISABLED"] = 9] = "API_DISABLED";
+    TornApiError2[TornApiError2["KEY_FEDERAL_JAIL"] = 10] = "KEY_FEDERAL_JAIL";
+    TornApiError2[TornApiError2["KEY_CHANGE_ERROR"] = 11] = "KEY_CHANGE_ERROR";
+    TornApiError2[TornApiError2["KEY_READ_ERROR"] = 12] = "KEY_READ_ERROR";
+    TornApiError2[TornApiError2["KEY_TEMPORARILY_DISABLED_TO_INACTIVITY"] = 13] = "KEY_TEMPORARILY_DISABLED_TO_INACTIVITY";
+    TornApiError2[TornApiError2["DAILY_READ_LIMIT_REACHED"] = 14] = "DAILY_READ_LIMIT_REACHED";
+    TornApiError2[TornApiError2["TEMPORARY_ERROR"] = 15] = "TEMPORARY_ERROR";
+    TornApiError2[TornApiError2["ACCESS_LEVEL_KEY_NOT_HIGH"] = 16] = "ACCESS_LEVEL_KEY_NOT_HIGH";
+    TornApiError2[TornApiError2["BACKEND_ERROR_OCCURRED"] = 17] = "BACKEND_ERROR_OCCURRED";
+    TornApiError2[TornApiError2["API_KEY_HAS_BEEN_PAUSED"] = 18] = "API_KEY_HAS_BEEN_PAUSED";
+    TornApiError2[TornApiError2["MUST_BE_MIGRATED_TO_CRIMES"] = 19] = "MUST_BE_MIGRATED_TO_CRIMES";
+    TornApiError2[TornApiError2["RACE_NOT_YET_FINISHED"] = 20] = "RACE_NOT_YET_FINISHED";
+    TornApiError2[TornApiError2["INCORRECT_CATEGORY"] = 21] = "INCORRECT_CATEGORY";
+    TornApiError2[TornApiError2["SELECTION_ONLY_AVAILABLE_API_V1"] = 22] = "SELECTION_ONLY_AVAILABLE_API_V1";
+    TornApiError2[TornApiError2["SELECTION_ONLY_AVAILABLE_API_V2"] = 23] = "SELECTION_ONLY_AVAILABLE_API_V2";
+    TornApiError2[TornApiError2["CLOSED_TEMPORARILY"] = 24] = "CLOSED_TEMPORARILY";
+    TornApiError2[TornApiError2["INVALID_STAT_REQUESTED"] = 25] = "INVALID_STAT_REQUESTED";
+    TornApiError2[TornApiError2["ONLY_CATEGORY_OR_STATS_CAN"] = 26] = "ONLY_CATEGORY_OR_STATS_CAN";
+    TornApiError2[TornApiError2["MUST_BE_MIGRATED_TO_ORGANIZED"] = 27] = "MUST_BE_MIGRATED_TO_ORGANIZED";
+    TornApiError2[TornApiError2["INCORRECT_LOG_ID"] = 28] = "INCORRECT_LOG_ID";
+    TornApiError2[TornApiError2["CATEGORY_SELECTION_NOT_AVAILABLE_FOR"] = 29] = "CATEGORY_SELECTION_NOT_AVAILABLE_FOR";
+  })(TornApiError || (TornApiError = {}));
+  class HTTPClient {
+    canAbort() {
+      return false;
+    }
+  }
+  class AbortableHTTPClient extends HTTPClient {
+    canAbort() {
+      return true;
+    }
+  }
+  class FetchHTTPClient extends AbortableHTTPClient {
+    async getJson(url, timeout = void 0) {
+      let response;
+      if (timeout !== void 0) {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), timeout);
+        response = await fetch(url, { signal: controller.signal });
+        clearTimeout(timeoutId);
+      } else {
+        response = await fetch(url);
+      }
+      return await response.json();
+    }
+  }
+  class TornApiClient {
+    httpClient;
+    defaultComment;
+    defaultTimeout;
+    constructor(options = {}) {
+      this.httpClient = options.httpClient ?? new FetchHTTPClient();
+      this.defaultComment = options.defaultComment;
+      this.defaultTimeout = options.defaultTimeout;
+    }
+    async getV1({ section, selections, id, params = {}, key, comment, cache, expiry, timeout }) {
+      const cached = await cache?.get({
+        section,
+        selections,
+        id,
+        params,
+        key
+      });
+      if (cached)
+        return cached;
+      let url = `https://api.torn.com/${section}/${id ?? ""}`;
+      url = this.populateUrl(url, key, selections ?? [], comment, params ?? {});
+      if (this.httpClient.canAbort() && typeof timeout === "number") {
+        return this.httpClient.getJson(url, timeout).then(addToCache).catch(this.handleError);
+      } else {
+        return this.httpClient.getJson(url).then(addToCache).catch(this.handleError);
+      }
+      function addToCache(response) {
+        if ("error" in response)
+          return response;
+        cache?.set({
+          section,
+          selections,
+          id,
+          params,
+          key
+        }, response, expiry ?? Date.now() + 3e4);
+        return response;
+      }
+    }
+    async getV2({ section, selections, id, params = {}, key, comment, cache, expiry, timeout }) {
+      const cached = await cache?.get({
+        section,
+        selections,
+        id,
+        params,
+        key
+      });
+      if (cached)
+        return cached;
+      let url = `https://api.torn.com/v2/${section}/${id ?? ""}`;
+      url = this.populateUrl(url, key, selections ?? [], comment, params ?? {});
+      if (this.httpClient.canAbort() && typeof timeout === "number") {
+        return this.httpClient.getJson(url, timeout).then(addToCache).catch(this.handleError);
+      } else {
+        return this.httpClient.getJson(url).then(addToCache).catch(this.handleError);
+      }
+      function addToCache(response) {
+        if ("error" in response)
+          return response;
+        cache?.set({
+          section,
+          selections,
+          id,
+          params,
+          key
+        }, response, expiry ?? Date.now() + 3e4);
+        return response;
+      }
+    }
+    handleError(error) {
+      console.error(error);
+      return { error: { code: -1, error: generateErrorString(error) } };
+      function generateErrorString(e) {
+        switch (typeof e) {
+          case "string":
+            return e;
+          case "object": {
+            if (e instanceof Error)
+              return e.message;
+            return JSON.stringify(e);
+          }
+          default:
+            return e.toString();
+        }
+      }
+    }
+    populateUrl(url, key, selections, comment, params) {
+      const allParams = {
+        key,
+        comment: comment ?? this.defaultComment,
+        selections: selections.length ? selections.join(",") : void 0,
+        ...params
+      };
+      const query = Object.entries(allParams).filter((entry) => !!entry[1]).map(([key2, value]) => `${key2}=${value}`).join("&");
+      return `${url}?${query}`;
+    }
+  }
   const FF_SCOUTER_BASE_URL = "https://ffscouter.com/api/v1";
   new TornApiClient({
-    defaultComment: `FFScouterV2-${"3.0.1"}`,
+    defaultComment: `FFScouterV2-${"3.1"}`,
     defaultTimeout: 30
 });
   async function gmRequest(options) {
@@ -931,6 +999,11 @@ clearAll() {
       ["targets", player_ids.toString()]
     ]);
     return `${FF_SCOUTER_BASE_URL}/get-stats?${query.toString()}`;
+  };
+  const EMPTY_AVAILABLE_ESTIMATES = {
+    bss: null,
+    premium: null,
+    spies: null
   };
   function is_ff_success(resp) {
     return resp.code === void 0;
@@ -1024,6 +1097,8 @@ clearAll() {
             source: result.source ?? "bss",
             premium_insights_available: result.premium_insights_available ?? false,
             distribution,
+            available_estimates: result.available_estimates ?? EMPTY_AVAILABLE_ESTIMATES,
+            spies: result.spies ?? [],
             player_id: result.player_id
           });
         }
@@ -1278,6 +1353,31 @@ clearAll() {
     ffconfig,
     new Storage("ffsv3-check")
   );
+  function resolve_estimate(data) {
+    const candidate = data.available_estimates?.[data.source];
+    return {
+      source: data.source,
+      bs_estimate: candidate?.bs_estimate ?? data.bs_estimate,
+      bs_estimate_human: candidate?.bs_estimate_human ?? data.bs_estimate_human,
+      last_updated: candidate?.last_updated ?? data.last_updated,
+      fair_fight: candidate?.fair_fight ?? data.fair_fight
+    };
+  }
+  function extract_ff(data) {
+    return resolve_estimate(data).fair_fight;
+  }
+  function extract_bs_estimate(data) {
+    return resolve_estimate(data).bs_estimate;
+  }
+  function extract_bs_estimate_human(data) {
+    return resolve_estimate(data).bs_estimate_human;
+  }
+  function extract_source(data) {
+    return resolve_estimate(data).source;
+  }
+  function extract_last_updated(data) {
+    return resolve_estimate(data).last_updated;
+  }
   const instanceOfAny = (object, constructors) => constructors.some((c) => object instanceof c);
   let idbProxyableTypes;
   let cursorAdvanceMethods;
@@ -2251,7 +2351,9 @@ queryString.charCodeAt(pos - 1) === 63) {
         }
       };
       this.clear_cache = () => {
-        this.cache.delete_db();
+        this.cache.delete_db().catch((err) => {
+          log$f.error("Failed to delete IndexedDB cache", err);
+        });
         check_key_status.clear();
       };
       this.enqueue_api = (player_id) => {
@@ -2331,7 +2433,11 @@ queryString.charCodeAt(pos - 1) === 63) {
           next_run = this.calculate_next_api_run(results.limits);
         }
         this.schedule_api(next_run);
-        await this.cache.clean_expired();
+        try {
+          await this.cache.clean_expired();
+        } catch (err) {
+          log$f.error("Failed to clean expired cache entries", err);
+        }
       };
       this.calculate_next_api_run = (limits) => {
         if (limits.remaining <= 0) {
@@ -2488,10 +2594,26 @@ queryString.charCodeAt(pos - 1) === 63) {
   const HOUR = 60 * 60;
   const DAY = HOUR * 24;
   const OLD_ESTIMATE_INTERVAL = 14 * DAY;
+  function get_source_marker(source) {
+    switch (source) {
+      case "spies":
+        return { icon: "spy", label: "Faction spy data" };
+      case "premium":
+        return { icon: "premium", label: "Premium data" };
+      case "bss":
+        return null;
+    }
+  }
+  const SOURCE_MARKER_VIEWBOX = "0 0 20 20";
+  const SPY_ICON_LENS = { cx: 8, cy: 8, r: 5 };
+  const SPY_ICON_HANDLE = { x1: 12, y1: 12, x2: 18, y2: 18 };
+  const SPY_ICON_COLOR = "#4a90d9";
+  const PREMIUM_ICON_PATH_D = "M10,1 L12.47,6.6 L18.56,7.22 L13.99,11.3 L15.29,17.28 L10,14.2 L4.71,17.28 L6.01,11.3 L1.44,7.22 L7.53,6.6 Z";
+  const PREMIUM_ICON_COLOR = "#d4af37";
   function format_ff_score(d2) {
-    const ff = d2.fair_fight.toFixed(2);
+    const ff = extract_ff(d2).toFixed(2);
     const now = Date.now() / 1e3;
-    const age = now - d2.last_updated;
+    const age = now - extract_last_updated(d2);
     var suffix = "";
     if (age > OLD_ESTIMATE_INTERVAL) {
       suffix = "?";
@@ -2499,13 +2621,14 @@ queryString.charCodeAt(pos - 1) === 63) {
     return `${ff}${suffix}`;
   }
   function format_difficulty_text(d2) {
-    if (d2.fair_fight <= 1) {
+    const ff = extract_ff(d2);
+    if (ff <= 1) {
       return "Extremely easy";
-    } else if (d2.fair_fight <= 2) {
+    } else if (ff <= 2) {
       return "Easy";
-    } else if (d2.fair_fight <= 3.5) {
+    } else if (ff <= 3.5) {
       return "Moderately difficult";
-    } else if (d2.fair_fight <= 4.5) {
+    } else if (ff <= 4.5) {
       return "Difficult";
     } else {
       return "May be impossible";
@@ -2679,7 +2802,7 @@ queryString.charCodeAt(pos - 1) === 63) {
     if (d2.no_data) {
       return NO_DATA_COLOR;
     }
-    let ff = d2.fair_fight;
+    let ff = extract_ff(d2);
     if (ff < 1) {
       ff = 1;
     } else if (ff > 5) {
@@ -2702,7 +2825,7 @@ queryString.charCodeAt(pos - 1) === 63) {
     const max_ff = ffconfig.max_ff_range;
     const low_mid_percent = 33;
     const mid_high_percent = 66;
-    const ff_lower = Math.min(d2.fair_fight, max_ff);
+    const ff_lower = Math.min(extract_ff(d2), max_ff);
     let percent;
     if (ff_lower < low_ff) {
       percent = (ff_lower - 1) / (low_ff - 1) * low_mid_percent;
@@ -2740,10 +2863,6 @@ queryString.charCodeAt(pos - 1) === 63) {
     const trimmed = valStr.trim();
     if (!trimmed) return null;
     return parse(trimmed, "s");
-  }
-  let _react;
-  function getReact() {
-    return _react ??= unsafeWindow.React;
   }
   new Proxy({}, {
     get(_, prop) {
@@ -2794,6 +2913,54 @@ queryString.charCodeAt(pos - 1) === 63) {
     "ffscouter-info-line__badge": "_ffscouter-info-line__badge_xi5zk_8",
     "ffscouter-info-line__premium-upgrade": "_ffscouter-info-line__premium-upgrade_xi5zk_15"
   };
+  function SourceMarkerIcon({ marker, className }) {
+    return jsxs(
+      "svg",
+      {
+        className: className ?? "ffscouter-inline-source-marker",
+        viewBox: SOURCE_MARKER_VIEWBOX,
+        role: "img",
+        "aria-label": marker.label,
+        children: [
+jsx("title", { children: marker.label }),
+          marker.icon === "spy" ? jsxs(Fragment, { children: [
+jsx(
+              "circle",
+              {
+                cx: SPY_ICON_LENS.cx,
+                cy: SPY_ICON_LENS.cy,
+                r: SPY_ICON_LENS.r,
+                fill: SPY_ICON_COLOR,
+                stroke: "#000000",
+                strokeWidth: 1.5
+              }
+            ),
+jsx(
+              "line",
+              {
+                x1: SPY_ICON_HANDLE.x1,
+                y1: SPY_ICON_HANDLE.y1,
+                x2: SPY_ICON_HANDLE.x2,
+                y2: SPY_ICON_HANDLE.y2,
+                stroke: "#000000",
+                strokeWidth: 2.5,
+                strokeLinecap: "round"
+              }
+            )
+          ] }) : jsx(
+            "path",
+            {
+              d: PREMIUM_ICON_PATH_D,
+              fill: PREMIUM_ICON_COLOR,
+              stroke: "#000000",
+              strokeWidth: 1.2,
+              strokeLinejoin: "round"
+            }
+          )
+        ]
+      }
+    );
+  }
   const log$e = logger.child("ui");
   const PREMIUM_UPGRADE_URL$1 = "https://ffscouter.com/premium";
   function FFHeaderLine({ playerId }) {
@@ -2847,9 +3014,10 @@ jsx(
     }
     const ffString = format_ff_score(data);
     const difficulty = format_difficulty_text(data);
-    const fresh = format_relative_time(data.last_updated);
+    const fresh = format_relative_time(extract_last_updated(data));
     const backgroundColor = get_ff_colour(data);
     const textColor = get_contrast_color(backgroundColor);
+    const sourceMarker = get_source_marker(extract_source(data));
     let extraDetailsLine = null;
     if (data.distribution?.distribution_human) {
       const ageStr = format_relative_time(data.distribution.last_updated);
@@ -2902,6 +3070,7 @@ jsxs(
           ]
         }
       ),
+      sourceMarker && jsx(SourceMarkerIcon, { marker: sourceMarker }),
 jsxs(
         "span",
         {
@@ -2914,7 +3083,7 @@ jsxs(
           },
           children: [
             "Est. Stats: ",
-jsx("span", { children: data.bs_estimate_human })
+jsx("span", { children: extract_bs_estimate_human(data) })
           ]
         }
       ),
@@ -2923,6 +3092,11 @@ jsx("span", { children: data.bs_estimate_human })
   }
   const log$d = logger.child("dom");
   const ID_PARAMS = ["XID", "user2ID"];
+  var GaugeAttachMode = ((GaugeAttachMode2) => {
+    GaugeAttachMode2["HONOR_BAR"] = "honor-bar";
+    GaugeAttachMode2["FALLBACK"] = "fallback";
+    return GaugeAttachMode2;
+  })(GaugeAttachMode || {});
   function extract_id_from_url(url) {
     const parsed = new URL(url);
     const search = new URLSearchParams(parsed.search);
@@ -2996,8 +3170,72 @@ jsx("span", { children: data.bs_estimate_human })
     svg.classList.add("ffscouter-arrow");
     return svg;
   }
+  function make_source_marker_svg(marker, className) {
+    const div = document.createElement("div");
+    const inner = marker.icon === "spy" ? `<circle cx="${SPY_ICON_LENS.cx}" cy="${SPY_ICON_LENS.cy}" r="${SPY_ICON_LENS.r}" fill="${SPY_ICON_COLOR}" stroke="#000000" stroke-width="1.5" />
+         <line x1="${SPY_ICON_HANDLE.x1}" y1="${SPY_ICON_HANDLE.y1}" x2="${SPY_ICON_HANDLE.x2}" y2="${SPY_ICON_HANDLE.y2}" stroke="#000000" stroke-width="2.5" stroke-linecap="round" />` : `<path d="${PREMIUM_ICON_PATH_D}" fill="${PREMIUM_ICON_COLOR}" stroke="#000000" stroke-width="1.2" stroke-linejoin="round" />`;
+    div.innerHTML = `<svg class="${className}" viewBox="${SOURCE_MARKER_VIEWBOX}" role="img" aria-label="${marker.label}">
+    <title>${marker.label}</title>
+    ${inner}
+  </svg>`;
+    if (!div.firstChild || !(div.firstChild instanceof SVGElement)) {
+      throw new Error(
+        "Wasn't able to extract source marker SVG out of div element"
+      );
+    }
+    return div.firstChild;
+  }
+  function make_source_marker_badge(d2) {
+    const marker = get_source_marker(extract_source(d2));
+    if (!marker) {
+      return null;
+    }
+    return make_source_marker_svg(marker, "ffscouter-source-marker");
+  }
+  const BUBBLE_FONT_SIZE_PX = 8.5;
+  const BUBBLE_MIN_WIDTH_EM = 2.5882;
+  const BUBBLE_PADDING_EM = 0.4706;
+  const BUBBLE_FONT_FAMILY = "Geneva, Arial, sans-serif";
+  const BUBBLE_WIDTH_SAFETY_PX = 1;
+  let measure_canvas_ctx;
+  function get_measure_canvas_ctx() {
+    if (measure_canvas_ctx === void 0) {
+      measure_canvas_ctx = document.createElement("canvas").getContext("2d");
+    }
+    return measure_canvas_ctx;
+  }
+  const bubble_width_cache = new Map();
+  function measure_bubble_width(text) {
+    const scale = ffconfig.gauge_marker_scale / 100;
+    const border_width = ffconfig.gauge_marker_border_width * scale;
+    const cache_key = `${text}|${scale}|${border_width}`;
+    const cached = bubble_width_cache.get(cache_key);
+    if (cached !== void 0) {
+      return cached;
+    }
+    const font_size = BUBBLE_FONT_SIZE_PX * scale;
+    const ctx = get_measure_canvas_ctx();
+    let text_width = 0;
+    if (ctx) {
+      ctx.font = `bold ${font_size}px ${BUBBLE_FONT_FAMILY}`;
+      text_width = ctx.measureText(text).width;
+    }
+    const padding = BUBBLE_PADDING_EM * font_size;
+    const min_width = BUBBLE_MIN_WIDTH_EM * font_size;
+    const width = Math.max(min_width, text_width + padding * 2) + border_width * 2 + BUBBLE_WIDTH_SAFETY_PX;
+    bubble_width_cache.set(cache_key, width);
+    return width;
+  }
+  function measure_marker_width(marker) {
+    const bubble = marker.querySelector(".ffscouter-bubble");
+    if (!bubble) {
+      return null;
+    }
+    return measure_bubble_width(bubble.textContent ?? "");
+  }
   function make_marker(d2) {
     const markerType = ffconfig.gauge_marker_type;
+    let shape;
     if (markerType === GaugeMarkerType.BUBBLE_FF || markerType === GaugeMarkerType.BUBBLE_ESTIMATE) {
       const fill = get_ff_arrow_colour(d2);
       const contrastColor = get_contrast_color(fill);
@@ -3007,15 +3245,24 @@ jsx("span", { children: data.bs_estimate_human })
       bubble.style.color = contrastColor;
       bubble.style.borderWidth = `${ffconfig.gauge_marker_border_width * (ffconfig.gauge_marker_scale / 100)}px`;
       if (markerType === GaugeMarkerType.BUBBLE_FF) {
-        bubble.textContent = d2.fair_fight.toFixed(2);
+        bubble.textContent = extract_ff(d2).toFixed(2);
       } else {
-        bubble.textContent = d2.bs_estimate_human || "N/A";
+        bubble.textContent = extract_bs_estimate_human(d2) || "N/A";
       }
-      return bubble;
+      shape = bubble;
+    } else {
+      shape = make_arrow(d2);
     }
-    return make_arrow(d2);
+    const wrapper = document.createElement("div");
+    wrapper.classList.add("ffscouter-marker-wrapper");
+    wrapper.appendChild(shape);
+    const badge = make_source_marker_badge(d2);
+    if (badge) {
+      wrapper.appendChild(badge);
+    }
+    return wrapper;
   }
-  function add_ff_arrow(element, featureName = "Unknown") {
+  function add_ff_arrow(element, featureName, attachMode) {
     const player_id = get_player_id_in_element(element);
     if (!player_id) {
       return;
@@ -3035,16 +3282,30 @@ jsx("span", { children: data.bs_estimate_human })
       const percent = ff_to_percent(d2);
       element.classList.add("ffscouter-gauge");
       element.style.setProperty("--band-percent", `${percent}`);
+      element.setAttribute("data-ffscouter-attach-mode", attachMode);
+      element.setAttribute(
+        "data-ffscouter-band-side",
+        percent > 50 ? "right" : "left"
+      );
       document.body.style.setProperty(
         "--ffscouter-marker-scale",
         `${ffconfig.gauge_marker_scale / 100}`
       );
-      const a = element.querySelector(".ffscouter-arrow, .ffscouter-bubble");
-      if (a) {
-        a.remove();
+      const existing = element.querySelector(".ffscouter-marker-wrapper");
+      if (existing) {
+        existing.remove();
       }
-      element.appendChild(make_marker(d2));
+      const marker = element.appendChild(make_marker(d2));
+      const width = measure_marker_width(marker);
+      if (width !== null) {
+        element.style.setProperty(
+          "--ffscouter-marker-actual-width",
+          `${width}px`
+        );
+      }
       ffscouter.add_analytics_entry(featureName, player_id, "applied");
+    }).catch((err) => {
+      log$d.error(err);
     });
   }
   function has_href(el) {
@@ -3124,16 +3385,16 @@ jsx("span", { children: data.bs_estimate_human })
     }
     return status.toLowerCase();
   }
-  function apply_ff_gauge_selector(node_list, featureName = "Unknown") {
+  function apply_ff_gauge_selector(node_list, featureName, attachMode) {
     for (const node of node_list) {
-      add_ff_arrow(node, featureName);
+      add_ff_arrow(node, featureName, attachMode);
     }
   }
-  function apply_ff_gauge(element, featureName = "Unknown") {
+  function apply_ff_gauge(element, featureName, attachMode) {
     if (!(element instanceof HTMLElement)) {
       return;
     }
-    add_ff_arrow(element, featureName);
+    add_ff_arrow(element, featureName, attachMode);
   }
   async function wait_for_element(querySelector, timeout, root) {
     const existingElement = document.querySelector(querySelector);
@@ -3347,10 +3608,6 @@ jsx("span", { children: data.bs_estimate_human })
     ) ?? "";
     return { ...classes, tab };
   }
-  let _reactDOM;
-  function getReactDOM() {
-    return _reactDOM ??= unsafeWindow.ReactDOM;
-  }
   new Proxy({}, {
     get(_, prop) {
       return getReactDOM()[prop];
@@ -3502,6 +3759,7 @@ jsx("span", { children: data.bs_estimate_human })
     onFilterChange,
     ref,
     initialHasLastActionData = false,
+    filteringDisabled = false,
     onReady
   }) {
     const [filterState, setFilterState] = useState(
@@ -3524,6 +3782,8 @@ jsx("span", { children: data.bs_estimate_human })
     hasLastActionDataRef.current = hasLastActionData;
     const modeRef = useRef(mode);
     modeRef.current = mode;
+    const filteringDisabledRef = useRef(filteringDisabled);
+    filteringDisabledRef.current = filteringDisabled;
     const onFilterChangeRef = useRef(onFilterChange);
     onFilterChangeRef.current = onFilterChange;
     const debounceTimerRef = useRef(null);
@@ -3538,7 +3798,7 @@ jsx("span", { children: data.bs_estimate_human })
       const s2 = filterStateRef.current;
       return {
         sortBy: s2.sortBy,
-        filterEnabled: s2.filterEnabled,
+        filterEnabled: filteringDisabledRef.current ? false : s2.filterEnabled,
         activity: s2.activity,
 
 
@@ -3863,7 +4123,7 @@ status: modeRef.current === "war" ? { ...s2.status, fallen: false } : s2.status,
       };
       const factionId1 = ids[0];
       const factionId2 = ids[1];
-      const scouterUrl = `https://ffscouter.com/faction-activity-comparison?faction_id_1=${factionId1}&faction_id_2=${factionId2}&start_at=${encodeURIComponent(formatUTC(start))}&end_at=${encodeURIComponent(formatUTC(now))}&bucket_minutes=5`;
+      const scouterUrl = `https://ffscouter.com/faction-activity-comparison?faction_id_1=${factionId1}&faction_id_2=${factionId2}&start_at=${encodeURIComponent(formatUTC(start))}&end_at=${encodeURIComponent(formatUTC(now))}&bucket_minutes=60`;
       window.open(scouterUrl, "_blank");
     };
     const s = filterState;
@@ -4487,10 +4747,10 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       }
       const data = dataMap.get(rp.player_id);
       if (data && !data.no_data) {
-        rp.row.dataset["ffValue"] = String(data.fair_fight);
-        rp.row.dataset["estValue"] = String(data.bs_estimate);
+        rp.row.dataset["ffValue"] = String(extract_ff(data));
+        rp.row.dataset["estValue"] = String(extract_bs_estimate(data));
         if (cell) {
-          const text = isEst ? data.bs_estimate_human : format_ff_score(data);
+          const text = isEst ? extract_bs_estimate_human(data) : format_ff_score(data);
           const bg_color = get_ff_colour(data);
           const text_color = get_contrast_color(bg_color);
           cell.style.backgroundColor = bg_color;
@@ -4552,9 +4812,12 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     loadObserver.observe(root, { childList: true, subtree: true });
     cleanup_when_detached(root, () => loadObserver.disconnect());
   }
+  const filterBoxRoots = new Map();
   function mountFilterBox(mode, onFilterChange) {
+    filterBoxRoots.get(mode)?.unmount();
     const container = document.createElement("div");
-    container.style.display = "contents";
+    const filteringDisabled = mode === "war" ? !ffconfig.war_filter_enabled : !ffconfig.faction_filter_enabled;
+    container.style.display = filteringDisabled ? "none" : "contents";
     container.setAttribute("data-ff-filter-box", "true");
     container.setAttribute("data-mode", mode);
     const ref = { current: null };
@@ -4591,7 +4854,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       setSortBy: (val) => runOrBuffer((h2) => h2.setSortBy(val)),
       getFilterSnapshot: () => ready && ref.current ? ref.current.getFilterSnapshot() : {
         sortBy: "none",
-        filterEnabled: true,
+        filterEnabled: !filteringDisabled,
         activity: { online: true, idle: true, offline: true },
         status: {
           okay: true,
@@ -4619,12 +4882,15 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       dispatchChange: () => runOrBuffer((h2) => h2.dispatchChange())
     };
     container.__ffHandle = handle;
-    createRoot(container).render(
+    const root = createRoot(container);
+    filterBoxRoots.set(mode, root);
+    root.render(
       createElement(FFFactionFilterBox, {
         mode,
         onFilterChange,
         ref,
         initialHasLastActionData: hasLastActionDataProp,
+        filteringDisabled,
         onReady
       })
     );
@@ -4709,7 +4975,9 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     membersList.setAttribute("data-ffscouter-initialized", "true");
     inject_filter_box(membersList);
     setup_header_click(membersList, ".table-header", "[role='button']");
-    apply_ff_columns(membersList);
+    apply_ff_columns(membersList).catch((err) => {
+      log$a.error(err);
+    });
     const target = membersList.querySelector(".table-body") || membersList;
     setup_reapply_watcher(
       membersList,
@@ -4763,9 +5031,14 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     }
     apply_ff_gauge_selector(
       root.querySelectorAll(".honor-text-wrap"),
-      FEATURE_NAME$4
+      FEATURE_NAME$4,
+      GaugeAttachMode.HONOR_BAR
     );
-    apply_ff_gauge_selector(root.querySelectorAll(".member"), FEATURE_NAME$4);
+    apply_ff_gauge_selector(
+      root.querySelectorAll(".member"),
+      FEATURE_NAME$4,
+      GaugeAttachMode.FALLBACK
+    );
     for (const l of root.querySelectorAll(".members-list, .chain-attacks-list")) {
       if (l instanceof HTMLElement) {
         apply_ff_members_list(l);
@@ -4840,7 +5113,9 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
   }
   function initialize_war_list(list) {
     setup_header_click(list, ".white-grad", "[class*='tab___']");
-    apply_ff_columns(list);
+    apply_ff_columns(list).catch((err) => {
+      log$a.error(err);
+    });
     setup_reapply_watcher(list, list, () => ffconfig.war_col_display);
   }
   const process_page = () => {
@@ -4849,12 +5124,16 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
         log$a.debug("Found members-list!");
         monitor_member_list(node);
       }
+    }).catch((err) => {
+      log$a.error(err);
     });
     wait_for_element(".chain-attacks-list", 1e4).then((node) => {
       if (node instanceof HTMLElement) {
         log$a.debug("Found chain-attacks-list!");
         monitor_member_list(node, true);
       }
+    }).catch((err) => {
+      log$a.error(err);
     });
     wait_for_element("#faction_war_list_id", 1e4).then(async (node) => {
       if (!node) {
@@ -4862,19 +5141,26 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       }
       log$a.debug("Found faction_war_list_id");
       const descriptions_observer = new MutationObserver(async (mutations) => {
-        for (const mutation of mutations) {
-          for (const node2 of mutation.addedNodes) {
-            if (node2 instanceof HTMLElement && node2.classList.contains("descriptions")) {
-              log$a.debug(
-                "Observed mutation that included adding descriptions",
-                node2
-              );
-              const faction_war = await wait_for_element(".faction-war", 1e4);
-              if (faction_war instanceof HTMLElement) {
-                setup_war_features(faction_war);
+        try {
+          for (const mutation of mutations) {
+            for (const node2 of mutation.addedNodes) {
+              if (node2 instanceof HTMLElement && node2.classList.contains("descriptions")) {
+                log$a.debug(
+                  "Observed mutation that included adding descriptions",
+                  node2
+                );
+                const faction_war = await wait_for_element(
+                  ".faction-war",
+                  1e4
+                );
+                if (faction_war instanceof HTMLElement) {
+                  setup_war_features(faction_war);
+                }
               }
             }
           }
+        } catch (err) {
+          log$a.error(err);
         }
       });
       descriptions_observer.observe(node, { childList: true });
@@ -4892,6 +5178,8 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
           setup_war_features(faction_war);
         }
       }
+    }).catch((err) => {
+      log$a.error(err);
     });
   };
   function should_run_faction() {
@@ -4925,7 +5213,9 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
           );
           for (const list of lists) {
             if (list instanceof HTMLElement) {
-              apply_ff_columns(list);
+              apply_ff_columns(list).catch((err) => {
+                log$a.error(err);
+              });
             }
           }
         }
@@ -5058,7 +5348,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
           page_specific = ['[class*="name__"]'];
         } else if (href.startsWith("https://www.torn.com/joblist.php")) {
           page_specific = [".employee", ".director"];
-        } else if (torn_page("messages") || torn_page("index") || torn_page("hospitalview") || torn_page("page", { sid: "UserList" })) {
+        } else if (torn_page("messages") || torn_page("index") || torn_page("page", { sid: "UserList" })) {
           page_specific = [".name"];
         } else if (href.startsWith("https://www.torn.com/bounties.php")) {
           page_specific = [".target, .listed"];
@@ -5086,7 +5376,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
         return {
           has_page_specific: false,
           page_specific_selectors: [],
-          combined_selector: ".honor-text-wrap, .user.name"
+          combined_selector: ".honor-text-wrap, .user-wrap.user-name, .user.name"
         };
       };
       let current_config = get_page_selectors();
@@ -5102,20 +5392,40 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
           ".honor-text-wrap"
         );
         if (honor_bars.length > 0) {
-          apply_ff_gauge_selector(honor_bars, FEATURE_NAME_HONOR_BAR);
+          apply_ff_gauge_selector(
+            honor_bars,
+            FEATURE_NAME_HONOR_BAR,
+            GaugeAttachMode.HONOR_BAR
+          );
         } else if (current_config.has_page_specific) {
           for (const selector of current_config.page_specific_selectors) {
             apply_ff_gauge_selector(
               node.querySelectorAll(selector),
-              FEATURE_NAME$3
+              FEATURE_NAME$3,
+              GaugeAttachMode.FALLBACK
             );
           }
         } else {
-          const name_elems = node.querySelectorAll(
+          const userwrap = node.querySelectorAll(
+            ".user-wrap.user-name"
+          );
+          if (userwrap.length > 0) {
+            apply_ff_gauge_selector(
+              userwrap,
+              FEATURE_NAME_USER_NAME,
+              GaugeAttachMode.FALLBACK
+            );
+            return;
+          }
+          const username = node.querySelectorAll(
             ".user.name"
           );
-          if (name_elems.length > 0) {
-            apply_ff_gauge_selector(name_elems, FEATURE_NAME_USER_NAME);
+          if (username.length > 0) {
+            apply_ff_gauge_selector(
+              username,
+              FEATURE_NAME_USER_NAME,
+              GaugeAttachMode.FALLBACK
+            );
           }
         }
         ffscouter.complete();
@@ -5487,23 +5797,28 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
           root.querySelectorAll(
             "div.bazaar-listing-card div:first-child div:first-child > a"
           ),
-          FEATURE_NAME$2
+          FEATURE_NAME$2,
+          GaugeAttachMode.FALLBACK
         );
         apply_ff_gauge_selector(
           root.querySelectorAll(".bazaar-card a"),
-          FEATURE_NAME$2
+          FEATURE_NAME$2,
+          GaugeAttachMode.FALLBACK
         );
         apply_ff_gauge_selector(
           root.querySelectorAll(".bazaar-card .bazaar-card-name"),
-          FEATURE_NAME$2
+          FEATURE_NAME$2,
+          GaugeAttachMode.FALLBACK
         );
         apply_ff_gauge_selector(
           root.querySelectorAll(".honor-text-wrap"),
-          FEATURE_NAME$2
+          FEATURE_NAME$2,
+          GaugeAttachMode.HONOR_BAR
         );
         apply_ff_gauge_selector(
           root.querySelectorAll('[class*="userInfoWrapper__"]'),
-          FEATURE_NAME$2
+          FEATURE_NAME$2,
+          GaugeAttachMode.FALLBACK
         );
       };
       const observer = new MutationObserver(process);
@@ -5916,18 +6231,26 @@ jsx("br", {}),
         }
         log$3.debug(`Found mini profile update for ${player_id}, adding ff data`);
         for (const bar of miniroot.querySelectorAll(".honor-text-wrap")) {
-          apply_ff_gauge(bar, FEATURE_NAME$1);
+          apply_ff_gauge(bar, FEATURE_NAME$1, GaugeAttachMode.HONOR_BAR);
         }
         miniroot.querySelector(".ffscouter-mini-desc")?.remove();
         const ff_string = format_ff_score(d2);
-        const fresh = format_relative_time(d2.last_updated);
-        const message = `FF ${ff_string} ${fresh}`;
-        const lastaction = miniroot.querySelector(".last-action");
+        const fresh = format_relative_time(extract_last_updated(d2));
+        const marker = get_source_marker(extract_source(d2));
         const desc = document.createElement("span");
         desc.classList.add("ffscouter-mini-desc");
-        desc.innerText = message;
+        desc.append(`FF ${ff_string}`);
+        if (marker) {
+          desc.appendChild(
+            make_source_marker_svg(marker, "ffscouter-inline-source-marker")
+          );
+        }
+        desc.append(` ${fresh}`);
+        const lastaction = miniroot.querySelector(".last-action");
         lastaction?.appendChild(document.createElement("br"));
         lastaction?.appendChild(desc);
+      }).catch((err) => {
+        log$3.error(err);
       });
       ffscouter.complete();
     });
@@ -6153,14 +6476,18 @@ jsx("br", {}),
         }
         const honor_bar = options.added.querySelector(".honor-text-wrap");
         if (honor_bar) {
-          apply_ff_gauge(honor_bar, FEATURE_NAME);
+          apply_ff_gauge(honor_bar, FEATURE_NAME, GaugeAttachMode.HONOR_BAR);
           return;
         }
         const user_info_wrapper = options.added.querySelector(
           '[class*="userInfoBlock__"]'
         );
         if (user_info_wrapper) {
-          apply_ff_gauge(user_info_wrapper, FEATURE_NAME);
+          apply_ff_gauge(
+            user_info_wrapper,
+            FEATURE_NAME,
+            GaugeAttachMode.FALLBACK
+          );
           return;
         }
       };
@@ -6269,6 +6596,10 @@ jsx("br", {}),
     warQuickAttackAction: CONFIG_DEFAULTS.war_quick_attack_action,
     statusAttackLinksEnabled: CONFIG_DEFAULTS.status_attack_links_enabled,
     debugDisablePdaHttp: CONFIG_DEFAULTS.debug_disable_pda_http,
+    debugForceReactFallback: CONFIG_DEFAULTS.debug_force_react_fallback,
+    settingsPanelOwnProfileOnly: CONFIG_DEFAULTS.settings_panel_own_profile_only,
+    factionFilterEnabled: CONFIG_DEFAULTS.faction_filter_enabled,
+    warFilterEnabled: CONFIG_DEFAULTS.war_filter_enabled,
     isPremium: null
   };
   function SettingsPanelComponent({
@@ -6289,6 +6620,7 @@ jsx("br", {}),
       onRendered();
     });
     const previewColor = get_palette_for_scheme(drafts.colorScheme)[5] ?? "#888888";
+    const previewSourceMarker = get_source_marker("spies");
     return jsxs(
       "details",
       {
@@ -6447,38 +6779,56 @@ jsxs(
                           "--ffscouter-marker-scale": drafts.gaugeMarkerScale / 100
                         },
                         children: [
+jsxs("span", { className: "ffscouter-preview-marker-slot", children: [
 jsxs(
-                            "svg",
-                            {
-                              className: "ffscouter-preview-arrow",
-                              viewBox: FF_ARROW_VIEWBOX,
-                              children: [
+                              "svg",
+                              {
+                                className: "ffscouter-preview-arrow",
+                                viewBox: FF_ARROW_VIEWBOX,
+                                children: [
 jsx("title", { children: "Preview Gauge Marker" }),
 jsx(
-                                  "path",
-                                  {
-                                    fillRule: "evenodd",
-                                    fill: previewColor,
-                                    stroke: "#000000",
-                                    strokeWidth: drafts.gaugeMarkerBorderWidth,
-                                    d: FF_ARROW_PATH_D
-                                  }
-                                )
-                              ]
-                            }
-                          ),
+                                    "path",
+                                    {
+                                      fillRule: "evenodd",
+                                      fill: previewColor,
+                                      stroke: "#000000",
+                                      strokeWidth: drafts.gaugeMarkerBorderWidth,
+                                      d: FF_ARROW_PATH_D
+                                    }
+                                  )
+                                ]
+                              }
+                            ),
+                            previewSourceMarker && jsx(
+                              SourceMarkerIcon,
+                              {
+                                marker: previewSourceMarker,
+                                className: "ffscouter-source-marker"
+                              }
+                            )
+                          ] }),
+jsxs("span", { className: "ffscouter-preview-marker-slot", children: [
 jsx(
-                            "div",
-                            {
-                              className: "ffscouter-preview-bubble",
-                              style: {
-                                backgroundColor: previewColor,
-                                color: get_contrast_color(previewColor),
-                                borderWidth: `${drafts.gaugeMarkerBorderWidth * (drafts.gaugeMarkerScale / 100)}px`
-                              },
-                              children: "2.34"
-                            }
-                          )
+                              "div",
+                              {
+                                className: "ffscouter-preview-bubble",
+                                style: {
+                                  backgroundColor: previewColor,
+                                  color: get_contrast_color(previewColor),
+                                  borderWidth: `${drafts.gaugeMarkerBorderWidth * (drafts.gaugeMarkerScale / 100)}px`
+                                },
+                                children: "2.34"
+                              }
+                            ),
+                            previewSourceMarker && jsx(
+                              SourceMarkerIcon,
+                              {
+                                marker: previewSourceMarker,
+                                className: "ffscouter-source-marker"
+                              }
+                            )
+                          ] })
                         ]
                       }
                     )
@@ -6733,6 +7083,18 @@ jsx("option", { value: "none", children: "None (Hide Column)" })
                     }
                   )
                 ] }),
+jsxs("div", { className: `${cls.cell} ${cls.cellCheckbox}`, children: [
+jsx(
+                    "input",
+                    {
+                      id: "faction-filter-toggle",
+                      type: "checkbox",
+                      checked: drafts.factionFilterEnabled,
+                      onChange
+                    }
+                  ),
+jsx("label", { htmlFor: "faction-filter-toggle", children: "Show faction filter box" })
+                ] }),
 jsxs("div", { className: cls.cell, children: [
 jsx("label", { htmlFor: "war-col-display", children: "War Page Shows:" }),
 jsxs(
@@ -6748,6 +7110,18 @@ jsx("option", { value: "none", children: "None (Hide Column)" })
                       ]
                     }
                   )
+                ] }),
+jsxs("div", { className: `${cls.cell} ${cls.cellCheckbox}`, children: [
+jsx(
+                    "input",
+                    {
+                      id: "war-filter-toggle",
+                      type: "checkbox",
+                      checked: drafts.warFilterEnabled,
+                      onChange
+                    }
+                  ),
+jsx("label", { htmlFor: "war-filter-toggle", children: "Show war filter box" })
                 ] }),
 jsxs("div", { className: `${cls.cell} ${cls.cellCheckbox}`, children: [
 jsx(
@@ -6787,6 +7161,18 @@ jsx(
                     }
                   ),
 jsx("label", { htmlFor: "ff-history-toggle", children: "Enable FF History button on profile pages" })
+                ] }),
+jsxs("div", { className: `${cls.cell} ${cls.cellCheckbox}`, children: [
+jsx(
+                    "input",
+                    {
+                      id: "settings-panel-own-profile-only-toggle",
+                      type: "checkbox",
+                      checked: drafts.settingsPanelOwnProfileOnly,
+                      onChange
+                    }
+                  ),
+jsx("label", { htmlFor: "settings-panel-own-profile-only-toggle", children: "Only show FF Scouter Settings on my own profile" })
                 ] }),
 jsx("div", { className: `${cls.span} ff-deprecation-note`, children: jsxs("span", { children: [
                   "War Monitor is no longer supported. Use",
@@ -6855,6 +7241,18 @@ jsx(
                     }
                   ),
 jsx("label", { htmlFor: "debug-disable-pda-http", children: "Disable PDA native HTTP (use GM_xmlhttpRequest instead)" })
+                ] }),
+jsxs("div", { className: `${cls.cell} ${cls.cellCheckbox}`, children: [
+jsx(
+                    "input",
+                    {
+                      id: "debug-force-react-fallback",
+                      type: "checkbox",
+                      checked: drafts.debugForceReactFallback,
+                      onChange
+                    }
+                  ),
+jsx("label", { htmlFor: "debug-force-react-fallback", children: "Force React fallback (fetch/evaluate Torn's own react-dom bundle instead of using unsafeWindow.React/ReactDOM)" })
                 ] })
               ] })
             ] }),
@@ -6960,6 +7358,14 @@ jsx(
           this._drafts.networkInterceptionEnabled = target.checked;
         } else if (id === "debug-disable-pda-http") {
           this._drafts.debugDisablePdaHttp = target.checked;
+        } else if (id === "debug-force-react-fallback") {
+          this._drafts.debugForceReactFallback = target.checked;
+        } else if (id === "settings-panel-own-profile-only-toggle") {
+          this._drafts.settingsPanelOwnProfileOnly = target.checked;
+        } else if (id === "faction-filter-toggle") {
+          this._drafts.factionFilterEnabled = target.checked;
+        } else if (id === "war-filter-toggle") {
+          this._drafts.warFilterEnabled = target.checked;
         }
         this.render();
       };
@@ -7017,7 +7423,11 @@ jsx(
         colorScheme: this._props.colorScheme,
         warQuickAttackAction: this._props.warQuickAttackAction,
         statusAttackLinksEnabled: this._props.statusAttackLinksEnabled,
-        debugDisablePdaHttp: this._props.debugDisablePdaHttp
+        debugDisablePdaHttp: this._props.debugDisablePdaHttp,
+        debugForceReactFallback: this._props.debugForceReactFallback,
+        settingsPanelOwnProfileOnly: this._props.settingsPanelOwnProfileOnly,
+        factionFilterEnabled: this._props.factionFilterEnabled,
+        warFilterEnabled: this._props.warFilterEnabled
       };
     }
     render() {
@@ -7132,7 +7542,11 @@ jsx(
             colorScheme: this._drafts.colorScheme,
             warQuickAttackAction: this._drafts.warQuickAttackAction,
             statusAttackLinksEnabled: this._drafts.statusAttackLinksEnabled,
-            debugDisablePdaHttp: this._drafts.debugDisablePdaHttp
+            debugDisablePdaHttp: this._drafts.debugDisablePdaHttp,
+            debugForceReactFallback: this._drafts.debugForceReactFallback,
+            settingsPanelOwnProfileOnly: this._drafts.settingsPanelOwnProfileOnly,
+            factionFilterEnabled: this._drafts.factionFilterEnabled,
+            warFilterEnabled: this._drafts.warFilterEnabled
           },
           bubbles: true,
           composed: true
@@ -7347,12 +7761,44 @@ get apiKey() {
       this._drafts.statusAttackLinksEnabled = val;
       this.render();
     }
+    get settingsPanelOwnProfileOnly() {
+      return this._props.settingsPanelOwnProfileOnly;
+    }
+    set settingsPanelOwnProfileOnly(val) {
+      this._props.settingsPanelOwnProfileOnly = val;
+      this._drafts.settingsPanelOwnProfileOnly = val;
+      this.render();
+    }
+    get factionFilterEnabled() {
+      return this._props.factionFilterEnabled;
+    }
+    set factionFilterEnabled(val) {
+      this._props.factionFilterEnabled = val;
+      this._drafts.factionFilterEnabled = val;
+      this.render();
+    }
+    get warFilterEnabled() {
+      return this._props.warFilterEnabled;
+    }
+    set warFilterEnabled(val) {
+      this._props.warFilterEnabled = val;
+      this._drafts.warFilterEnabled = val;
+      this.render();
+    }
     get debugDisablePdaHttp() {
       return this._props.debugDisablePdaHttp;
     }
     set debugDisablePdaHttp(val) {
       this._props.debugDisablePdaHttp = val;
       this._drafts.debugDisablePdaHttp = val;
+      this.render();
+    }
+    get debugForceReactFallback() {
+      return this._props.debugForceReactFallback;
+    }
+    set debugForceReactFallback(val) {
+      this._props.debugForceReactFallback = val;
+      this._drafts.debugForceReactFallback = val;
       this.render();
     }
     get isPremium() {
@@ -7551,8 +7997,38 @@ get draftApiKey() {
       this._drafts.debugDisablePdaHttp = val;
       this.render();
     }
+    get draftDebugForceReactFallback() {
+      return this._drafts.debugForceReactFallback;
+    }
+    set draftDebugForceReactFallback(val) {
+      this._drafts.debugForceReactFallback = val;
+      this.render();
+    }
+    get draftSettingsPanelOwnProfileOnly() {
+      return this._drafts.settingsPanelOwnProfileOnly;
+    }
+    set draftSettingsPanelOwnProfileOnly(val) {
+      this._drafts.settingsPanelOwnProfileOnly = val;
+      this.render();
+    }
+    get draftFactionFilterEnabled() {
+      return this._drafts.factionFilterEnabled;
+    }
+    set draftFactionFilterEnabled(val) {
+      this._drafts.factionFilterEnabled = val;
+      this.render();
+    }
+    get draftWarFilterEnabled() {
+      return this._drafts.warFilterEnabled;
+    }
+    set draftWarFilterEnabled(val) {
+      this._drafts.warFilterEnabled = val;
+      this.render();
+    }
   }
-  customElements.define("ff-settings-panel", FFSettingsPanel);
+  if (!customElements.get("ff-settings-panel")) {
+    customElements.define("ff-settings-panel", FFSettingsPanel);
+  }
   const V2_PREFIX = "ffscouterv2-";
   const V3_PREFIX = "ffsv3-config";
   const V2_IDB_NAME = "ffscouter-cache";
@@ -7646,6 +8122,17 @@ get draftApiKey() {
       return torn_page("profiles");
     },
     async run() {
+      if (ffconfig.settings_panel_own_profile_only) {
+        const viewedId = extract_id_from_url(window.location.href);
+        if (viewedId === null) {
+          return;
+        }
+        const localIdStr = await getLocalUserId();
+        const localId = localIdStr !== null ? parseInt(localIdStr, 10) : null;
+        if (localId !== null && !Number.isNaN(localId) && viewedId !== localId) {
+          return;
+        }
+      }
       const panel = await create_ff_element("ff-settings-panel");
       if (!panel) {
         toast(
@@ -7681,6 +8168,10 @@ get draftApiKey() {
       panel.warQuickAttackAction = ffconfig.war_quick_attack_action;
       panel.statusAttackLinksEnabled = ffconfig.status_attack_links_enabled;
       panel.debugDisablePdaHttp = ffconfig.debug_disable_pda_http;
+      panel.debugForceReactFallback = ffconfig.debug_force_react_fallback;
+      panel.settingsPanelOwnProfileOnly = ffconfig.settings_panel_own_profile_only;
+      panel.factionFilterEnabled = ffconfig.faction_filter_enabled;
+      panel.warFilterEnabled = ffconfig.war_filter_enabled;
       panel.addEventListener("ff-save", async (e) => {
         const detail = e.detail;
         ffconfig.key = detail.apiKey;
@@ -7719,6 +8210,10 @@ get draftApiKey() {
         ffconfig.war_quick_attack_action = detail.warQuickAttackAction;
         ffconfig.status_attack_links_enabled = detail.statusAttackLinksEnabled;
         ffconfig.debug_disable_pda_http = detail.debugDisablePdaHttp;
+        ffconfig.debug_force_react_fallback = detail.debugForceReactFallback;
+        ffconfig.settings_panel_own_profile_only = detail.settingsPanelOwnProfileOnly;
+        ffconfig.faction_filter_enabled = detail.factionFilterEnabled;
+        ffconfig.war_filter_enabled = detail.warFilterEnabled;
         panel.isPremium = await check_key_status.is_premium(true);
         toast("Settings saved successfully!");
         window.dispatchEvent(new CustomEvent("ff-config-updated"));
@@ -7756,6 +8251,10 @@ get draftApiKey() {
         panel.warQuickAttackAction = ffconfig.war_quick_attack_action;
         panel.statusAttackLinksEnabled = ffconfig.status_attack_links_enabled;
         panel.debugDisablePdaHttp = ffconfig.debug_disable_pda_http;
+        panel.debugForceReactFallback = ffconfig.debug_force_react_fallback;
+        panel.settingsPanelOwnProfileOnly = ffconfig.settings_panel_own_profile_only;
+        panel.factionFilterEnabled = ffconfig.faction_filter_enabled;
+        panel.warFilterEnabled = ffconfig.war_filter_enabled;
         toast("Settings reset to defaults!");
         window.dispatchEvent(new CustomEvent("ff-config-updated"));
       });
@@ -8060,7 +8559,7 @@ get draftApiKey() {
     httpInterceptors.push(interceptor);
     httpInterceptors.sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0));
   }
-  const stylesCss = ".ffscouter-gauge{position:relative;display:block;padding:0}.ffscouter-arrow,.ffscouter-preview-arrow{width:var(--ffscouter-arrow-width);object-fit:cover;pointer-events:none}.ffscouter-arrow{position:absolute;transform:translate(-50%,-30%);padding:0;top:0;left:calc(var(--ffscouter-arrow-width) / 2 + var(--band-percent) * (100% - var(--ffscouter-arrow-width)) / 100)}.ffscouter-preview-arrow{display:inline-block;vertical-align:middle}.ffscouter-bubble,.ffscouter-preview-bubble{min-width:2.5882em;height:1.6471em;line-height:1.4118;border:1px solid rgba(0,0,0,.4);border-radius:999px;font-size:var(--ffscouter-bubble-font-size);font-weight:700;font-family:Geneva,Arial,sans-serif;text-align:center;padding:0 .4706em;box-sizing:border-box;white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;text-shadow:0 1px 1px rgba(0,0,0,.5);box-shadow:0 1px 2px #0000004d}.ffscouter-bubble{position:absolute;transform:translate(-50%,-30%);top:0;left:calc(var(--ffscouter-arrow-width) / 2 + var(--band-percent) * (100% - var(--ffscouter-arrow-width)) / 100);pointer-events:none;z-index:10}.ffscouter-preview-bubble{vertical-align:middle}.ffscouter-marker-preview{display:inline-flex;align-items:center;gap:10px;--ffscouter-arrow-width: calc(20px * var(--ffscouter-marker-scale));--ffscouter-bubble-font-size: calc(8.5px * var(--ffscouter-marker-scale))}.ffscouter-mini-desc{padding:0 5px}.ffscouter-swatch-row{display:inline-flex;gap:3px}.ffscouter-swatch{display:inline-block;width:20px;height:13px}body{--ffscouter-bg-color: #f0f0f0;--ffscouter-alt-bg-color: #fff;--ffscouter-border-color: #ccc;--ffscouter-input-color: #ccc;--ffscouter-text-color: #000;--ffscouter-hover-color: #ddd;--ffscouter-glow-color: #4caf50;--ffscouter-success-color: #4caf50;--ffscouter-marker-scale: 1;--ffscouter-arrow-width: calc(20px * var(--ffscouter-marker-scale));--ffscouter-bubble-font-size: calc(8.5px * var(--ffscouter-marker-scale))}body.dark-mode{--ffscouter-bg-color: #333;--ffscouter-alt-bg-color: #383838;--ffscouter-border-color: #444;--ffscouter-input-color: #504f4f;--ffscouter-text-color: #ccc;--ffscouter-hover-color: #555;--ffscouter-glow-color: #4caf50;--ffscouter-success-color: #4caf50}ff-settings-panel{display:block}.profile-status{position:relative}.ff-flight-element{position:absolute;right:10px;bottom:2px;z-index:2}.ff-scouter-profile-flight-info{display:inline-block;text-align:right;font-size:11px;line-height:1.25;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.85)}.profile-status .ff-scouter-profile-flight-info a{color:#fff;text-decoration:underline}.faction-war .ffscouter-cell{float:left!important;width:32px!important;height:20px!important;font-size:11px!important;font-weight:700!important;border-radius:3px!important;box-sizing:border-box!important;margin:7px 4px!important;padding:0!important;text-align:center!important;line-height:20px!important;z-index:10!important}.ffscouter-cell{cursor:pointer!important}.faction-war .ffscouter-header,.table-header .ffscouter-header{float:left!important;width:38px!important;font-size:12px!important;font-weight:700!important;padding:0!important;text-align:center!important;background-color:transparent!important;cursor:pointer!important}.faction-war:has(.ffscouter-header[data-ffscouter-sort]) [class*=sortIcon___]:not(.ffscouter-sort-icon),.members-list:has(.ffscouter-header[data-ffscouter-sort]) [class*=sortIcon___]:not(.ffscouter-sort-icon){visibility:hidden!important}[data-ffscouter-hidden]{display:none!important}.faction-war[data-ffscouter-hide-level=true] .level:not(.ffscouter-cell):not(.ffscouter-header){display:none!important}.faction-war[data-ffscouter-hide-status=true] .status,.faction-war[data-ffscouter-hide-score=true] .points{display:none!important}.faction-war[data-ffscouter-col-display=fair_fight]:not([data-ffscouter-hide-level=true]) .level:not(.ffscouter-cell):not(.ffscouter-header),.faction-war[data-ffscouter-col-display=battle_stats]:not([data-ffscouter-hide-level=true]) .level:not(.ffscouter-cell):not(.ffscouter-header){width:29px!important}.faction-war[data-ffscouter-col-display=fair_fight]:not([data-ffscouter-hide-level=true]) .status,.faction-war[data-ffscouter-col-display=battle_stats]:not([data-ffscouter-hide-level=true]) .status{width:50px!important}.faction-war[data-ffscouter-col-display=fair_fight]:not([data-ffscouter-hide-level=true]) .points,.faction-war[data-ffscouter-col-display=battle_stats]:not([data-ffscouter-hide-level=true]) .points{width:38px!important}.members-list li.enemy:has(>.tt-stats-estimate),.members-list li.your:has(>.tt-stats-estimate),.members-list li.enemy:has(>div.clear~*),.members-list li.your:has(>div.clear~*){padding-bottom:22px!important;position:relative!important}.members-list li.enemy>.tt-stats-estimate,.members-list li.your>.tt-stats-estimate,.members-list li.enemy>div.clear~*,.members-list li.your>div.clear~*{position:absolute!important;bottom:2px!important;left:10px!important;height:18px!important;line-height:18px!important;font-size:11px!important;width:calc(100% - 20px)!important;display:block!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}body[data-ff-status-attack-enabled=true] [class*=userStatusWrap__],body[data-ff-status-attack-enabled=true] li[id^=icon][id*=-profile-].user-status-16-Online,body[data-ff-status-attack-enabled=true] li[id^=icon][id*=-profile-].user-status-16-Away,body[data-ff-status-attack-enabled=true] li[id^=icon][id*=-profile-].user-status-16-Offline,body[data-ff-status-attack-enabled=true] #profile-mini-root li[id^=icon][id*=-mini-profile-].user-status-16-Online,body[data-ff-status-attack-enabled=true] #profile-mini-root li[id^=icon][id*=-mini-profile-].user-status-16-Away,body[data-ff-status-attack-enabled=true] #profile-mini-root li[id^=icon][id*=-mini-profile-].user-status-16-Offline,body[data-ff-status-attack-enabled=true] li[id^=icon][id*=___].iconShow.ffscouter-forum-status{cursor:crosshair!important}.d .job-lists-wrap .item>li.company,.d .job-lists-wrap .item>li.director,.d .job-lists-wrap .item>li.salary,.d .job-lists-wrap .item>li.ranks{margin-bottom:0!important;padding-bottom:0!important}";
+  const stylesCss = ".ffscouter-gauge{position:relative;display:block;padding:0}.ffscouter-arrow,.ffscouter-preview-arrow{width:var(--ffscouter-arrow-width);object-fit:cover;pointer-events:none}.ffscouter-arrow{display:block;padding:0}.ffscouter-preview-arrow{display:inline-block;vertical-align:middle}.ffscouter-marker-wrapper{position:absolute;display:inline-block;pointer-events:none;line-height:0;transform:translate(var(--ffscouter-marker-tx, -50%),var(--ffscouter-marker-ty, -30%));z-index:10}.ffscouter-gauge[data-ffscouter-band-side=left]>.ffscouter-marker-wrapper{left:calc(var(--ffscouter-marker-actual-width, var(--ffscouter-arrow-width)) / 2 + var(--band-percent) * (100% - var(--ffscouter-marker-actual-width, var(--ffscouter-arrow-width))) / 100);--ffscouter-marker-tx: -50%}.ffscouter-gauge[data-ffscouter-band-side=right]>.ffscouter-marker-wrapper{right:calc(var(--ffscouter-marker-actual-width, var(--ffscouter-arrow-width)) / 2 + (100 - var(--band-percent)) * (100% - var(--ffscouter-marker-actual-width, var(--ffscouter-arrow-width))) / 100 + .35 * var(--ffscouter-source-marker-size));--ffscouter-marker-tx: 50%}.ffscouter-gauge[data-ffscouter-attach-mode=honor-bar]>.ffscouter-marker-wrapper{top:0;--ffscouter-marker-ty: -30%}.ffscouter-gauge[data-ffscouter-attach-mode=fallback]>.ffscouter-marker-wrapper{top:0;bottom:0;margin:auto 0;--ffscouter-marker-ty: 0%}.ffscouter-bubble,.ffscouter-preview-bubble{min-width:2.5882em;height:1.6471em;line-height:1.4118;border:1px solid rgba(0,0,0,.4);border-radius:999px;font-size:var(--ffscouter-bubble-font-size);font-weight:700;font-family:Geneva,Arial,sans-serif;text-align:center;padding:0 .4706em;box-sizing:border-box;white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;text-shadow:0 1px 1px rgba(0,0,0,.5);box-shadow:0 1px 2px #0000004d}.ffscouter-bubble{pointer-events:none}.ffscouter-preview-bubble{vertical-align:middle}.ffscouter-source-marker{position:absolute;top:calc(-.35 * var(--ffscouter-source-marker-size));right:calc(-.35 * var(--ffscouter-source-marker-size));width:var(--ffscouter-source-marker-size);height:var(--ffscouter-source-marker-size);pointer-events:auto;overflow:visible}.ffscouter-preview-marker-slot{position:relative;display:inline-block}.ffscouter-inline-source-marker{display:inline-block!important;float:none!important;position:static!important;width:16px!important;height:16px!important;vertical-align:middle!important;margin:0 0 0 4px!important}.ffscouter-marker-preview{display:inline-flex;align-items:center;gap:10px;--ffscouter-arrow-width: calc(20px * var(--ffscouter-marker-scale));--ffscouter-bubble-font-size: calc(8.5px * var(--ffscouter-marker-scale));--ffscouter-source-marker-size: calc(12px * var(--ffscouter-marker-scale))}.ffscouter-mini-desc{padding:0 5px}.ffscouter-swatch-row{display:inline-flex;gap:3px}.ffscouter-swatch{display:inline-block;width:20px;height:13px}body{--ffscouter-bg-color: #f0f0f0;--ffscouter-alt-bg-color: #fff;--ffscouter-border-color: #ccc;--ffscouter-input-color: #ccc;--ffscouter-text-color: #000;--ffscouter-hover-color: #ddd;--ffscouter-glow-color: #4caf50;--ffscouter-success-color: #4caf50;--ffscouter-marker-scale: 1;--ffscouter-arrow-width: calc(20px * var(--ffscouter-marker-scale));--ffscouter-bubble-font-size: calc(8.5px * var(--ffscouter-marker-scale));--ffscouter-source-marker-size: calc(12px * var(--ffscouter-marker-scale))}body.dark-mode{--ffscouter-bg-color: #333;--ffscouter-alt-bg-color: #383838;--ffscouter-border-color: #444;--ffscouter-input-color: #504f4f;--ffscouter-text-color: #ccc;--ffscouter-hover-color: #555;--ffscouter-glow-color: #4caf50;--ffscouter-success-color: #4caf50}ff-settings-panel{display:block}.profile-status{position:relative}.ff-flight-element{position:absolute;right:10px;bottom:2px;z-index:2}.ff-scouter-profile-flight-info{display:inline-block;text-align:right;font-size:11px;line-height:1.25;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.85)}.profile-status .ff-scouter-profile-flight-info a{color:#fff;text-decoration:underline}.faction-war .ffscouter-cell{float:left!important;width:32px!important;height:20px!important;font-size:11px!important;font-weight:700!important;border-radius:3px!important;box-sizing:border-box!important;margin:7px 4px!important;padding:0!important;text-align:center!important;line-height:20px!important;z-index:10!important}.ffscouter-cell{cursor:pointer!important}.faction-war .ffscouter-header,.table-header .ffscouter-header{float:left!important;width:38px!important;font-size:12px!important;font-weight:700!important;padding:0!important;text-align:center!important;background-color:transparent!important;cursor:pointer!important}.faction-war:has(.ffscouter-header[data-ffscouter-sort]) [class*=sortIcon___]:not(.ffscouter-sort-icon),.members-list:has(.ffscouter-header[data-ffscouter-sort]) [class*=sortIcon___]:not(.ffscouter-sort-icon){visibility:hidden!important}[data-ffscouter-hidden]{display:none!important}.faction-war[data-ffscouter-hide-level=true] .level:not(.ffscouter-cell):not(.ffscouter-header){display:none!important}.faction-war[data-ffscouter-hide-status=true] .status,.faction-war[data-ffscouter-hide-score=true] .points{display:none!important}.faction-war[data-ffscouter-col-display=fair_fight]:not([data-ffscouter-hide-level=true]) .level:not(.ffscouter-cell):not(.ffscouter-header),.faction-war[data-ffscouter-col-display=battle_stats]:not([data-ffscouter-hide-level=true]) .level:not(.ffscouter-cell):not(.ffscouter-header){width:29px!important}.faction-war[data-ffscouter-col-display=fair_fight]:not([data-ffscouter-hide-level=true]) .status,.faction-war[data-ffscouter-col-display=battle_stats]:not([data-ffscouter-hide-level=true]) .status{width:50px!important}.faction-war[data-ffscouter-col-display=fair_fight]:not([data-ffscouter-hide-level=true]) .points,.faction-war[data-ffscouter-col-display=battle_stats]:not([data-ffscouter-hide-level=true]) .points{width:38px!important}.members-list li.enemy:has(>.tt-stats-estimate),.members-list li.your:has(>.tt-stats-estimate),.members-list li.enemy:has(>div.clear~*),.members-list li.your:has(>div.clear~*){padding-bottom:22px!important;position:relative!important}.members-list li.enemy>.tt-stats-estimate,.members-list li.your>.tt-stats-estimate,.members-list li.enemy>div.clear~*,.members-list li.your>div.clear~*{position:absolute!important;bottom:2px!important;left:10px!important;height:18px!important;line-height:18px!important;font-size:11px!important;width:calc(100% - 20px)!important;display:block!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}body[data-ff-status-attack-enabled=true] [class*=userStatusWrap__],body[data-ff-status-attack-enabled=true] li[id^=icon][id*=-profile-].user-status-16-Online,body[data-ff-status-attack-enabled=true] li[id^=icon][id*=-profile-].user-status-16-Away,body[data-ff-status-attack-enabled=true] li[id^=icon][id*=-profile-].user-status-16-Offline,body[data-ff-status-attack-enabled=true] #profile-mini-root li[id^=icon][id*=-mini-profile-].user-status-16-Online,body[data-ff-status-attack-enabled=true] #profile-mini-root li[id^=icon][id*=-mini-profile-].user-status-16-Away,body[data-ff-status-attack-enabled=true] #profile-mini-root li[id^=icon][id*=-mini-profile-].user-status-16-Offline,body[data-ff-status-attack-enabled=true] li[id^=icon][id*=___].iconShow.ffscouter-forum-status{cursor:crosshair!important}.d .job-lists-wrap .item>li.company,.d .job-lists-wrap .item>li.director,.d .job-lists-wrap .item>li.salary,.d .job-lists-wrap .item>li.ranks{margin-bottom:0!important;padding-bottom:0!important}.d .users-list.links .user-wrap.ffscouter-gauge{margin-top:0!important;margin-bottom:0!important;padding-top:0!important;padding-bottom:0!important}";
   importCSS(stylesCss);
   const log = logger.child("boot");
   const INJECTION_KEY = "__FF_SCOUTER_V2_INJECTED__";
@@ -8083,7 +8582,7 @@ get draftApiKey() {
       return;
     }
     document.documentElement.setAttribute(INJECTION_KEY, "1");
-    log.info("Initializing", "3.0.1");
+    log.info("Initializing", "3.1");
     run_migration();
     if (ffscouter.analytics_enabled) {
       if (typeof unsafeWindow !== "undefined") {
