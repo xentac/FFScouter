@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FF Scouter V2 beta
 // @namespace    xentac-beta
-// @version      3.1-beta2
+// @version      3.1
 // @author       xentac [3354782], MAVRI [2402357], rDacted [2670953], Weav3r [1853324], Glasnost [1844049]
 // @description  Shows the expected Fair Fight score against targets and faction war status
 // @license      GPLv3
@@ -973,7 +973,7 @@ clearAll() {
   }
   const FF_SCOUTER_BASE_URL = "https://ffscouter.com/api/v1";
   new TornApiClient({
-    defaultComment: `FFScouterV2-${"3.1-beta2"}`,
+    defaultComment: `FFScouterV2-${"3.1"}`,
     defaultTimeout: 30
 });
   async function gmRequest(options) {
@@ -4812,7 +4812,9 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     loadObserver.observe(root, { childList: true, subtree: true });
     cleanup_when_detached(root, () => loadObserver.disconnect());
   }
+  const filterBoxRoots = new Map();
   function mountFilterBox(mode, onFilterChange) {
+    filterBoxRoots.get(mode)?.unmount();
     const container = document.createElement("div");
     const filteringDisabled = mode === "war" ? !ffconfig.war_filter_enabled : !ffconfig.faction_filter_enabled;
     container.style.display = filteringDisabled ? "none" : "contents";
@@ -4880,7 +4882,9 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       dispatchChange: () => runOrBuffer((h2) => h2.dispatchChange())
     };
     container.__ffHandle = handle;
-    createRoot(container).render(
+    const root = createRoot(container);
+    filterBoxRoots.set(mode, root);
+    root.render(
       createElement(FFFactionFilterBox, {
         mode,
         onFilterChange,
@@ -8578,7 +8582,7 @@ get draftApiKey() {
       return;
     }
     document.documentElement.setAttribute(INJECTION_KEY, "1");
-    log.info("Initializing", "3.1-beta2");
+    log.info("Initializing", "3.1");
     run_migration();
     if (ffscouter.analytics_enabled) {
       if (typeof unsafeWindow !== "undefined") {
