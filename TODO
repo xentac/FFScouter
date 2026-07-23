@@ -8,6 +8,36 @@
 - On profile and attack pages "Est" should say "Spy" if using tornstats
 - Add marker or icon to FF/Est to signify which stat is the high stat for a premium/spy estimate
 
+# Memory leak follow-ups (from GreasyFork discussion 335638, after fixing the Filter Box remount leak — ADR 0010)
+
+Candidates surfaced while investigating the reported unbounded WebExtensions RSS growth
+(370MB → 7.86GB over 20-24h). Only the Filter Box remount leak (ADR 0010, [[Filter Box
+Remount Leak]] in CONTEXT.md) has been confirmed and fixed. The rest are not yet actioned:
+
+- **`descriptions_observer` (`faction/index.ts:557`)** — unconfirmed, needs verification.
+  A `MutationObserver` recreated on every `process_page()` call (same trigger as the fixed
+  leak) and never disconnected. Its callback doesn't close over any per-navigation element
+  (only calls `wait_for_element`/`setup_war_features` fresh each time), and an active
+  `MutationObserver` typically holds only a weak reference to its target node — so if Torn
+  replaces `#faction_war_list_id` on every tab switch (as it does for `.members-list`/
+  `.faction-war`), the old node and its dangling observer likely become collectible
+  together without further action. Whether this actually holds depends on whether Torn
+  ever *reuses* the same node across navigations instead of replacing it (would stack
+  redundant observers on one node, firing `setup_war_features` repeatedly — harmless
+  functionally thanks to its own `data-ffscouter-initialized` guard, but wasteful). Verify
+  empirically (heap snapshot across repeated tab switches) before deciding whether this
+  needs the same track-and-disconnect treatment as ADR 0010.
+- **Three redundant SPA-navigation-detection mechanisms** — ruled out as a leak (each
+  registers a fixed set of listeners once per document, doesn't compound), but a real
+  architecture inconsistency worth consolidating: the Navigation API / `on_navigation`'s
+  `popstate`+`hashchange` fallback (`src/utils/dom.ts:790-812`), and `status-attack`'s own
+  independent `pushState`/`replaceState` monkey-patch (`src/features/status-attack/index.ts:224-239`)
+  are three separate ways of answering "did navigation happen."
+- **Unbounded module-level caches** — real leaks by definition (never evicted for the
+  document's lifetime) but bounded by the space of distinct input values and almost
+  certainly KB-, not GB-, scale: `bubble_width_cache` (`src/utils/dom.ts:205`) and
+  `seenUnknownActivityLabels` (`src/utils/dom.ts:452`). Hygiene-level fix, not urgent.
+
 # React Doctor follow-ups (re-run: v0.5.8, after CSS-modules migration + Fedded/Fallen)
 
 59 warnings total (Bugs 9, Performance 16, Accessibility 14, Maintainability 20).
