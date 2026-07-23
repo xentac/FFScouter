@@ -14,7 +14,7 @@ import {
 import { type FactionsColDisplay, ffconfig } from "@utils/ffconfig";
 import logger from "@utils/logger";
 import { createElement } from "react";
-import { createRoot } from "react-dom/client";
+import { createRoot, type Root } from "react-dom/client";
 import { type Feature, StartTime } from "../feature";
 import { apply_ff_columns, poll_traveling_flights } from "./column-population";
 import {
@@ -71,10 +71,21 @@ function run_when_ready(
 // Re-exported so feature tests can import it from the feature module.
 export { getFilterBoxHandle };
 
+// Torn's faction/war tabs are hash-routed, so process_page() re-runs on every
+// tab switch and mountFilterBox is called again against a brand-new
+// membersList/factionWar element each time. Without tracking the previous
+// root per mode and unmounting it here, window's resize/ff-config-updated
+// listeners (faction-filter-box.tsx) keep the abandoned component instance
+// alive indefinitely, pinning the entire previous list's DOM subtree via the
+// onFilterChange closure captured below. See ADR 0010.
+const filterBoxRoots = new Map<"faction" | "war", Root>();
+
 function mountFilterBox(
   mode: "faction" | "war",
   onFilterChange: (snapshot: FactionFilterSnapshot) => void,
 ): HTMLElement {
+  filterBoxRoots.get(mode)?.unmount();
+
   const container = document.createElement("div");
   // When the mode's Settings toggle is off, mount the box hidden instead of
   // skipping it: both FF/Est sort triggers (the box's Sort button and native
@@ -173,7 +184,9 @@ function mountFilterBox(
   (container as unknown as { __ffHandle: FactionFilterBoxHandle }).__ffHandle =
     handle;
 
-  createRoot(container).render(
+  const root = createRoot(container);
+  filterBoxRoots.set(mode, root);
+  root.render(
     createElement(FFFactionFilterBox, {
       mode,
       onFilterChange,

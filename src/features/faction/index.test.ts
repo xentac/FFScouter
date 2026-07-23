@@ -728,6 +728,78 @@ test("war filter disabled in settings hides only the war box, not the faction bo
   wrapper.remove();
 });
 
+test("mounting the filter box again unmounts the previous instance instead of leaking its window listeners", async () => {
+  // Regression test for ADR 0010: mountFilterBox previously never unmounted
+  // the prior React root, so window's resize/ff-config-updated listeners
+  // (faction-filter-box.tsx) kept every abandoned mount instance alive
+  // indefinitely, along with the entire previous membersList/factionWar
+  // subtree it captured via onFilterChange.
+  function makeMembersList() {
+    // Own wrapper per call so inject_filter_box's duplicate-guard (which
+    // checks the parent for an existing box) doesn't see the previous one —
+    // matching how Torn replaces the whole members-list container, box
+    // included, on each navigation rather than leaving the old box in place.
+    const wrapper = document.createElement("div");
+    const membersList = document.createElement("div");
+    membersList.className = "members-list";
+    membersList.innerHTML = `
+      <ul class="table-header">
+        <li class="member">Member</li>
+        <li class="lvl">Lvl</li>
+      </ul>
+      <div class="table-body">
+        <div class="table-row" id="row-1">
+          <div class="member"><a href="/profiles.php?XID=222">Player 222</a></div>
+          <div class="lvl">60</div>
+          <div class="status okay">Okay</div>
+        </div>
+      </div>
+    `;
+    wrapper.appendChild(membersList);
+    document.body.appendChild(wrapper);
+    return membersList;
+  }
+
+  // Simulate two SPA navigations to the faction members page (e.g. tab
+  // switching away and back), each producing a brand-new membersList element
+  // — matching Torn's real behavior of never reusing the old one. The first
+  // mount happens before the spies are installed: filterBoxRoots is
+  // module-level state shared across every test in this file (correctly
+  // mirroring production), so a spy installed before this first mount would
+  // also catch whatever a *previous* test's leftover "faction" mode root
+  // does when it gets unmounted here — this test only cares about what
+  // happens on the *second* mount.
+  const membersList1 = makeMembersList();
+  initialize_features(membersList1);
+  const box1 = membersList1.previousElementSibling as HTMLElement;
+  await waitForFilterBox(getFilterBoxHandle(box1)!);
+
+  const addSpy = vi.spyOn(window, "addEventListener");
+  const removeSpy = vi.spyOn(window, "removeEventListener");
+
+  const membersList2 = makeMembersList();
+  initialize_features(membersList2);
+  const box2 = membersList2.previousElementSibling as HTMLElement;
+  await waitForFilterBox(getFilterBoxHandle(box2)!);
+
+  // Mounting box2 must have unmounted box1 first, which is what runs its
+  // mount effect's cleanup and removes these window listeners — exactly
+  // once each, not left to accumulate.
+  for (const eventName of ["resize", "ff-config-updated"]) {
+    const added = addSpy.mock.calls.filter((c) => c[0] === eventName).length;
+    const removed = removeSpy.mock.calls.filter(
+      (c) => c[0] === eventName,
+    ).length;
+    expect(removed).toBe(1);
+    expect(added).toBe(1);
+  }
+
+  membersList1.remove();
+  membersList2.remove();
+  box1.remove();
+  box2.remove();
+});
+
 describe("should_run_faction URL and hash matching", () => {
   test("returns true for step=profile with any ID", () => {
     vi.stubGlobal("location", {
