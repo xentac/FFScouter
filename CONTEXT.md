@@ -151,6 +151,9 @@ Online/idle/offline state derived per-row from the `aria-label` ("{name} is onli
 ### Torn Markup Snapshot
 A dated, untrimmed capture of a live Torn page fragment, stored under a feature's `__fixtures__/torn-markup/<date>/` directory (e.g. `src/features/faction/__fixtures__/torn-markup/2026-06-22/`). Captured opportunistically when Torn changes markup; the latest dated folder is wired into a test asserting our parsing still produces the expected result, so the snapshot and the parser can't silently drift apart. Older dated folders are kept for reference but not re-tested. Distinct from the trimmed inline `innerHTML` strings used elsewhere in `.test.ts` files, which exist only to exercise one assertion and aren't meant to be faithful.
 
+### User Info Box
+The `userInfoBox__*` div Torn renders per-player (status wrap, faction-tag link, and honor/name link with the profile `XID=` as siblings), nested inside an outer `userInfoWrapper__*` on Item Market listings. The same shape backs the FF gauge on Hall of Fame and faction-profile pages via `fallback`'s `userInfoBox__` selector. [[Activity Status]] and click-to-attack extraction both key off the inner `userStatusWrap__` status div; player-ID extraction falls back to `get_player_id_in_element` scoped to the closest `userInfoBox__` ancestor when no page-specific extraction path applies.
+
 ### Estimate Source
 `"bss" | "premium" | "spies"` (`EstimateSource` in `src/utils/types.ts`) — the three sources the get-stats endpoint can merge an estimate from, matching both its top-level `source` field and the keys of [[Available Estimates]]. `"bss"` is public battle-stat data, `"premium"` is premium spy data, `"spies"` is a complete faction spy record.
 

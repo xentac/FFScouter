@@ -170,6 +170,16 @@ function handleStatusClick(e: MouseEvent) {
     }
   }
 
+  // 7. Generic userInfoBox fallback (Item Market and other pages using Torn's
+  // shared userInfoBox__/userInfoWrapper__ widget; scoped to the closest box
+  // so a listing grid's neighboring player can't be picked up instead)
+  if (!playerId) {
+    const container = statusEl.closest('[class*="userInfoBox__"]');
+    if (container) {
+      playerId = get_player_id_in_element(container);
+    }
+  }
+
   if (!playerId) {
     log.debug("Failed to extract playerId from status icon click");
     return;

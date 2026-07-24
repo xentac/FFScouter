@@ -15,6 +15,8 @@ import {
   test,
   vi,
 } from "vitest";
+import itemMarketHonorOff from "./__fixtures__/torn-markup/2026-07-24/item-market-userinfobox-honor-off.html?raw";
+import itemMarketHonorOn from "./__fixtures__/torn-markup/2026-07-24/item-market-userinfobox-honor-on.html?raw";
 import statusAttack from "./index";
 
 vi.mock("@utils/dom", async (importOriginal) => {
@@ -307,6 +309,78 @@ describe("Online Status Attack Links Feature", () => {
 
     expect(openSpy).not.toHaveBeenCalled();
     expect(mockLocation.href).toBe("");
+  });
+
+  test("Item Market userInfoBox (honor bar on) status icon click attacks correct player", async () => {
+    document.body.innerHTML = itemMarketHonorOn;
+
+    vi.mocked(get_player_id_in_element).mockImplementation((el) => {
+      const anchor = el.querySelector('a[href*="XID="]');
+      const match = anchor?.getAttribute("href")?.match(/XID=(\d+)/);
+      return match ? (Number(match[1]) as any) : null;
+    });
+
+    await statusAttack.run();
+
+    const statusEl = document.querySelector(
+      '[class*="userStatusWrap__"]',
+    ) as HTMLElement;
+    statusEl.click();
+
+    expect(openSpy).toHaveBeenCalledWith(
+      "https://www.torn.com/page.php?sid=attack&user2ID=3824625",
+      "_blank",
+    );
+  });
+
+  test("Item Market userInfoBox (honor bar off) status icon click attacks correct player", async () => {
+    document.body.innerHTML = itemMarketHonorOff;
+
+    vi.mocked(get_player_id_in_element).mockImplementation((el) => {
+      const anchor = el.querySelector('a[href*="XID="]');
+      const match = anchor?.getAttribute("href")?.match(/XID=(\d+)/);
+      return match ? (Number(match[1]) as any) : null;
+    });
+
+    await statusAttack.run();
+
+    const statusEl = document.querySelector(
+      '[class*="userStatusWrap__"]',
+    ) as HTMLElement;
+    statusEl.click();
+
+    expect(openSpy).toHaveBeenCalledWith(
+      "https://www.torn.com/page.php?sid=attack&user2ID=4403239",
+      "_blank",
+    );
+  });
+
+  test("Item Market userInfoBox extraction is scoped per listing, not leaked across siblings", async () => {
+    // Two listings side by side, as rendered in a real market grid
+    document.body.innerHTML = itemMarketHonorOn + itemMarketHonorOff;
+
+    vi.mocked(get_player_id_in_element).mockImplementation((el) => {
+      const anchor = el.querySelector('a[href*="XID="]');
+      const match = anchor?.getAttribute("href")?.match(/XID=(\d+)/);
+      return match ? (Number(match[1]) as any) : null;
+    });
+
+    await statusAttack.run();
+
+    const statusEls = document.querySelectorAll('[class*="userStatusWrap__"]');
+    expect(statusEls).toHaveLength(2);
+
+    (statusEls[0] as HTMLElement).click();
+    expect(openSpy).toHaveBeenLastCalledWith(
+      "https://www.torn.com/page.php?sid=attack&user2ID=3824625",
+      "_blank",
+    );
+
+    (statusEls[1] as HTMLElement).click();
+    expect(openSpy).toHaveBeenLastCalledWith(
+      "https://www.torn.com/page.php?sid=attack&user2ID=4403239",
+      "_blank",
+    );
   });
 
   test("Click is bypassed when status_attack_links_enabled is false", async () => {
