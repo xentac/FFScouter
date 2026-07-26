@@ -78,6 +78,35 @@ function setupForumObserver() {
   log.debug("Forum status observer connected");
 }
 
+// Logs the resolved player ID alongside independent ID sources found on the
+// enclosing row (TWSE's data-player_id, and the row's own Attack-link
+// user2ID=), so a live occurrence of the still-unexplained "attacks a
+// different player" symptom (see ADR 0011) produces real evidence instead of
+// another vague report. This is NOT a mismatch check — these sources are
+// currently confirmed to always agree with each other (they're redundant
+// encodings of the same row's identity), so there is no "correct answer" to
+// compare against in code. It's always emitted, at info (not debug) level,
+// so it survives the default log threshold; a human compares it against a
+// fresh bug report after the fact. If these sources ever *do* disagree, that
+// pinpoints a real extraction-level inconsistency; if they keep agreeing
+// while the symptom still occurs, that rules out extraction as the mechanism.
+function logExtractionCrossCheck(statusEl: Element, resolvedId: number) {
+  const row = statusEl.closest("li[data-player_id], li.enemy, li.your");
+  const dataPlayerId = row?.getAttribute("data-player_id") ?? null;
+
+  const attackHref = row
+    ?.querySelector('a[href*="user2ID="]')
+    ?.getAttribute("href");
+  const attackMatch = attackHref?.match(/user2ID=(\d+)/);
+  const attackLinkUserId = attackMatch?.[1] ?? null;
+
+  log.info("Status click extraction cross-check:", {
+    resolvedId,
+    dataPlayerId,
+    attackLinkUserId,
+  });
+}
+
 // Keep track of logged-in user ID to prevent self-clicking
 let localUserId: number | null = null;
 
@@ -184,6 +213,8 @@ function handleStatusClick(e: MouseEvent) {
     log.debug("Failed to extract playerId from status icon click");
     return;
   }
+
+  logExtractionCrossCheck(statusEl, playerId);
 
   // Prevent self-attacking
   if (localUserId && playerId === localUserId) {

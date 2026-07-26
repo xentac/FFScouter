@@ -17,6 +17,7 @@ import {
 } from "vitest";
 import itemMarketHonorOff from "./__fixtures__/torn-markup/2026-07-24/item-market-userinfobox-honor-off.html?raw";
 import itemMarketHonorOn from "./__fixtures__/torn-markup/2026-07-24/item-market-userinfobox-honor-on.html?raw";
+import warListEnemyRows from "./__fixtures__/torn-markup/2026-07-26/war-list-enemy-rows.html?raw";
 import statusAttack from "./index";
 
 vi.mock("@utils/dom", async (importOriginal) => {
@@ -381,6 +382,87 @@ describe("Online Status Attack Links Feature", () => {
       "https://www.torn.com/page.php?sid=attack&user2ID=4403239",
       "_blank",
     );
+  });
+
+  test("Faction/war real markup: extracts the correct player per row, unmocked (regression for ADR 0011)", async () => {
+    // Real ~5-row excerpt from a live war member list (2026-07-26 capture), unlike
+    // the other faction/war tests above, which mock get_player_id_in_element away
+    // entirely and so can't catch a real DOM-scoping regression. Covers Okay
+    // (attackable) plus Hospital/Traveling/Abroad (not attackable in Torn's UI,
+    // but the click-to-attack path doesn't check attackability, so extraction
+    // must still resolve the correct player).
+    document.body.innerHTML = warListEnemyRows;
+    vi.mocked(torn_page).mockImplementation((page) => page === "factions");
+
+    const actualDom =
+      await vi.importActual<typeof import("@utils/dom")>("@utils/dom");
+    vi.mocked(get_player_id_in_element).mockImplementation(
+      actualDom.get_player_id_in_element,
+    );
+
+    const infoSpy = vi.spyOn(console, "info").mockImplementation(() => {});
+
+    // attackLinkUserId is null for Hospital/Traveling/Abroad rows: Torn renders
+    // a <span>, not an <a>, for the Attack cell when a player isn't attackable.
+    const rows: {
+      ariaLabel: string;
+      playerId: number;
+      attackLinkUserId: string | null;
+    }[] = [
+      {
+        ariaLabel: "SyDySTiK is offline",
+        playerId: 955461,
+        attackLinkUserId: "955461",
+      }, // Okay
+      {
+        ariaLabel: "Shayul is offline",
+        playerId: 2339380,
+        attackLinkUserId: null,
+      }, // Hospital
+      {
+        ariaLabel: "Cocytos is offline",
+        playerId: 3089412,
+        attackLinkUserId: null,
+      }, // Traveling
+      {
+        ariaLabel: "Wothers is idle",
+        playerId: 2165637,
+        attackLinkUserId: "2165637",
+      }, // Okay
+      {
+        ariaLabel: "ThcWhiteMamba is offline",
+        playerId: 3742279,
+        attackLinkUserId: null,
+      }, // Abroad
+    ];
+
+    await statusAttack.run();
+
+    for (const { ariaLabel, playerId, attackLinkUserId } of rows) {
+      const statusDot = document.querySelector(
+        `[aria-label="${ariaLabel}"]`,
+      ) as HTMLElement;
+      expect(statusDot).not.toBeNull();
+
+      statusDot.click();
+
+      expect(openSpy).toHaveBeenLastCalledWith(
+        `https://www.torn.com/page.php?sid=attack&user2ID=${playerId}`,
+        "_blank",
+      );
+
+      // Confirms the ADR 0011 diagnostic cross-check (item 1) fires with the
+      // row's independent ID sources on real markup, not just that a call
+      // happened.
+      const lastInfoCall = infoSpy.mock.calls.at(-1);
+      expect(lastInfoCall?.at(-1)).toEqual({
+        resolvedId: playerId,
+        dataPlayerId: String(playerId),
+        attackLinkUserId,
+      });
+    }
+
+    infoSpy.mockRestore();
   });
 
   test("Click is bypassed when status_attack_links_enabled is false", async () => {

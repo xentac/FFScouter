@@ -382,6 +382,68 @@ test("apply_ff_columns supports configurable display via real DOM elements when 
   expect(list.querySelector(".ffscouter-cell")).toBeNull();
 });
 
+test("ffscouter-cell click diagnostic detects a stale id binding when the row's DOM content changes without a repopulation", async () => {
+  // apply_ff_columns is only re-run on a full list swap (see index.ts's
+  // setup_reapply_watcher), not on every in-place data tick, so cell.onclick's
+  // captured rp.player_id can survive past a point where the row's own
+  // content has moved on. This test forces that by mutating the row's honor
+  // link after population, without calling apply_ff_columns again, and
+  // documents current behavior: the click still fires for the STALE id, but
+  // the diagnostic log correctly flags the mismatch against a fresh
+  // re-resolution of the row.
+  ffconfig.war_col_display = FactionsColDisplay.FAIR_FIGHT;
+  ffconfig.war_quick_attack_action = WarQuickAttackAction.NEW_TAB;
+
+  vi.mocked(ffscouter.get).mockResolvedValue(mock_ff_data(3.5, 5000000, "5M"));
+
+  const factionWar = document.createElement("div");
+  factionWar.className = "faction-war";
+
+  const list = document.createElement("div");
+  list.className = "members-list";
+  list.innerHTML = `
+    <div class="white-grad">
+      <div class="member">Member</div>
+      <div class="level">Lvl</div>
+    </div>
+    <ul class="table-body">
+      <li class="table-row" data-player_id="111">
+        <div class="member"><a href="/profiles.php?XID=111">Player 111</a></div>
+        <div class="level">50</div>
+      </li>
+    </ul>
+  `;
+  factionWar.appendChild(list);
+  document.body.appendChild(factionWar);
+
+  await apply_ff_columns(list);
+
+  const row = list.querySelector(".table-row") as HTMLElement;
+  const cell = list.querySelector(".ffscouter-cell") as HTMLElement;
+
+  // Simulate the row's DOM node being reused for a different player without
+  // apply_ff_columns ever running again for it.
+  const honorLink = row.querySelector("a") as HTMLAnchorElement;
+  honorLink.href = "/profiles.php?XID=222";
+
+  const openSpy = vi.spyOn(window, "open").mockImplementation(() => null);
+  const infoSpy = vi.spyOn(console, "info").mockImplementation(() => {});
+
+  cell.click();
+
+  expect(openSpy).toHaveBeenCalledWith(
+    "https://www.torn.com/page.php?sid=attack&user2ID=111",
+    "_blank",
+  );
+
+  const lastInfoCall = infoSpy.mock.calls.at(-1);
+  expect(lastInfoCall?.at(-1)).toEqual({
+    staleClosurePlayerId: 111,
+    freshPlayerId: 222,
+    stale: true,
+  });
+});
+
 test("poll_traveling_flights adds data-earliest-arrival and data-latest-arrival to traveling players if user is premium", async () => {
   vi.mocked(check_key_status.is_premium).mockResolvedValue(true);
   vi.mocked(ffscouter.get_flights).mockResolvedValue({

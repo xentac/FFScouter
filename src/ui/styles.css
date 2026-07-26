@@ -455,6 +455,29 @@ body[data-ff-status-attack-enabled="true"]
   cursor: crosshair !important;
 }
 
+/* Grow the status dot's clickable region a few px past its tiny (~12px) SVG,
+   to reduce the mis-aim case (ADR 0011) where a slightly off-target click
+   lands on the adjacent honor/profile link instead. The ::after overlay is
+   absolutely positioned, so it adds zero layout size to the flex row (no
+   shift of neighboring cells) and only grows the *hit-testable* area.
+   UNVERIFIED: this sandbox has no live, logged-in Torn page to render
+   against, so the actual dead flex-gap space around the dot on each affected
+   page (faction/war list, item market, profile, mini-profile, forums) is
+   unconfirmed.
+   Kept deliberately small (3px) to stay inside that gap; per the reporting
+   user this must NEVER grow into the honor/profile link's own clickable box,
+   since tapping the name/profile link is a distinct, legitimate action. Verify
+   in a real browser and shrink this value if it overlaps a neighbor on any
+   of those pages. */
+body[data-ff-status-attack-enabled="true"] [class*="userStatusWrap__"] {
+  position: relative;
+}
+body[data-ff-status-attack-enabled="true"] [class*="userStatusWrap__"]::after {
+  content: "";
+  position: absolute;
+  inset: -3px;
+}
+
 /* Override Torn's shitty layout to make director links clickable if they don't have an estimate */
 .d .job-lists-wrap .item > li.company,
 .d .job-lists-wrap .item > li.director,

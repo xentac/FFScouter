@@ -227,6 +227,24 @@ export async function apply_ff_columns(membersList: HTMLElement) {
       cell.onclick = (e) => {
         e.preventDefault();
         e.stopPropagation();
+
+        // Diagnostic for the reported "attacks the wrong player" symptom:
+        // rp.player_id is captured in this closure at population time, but
+        // this handler can survive on the DOM past that point (apply_ff_columns
+        // is only re-run on a full list swap, not on every in-place data tick
+        // — see index.ts's setup_reapply_watcher). Re-resolving the ID from the
+        // row's *current* DOM content lets us tell whether the row was reused
+        // for a different player without repopulation ever running again.
+        // Unlike status-attack's cross-check (ADR 0011), these two values are
+        // NOT expected to always agree, so a real mismatch here is hard
+        // evidence of exactly that failure mode, not noise.
+        const freshPlayerId = get_player_id_in_element(rp.row);
+        log.info("FF/Est cell click: id-binding cross-check:", {
+          staleClosurePlayerId: rp.player_id,
+          freshPlayerId,
+          stale: freshPlayerId !== rp.player_id,
+        });
+
         const forceNewTab = e.ctrlKey || e.metaKey || e.button === 1;
         open_attack_link(rp.player_id, {
           openInNewTab: forceNewTab ? true : undefined,
