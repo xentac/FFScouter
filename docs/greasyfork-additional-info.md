@@ -65,7 +65,7 @@ FFScouter (`ffscouter.com`) is a separate service this script depends on, run by
 
 Found a bug or have a feature request? [Open an issue on GitHub](https://github.com/xentac/FFScouter/issues).
 
-Support is also available in the [FF Scouter discord server](https://discord.gg/cndwEmVSd).
+Support is also available in the [FF Scouter discord server](https://ffscouter.com/discord).
 
 ## Disclaimer
 
