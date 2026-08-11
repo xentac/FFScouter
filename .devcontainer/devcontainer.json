@@ -1,0 +1,43 @@
+{
+  "name": "FFScouter (Claude Code)",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  // GitHub CLI (docs/agents/issue-tracker.md's triage workflow runs entirely
+  // through `gh`) and the official Claude Code CLI feature. Node comes from
+  // the base image; Bun is installed directly in the Dockerfile.
+  "features": {
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+    "ghcr.io/anthropics/devcontainer-features/claude-code:1": {}
+  },
+  // Required for init-firewall.sh to manage iptables/ipset inside the container
+  "runArgs": ["--cap-add=NET_ADMIN", "--cap-add=NET_RAW"],
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "editor.formatOnSave": true,
+        "[typescript]": {
+          "editor.defaultFormatter": "biomejs.biome"
+        },
+        "[typescriptreact]": {
+          "editor.defaultFormatter": "biomejs.biome"
+        }
+      },
+      "extensions": ["biomejs.biome", "anthropic.claude-code"]
+    }
+  },
+  "remoteUser": "node",
+  // Persist Claude Code credentials/config and shell history across rebuilds
+  "mounts": [
+    "source=ffscouter-claude-config-${devcontainerId},target=/home/node/.claude,type=volume",
+    "source=ffscouter-bashhistory-${devcontainerId},target=/commandhistory,type=volume",
+    "source=${localEnv:HOME}/.config/jj/config.toml,target=/home/node/.config/jj/config.toml,type=bind"
+  ],
+  "containerEnv": {
+    "CLAUDE_CONFIG_DIR": "/home/node/.claude"
+  },
+  // Run initial installation and diagnostic checks after container creation
+  "postCreateCommand": "bun --version && node --version && gh --version && jj --version",
+  "postStartCommand": "sudo bash /workspaces/ffscouter/.devcontainer/init-firewall.sh",
+  "waitFor": "postStartCommand"
+}
