@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FF Scouter V2 beta
 // @namespace    xentac-beta
-// @version      3.2-beta2
+// @version      3.2-beta3
 // @author       xentac [3354782], MAVRI [2402357], rDacted [2670953], Weav3r [1853324], Glasnost [1844049]
 // @description  Shows the expected Fair Fight score against targets and faction war status
 // @license      GPLv3
@@ -973,7 +973,7 @@ clearAll() {
   }
   const FF_SCOUTER_BASE_URL = "https://ffscouter.com/api/v1";
   new TornApiClient({
-    defaultComment: `FFScouterV2-${"3.2-beta2"}`,
+    defaultComment: `FFScouterV2-${"3.2-beta3"}`,
     defaultTimeout: 30
 });
   async function gmRequest(options) {
@@ -1339,6 +1339,16 @@ clearAll() {
           return status.is_premium;
         } catch (err) {
           log$h.warn("Failed to check premium status:", err);
+          return null;
+        }
+      };
+      this.is_registered = async (force = false) => {
+        try {
+          const status = await this.check_key_status(force);
+          if (!status) return null;
+          return status.is_registered;
+        } catch (err) {
+          log$h.warn("Failed to check key registration status:", err);
           return null;
         }
       };
@@ -5199,6 +5209,107 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     }
     return false;
   }
+  const API_KEY_NOTICE_ID = "ffscouter-api-key-notice";
+  let apiKeyNoticeDismissed = false;
+  let apiKeyNoticeQueue = Promise.resolve();
+  function remove_api_key_notice() {
+    document.getElementById(API_KEY_NOTICE_ID)?.remove();
+  }
+  function build_api_key_notice(message) {
+    const banner = document.createElement("div");
+    banner.id = API_KEY_NOTICE_ID;
+    banner.style.cssText = [
+      "background: var(--ffscouter-glow-color, #4caf50)",
+      "color: #fff",
+      "padding: 10px 16px",
+      "font-size: 14px",
+      "display: flex",
+      "align-items: center",
+      "justify-content: space-between",
+      "gap: 12px",
+      "z-index: 9999",
+      "box-sizing: border-box",
+      "width: 100%"
+    ].join(";");
+    const msg = document.createElement("span");
+    const link = document.createElement("a");
+    link.textContent = "FF Scouter Settings";
+    link.style.cssText = "color: #fff; font-weight: bold; text-decoration: underline;";
+    msg.append(message, link, " on your profile page.");
+    getLocalUserId().then((id) => {
+      if (id) {
+        link.href = `https://www.torn.com/profiles.php?XID=${id}#ff-scouter-api-key`;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+      }
+    }).catch((err) => {
+      log$a.error(err);
+    });
+    const closeBtn = document.createElement("button");
+    closeBtn.textContent = "×";
+    closeBtn.setAttribute("aria-label", "Dismiss");
+    closeBtn.style.cssText = [
+      "background: none",
+      "border: none",
+      "color: #fff",
+      "font-size: 20px",
+      "font-weight: bold",
+      "cursor: pointer",
+      "padding: 0",
+      "line-height: 1",
+      "flex-shrink: 0"
+    ].join(";");
+    closeBtn.onclick = () => {
+      apiKeyNoticeDismissed = true;
+      banner.remove();
+    };
+    banner.appendChild(msg);
+    banner.appendChild(closeBtn);
+    return banner;
+  }
+  async function update_api_key_notice_impl() {
+    if (!should_run_faction() || apiKeyNoticeDismissed) {
+      remove_api_key_notice();
+      return;
+    }
+    if (document.getElementById(API_KEY_NOTICE_ID)) {
+      return;
+    }
+    let message;
+    if (!ffconfig.key) {
+      message = "FF Scouter needs your API key to show Fair Fight data here. Enter it in ";
+    } else {
+      const registered = await check_key_status.is_registered();
+      if (registered !== false) {
+        return;
+      }
+      message = "Your FF Scouter API key isn't registered. Check it in ";
+    }
+    if (!should_run_faction() || apiKeyNoticeDismissed) {
+      remove_api_key_notice();
+      return;
+    }
+    if (document.getElementById(API_KEY_NOTICE_ID)) {
+      return;
+    }
+    const wrapper = await wait_for_element(".content-wrapper", 1e4);
+    if (!wrapper) {
+      return;
+    }
+    if (!should_run_faction() || apiKeyNoticeDismissed) {
+      remove_api_key_notice();
+      return;
+    }
+    if (document.getElementById(API_KEY_NOTICE_ID)) {
+      return;
+    }
+    wrapper.prepend(build_api_key_notice(message));
+  }
+  function update_api_key_notice() {
+    apiKeyNoticeQueue = apiKeyNoticeQueue.then(update_api_key_notice_impl).catch((err) => {
+      log$a.error(err);
+    });
+  }
   const index$c = {
     name: "Faction page FF display",
     description: "Shows FF arrows on both your faction and other faction pages.",
@@ -5211,6 +5322,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
         if (should_run_faction()) {
           process_page();
         }
+        update_api_key_notice();
       });
       window.addEventListener("ff-config-updated", () => {
         if (should_run_faction()) {
@@ -5225,10 +5337,12 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
             }
           }
         }
+        update_api_key_notice();
       });
       if (should_run_faction()) {
         process_page();
       }
+      update_api_key_notice();
     }
   };
   const __vite_glob_0_2 = Object.freeze( Object.defineProperty({
@@ -6606,12 +6720,14 @@ jsx("br", {}),
     settingsPanelOwnProfileOnly: CONFIG_DEFAULTS.settings_panel_own_profile_only,
     factionFilterEnabled: CONFIG_DEFAULTS.faction_filter_enabled,
     warFilterEnabled: CONFIG_DEFAULTS.war_filter_enabled,
-    isPremium: null
+    isPremium: null,
+    isKeyRegistered: null
   };
   function SettingsPanelComponent({
     props,
     drafts,
     isPremium,
+    isKeyRegistered,
     rangeError,
     showSavedMessage,
     onChange,
@@ -6630,7 +6746,7 @@ jsx("br", {}),
     return jsxs(
       "details",
       {
-        className: `${cls.accordion}${!props.apiKey ? ` ${cls.accordionGlow}` : ""} cont-gray border-round`,
+        className: `${cls.accordion}${!props.apiKey || isKeyRegistered === false ? ` ${cls.accordionGlow}` : ""} cont-gray border-round`,
         children: [
 jsx("summary", { children: "FF Scouter Settings" }),
 jsxs("div", { className: cls.body, children: [
@@ -6661,11 +6777,11 @@ jsx(
                 ] }),
 jsxs("div", { className: `${cls.span} ${cls.apiBlock}`, children: [
 jsxs("div", { className: cls.cell, children: [
-jsx("label", { htmlFor: "api-key", children: "API Key:" }),
+jsx("label", { htmlFor: "ff-scouter-api-key", children: "API Key:" }),
 jsx(
                       "input",
                       {
-                        id: "api-key",
+                        id: "ff-scouter-api-key",
                         type: "text",
                         className: props.apiKey ? cls.blur : "",
                         placeholder: "Paste your key here...",
@@ -7304,7 +7420,7 @@ jsx(
         if (!target) return;
         this._showSavedMessage = false;
         const id = target.id;
-        if (id === "api-key") {
+        if (id === "ff-scouter-api-key") {
           this._drafts.apiKey = target.value;
         } else if (id === "gauge-marker-scale" || id === "gauge-marker-scale-number") {
           const raw = Number(target.value);
@@ -7448,6 +7564,7 @@ jsx(
           props: this._props,
           drafts: this._drafts,
           isPremium: this._props.isPremium,
+          isKeyRegistered: this._props.isKeyRegistered,
           rangeError: this._rangeError,
           showSavedMessage: this._showSavedMessage,
           onChange: this.handleChange,
@@ -7812,6 +7929,13 @@ get apiKey() {
     }
     set isPremium(val) {
       this._props.isPremium = val;
+      this.render();
+    }
+    get isKeyRegistered() {
+      return this._props.isKeyRegistered;
+    }
+    set isKeyRegistered(val) {
+      this._props.isKeyRegistered = val;
       this.render();
     }
 get draftApiKey() {
@@ -8221,6 +8345,7 @@ get draftApiKey() {
         ffconfig.faction_filter_enabled = detail.factionFilterEnabled;
         ffconfig.war_filter_enabled = detail.warFilterEnabled;
         panel.isPremium = await check_key_status.is_premium(true);
+        panel.isKeyRegistered = await check_key_status.is_registered(false);
         toast("Settings saved successfully!");
         window.dispatchEvent(new CustomEvent("ff-config-updated"));
       });
@@ -8279,6 +8404,7 @@ get draftApiKey() {
         ffconfig.key = detail.apiKey;
         panel.apiKey = detail.apiKey;
         panel.isPremium = await check_key_status.is_premium(true);
+        panel.isKeyRegistered = await check_key_status.is_registered(false);
         toast("API key saved successfully!");
         window.dispatchEvent(new CustomEvent("ff-config-updated"));
       });
@@ -8289,16 +8415,19 @@ get draftApiKey() {
           return;
         }
         panel.isPremium = null;
+        panel.isKeyRegistered = null;
         let result = null;
         try {
           result = await check_key(detail.apiKey);
         } catch (err) {
           panel.isPremium = null;
+          panel.isKeyRegistered = null;
           toast(`${err}`, TOAST_LEVEL.ERROR);
           return;
         }
         if (result == null || result.blank) {
           panel.isPremium = null;
+          panel.isKeyRegistered = null;
           toast(
             "Problem querying ffscouter.com API. Please wait a few seconds and try again.",
             TOAST_LEVEL.WARNING
@@ -8313,9 +8442,11 @@ get draftApiKey() {
           ffconfig.key = detail.apiKey;
           panel.apiKey = detail.apiKey;
           panel.isPremium = result.result.is_premium;
+          panel.isKeyRegistered = true;
           check_key_status.clear();
         } else {
           panel.isPremium = false;
+          panel.isKeyRegistered = false;
         }
         toast(message, level);
       });
@@ -8325,8 +8456,16 @@ get draftApiKey() {
         return;
       }
       profileWrapper.parentNode?.insertBefore(panel, profileWrapper.nextSibling);
-      check_key_status.is_premium(true).then((result) => {
+      if (window.location.hash === "#ff-scouter-api-key") {
+        await panel.updateComplete;
+        const details = panel.querySelector("details");
+        if (details instanceof HTMLDetailsElement) {
+          details.open = true;
+        }
+      }
+      check_key_status.is_premium(true).then(async (result) => {
         panel.isPremium = result;
+        panel.isKeyRegistered = await check_key_status.is_registered(false);
       });
     },
     httpIntercept: {
@@ -8425,7 +8564,9 @@ get draftApiKey() {
     #profile-mini-root li[id^="icon"][id*="-mini-profile-"].user-status-16-Online,
     #profile-mini-root li[id^="icon"][id*="-mini-profile-"].user-status-16-Away,
     #profile-mini-root li[id^="icon"][id*="-mini-profile-"].user-status-16-Offline,
-    li[id^="icon"][id*="___"].iconShow.ffscouter-forum-status
+    li[id^="icon"][id*="___"].iconShow.ffscouter-forum-status,
+    .status > [class$="-status"],
+    .left-side ul.singleicon li[id^="icon"][id*="___"].iconShow
   `);
     if (!statusEl) return;
     let playerId = null;
@@ -8470,6 +8611,12 @@ get draftApiKey() {
       const miniRoot = document.getElementById("profile-mini-root");
       if (miniRoot?.contains(statusEl)) {
         playerId = get_player_id_in_element(miniRoot);
+      }
+    }
+    if (!playerId) {
+      const container = statusEl.closest(".left-right-wrapper");
+      if (container) {
+        playerId = get_player_id_in_element(container);
       }
     }
     if (!playerId) {
@@ -8584,7 +8731,7 @@ get draftApiKey() {
     httpInterceptors.push(interceptor);
     httpInterceptors.sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0));
   }
-  const stylesCss = '.ffscouter-gauge{position:relative;display:block;padding:0}.ffscouter-arrow,.ffscouter-preview-arrow{width:var(--ffscouter-arrow-width);object-fit:cover;pointer-events:none}.ffscouter-arrow{display:block;padding:0}.ffscouter-preview-arrow{display:inline-block;vertical-align:middle}.ffscouter-marker-wrapper{position:absolute;display:inline-block;pointer-events:none;line-height:0;transform:translate(var(--ffscouter-marker-tx, -50%),var(--ffscouter-marker-ty, -30%));z-index:10}.ffscouter-gauge[data-ffscouter-band-side=left]>.ffscouter-marker-wrapper{left:calc(var(--ffscouter-marker-actual-width, var(--ffscouter-arrow-width)) / 2 + var(--band-percent) * (100% - var(--ffscouter-marker-actual-width, var(--ffscouter-arrow-width))) / 100);--ffscouter-marker-tx: -50%}.ffscouter-gauge[data-ffscouter-band-side=right]>.ffscouter-marker-wrapper{right:calc(var(--ffscouter-marker-actual-width, var(--ffscouter-arrow-width)) / 2 + (100 - var(--band-percent)) * (100% - var(--ffscouter-marker-actual-width, var(--ffscouter-arrow-width))) / 100 + .35 * var(--ffscouter-source-marker-size));--ffscouter-marker-tx: 50%}.ffscouter-gauge[data-ffscouter-attach-mode=honor-bar]>.ffscouter-marker-wrapper{top:0;--ffscouter-marker-ty: -30%}.ffscouter-gauge[data-ffscouter-attach-mode=fallback]>.ffscouter-marker-wrapper{top:0;bottom:0;margin:auto 0;--ffscouter-marker-ty: 0%}.ffscouter-bubble,.ffscouter-preview-bubble{min-width:2.5882em;height:1.6471em;line-height:1.4118;border:1px solid rgba(0,0,0,.4);border-radius:999px;font-size:var(--ffscouter-bubble-font-size);font-weight:700;font-family:Geneva,Arial,sans-serif;text-align:center;padding:0 .4706em;box-sizing:border-box;white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;text-shadow:0 1px 1px rgba(0,0,0,.5);box-shadow:0 1px 2px #0000004d}.ffscouter-bubble{pointer-events:none}.ffscouter-preview-bubble{vertical-align:middle}.ffscouter-source-marker{position:absolute;top:calc(-.35 * var(--ffscouter-source-marker-size));right:calc(-.35 * var(--ffscouter-source-marker-size));width:var(--ffscouter-source-marker-size);height:var(--ffscouter-source-marker-size);pointer-events:auto;overflow:visible}.ffscouter-preview-marker-slot{position:relative;display:inline-block}.ffscouter-inline-source-marker{display:inline-block!important;float:none!important;position:static!important;width:16px!important;height:16px!important;vertical-align:middle!important;margin:0 0 0 4px!important}.ffscouter-marker-preview{display:inline-flex;align-items:center;gap:10px;--ffscouter-arrow-width: calc(20px * var(--ffscouter-marker-scale));--ffscouter-bubble-font-size: calc(8.5px * var(--ffscouter-marker-scale));--ffscouter-source-marker-size: calc(12px * var(--ffscouter-marker-scale))}.ffscouter-mini-desc{padding:0 5px}.ffscouter-swatch-row{display:inline-flex;gap:3px}.ffscouter-swatch{display:inline-block;width:20px;height:13px}body{--ffscouter-bg-color: #f0f0f0;--ffscouter-alt-bg-color: #fff;--ffscouter-border-color: #ccc;--ffscouter-input-color: #ccc;--ffscouter-text-color: #000;--ffscouter-hover-color: #ddd;--ffscouter-glow-color: #4caf50;--ffscouter-success-color: #4caf50;--ffscouter-marker-scale: 1;--ffscouter-arrow-width: calc(20px * var(--ffscouter-marker-scale));--ffscouter-bubble-font-size: calc(8.5px * var(--ffscouter-marker-scale));--ffscouter-source-marker-size: calc(12px * var(--ffscouter-marker-scale))}body.dark-mode{--ffscouter-bg-color: #333;--ffscouter-alt-bg-color: #383838;--ffscouter-border-color: #444;--ffscouter-input-color: #504f4f;--ffscouter-text-color: #ccc;--ffscouter-hover-color: #555;--ffscouter-glow-color: #4caf50;--ffscouter-success-color: #4caf50}ff-settings-panel{display:block}.profile-status{position:relative}.ff-flight-element{position:absolute;right:10px;bottom:2px;z-index:2}.ff-scouter-profile-flight-info{display:inline-block;text-align:right;font-size:11px;line-height:1.25;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.85)}.profile-status .ff-scouter-profile-flight-info a{color:#fff;text-decoration:underline}.faction-war .ffscouter-cell{float:left!important;width:32px!important;height:20px!important;font-size:11px!important;font-weight:700!important;border-radius:3px!important;box-sizing:border-box!important;margin:7px 4px!important;padding:0!important;text-align:center!important;line-height:20px!important;z-index:10!important}.ffscouter-cell{cursor:pointer!important}.faction-war .ffscouter-header,.table-header .ffscouter-header{float:left!important;width:38px!important;font-size:12px!important;font-weight:700!important;padding:0!important;text-align:center!important;background-color:transparent!important;cursor:pointer!important}.faction-war:has(.ffscouter-header[data-ffscouter-sort]) [class*=sortIcon___]:not(.ffscouter-sort-icon),.members-list:has(.ffscouter-header[data-ffscouter-sort]) [class*=sortIcon___]:not(.ffscouter-sort-icon){visibility:hidden!important}[data-ffscouter-hidden]{display:none!important}.faction-war[data-ffscouter-hide-level=true] .level:not(.ffscouter-cell):not(.ffscouter-header){display:none!important}.faction-war[data-ffscouter-hide-status=true] .status,.faction-war[data-ffscouter-hide-score=true] .points{display:none!important}.faction-war[data-ffscouter-col-display=fair_fight]:not([data-ffscouter-hide-level=true]) .level:not(.ffscouter-cell):not(.ffscouter-header),.faction-war[data-ffscouter-col-display=battle_stats]:not([data-ffscouter-hide-level=true]) .level:not(.ffscouter-cell):not(.ffscouter-header){width:29px!important}.faction-war[data-ffscouter-col-display=fair_fight]:not([data-ffscouter-hide-level=true]) .status,.faction-war[data-ffscouter-col-display=battle_stats]:not([data-ffscouter-hide-level=true]) .status{width:50px!important}.faction-war[data-ffscouter-col-display=fair_fight]:not([data-ffscouter-hide-level=true]) .points,.faction-war[data-ffscouter-col-display=battle_stats]:not([data-ffscouter-hide-level=true]) .points{width:38px!important}.members-list li.enemy:has(>.tt-stats-estimate),.members-list li.your:has(>.tt-stats-estimate),.members-list li.enemy:has(>div.clear~*),.members-list li.your:has(>div.clear~*){padding-bottom:22px!important;position:relative!important}.members-list li.enemy>.tt-stats-estimate,.members-list li.your>.tt-stats-estimate,.members-list li.enemy>div.clear~*,.members-list li.your>div.clear~*{position:absolute!important;bottom:2px!important;left:10px!important;height:18px!important;line-height:18px!important;font-size:11px!important;width:calc(100% - 20px)!important;display:block!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}body[data-ff-status-attack-enabled=true] [class*=userStatusWrap__],body[data-ff-status-attack-enabled=true] li[id^=icon][id*=-profile-].user-status-16-Online,body[data-ff-status-attack-enabled=true] li[id^=icon][id*=-profile-].user-status-16-Away,body[data-ff-status-attack-enabled=true] li[id^=icon][id*=-profile-].user-status-16-Offline,body[data-ff-status-attack-enabled=true] #profile-mini-root li[id^=icon][id*=-mini-profile-].user-status-16-Online,body[data-ff-status-attack-enabled=true] #profile-mini-root li[id^=icon][id*=-mini-profile-].user-status-16-Away,body[data-ff-status-attack-enabled=true] #profile-mini-root li[id^=icon][id*=-mini-profile-].user-status-16-Offline,body[data-ff-status-attack-enabled=true] li[id^=icon][id*=___].iconShow.ffscouter-forum-status{cursor:crosshair!important}body[data-ff-status-attack-enabled=true] [class*=userStatusWrap__]{position:relative}body[data-ff-status-attack-enabled=true] [class*=userStatusWrap__]:after{content:"";position:absolute;inset:-3px}.d .job-lists-wrap .item>li.company,.d .job-lists-wrap .item>li.director,.d .job-lists-wrap .item>li.salary,.d .job-lists-wrap .item>li.ranks{margin-bottom:0!important;padding-bottom:0!important}.d .users-list.links .user-wrap.ffscouter-gauge{margin-top:0!important;margin-bottom:0!important;padding-top:0!important;padding-bottom:0!important}';
+  const stylesCss = '.ffscouter-gauge{position:relative;display:block;padding:0}.ffscouter-arrow,.ffscouter-preview-arrow{width:var(--ffscouter-arrow-width);object-fit:cover;pointer-events:none}.ffscouter-arrow{display:block;padding:0}.ffscouter-preview-arrow{display:inline-block;vertical-align:middle}.ffscouter-marker-wrapper{position:absolute;display:inline-block;pointer-events:none;line-height:0;transform:translate(var(--ffscouter-marker-tx, -50%),var(--ffscouter-marker-ty, -30%));z-index:10}.ffscouter-gauge[data-ffscouter-band-side=left]>.ffscouter-marker-wrapper{left:calc(var(--ffscouter-marker-actual-width, var(--ffscouter-arrow-width)) / 2 + var(--band-percent) * (100% - var(--ffscouter-marker-actual-width, var(--ffscouter-arrow-width))) / 100);--ffscouter-marker-tx: -50%}.ffscouter-gauge[data-ffscouter-band-side=right]>.ffscouter-marker-wrapper{right:calc(var(--ffscouter-marker-actual-width, var(--ffscouter-arrow-width)) / 2 + (100 - var(--band-percent)) * (100% - var(--ffscouter-marker-actual-width, var(--ffscouter-arrow-width))) / 100 + .35 * var(--ffscouter-source-marker-size));--ffscouter-marker-tx: 50%}.ffscouter-gauge[data-ffscouter-attach-mode=honor-bar]>.ffscouter-marker-wrapper{top:0;--ffscouter-marker-ty: -30%}.ffscouter-gauge[data-ffscouter-attach-mode=fallback]>.ffscouter-marker-wrapper{top:0;bottom:0;margin:auto 0;--ffscouter-marker-ty: 0%}.ffscouter-bubble,.ffscouter-preview-bubble{min-width:2.5882em;height:1.6471em;line-height:1.4118;border:1px solid rgba(0,0,0,.4);border-radius:999px;font-size:var(--ffscouter-bubble-font-size);font-weight:700;font-family:Geneva,Arial,sans-serif;text-align:center;padding:0 .4706em;box-sizing:border-box;white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;text-shadow:0 1px 1px rgba(0,0,0,.5);box-shadow:0 1px 2px #0000004d}.ffscouter-bubble{pointer-events:none}.ffscouter-preview-bubble{vertical-align:middle}.ffscouter-source-marker{position:absolute;top:calc(-.35 * var(--ffscouter-source-marker-size));right:calc(-.35 * var(--ffscouter-source-marker-size));width:var(--ffscouter-source-marker-size);height:var(--ffscouter-source-marker-size);pointer-events:auto;overflow:visible}.ffscouter-preview-marker-slot{position:relative;display:inline-block}.ffscouter-inline-source-marker{display:inline-block!important;float:none!important;position:static!important;width:16px!important;height:16px!important;vertical-align:middle!important;margin:0 0 0 4px!important}.ffscouter-marker-preview{display:inline-flex;align-items:center;gap:10px;--ffscouter-arrow-width: calc(20px * var(--ffscouter-marker-scale));--ffscouter-bubble-font-size: calc(8.5px * var(--ffscouter-marker-scale));--ffscouter-source-marker-size: calc(12px * var(--ffscouter-marker-scale))}.ffscouter-mini-desc{padding:0 5px}.ffscouter-swatch-row{display:inline-flex;gap:3px}.ffscouter-swatch{display:inline-block;width:20px;height:13px}body{--ffscouter-bg-color: #f0f0f0;--ffscouter-alt-bg-color: #fff;--ffscouter-border-color: #ccc;--ffscouter-input-color: #ccc;--ffscouter-text-color: #000;--ffscouter-hover-color: #ddd;--ffscouter-glow-color: #4caf50;--ffscouter-success-color: #4caf50;--ffscouter-marker-scale: 1;--ffscouter-arrow-width: calc(20px * var(--ffscouter-marker-scale));--ffscouter-bubble-font-size: calc(8.5px * var(--ffscouter-marker-scale));--ffscouter-source-marker-size: calc(12px * var(--ffscouter-marker-scale))}body.dark-mode{--ffscouter-bg-color: #333;--ffscouter-alt-bg-color: #383838;--ffscouter-border-color: #444;--ffscouter-input-color: #504f4f;--ffscouter-text-color: #ccc;--ffscouter-hover-color: #555;--ffscouter-glow-color: #4caf50;--ffscouter-success-color: #4caf50}ff-settings-panel{display:block}.profile-status{position:relative}.ff-flight-element{position:absolute;right:10px;bottom:2px;z-index:2}.ff-scouter-profile-flight-info{display:inline-block;text-align:right;font-size:11px;line-height:1.25;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.85)}.profile-status .ff-scouter-profile-flight-info a{color:#fff;text-decoration:underline}.faction-war .ffscouter-cell{float:left!important;width:32px!important;height:20px!important;font-size:11px!important;font-weight:700!important;border-radius:3px!important;box-sizing:border-box!important;margin:7px 4px!important;padding:0!important;text-align:center!important;line-height:20px!important;z-index:10!important}.ffscouter-cell{cursor:pointer!important}.faction-war .ffscouter-header,.table-header .ffscouter-header{float:left!important;width:38px!important;font-size:12px!important;font-weight:700!important;padding:0!important;text-align:center!important;background-color:transparent!important;cursor:pointer!important}.faction-war:has(.ffscouter-header[data-ffscouter-sort]) [class*=sortIcon___]:not(.ffscouter-sort-icon),.members-list:has(.ffscouter-header[data-ffscouter-sort]) [class*=sortIcon___]:not(.ffscouter-sort-icon){visibility:hidden!important}[data-ffscouter-hidden]{display:none!important}.faction-war[data-ffscouter-hide-level=true] .level:not(.ffscouter-cell):not(.ffscouter-header){display:none!important}.faction-war[data-ffscouter-hide-status=true] .status,.faction-war[data-ffscouter-hide-score=true] .points{display:none!important}.faction-war[data-ffscouter-col-display=fair_fight]:not([data-ffscouter-hide-level=true]) .level:not(.ffscouter-cell):not(.ffscouter-header),.faction-war[data-ffscouter-col-display=battle_stats]:not([data-ffscouter-hide-level=true]) .level:not(.ffscouter-cell):not(.ffscouter-header){width:29px!important}.faction-war[data-ffscouter-col-display=fair_fight]:not([data-ffscouter-hide-level=true]) .status,.faction-war[data-ffscouter-col-display=battle_stats]:not([data-ffscouter-hide-level=true]) .status{width:50px!important}.faction-war[data-ffscouter-col-display=fair_fight]:not([data-ffscouter-hide-level=true]) .points,.faction-war[data-ffscouter-col-display=battle_stats]:not([data-ffscouter-hide-level=true]) .points{width:38px!important}.members-list li.enemy:has(>.tt-stats-estimate),.members-list li.your:has(>.tt-stats-estimate),.members-list li.enemy:has(>div.clear~*),.members-list li.your:has(>div.clear~*){padding-bottom:22px!important;position:relative!important}.members-list li.enemy>.tt-stats-estimate,.members-list li.your>.tt-stats-estimate,.members-list li.enemy>div.clear~*,.members-list li.your>div.clear~*{position:absolute!important;bottom:2px!important;left:10px!important;height:18px!important;line-height:18px!important;font-size:11px!important;width:calc(100% - 20px)!important;display:block!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}body[data-ff-status-attack-enabled=true] [class*=userStatusWrap__],body[data-ff-status-attack-enabled=true] li[id^=icon][id*=-profile-].user-status-16-Online,body[data-ff-status-attack-enabled=true] li[id^=icon][id*=-profile-].user-status-16-Away,body[data-ff-status-attack-enabled=true] li[id^=icon][id*=-profile-].user-status-16-Offline,body[data-ff-status-attack-enabled=true] #profile-mini-root li[id^=icon][id*=-mini-profile-].user-status-16-Online,body[data-ff-status-attack-enabled=true] #profile-mini-root li[id^=icon][id*=-mini-profile-].user-status-16-Away,body[data-ff-status-attack-enabled=true] #profile-mini-root li[id^=icon][id*=-mini-profile-].user-status-16-Offline,body[data-ff-status-attack-enabled=true] li[id^=icon][id*=___].iconShow.ffscouter-forum-status,body[data-ff-status-attack-enabled=true] .status>[class$=-status],body[data-ff-status-attack-enabled=true] .left-side ul.singleicon li[id^=icon][id*=___].iconShow{cursor:crosshair!important}body[data-ff-status-attack-enabled=true] [class*=userStatusWrap__]{position:relative}body[data-ff-status-attack-enabled=true] [class*=userStatusWrap__]:after{content:"";position:absolute;inset:-3px}.d .job-lists-wrap .item>li.company,.d .job-lists-wrap .item>li.director,.d .job-lists-wrap .item>li.salary,.d .job-lists-wrap .item>li.ranks{margin-bottom:0!important;padding-bottom:0!important}.d .users-list.links .user-wrap.ffscouter-gauge{margin-top:0!important;margin-bottom:0!important;padding-top:0!important;padding-bottom:0!important}';
   importCSS(stylesCss);
   const log = logger.child("boot");
   const INJECTION_KEY = "__FF_SCOUTER_V2_INJECTED__";
@@ -8607,7 +8754,7 @@ get draftApiKey() {
       return;
     }
     document.documentElement.setAttribute(INJECTION_KEY, "1");
-    log.info("Initializing", "3.2-beta2");
+    log.info("Initializing", "3.2-beta3");
     run_migration();
     if (ffscouter.analytics_enabled) {
       if (typeof unsafeWindow !== "undefined") {
