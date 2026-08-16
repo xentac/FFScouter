@@ -136,7 +136,9 @@ function handleStatusClick(e: MouseEvent) {
     #profile-mini-root li[id^="icon"][id*="-mini-profile-"].user-status-16-Online,
     #profile-mini-root li[id^="icon"][id*="-mini-profile-"].user-status-16-Away,
     #profile-mini-root li[id^="icon"][id*="-mini-profile-"].user-status-16-Offline,
-    li[id^="icon"][id*="___"].iconShow.ffscouter-forum-status
+    li[id^="icon"][id*="___"].iconShow.ffscouter-forum-status,
+    .status > [class$="-status"],
+    .left-side ul.singleicon li[id^="icon"][id*="___"].iconShow
   `);
 
   if (!statusEl) return;
@@ -199,7 +201,21 @@ function handleStatusClick(e: MouseEvent) {
     }
   }
 
-  // 7. Generic userInfoBox fallback (Item Market and other pages using Torn's
+  // 7. Users-list rows (foreign country/travel "people" lists, and other
+  // pages sharing this older left/right row layout): both the online/idle/
+  // offline presence dot (in .left-side's singleicon tray) and the Okay/
+  // Hospital status text (in .right-side's .status) live under the same
+  // .left-right-wrapper as the profile link. Scope there so the icon tray
+  // rendered below the row (with unrelated faction/company/spouse links)
+  // can't leak in.
+  if (!playerId) {
+    const container = statusEl.closest(".left-right-wrapper");
+    if (container) {
+      playerId = get_player_id_in_element(container);
+    }
+  }
+
+  // 8. Generic userInfoBox fallback (Item Market and other pages using Torn's
   // shared userInfoBox__/userInfoWrapper__ widget; scoped to the closest box
   // so a listing grid's neighboring player can't be picked up instead)
   if (!playerId) {

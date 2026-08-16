@@ -18,6 +18,7 @@ import {
 import itemMarketHonorOff from "./__fixtures__/torn-markup/2026-07-24/item-market-userinfobox-honor-off.html?raw";
 import itemMarketHonorOn from "./__fixtures__/torn-markup/2026-07-24/item-market-userinfobox-honor-on.html?raw";
 import warListEnemyRows from "./__fixtures__/torn-markup/2026-07-26/war-list-enemy-rows.html?raw";
+import travelPeopleList from "./__fixtures__/torn-markup/2026-08-16/travel-people-list.html?raw";
 import statusAttack from "./index";
 
 vi.mock("@utils/dom", async (importOriginal) => {
@@ -463,6 +464,101 @@ describe("Online Status Attack Links Feature", () => {
     }
 
     infoSpy.mockRestore();
+  });
+
+  test("Foreign country/travel people-list real markup: clicking the status text extracts the correct player per row, unmocked", async () => {
+    // Real ~4-row excerpt from a live "people" list on a foreign country page
+    // (2026-08-16 capture). Rows use the older .left-right-wrapper/.left-side/
+    // .right-side layout (not userStatusWrap__/userInfoBox__), so this is a
+    // distinct extraction path from the faction/war and item-market tests.
+    document.body.innerHTML = travelPeopleList;
+    vi.mocked(torn_page).mockImplementation(() => false);
+
+    const actualDom =
+      await vi.importActual<typeof import("@utils/dom")>("@utils/dom");
+    vi.mocked(get_player_id_in_element).mockImplementation(
+      actualDom.get_player_id_in_element,
+    );
+
+    const rows: { name: string; playerId: number }[] = [
+      { name: "Morgz", playerId: 83384 }, // Hospital
+      { name: "soulhunter", playerId: 317898 }, // Okay
+      { name: "twat", playerId: 2411466 }, // Hospital
+      { name: "22Reflex", playerId: 2595471 }, // Hospital, revive disabled
+    ];
+
+    await statusAttack.run();
+
+    for (const { name, playerId } of rows) {
+      const userLink = document.querySelector(
+        `a.user.name[title^="${name} "]`,
+      ) as HTMLElement;
+      expect(userLink).not.toBeNull();
+
+      const statusEl = userLink
+        .closest(".left-right-wrapper")
+        ?.querySelector('.status > [class$="-status"]') as HTMLElement;
+      expect(statusEl).not.toBeNull();
+
+      statusEl.click();
+
+      expect(openSpy).toHaveBeenLastCalledWith(
+        `https://www.torn.com/page.php?sid=attack&user2ID=${playerId}`,
+        "_blank",
+      );
+    }
+  });
+
+  test("Foreign country/travel people-list real markup: clicking the online/idle/offline presence dot extracts the correct player per row, unmocked", async () => {
+    // Same fixture, but exercising the .left-side singleicon tray (the
+    // presence dot) instead of the .right-side status text, across all
+    // three presence states it renders as (icon1/Online, icon2/Offline,
+    // icon62/Idle).
+    document.body.innerHTML = travelPeopleList;
+    vi.mocked(torn_page).mockImplementation(() => false);
+
+    const actualDom =
+      await vi.importActual<typeof import("@utils/dom")>("@utils/dom");
+    vi.mocked(get_player_id_in_element).mockImplementation(
+      actualDom.get_player_id_in_element,
+    );
+
+    const rows: { name: string; playerId: number }[] = [
+      { name: "Morgz", playerId: 83384 }, // Offline
+      { name: "Archimedes", playerId: 2061973 }, // Idle
+      { name: "-Ghost-", playerId: 2067532 }, // Online
+    ];
+
+    await statusAttack.run();
+
+    for (const { name, playerId } of rows) {
+      const userLink = document.querySelector(
+        `a.user.name[title^="${name} "]`,
+      ) as HTMLElement;
+      expect(userLink).not.toBeNull();
+
+      // Split into two 2-part queries rather than one 3-part descendant chain
+      // (`.left-side ul.singleicon li.iconShow`): jsdom's nwsapi selector
+      // engine returns a false negative for that chain here, apparently
+      // because of the many repeated id="iconTray" elements across this
+      // fixture's rows. `element.closest()`/`.matches()` aren't affected
+      // (verified separately), so this is a test-only workaround, not a
+      // production bug.
+      const leftSide = userLink
+        .closest(".left-right-wrapper")
+        ?.querySelector(".left-side");
+      const presenceDot = leftSide?.querySelector(
+        "ul.singleicon li.iconShow",
+      ) as HTMLElement;
+      expect(presenceDot).not.toBeNull();
+
+      presenceDot.click();
+
+      expect(openSpy).toHaveBeenLastCalledWith(
+        `https://www.torn.com/page.php?sid=attack&user2ID=${playerId}`,
+        "_blank",
+      );
+    }
   });
 
   test("Click is bypassed when status_attack_links_enabled is false", async () => {

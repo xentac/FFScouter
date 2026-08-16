@@ -451,7 +451,12 @@ body[data-ff-status-attack-enabled="true"]
   #profile-mini-root
   li[id^="icon"][id*="-mini-profile-"].user-status-16-Offline,
 body[data-ff-status-attack-enabled="true"]
-  li[id^="icon"][id*="___"].iconShow.ffscouter-forum-status {
+  li[id^="icon"][id*="___"].iconShow.ffscouter-forum-status,
+body[data-ff-status-attack-enabled="true"] .status > [class$="-status"],
+body[data-ff-status-attack-enabled="true"]
+  .left-side
+  ul.singleicon
+  li[id^="icon"][id*="___"].iconShow {
   cursor: crosshair !important;
 }
 
