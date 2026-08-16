@@ -140,6 +140,7 @@ export default {
       ffconfig.faction_filter_enabled = detail.factionFilterEnabled;
       ffconfig.war_filter_enabled = detail.warFilterEnabled;
       panel.isPremium = await check_key_status.is_premium(true);
+      panel.isKeyRegistered = await check_key_status.is_registered(false);
       toast("Settings saved successfully!");
       window.dispatchEvent(new CustomEvent("ff-config-updated"));
     });
@@ -208,6 +209,7 @@ export default {
       ffconfig.key = detail.apiKey;
       panel.apiKey = detail.apiKey;
       panel.isPremium = await check_key_status.is_premium(true);
+      panel.isKeyRegistered = await check_key_status.is_registered(false);
 
       toast("API key saved successfully!");
       window.dispatchEvent(new CustomEvent("ff-config-updated"));
@@ -220,16 +222,19 @@ export default {
         return;
       }
       panel.isPremium = null;
+      panel.isKeyRegistered = null;
       let result: FFApiCheckResponse | null = null;
       try {
         result = await check_key(detail.apiKey);
       } catch (err) {
         panel.isPremium = null;
+        panel.isKeyRegistered = null;
         toast(`${err}`, TOAST_LEVEL.ERROR);
         return;
       }
       if (result == null || result.blank) {
         panel.isPremium = null;
+        panel.isKeyRegistered = null;
         toast(
           "Problem querying ffscouter.com API. Please wait a few seconds and try again.",
           TOAST_LEVEL.WARNING,
@@ -246,9 +251,11 @@ export default {
         ffconfig.key = detail.apiKey;
         panel.apiKey = detail.apiKey;
         panel.isPremium = result.result.is_premium;
+        panel.isKeyRegistered = true;
         check_key_status.clear();
       } else {
         panel.isPremium = false;
+        panel.isKeyRegistered = false;
       }
       toast(message, level);
     });
@@ -262,9 +269,27 @@ export default {
 
     profileWrapper.parentNode?.insertBefore(panel, profileWrapper.nextSibling);
 
-    // Check premium status in the background so it never blocks panel injection
-    check_key_status.is_premium(true).then((result) => {
+    // Deep-link support: other pages can link to `#ff-scouter-api-key` to
+    // expand the accordion onto the API Key field. The native browser
+    // behavior for fragment-targets inside a closed <details> can't fire
+    // here, since this element doesn't exist in the DOM until React commits,
+    // well after the browser already processed the URL fragment at
+    // navigation time. See ADR 0012 for why this is driven explicitly (and
+    // without scrolling) instead.
+    if (window.location.hash === "#ff-scouter-api-key") {
+      await panel.updateComplete;
+      const details = panel.querySelector("details");
+      if (details instanceof HTMLDetailsElement) {
+        details.open = true;
+      }
+    }
+
+    // Check key status in the background so it never blocks panel injection.
+    // is_registered reads the same cached check-key response is_premium just
+    // populated, so this is one API call, not two.
+    check_key_status.is_premium(true).then(async (result) => {
       panel.isPremium = result;
+      panel.isKeyRegistered = await check_key_status.is_registered(false);
     });
   },
 

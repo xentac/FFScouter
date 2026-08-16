@@ -86,12 +86,14 @@ const DEFAULT_VALUES = {
   factionFilterEnabled: CONFIG_DEFAULTS.faction_filter_enabled,
   warFilterEnabled: CONFIG_DEFAULTS.war_filter_enabled,
   isPremium: null as boolean | null,
+  isKeyRegistered: null as boolean | null,
 };
 
 type SettingsPanelComponentProps = {
   props: any;
   drafts: any;
   isPremium: boolean | null;
+  isKeyRegistered: boolean | null;
   rangeError: string;
   showSavedMessage: boolean;
   onChange: (
@@ -109,6 +111,7 @@ export function SettingsPanelComponent({
   props,
   drafts,
   isPremium,
+  isKeyRegistered,
   rangeError,
   showSavedMessage,
   onChange,
@@ -131,7 +134,7 @@ export function SettingsPanelComponent({
 
   return (
     <details
-      className={`${cls.accordion}${!props.apiKey ? ` ${cls.accordionGlow}` : ""} cont-gray border-round`}
+      className={`${cls.accordion}${!props.apiKey || isKeyRegistered === false ? ` ${cls.accordionGlow}` : ""} cont-gray border-round`}
     >
       <summary>FF Scouter Settings</summary>
 
@@ -161,9 +164,9 @@ export function SettingsPanelComponent({
 
             <div className={`${cls.span} ${cls.apiBlock}`}>
               <div className={cls.cell}>
-                <label htmlFor="api-key">API Key:</label>
+                <label htmlFor="ff-scouter-api-key">API Key:</label>
                 <input
-                  id="api-key"
+                  id="ff-scouter-api-key"
                   type="text"
                   className={props.apiKey ? cls.blur : ""}
                   placeholder="Paste your key here..."
@@ -812,6 +815,7 @@ export class FFSettingsPanel extends HTMLElement {
         props: this._props,
         drafts: this._drafts,
         isPremium: this._props.isPremium,
+        isKeyRegistered: this._props.isKeyRegistered,
         rangeError: this._rangeError,
         showSavedMessage: this._showSavedMessage,
         onChange: this.handleChange,
@@ -946,7 +950,7 @@ export class FFSettingsPanel extends HTMLElement {
     this._showSavedMessage = false;
 
     const id = target.id;
-    if (id === "api-key") {
+    if (id === "ff-scouter-api-key") {
       this._drafts.apiKey = target.value;
     } else if (
       id === "gauge-marker-scale" ||
@@ -1338,6 +1342,14 @@ export class FFSettingsPanel extends HTMLElement {
   }
   set isPremium(val) {
     this._props.isPremium = val;
+    this.render();
+  }
+
+  get isKeyRegistered() {
+    return this._props.isKeyRegistered;
+  }
+  set isKeyRegistered(val) {
+    this._props.isKeyRegistered = val;
     this.render();
   }
 

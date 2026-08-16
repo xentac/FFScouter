@@ -4,9 +4,11 @@ import {
   FFFactionFilterBox,
   getFilterBoxHandle,
 } from "@ui/faction-filter-box";
+import { check_key_status } from "@utils/check_key";
 import {
   apply_ff_gauge_selector,
   GaugeAttachMode,
+  getLocalUserId,
   on_navigation,
   torn_page,
   wait_for_element,
@@ -636,6 +638,149 @@ export function should_run_faction(): boolean {
   return false;
 }
 
+// ============================================================================
+// SECTION 5b: MISSING/INVALID API KEY NOTICE
+// A dismissible banner nudging users with no configured API key (or a
+// present-but-known-invalid one) toward the Settings Panel on their profile
+// page. Dismissal is tracked in module state rather than ffconfig: faction
+// pages are hash-routed (process_page() re-runs per hash change without a
+// full reload), so a plain in-memory flag survives switching tabs within the
+// same faction view but naturally resets on the next real page load. See ADR
+// 0012 for how the linked Settings Panel reveals the API Key field.
+// ============================================================================
+const API_KEY_NOTICE_ID = "ffscouter-api-key-notice";
+
+let apiKeyNoticeDismissed = false;
+// Serializes concurrent update_api_key_notice() calls (e.g. a hash change
+// firing while the previous check is still awaiting check_key_status) so two
+// in-flight calls can't both pass the "not already showing" check and insert
+// duplicate banners.
+let apiKeyNoticeQueue: Promise<void> = Promise.resolve();
+
+function remove_api_key_notice() {
+  document.getElementById(API_KEY_NOTICE_ID)?.remove();
+}
+
+function build_api_key_notice(message: string): HTMLElement {
+  const banner = document.createElement("div");
+  banner.id = API_KEY_NOTICE_ID;
+  banner.style.cssText = [
+    "background: var(--ffscouter-glow-color, #4caf50)",
+    "color: #fff",
+    "padding: 10px 16px",
+    "font-size: 14px",
+    "display: flex",
+    "align-items: center",
+    "justify-content: space-between",
+    "gap: 12px",
+    "z-index: 9999",
+    "box-sizing: border-box",
+    "width: 100%",
+  ].join(";");
+
+  const msg = document.createElement("span");
+  const link = document.createElement("a");
+  link.textContent = "FF Scouter Settings";
+  link.style.cssText =
+    "color: #fff; font-weight: bold; text-decoration: underline;";
+  // No href until getLocalUserId() resolves below: an <a> without href isn't
+  // rendered as a link by default, so this reads as plain text in the
+  // meantime rather than a dead/misleading link.
+  msg.append(message, link, " on your profile page.");
+
+  getLocalUserId()
+    .then((id) => {
+      if (id) {
+        link.href = `https://www.torn.com/profiles.php?XID=${id}#ff-scouter-api-key`;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+      }
+    })
+    .catch((err: unknown) => {
+      log.error(err);
+    });
+
+  const closeBtn = document.createElement("button");
+  closeBtn.textContent = "×";
+  closeBtn.setAttribute("aria-label", "Dismiss");
+  closeBtn.style.cssText = [
+    "background: none",
+    "border: none",
+    "color: #fff",
+    "font-size: 20px",
+    "font-weight: bold",
+    "cursor: pointer",
+    "padding: 0",
+    "line-height: 1",
+    "flex-shrink: 0",
+  ].join(";");
+  closeBtn.onclick = () => {
+    apiKeyNoticeDismissed = true;
+    banner.remove();
+  };
+
+  banner.appendChild(msg);
+  banner.appendChild(closeBtn);
+  return banner;
+}
+
+async function update_api_key_notice_impl() {
+  if (!should_run_faction() || apiKeyNoticeDismissed) {
+    remove_api_key_notice();
+    return;
+  }
+  if (document.getElementById(API_KEY_NOTICE_ID)) {
+    return;
+  }
+
+  let message: string;
+  if (!ffconfig.key) {
+    message =
+      "FF Scouter needs your API key to show Fair Fight data here. Enter it in ";
+  } else {
+    // Fails open on a null (unknown/error) result: a transient API hiccup
+    // should never accuse the user of having a bad key.
+    const registered = await check_key_status.is_registered();
+    if (registered !== false) {
+      return;
+    }
+    message = "Your FF Scouter API key isn't registered. Check it in ";
+  }
+
+  // Re-check after the await above: navigation, dismissal, or another queued
+  // call may have changed things while we were waiting on the key check.
+  if (!should_run_faction() || apiKeyNoticeDismissed) {
+    remove_api_key_notice();
+    return;
+  }
+  if (document.getElementById(API_KEY_NOTICE_ID)) {
+    return;
+  }
+
+  const wrapper = await wait_for_element(".content-wrapper", 10_000);
+  if (!wrapper) {
+    return;
+  }
+
+  if (!should_run_faction() || apiKeyNoticeDismissed) {
+    remove_api_key_notice();
+    return;
+  }
+  if (document.getElementById(API_KEY_NOTICE_ID)) {
+    return;
+  }
+
+  wrapper.prepend(build_api_key_notice(message));
+}
+
+function update_api_key_notice() {
+  apiKeyNoticeQueue = apiKeyNoticeQueue
+    .then(update_api_key_notice_impl)
+    .catch((err: unknown) => {
+      log.error(err);
+    });
+}
+
 export default {
   name: "Faction page FF display",
   description: "Shows FF arrows on both your faction and other faction pages.",
@@ -651,6 +796,7 @@ export default {
       if (should_run_faction()) {
         process_page();
       }
+      update_api_key_notice();
     });
 
     window.addEventListener("ff-config-updated", () => {
@@ -666,10 +812,12 @@ export default {
           }
         }
       }
+      update_api_key_notice();
     });
 
     if (should_run_faction()) {
       process_page();
     }
+    update_api_key_notice();
   },
 } satisfies Feature;

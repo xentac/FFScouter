@@ -32,7 +32,9 @@ test("ff-settings-panel dispatches ff-save-key on change event of the API key in
     events.push(e as CustomEvent);
   });
 
-  const apiKeyInput = el.querySelector("#api-key") as HTMLInputElement;
+  const apiKeyInput = el.querySelector(
+    "#ff-scouter-api-key",
+  ) as HTMLInputElement;
   expect(apiKeyInput).not.toBeNull();
 
   // Type the key (input) then commit it by blurring the field (focusout).
@@ -414,7 +416,9 @@ test("ff-settings-panel lays each section out as a grid with full-width bundles 
   // API key/Premium, Feature Toggles, and Debug Settings are each wrapped in
   // their own visually distinct group too
   expect(
-    el.querySelector("#api-key")?.closest(".ff-settings-panel__group"),
+    el
+      .querySelector("#ff-scouter-api-key")
+      ?.closest(".ff-settings-panel__group"),
   ).not.toBeNull();
   expect(
     el
@@ -454,7 +458,9 @@ test("ff-settings-panel lays each section out as a grid with full-width bundles 
     el.querySelector("#ff-range-low")?.closest(".ff-settings-panel__span"),
   ).not.toBeNull();
   expect(
-    el.querySelector("#api-key")?.closest(".ff-settings-panel__span"),
+    el
+      .querySelector("#ff-scouter-api-key")
+      ?.closest(".ff-settings-panel__span"),
   ).not.toBeNull();
 });
 

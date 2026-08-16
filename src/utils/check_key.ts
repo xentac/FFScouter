@@ -62,6 +62,17 @@ export class CheckKeyStatus {
     }
   };
 
+  is_registered = async (force: boolean = false): Promise<boolean | null> => {
+    try {
+      const status = await this.check_key_status(force);
+      if (!status) return null;
+      return status.is_registered;
+    } catch (err) {
+      log.warn("Failed to check key registration status:", err);
+      return null;
+    }
+  };
+
   clear = (): void => {
     this.storage.remove(CHECK_KEY);
   };
