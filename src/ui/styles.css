@@ -260,6 +260,10 @@ body {
   --ffscouter-arrow-width: calc(20px * var(--ffscouter-marker-scale));
   --ffscouter-bubble-font-size: calc(8.5px * var(--ffscouter-marker-scale));
   --ffscouter-source-marker-size: calc(12px * var(--ffscouter-marker-scale));
+  /* Opposite of --ffscouter-text-color: outlines the Stat Distribution Badge
+     icon so it stays legible over light FF cell colors even though its fill
+     (currentColor off --ffscouter-text-color) is black in this theme. */
+  --ffscouter-stat-badge-outline-color: #fff;
 }
 
 body.dark-mode {
@@ -271,6 +275,7 @@ body.dark-mode {
   --ffscouter-hover-color: #555;
   --ffscouter-glow-color: #4caf50;
   --ffscouter-success-color: #4caf50;
+  --ffscouter-stat-badge-outline-color: #000;
 }
 
 ff-settings-panel {
@@ -320,6 +325,78 @@ ff-settings-panel {
 
 .ffscouter-cell {
   cursor: pointer !important;
+  position: relative !important;
+  overflow: visible !important;
+}
+
+/* Stat Distribution Badge: small icon(s) in a faction/war .ffscouter-cell's
+   top corner(s) showing the player's dominant battle stat(s) (see
+   get_stat_distribution_badges in strings.ts). Centered horizontally on the
+   cell's left/right corner (left: 0/right: 0 plus a half-size translate)
+   rather than flush inside an edge, so the icon reads as sitting "in" the
+   corner rather than floating beside the cell. Unscoped (not
+   `.faction-war .ffscouter-cell`) since this badge shows on both the war box
+   and the regular faction member list. Fill follows the page's own light/dark
+   mode (--ffscouter-text-color, see body/body.dark-mode below) via
+   currentColor rather than the cell's own get_contrast_color background —
+   the badge overlaps the page background as much as the cell now that it's
+   corner-centered, and the FF-value-driven cell color made it unreadable
+   against a light-mode background of a similar shade. !important for the
+   same reason as .faction-war .ffscouter-cell below: fighting Torn's
+   host-page CSS on injected elements.
+
+   Vertical position differs by context: the war box row is tight (20px cell,
+   7px margin), so it keeps the badge centered exactly on the cell's top edge
+   (see the .faction-war override below — do not change this without the war
+   box in front of you, a previous broader positioning tweak here already
+   broke its row layout once). The regular (non-war) member list's rows are
+   much taller, so the default rule here sits the badge lower, dropping
+   further onto the cell instead of mostly poking above it.
+
+   Because part of the badge always renders outside .ffscouter-cell's own
+   box, .ffscouter-cell's own overflow:visible above covers that. A broader
+   attempt to also force overflow:visible up the row/list ancestor chain
+   (.table-row/.enemy/.your/.members-list) was tried and reverted —
+   .faction-war .members-list in particular is load-bearing for the
+   two-column war box layout, and forcing it visible broke row layout there.
+   If badges still clip in a specific context, that needs a narrower,
+   page-verified fix rather than another broad ancestor override. */
+.ffscouter-stat-badge {
+  position: absolute !important;
+  top: 6px !important;
+  width: 12px !important;
+  height: 12px !important;
+  color: var(--ffscouter-text-color) !important;
+  pointer-events: none !important;
+  overflow: visible !important;
+  z-index: 11 !important;
+}
+
+.faction-war .ffscouter-stat-badge {
+  top: 0 !important;
+}
+
+/* A thin halo (opposite of the icon's own theme color) so it stays readable
+   against lighter FF cell colors, where a same-toned icon+background nearly
+   disappears. paint-order draws the stroke first so it only shows as an
+   outline, not a filled ring, and keeps it from growing the icon much — the
+   viewBox is tightly cropped to each icon (~10-15 units) so a 1-unit stroke
+   reads as under 1px at the 12px render size. */
+.ffscouter-stat-badge path {
+  stroke: var(--ffscouter-stat-badge-outline-color) !important;
+  stroke-width: 1px !important;
+  stroke-linejoin: round !important;
+  paint-order: stroke fill !important;
+}
+
+.ffscouter-stat-badge--left {
+  left: 0 !important;
+  transform: translate(-50%, -50%) !important;
+}
+
+.ffscouter-stat-badge--right {
+  right: 0 !important;
+  transform: translate(50%, -50%) !important;
 }
 
 .faction-war .ffscouter-header,

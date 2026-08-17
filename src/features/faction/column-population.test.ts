@@ -212,6 +212,134 @@ test("apply_ff_columns injects Est column header and cells with distribution too
   expect(cell0.title).toContain("Top Stats: Strength: 50%, Speed: 20%");
 });
 
+test("apply_ff_columns shows the distribution tooltip and stat badges in FAIR_FIGHT mode too, not just BATTLE_STATS", async () => {
+  ffconfig.factions_col_display = FactionsColDisplay.FAIR_FIGHT;
+
+  vi.mocked(ffscouter.get).mockImplementation(async (id) => {
+    if (id === 111) {
+      return {
+        player_id: 111,
+        no_data: false,
+        fair_fight: 2.5,
+        last_updated: Date.now() / 1000,
+        bs_estimate: 1000000,
+        bs_estimate_human: "1M",
+        bss_public: 1,
+        source: "bss",
+        premium_insights_available: false,
+        available_estimates: {
+          bss: {
+            bss_public: 1,
+            bs_estimate: 1000000,
+            bs_estimate_human: "1M",
+            last_updated: Date.now() / 1000,
+            fair_fight: 2.5,
+          },
+          premium: null,
+          spies: null,
+        },
+        spies: [],
+        distribution: {
+          last_updated: Date.now() / 1000,
+          distribution_human: "Strength: 80%, Speed: 75%",
+          stats_percentage: { strength: 80, speed: 75 },
+        },
+      };
+    }
+    return { player_id: id as PlayerId, no_data: true };
+  });
+
+  const container = document.createElement("div");
+  container.className = "members-list";
+  container.innerHTML = `
+    <ul class="table-header">
+      <li class="member">Member</li>
+      <li class="lvl">Lvl</li>
+    </ul>
+    <ul class="table-body">
+      <li class="table-row">
+        <div class="member"><a href="/profiles.php?XID=111">Player 111</a></div>
+        <div class="lvl">50</div>
+      </li>
+    </ul>
+  `;
+  document.body.appendChild(container);
+
+  await apply_ff_columns(container);
+
+  const cell = container.querySelector(".ffscouter-cell") as HTMLElement;
+  expect(cell.title).toContain("Top Stats: Strength: 80%, Speed: 75%");
+
+  // strength (80) and speed (75) are within 10 points, so both show —
+  // higher (strength) on the left, lower (speed) on the right.
+  const badges = cell.querySelectorAll(".ffscouter-stat-badge");
+  expect(badges.length).toBe(2);
+  expect(badges[0]?.classList.contains("ffscouter-stat-badge--left")).toBe(
+    true,
+  );
+  expect(badges[0]?.getAttribute("aria-label")).toBe("Strength");
+  expect(badges[1]?.classList.contains("ffscouter-stat-badge--right")).toBe(
+    true,
+  );
+  expect(badges[1]?.getAttribute("aria-label")).toBe("Speed");
+});
+
+test("apply_ff_columns hides stat badges (but keeps the tooltip) when stat_distribution_badge_enabled is off", async () => {
+  ffconfig.factions_col_display = FactionsColDisplay.FAIR_FIGHT;
+  ffconfig.stat_distribution_badge_enabled = false;
+
+  vi.mocked(ffscouter.get).mockResolvedValue({
+    player_id: 111 as PlayerId,
+    no_data: false,
+    fair_fight: 2.5,
+    last_updated: Date.now() / 1000,
+    bs_estimate: 1000000,
+    bs_estimate_human: "1M",
+    bss_public: 1,
+    source: "bss",
+    premium_insights_available: false,
+    available_estimates: {
+      bss: {
+        bss_public: 1,
+        bs_estimate: 1000000,
+        bs_estimate_human: "1M",
+        last_updated: Date.now() / 1000,
+        fair_fight: 2.5,
+      },
+      premium: null,
+      spies: null,
+    },
+    spies: [],
+    distribution: {
+      last_updated: Date.now() / 1000,
+      distribution_human: "Strength: 80%",
+      stats_percentage: { strength: 80 },
+    },
+  });
+
+  const container = document.createElement("div");
+  container.className = "members-list";
+  container.innerHTML = `
+    <ul class="table-header">
+      <li class="member">Member</li>
+      <li class="lvl">Lvl</li>
+    </ul>
+    <ul class="table-body">
+      <li class="table-row">
+        <div class="member"><a href="/profiles.php?XID=111">Player 111</a></div>
+        <div class="lvl">50</div>
+      </li>
+    </ul>
+  `;
+  document.body.appendChild(container);
+
+  await apply_ff_columns(container);
+
+  const cell = container.querySelector(".ffscouter-cell") as HTMLElement;
+  expect(cell.title).toContain("Top Stats: Strength: 80%");
+  expect(cell.querySelectorAll(".ffscouter-stat-badge").length).toBe(0);
+});
+
 test("faction features react to ff-config-updated events", async () => {
   ffconfig.factions_col_display = FactionsColDisplay.FAIR_FIGHT;
 

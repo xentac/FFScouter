@@ -5,6 +5,7 @@ import type {
   EstimateSource,
   FFData,
   FFDataComplete,
+  FFDataDistribution,
   TimestampSec,
 } from "./types";
 
@@ -53,6 +54,104 @@ export const SPY_ICON_COLOR = "#4a90d9";
 export const PREMIUM_ICON_PATH_D =
   "M10,1 L12.47,6.6 L18.56,7.22 L13.99,11.3 L15.29,17.28 L10,14.2 L4.71,17.28 L6.01,11.3 L1.44,7.22 L7.53,6.6 Z";
 export const PREMIUM_ICON_COLOR = "#d4af37";
+
+export type StatKey = "strength" | "speed" | "defense" | "dexterity";
+
+// Geometry for the Stat Distribution Badge icons, hand-sliced from Torn's own
+// gym stat icon sheet (stat_icons.svg, root of repo). Each entry is one <g>
+// group from that file: `d` and `transform` are copied verbatim (the group's
+// path data is only meaningful together with its translate), and `viewBox` is
+// a tight crop (with ~0.5 unit padding) around that group's own bounding box
+// within the sheet's 136x34 viewBox, computed with svg-path-bbox rather than
+// guessed by hand — the four icons are not evenly spaced (translate x-offsets
+// -603.53/-868.4/-1097/-1224.75), so a naive 34px-wide slice per icon would
+// cut some of them off. The sheet's own gradient fills (url(#a) etc.) are
+// deliberately dropped here: the badge needs a solid get_contrast_color fill
+// to match the cell's own text color, not the sheet's fixed lime-green look.
+//
+// Which shape is which stat was confirmed by rendering each group standalone
+// and asking (2026-08-16): the 1st group (tx -603.53) is an arms-raised flex
+// pose (Strength), the 2nd (tx -868.4) is a hunched one-arm-up guard/brace
+// stance (Defense), the 3rd (tx -1097) is an unambiguous running figure
+// (Speed), and the 4th (tx -1224.75) is a leaning, reaching pose (Dexterity)
+// — do not reorder these to match file/DOM order without re-confirming, since
+// that first guess (Speed/Defense/Dexterity/Strength in file order) was wrong.
+export const STAT_ICON_GEOMETRY: Record<
+  StatKey,
+  { d: string; transform: string; viewBox: string }
+> = {
+  strength: {
+    d: "M721.018,226.5a1.506,1.506,0,1,0,1.506-1.5A1.5,1.5,0,0,0,721.018,226.5Zm-1.712,2.517a.838.838,0,0,1-.856-.989l.255-1.708a1.05,1.05,0,0,0-1.009-.743.618.618,0,0,0-.678.743l-.493,2.3a2.77,2.77,0,0,0,2.662,1.961h.827a.812.812,0,0,1,.831.985l-.36,2.48-1.689,4c-.168.531.194.962.808.962a1.111,1.111,0,0,0,.955-.643l1.761-3.685h.376l1.79,3.687a1.118,1.118,0,0,0,.959.641c.614,0,.975-.43.805-.961l-1.709-4.063-.342-2.413a.816.816,0,0,1,.834-.986h.828a2.77,2.77,0,0,0,2.663-1.961l-.495-2.288a.625.625,0,0,0-.685-.751,1.062,1.062,0,0,0-1.02.751l.257,1.7a.837.837,0,0,1-.855.989Z",
+    transform: "translate(-603.53, -215)",
+    viewBox: "112.5 9.5 13 15",
+  },
+  defense: {
+    d: "M916.08,233l-.886,3-.743,2.126a.63.63,0,0,0,.661.874,1.432,1.432,0,0,0,1.275-.874L917.13,236l.525-1.75,1.739.75-.381,3.1a.8.8,0,0,0,.841.9,1.08,1.08,0,0,0,1.063-.9l.381-3.1-1.838-3a1.244,1.244,0,0,1,1.05-1.234h.935a1.878,1.878,0,0,0,1.953-2l-.1-2.364a.9.9,0,0,0-.9-.693.6.6,0,0,0-.629.688L922,229h-3.79a1.4,1.4,0,0,0-1.3.97Zm1.05-6.5A1.577,1.577,0,1,0,918.7,225,1.539,1.539,0,0,0,917.13,226.5Z",
+    transform: "translate(-868.4, -215)",
+    viewBox: "45.5 9.5 10 15",
+  },
+  speed: {
+    d: "M1116,226.5a1.5,1.5,0,1,0,1.5-1.5A1.5,1.5,0,0,0,1116,226.5Zm4,6.188s1-.252,1-1.108-1-1-1-1-1.65.08-1.82-.143a8.8,8.8,0,0,0-2.18-1.716c-1.04-.571-1.85-1.119-2.7-.944-.86.159-2.54,2.14-3.15,2.7s.21,1.681,1.23.9a14.436,14.436,0,0,0,1.78-1.6s.53-.349.59-.175a5.245,5.245,0,0,1-.56,1.253,22.382,22.382,0,0,0-1.21,1.918c-.46.539-.83,1.506-1.05,1.57a20.377,20.377,0,0,1-2.55-.952.878.878,0,0,0-1.26.334,1,1,0,0,0,.45,1.332s3.6,1.522,4.09,1.427,1.64-2.109,1.95-2.109a3.4,3.4,0,0,1,1.54.792c.02.175,0,3.013,0,3.013s-.17.824.87.824.9-.824.9-.824.1-3.679.11-4.012-1.58-1.363-1.93-1.442c.39-.6,1.05-1.855,1.22-1.776.15.1.56,1.293,1.1,1.445C1117.92,232.531,1120,232.688,1120,232.688Z",
+    transform: "translate(-1097, -215)",
+    viewBox: "9.5 9.5 15 15",
+  },
+  dexterity: {
+    d: "M1315.748,233.172c0-1.188-1.713-2.818-1.713-2.818a5.12,5.12,0,0,0-2.3-1.785s-3.164-1.488-4.167-3.227a.679.679,0,0,0-.9-.262.611.611,0,0,0-.345.9,8.947,8.947,0,0,0,2.695,3.021c-1.661,1.051-2.308,4.288-2.308,4.288l-.167.758-1.755,4c-.178.531.2.962.835.962a1.154,1.154,0,0,0,.992-.643l1.838-3.685h.386l1.859,3.687a1.184,1.184,0,0,0,1,.641c.637,0,1.013-.43.836-.961L1310.755,234l-.178-.712a1.9,1.9,0,0,1,1.191-2.42,5.613,5.613,0,0,1,2.423,2.977l.073.155h1.149A2.038,2.038,0,0,0,1315.748,233.172Zm-3.426-6.672a1.568,1.568,0,1,0,1.567-1.5A1.533,1.533,0,0,0,1312.322,226.5Z",
+    transform: "translate(-1224.75, -215)",
+    viewBox: "79.5 9.5 12 15",
+  },
+};
+
+export const STAT_ICON_LABELS: Record<StatKey, string> = {
+  strength: "Strength",
+  speed: "Speed",
+  defense: "Defense",
+  dexterity: "Dexterity",
+};
+
+// A Stat Distribution Badge is never more than 2 icons, tagged with the cell
+// corner they render in — see get_stat_distribution_badges below.
+export type StatDistributionBadge = {
+  stat: StatKey;
+  percent: number;
+  position: "left" | "right";
+};
+
+// Ranking rule (see [[Stat Distribution Badge]] in CONTEXT.md): the highest
+// stats_percentage entry always gets a badge. A close 2nd (within 10
+// percentage points) also gets one, and when both show, the higher of the two
+// sits on the left, the lower on the right — but a lone highest (no close
+// 2nd) sits on the right by itself. Undefined stats_percentage fields are
+// excluded from ranking entirely, and never more than 2 badges are shown even
+// if a 3rd stat is also within 10 points of the 2nd.
+const CLOSE_SECOND_THRESHOLD = 10;
+
+export function get_stat_distribution_badges(
+  dist: FFDataDistribution,
+): StatDistributionBadge[] {
+  const entries = Object.entries(dist.stats_percentage) as [
+    StatKey,
+    number | undefined,
+  ][];
+  const ranked = entries
+    .filter((entry): entry is [StatKey, number] => entry[1] !== undefined)
+    .sort((a, b) => b[1] - a[1]);
+
+  const top = ranked[0];
+  if (!top) {
+    return [];
+  }
+
+  const second = ranked[1];
+  if (second && top[1] - second[1] <= CLOSE_SECOND_THRESHOLD) {
+    return [
+      { stat: top[0], percent: top[1], position: "left" },
+      { stat: second[0], percent: second[1], position: "right" },
+    ];
+  }
+
+  return [{ stat: top[0], percent: top[1], position: "right" }];
+}
 
 export function format_ff_score(d: FFDataComplete) {
   const ff = extract_ff(d).toFixed(2);

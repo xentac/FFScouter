@@ -87,6 +87,7 @@ const DEFAULT_VALUES = {
   settingsPanelOwnProfileOnly: CONFIG_DEFAULTS.settings_panel_own_profile_only,
   factionFilterEnabled: CONFIG_DEFAULTS.faction_filter_enabled,
   warFilterEnabled: CONFIG_DEFAULTS.war_filter_enabled,
+  statDistributionBadgeEnabled: CONFIG_DEFAULTS.stat_distribution_badge_enabled,
   isPremium: null as boolean | null,
   isKeyRegistered: null as boolean | null,
 };
@@ -638,6 +639,18 @@ export function SettingsPanelComponent({
 
             <div className={`${cls.cell} ${cls.cellCheckbox}`}>
               <input
+                id="stat-distribution-badge-toggle"
+                type="checkbox"
+                checked={drafts.statDistributionBadgeEnabled}
+                onChange={onChange}
+              />
+              <label htmlFor="stat-distribution-badge-toggle">
+                Show dominant stat badge on faction/war FF cells
+              </label>
+            </div>
+
+            <div className={`${cls.cell} ${cls.cellCheckbox}`}>
+              <input
                 id="settings-panel-own-profile-only-toggle"
                 type="checkbox"
                 checked={drafts.settingsPanelOwnProfileOnly}
@@ -817,6 +830,7 @@ export class FFSettingsPanel extends HTMLElement {
       settingsPanelOwnProfileOnly: this._props.settingsPanelOwnProfileOnly,
       factionFilterEnabled: this._props.factionFilterEnabled,
       warFilterEnabled: this._props.warFilterEnabled,
+      statDistributionBadgeEnabled: this._props.statDistributionBadgeEnabled,
     };
   }
 
@@ -948,6 +962,8 @@ export class FFSettingsPanel extends HTMLElement {
           settingsPanelOwnProfileOnly: this._drafts.settingsPanelOwnProfileOnly,
           factionFilterEnabled: this._drafts.factionFilterEnabled,
           warFilterEnabled: this._drafts.warFilterEnabled,
+          statDistributionBadgeEnabled:
+            this._drafts.statDistributionBadgeEnabled,
         },
         bubbles: true,
         composed: true,
@@ -1057,6 +1073,10 @@ export class FFSettingsPanel extends HTMLElement {
       this._drafts.factionFilterEnabled = (target as HTMLInputElement).checked;
     } else if (id === "war-filter-toggle") {
       this._drafts.warFilterEnabled = (target as HTMLInputElement).checked;
+    } else if (id === "stat-distribution-badge-toggle") {
+      this._drafts.statDistributionBadgeEnabled = (
+        target as HTMLInputElement
+      ).checked;
     }
 
     this.render();
@@ -1347,6 +1367,15 @@ export class FFSettingsPanel extends HTMLElement {
   set warFilterEnabled(val) {
     this._props.warFilterEnabled = val;
     this._drafts.warFilterEnabled = val;
+    this.render();
+  }
+
+  get statDistributionBadgeEnabled() {
+    return this._props.statDistributionBadgeEnabled;
+  }
+  set statDistributionBadgeEnabled(val) {
+    this._props.statDistributionBadgeEnabled = val;
+    this._drafts.statDistributionBadgeEnabled = val;
     this.render();
   }
 
@@ -1641,6 +1670,13 @@ export class FFSettingsPanel extends HTMLElement {
     this.render();
   }
 
+  get draftStatDistributionBadgeEnabled() {
+    return this._drafts.statDistributionBadgeEnabled;
+  }
+  set draftStatDistributionBadgeEnabled(val) {
+    this._drafts.statDistributionBadgeEnabled = val;
+    this.render();
+  }
 }
 
 // Guard against redefinition: the script's module graph can be evaluated more

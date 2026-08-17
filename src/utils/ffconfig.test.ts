@@ -55,6 +55,9 @@ test("FFConfig gets default values when storage is empty", () => {
   expect(config.settings_panel_own_profile_only).toEqual(
     CONFIG_DEFAULTS.settings_panel_own_profile_only,
   );
+  expect(config.stat_distribution_badge_enabled).toEqual(
+    CONFIG_DEFAULTS.stat_distribution_badge_enabled,
+  );
 });
 
 test("FFConfig sets and gets custom configuration values", () => {
@@ -81,6 +84,7 @@ test("FFConfig sets and gets custom configuration values", () => {
   config.gauge_marker_scale = 150;
   config.gauge_marker_border_width = 3;
   config.gauge_marker_justify = GaugeMarkerJustify.LEFT;
+  config.stat_distribution_badge_enabled = false;
 
   expect(config.key).toEqual("myapi-key");
   expect(config.low_ff_range).toEqual(1.5);
@@ -105,6 +109,7 @@ test("FFConfig sets and gets custom configuration values", () => {
   expect(config.gauge_marker_scale).toEqual(150);
   expect(config.gauge_marker_border_width).toEqual(3);
   expect(config.gauge_marker_justify).toEqual(GaugeMarkerJustify.LEFT);
+  expect(config.stat_distribution_badge_enabled).toBe(false);
 
   const mockTargets = {
     targets: [{ player_id: 1, name: "p1" } as any],
@@ -147,6 +152,7 @@ test("FFConfig.reset resets values to their default states except the api key", 
   config.gauge_marker_border_width = 3;
   config.gauge_marker_justify = GaugeMarkerJustify.RIGHT;
   config.settings_panel_own_profile_only = true;
+  config.stat_distribution_badge_enabled = false;
 
   config.reset();
 
@@ -181,5 +187,8 @@ test("FFConfig.reset resets values to their default states except the api key", 
   );
   expect(config.settings_panel_own_profile_only).toEqual(
     CONFIG_DEFAULTS.settings_panel_own_profile_only,
+  );
+  expect(config.stat_distribution_badge_enabled).toEqual(
+    CONFIG_DEFAULTS.stat_distribution_badge_enabled,
   );
 });

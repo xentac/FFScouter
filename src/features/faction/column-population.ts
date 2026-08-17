@@ -1,6 +1,10 @@
 import { getFilterBoxHandle } from "@ui/faction-filter-box";
 import { check_key_status } from "@utils/check_key";
-import { get_player_id_in_element, open_attack_link } from "@utils/dom";
+import {
+  get_player_id_in_element,
+  make_stat_icon_svg,
+  open_attack_link,
+} from "@utils/dom";
 import {
   extract_bs_estimate,
   extract_bs_estimate_human,
@@ -14,6 +18,7 @@ import {
   format_relative_time,
   get_contrast_color,
   get_ff_colour,
+  get_stat_distribution_badges,
 } from "@utils/strings";
 import type { PlayerId } from "@utils/types";
 import {
@@ -272,12 +277,30 @@ export async function apply_ff_columns(membersList: HTMLElement) {
         cell.style.fontWeight = "bold";
         cell.textContent = text;
 
-        if (isEst && data.distribution) {
+        // Shown regardless of Column Display Mode (FF/Est) — the tooltip used
+        // to be gated to Est mode only, which was an inconsistency corrected
+        // alongside the Stat Distribution Badge below (see CONTEXT.md).
+        if (data.distribution) {
           const ageStr = format_relative_time(data.distribution.last_updated);
           const agePart = ageStr ? ` ${ageStr}` : "";
           cell.title = `Top Stats: ${data.distribution.distribution_human}${agePart}`;
         } else {
           cell.title = "";
+        }
+
+        if (ffconfig.stat_distribution_badge_enabled && data.distribution) {
+          for (const badge of get_stat_distribution_badges(data.distribution)) {
+            cell.appendChild(
+              make_stat_icon_svg(
+                badge.stat,
+                // Follows the page's light/dark mode (--ffscouter-text-color
+                // in styles.css), not the cell's own FF-value-driven contrast
+                // color — see the .ffscouter-stat-badge comment in styles.css.
+                "currentColor",
+                `ffscouter-stat-badge ffscouter-stat-badge--${badge.position}`,
+              ),
+            );
+          }
         }
       }
     } else {

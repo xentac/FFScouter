@@ -252,6 +252,37 @@ test("ff-settings-panel dispatches ff-save event with correct factionFilterEnabl
   expect(saveEvents[0]?.detail?.factionFilterEnabled).toBe(true);
 });
 
+test("ff-settings-panel dispatches ff-save event with correct statDistributionBadgeEnabled when saved", async () => {
+  const el = document.createElement("ff-settings-panel") as FFSettingsPanel;
+  document.body.appendChild(el);
+  await el.updateComplete;
+
+  const saveEvents: CustomEvent[] = [];
+  el.addEventListener("ff-save", (e: Event) => {
+    saveEvents.push(e as CustomEvent);
+  });
+
+  const checkbox = el.querySelector(
+    "#stat-distribution-badge-toggle",
+  ) as HTMLInputElement;
+  expect(checkbox).not.toBeNull();
+  // Default is on; a real click toggles it off.
+  expect(checkbox.checked).toBe(true);
+
+  checkbox.click();
+  await el.updateComplete;
+  expect(checkbox.checked).toBe(false);
+
+  const saveBtn = Array.from(el.querySelectorAll("button")).find(
+    (btn) => btn.textContent?.trim() === "Save Settings",
+  ) as HTMLButtonElement;
+  expect(saveBtn).not.toBeNull();
+  saveBtn.click();
+
+  expect(saveEvents.length).toBe(1);
+  expect(saveEvents[0]?.detail?.statDistributionBadgeEnabled).toBe(false);
+});
+
 test("ff-settings-panel syncs the marker-size slider and number input, clamps out-of-range values, and dispatches gaugeMarkerScale on save", async () => {
   const el = document.createElement("ff-settings-panel") as FFSettingsPanel;
   document.body.appendChild(el);

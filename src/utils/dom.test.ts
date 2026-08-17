@@ -20,6 +20,7 @@ import {
   getLocalUserId,
   getRFC,
   MonitorElements,
+  make_stat_icon_svg,
   open_attack_link,
   torn_page,
   wait_for_body,
@@ -404,6 +405,25 @@ test("apply_ff_gauge invokes add_ff_arrow if element is valid", async () => {
 
   await new Promise((resolve) => setTimeout(resolve, 10));
   expect(mockGet).toHaveBeenCalledWith(456);
+});
+
+test("make_stat_icon_svg builds a labeled, filled SVG icon for each stat", () => {
+  const cases: ["strength" | "speed" | "defense" | "dexterity", string][] = [
+    ["strength", "Strength"],
+    ["speed", "Speed"],
+    ["defense", "Defense"],
+    ["dexterity", "Dexterity"],
+  ];
+
+  for (const [stat, label] of cases) {
+    const svg = make_stat_icon_svg(stat, "black", "ffscouter-stat-badge");
+    expect(svg.tagName.toLowerCase()).toEqual("svg");
+    expect(svg.getAttribute("class")).toEqual("ffscouter-stat-badge");
+    expect(svg.getAttribute("aria-label")).toEqual(label);
+    expect(svg.getAttribute("role")).toEqual("img");
+    expect(svg.querySelector("title")?.textContent).toEqual(label);
+    expect(svg.querySelector("path")?.getAttribute("fill")).toEqual("black");
+  }
 });
 
 test("wait_for_element resolves element when present or added", async () => {

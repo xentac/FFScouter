@@ -97,6 +97,7 @@ export const CONFIG_DEFAULTS = {
   settings_panel_own_profile_only: false,
   faction_filter_enabled: true,
   war_filter_enabled: true,
+  stat_distribution_badge_enabled: true,
 } as const;
 
 enum CONFIG {
@@ -139,6 +140,7 @@ enum CONFIG {
   SETTINGS_PANEL_OWN_PROFILE_ONLY = "settings_panel_own_profile_only",
   FACTION_FILTER_ENABLED = "faction_filter_enabled",
   WAR_FILTER_ENABLED = "war_filter_enabled",
+  STAT_DISTRIBUTION_BADGE_ENABLED = "stat_distribution_badge_enabled",
 }
 
 export class FFConfig {
@@ -430,6 +432,17 @@ export class FFConfig {
     this.storage.set(CONFIG.WAR_FILTER_ENABLED, val);
   }
 
+  get stat_distribution_badge_enabled(): boolean {
+    return (
+      this.storage.get(CONFIG.STAT_DISTRIBUTION_BADGE_ENABLED) ??
+      CONFIG_DEFAULTS.stat_distribution_badge_enabled
+    );
+  }
+
+  set stat_distribution_badge_enabled(val: boolean) {
+    this.storage.set(CONFIG.STAT_DISTRIBUTION_BADGE_ENABLED, val);
+  }
+
   get debug_disable_pda_http(): boolean {
     return (
       this.storage.get(CONFIG.DEBUG_DISABLE_PDA_HTTP) ??
@@ -611,6 +624,7 @@ export class FFConfig {
     this.storage.remove(CONFIG.SETTINGS_PANEL_OWN_PROFILE_ONLY);
     this.storage.remove(CONFIG.FACTION_FILTER_ENABLED);
     this.storage.remove(CONFIG.WAR_FILTER_ENABLED);
+    this.storage.remove(CONFIG.STAT_DISTRIBUTION_BADGE_ENABLED);
   }
 }
 

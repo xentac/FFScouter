@@ -11,10 +11,11 @@ import {
   get_ff_arrow_colour,
   get_ff_colour,
   get_source_marker,
+  get_stat_distribution_badges,
   parse_duration_to_seconds,
   parse_suffix_number,
 } from "./strings";
-import type { FFDataComplete } from "./types";
+import type { FFDataComplete, FFDataDistribution } from "./types";
 
 const HOUR = 60 * 60;
 const DAY = HOUR * 24;
@@ -282,6 +283,67 @@ test("get_source_marker returns an icon descriptor for spies and premium, and nu
     label: "Premium data",
   });
   expect(get_source_marker("bss")).toBeNull();
+});
+
+function dist(
+  stats_percentage: FFDataDistribution["stats_percentage"],
+): FFDataDistribution {
+  return {
+    last_updated: 0,
+    distribution_human: "",
+    stats_percentage,
+  };
+}
+
+test("get_stat_distribution_badges returns nothing when no stats are defined", () => {
+  expect(get_stat_distribution_badges(dist({}))).toEqual([]);
+});
+
+test("get_stat_distribution_badges shows a lone badge on the right when there's no close 2nd", () => {
+  expect(
+    get_stat_distribution_badges(
+      dist({ strength: 80, speed: 50, defense: 40, dexterity: 30 }),
+    ),
+  ).toEqual([{ stat: "strength", percent: 80, position: "right" }]);
+});
+
+test("get_stat_distribution_badges shows both badges when the 2nd is within 10 points, higher on the left", () => {
+  expect(
+    get_stat_distribution_badges(
+      dist({ strength: 80, speed: 72, defense: 40, dexterity: 30 }),
+    ),
+  ).toEqual([
+    { stat: "strength", percent: 80, position: "left" },
+    { stat: "speed", percent: 72, position: "right" },
+  ]);
+});
+
+test("get_stat_distribution_badges treats exactly 10 points apart as close", () => {
+  expect(
+    get_stat_distribution_badges(dist({ strength: 80, speed: 70 })),
+  ).toEqual([
+    { stat: "strength", percent: 80, position: "left" },
+    { stat: "speed", percent: 70, position: "right" },
+  ]);
+});
+
+test("get_stat_distribution_badges never shows more than 2, even if a 3rd is close to the 2nd", () => {
+  const result = get_stat_distribution_badges(
+    dist({ strength: 80, speed: 75, defense: 71, dexterity: 10 }),
+  );
+  expect(result).toHaveLength(2);
+  expect(result).toEqual([
+    { stat: "strength", percent: 80, position: "left" },
+    { stat: "speed", percent: 75, position: "right" },
+  ]);
+});
+
+test("get_stat_distribution_badges ignores undefined stats when ranking", () => {
+  expect(
+    get_stat_distribution_badges(
+      dist({ strength: undefined, speed: 60, defense: undefined }),
+    ),
+  ).toEqual([{ stat: "speed", percent: 60, position: "right" }]);
 });
 
 test("parse_duration_to_seconds parses compound and word-form durations", () => {

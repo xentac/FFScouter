@@ -20,6 +20,9 @@ import {
   SPY_ICON_COLOR,
   SPY_ICON_HANDLE,
   SPY_ICON_LENS,
+  STAT_ICON_GEOMETRY,
+  STAT_ICON_LABELS,
+  type StatKey,
 } from "./strings";
 import type { FFDataComplete, PlayerId } from "./types";
 
@@ -168,6 +171,30 @@ function make_source_marker_badge(d: FFDataComplete): SVGElement | null {
   }
 
   return make_source_marker_svg(marker, "ffscouter-source-marker");
+}
+
+// Builds one Stat Distribution Badge icon (see get_stat_distribution_badges in
+// strings.ts), sliced from Torn's own gym stat icon sheet. Raw-DOM only, for
+// column-population.ts's non-React faction/war cell construction — unlike
+// Source Marker, there's no JSX consumer for this badge, so it doesn't need a
+// second renderer built off the same STAT_ICON_GEOMETRY constants.
+export function make_stat_icon_svg(
+  stat: StatKey,
+  fill: string,
+  className: string,
+): SVGElement {
+  const geo = STAT_ICON_GEOMETRY[stat];
+  const label = STAT_ICON_LABELS[stat];
+  const div = document.createElement("div");
+  div.innerHTML = `<svg class="${className}" viewBox="${geo.viewBox}" role="img" aria-label="${label}">
+    <title>${label}</title>
+    <g transform="${geo.transform}"><path d="${geo.d}" fill="${fill}" /></g>
+  </svg>`;
+
+  if (!div.firstChild || !(div.firstChild instanceof SVGElement)) {
+    throw new Error("Wasn't able to extract stat icon SVG out of div element");
+  }
+  return div.firstChild;
 }
 
 // A bubble's rendered width is a pure function of its text plus the two
