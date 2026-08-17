@@ -44,6 +44,12 @@ export enum GaugeMarkerType {
   BUBBLE_ESTIMATE = "bubble_estimate",
 }
 
+export enum GaugeMarkerJustify {
+  GAUGE = "gauge",
+  LEFT = "left",
+  RIGHT = "right",
+}
+
 export enum ColorScheme {
   CLASSIC = "classic",
   COOL_DIVERGING = "cool_diverging",
@@ -80,6 +86,7 @@ export const CONFIG_DEFAULTS = {
   gauge_marker_type: GaugeMarkerType.ARROW,
   gauge_marker_scale: 100,
   gauge_marker_border_width: 1,
+  gauge_marker_justify: GaugeMarkerJustify.GAUGE,
   war_quick_attack_action: WarQuickAttackAction.NEW_TAB,
   network_interception_enabled: false,
   status_attack_links_enabled: true,
@@ -121,6 +128,7 @@ enum CONFIG {
   GAUGE_MARKER_TYPE = "gauge_marker_type",
   GAUGE_MARKER_SCALE = "gauge_marker_scale",
   GAUGE_MARKER_BORDER_WIDTH = "gauge_marker_border_width",
+  GAUGE_MARKER_JUSTIFY = "gauge_marker_justify",
   WAR_QUICK_ATTACK_ACTION = "war_quick_attack_action",
   NETWORK_INTERCEPTION_ENABLED = "network_interception_enabled",
   STATUS_ATTACK_LINKS_ENABLED = "status_attack_links_enabled",
@@ -477,6 +485,17 @@ export class FFConfig {
     this.storage.set(CONFIG.GAUGE_MARKER_BORDER_WIDTH, val);
   }
 
+  get gauge_marker_justify(): GaugeMarkerJustify {
+    return (
+      this.storage.get(CONFIG.GAUGE_MARKER_JUSTIFY) ??
+      CONFIG_DEFAULTS.gauge_marker_justify
+    );
+  }
+
+  set gauge_marker_justify(val: GaugeMarkerJustify) {
+    this.storage.set(CONFIG.GAUGE_MARKER_JUSTIFY, val);
+  }
+
   get color_scheme(): ColorScheme {
     return (
       this.storage.get(CONFIG.COLOR_SCHEME) ?? CONFIG_DEFAULTS.color_scheme
@@ -582,6 +601,7 @@ export class FFConfig {
     this.storage.remove(CONFIG.GAUGE_MARKER_TYPE);
     this.storage.remove(CONFIG.GAUGE_MARKER_SCALE);
     this.storage.remove(CONFIG.GAUGE_MARKER_BORDER_WIDTH);
+    this.storage.remove(CONFIG.GAUGE_MARKER_JUSTIFY);
     this.storage.remove(CONFIG.WAR_QUICK_ATTACK_ACTION);
     this.storage.remove(CONFIG.STATUS_ATTACK_LINKS_ENABLED);
     this.storage.remove(CONFIG.DEBUG_DISABLE_PDA_HTTP);

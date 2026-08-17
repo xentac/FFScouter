@@ -26,7 +26,12 @@ import {
   wait_for_element,
   waitForDocumentReady,
 } from "./dom";
-import { ffconfig, GaugeMarkerType, WarQuickAttackAction } from "./ffconfig";
+import {
+  ffconfig,
+  GaugeMarkerJustify,
+  GaugeMarkerType,
+  WarQuickAttackAction,
+} from "./ffconfig";
 import { ffscouter } from "./ffscouter";
 
 vi.mock("./ffscouter", () => {
@@ -338,6 +343,50 @@ test("add_ff_arrow renders bubble with stat estimate when configured", async () 
   const bubble = anchor.querySelector(".ffscouter-bubble");
   expect(bubble).not.toBeNull();
   expect(bubble?.textContent).toEqual("1.2b");
+});
+
+test("add_ff_arrow pins a bubble marker to the edge when gauge_marker_justify is set, overriding the FF-value position", async () => {
+  ffconfig.gauge_marker_type = GaugeMarkerType.BUBBLE_FF;
+  ffconfig.gauge_marker_justify = GaugeMarkerJustify.LEFT;
+  vi.mocked(ffscouter.get).mockResolvedValue(mock_ff_data());
+
+  const leftAnchor = document.createElement("a");
+  leftAnchor.href = "https://www.torn.com/profiles.php?XID=123";
+  document.body.appendChild(leftAnchor);
+
+  add_ff_arrow(leftAnchor, "test", GaugeAttachMode.FALLBACK);
+  await new Promise((resolve) => setTimeout(resolve, 10));
+
+  expect(leftAnchor.style.getPropertyValue("--band-percent")).toEqual("0");
+  expect(leftAnchor.getAttribute("data-ffscouter-band-side")).toEqual("left");
+
+  ffconfig.gauge_marker_justify = GaugeMarkerJustify.RIGHT;
+  const rightAnchor = document.createElement("a");
+  rightAnchor.href = "https://www.torn.com/profiles.php?XID=456";
+  document.body.appendChild(rightAnchor);
+
+  add_ff_arrow(rightAnchor, "test", GaugeAttachMode.FALLBACK);
+  await new Promise((resolve) => setTimeout(resolve, 10));
+
+  expect(rightAnchor.style.getPropertyValue("--band-percent")).toEqual("100");
+  expect(rightAnchor.getAttribute("data-ffscouter-band-side")).toEqual("right");
+});
+
+test("add_ff_arrow ignores gauge_marker_justify for the arrow marker style", async () => {
+  ffconfig.gauge_marker_type = GaugeMarkerType.ARROW;
+  ffconfig.gauge_marker_justify = GaugeMarkerJustify.LEFT;
+  vi.mocked(ffscouter.get).mockResolvedValue(mock_ff_data());
+
+  const anchor = document.createElement("a");
+  anchor.href = "https://www.torn.com/profiles.php?XID=123";
+  document.body.appendChild(anchor);
+
+  add_ff_arrow(anchor, "test", GaugeAttachMode.FALLBACK);
+  await new Promise((resolve) => setTimeout(resolve, 10));
+
+  // Same FF-value-driven percent as the plain arrow test above, unaffected
+  // by gauge_marker_justify since it only applies to bubble marker styles.
+  expect(anchor.style.getPropertyValue("--band-percent")).toEqual("57.75");
 });
 
 test("apply_ff_gauge invokes add_ff_arrow if element is valid", async () => {

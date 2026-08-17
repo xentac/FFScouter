@@ -4,6 +4,7 @@ import {
   CONFIG_DEFAULTS,
   type ColorScheme,
   type FactionsColDisplay,
+  type GaugeMarkerJustify,
   type GaugeMarkerType,
   type WarQuickAttackAction,
 } from "@utils/ffconfig";
@@ -77,6 +78,7 @@ const DEFAULT_VALUES = {
   gaugeMarkerType: CONFIG_DEFAULTS.gauge_marker_type,
   gaugeMarkerScale: CONFIG_DEFAULTS.gauge_marker_scale,
   gaugeMarkerBorderWidth: CONFIG_DEFAULTS.gauge_marker_border_width,
+  gaugeMarkerJustify: CONFIG_DEFAULTS.gauge_marker_justify,
   colorScheme: CONFIG_DEFAULTS.color_scheme,
   warQuickAttackAction: CONFIG_DEFAULTS.war_quick_attack_action,
   statusAttackLinksEnabled: CONFIG_DEFAULTS.status_attack_links_enabled,
@@ -221,6 +223,22 @@ export function SettingsPanelComponent({
                 <option value="bubble_estimate">Bubble (BS Estimate)</option>
               </select>
             </div>
+
+            {(drafts.gaugeMarkerType === "bubble_ff" ||
+              drafts.gaugeMarkerType === "bubble_estimate") && (
+              <div className={cls.cell}>
+                <label htmlFor="gauge-marker-justify">Bubble Position:</label>
+                <select
+                  id="gauge-marker-justify"
+                  value={drafts.gaugeMarkerJustify}
+                  onChange={onChange}
+                >
+                  <option value="gauge">Gauge (Default)</option>
+                  <option value="left">Always Left</option>
+                  <option value="right">Always Right</option>
+                </select>
+              </div>
+            )}
 
             <div className={`${cls.span} ${cls.markerSize}`}>
               <label htmlFor="gauge-marker-scale">Marker Size:</label>
@@ -790,6 +808,7 @@ export class FFSettingsPanel extends HTMLElement {
       gaugeMarkerType: this._props.gaugeMarkerType,
       gaugeMarkerScale: this._props.gaugeMarkerScale,
       gaugeMarkerBorderWidth: this._props.gaugeMarkerBorderWidth,
+      gaugeMarkerJustify: this._props.gaugeMarkerJustify,
       colorScheme: this._props.colorScheme,
       warQuickAttackAction: this._props.warQuickAttackAction,
       statusAttackLinksEnabled: this._props.statusAttackLinksEnabled,
@@ -920,6 +939,7 @@ export class FFSettingsPanel extends HTMLElement {
           gaugeMarkerType: this._drafts.gaugeMarkerType,
           gaugeMarkerScale: this._drafts.gaugeMarkerScale,
           gaugeMarkerBorderWidth: this._drafts.gaugeMarkerBorderWidth,
+          gaugeMarkerJustify: this._drafts.gaugeMarkerJustify,
           colorScheme: this._drafts.colorScheme,
           warQuickAttackAction: this._drafts.warQuickAttackAction,
           statusAttackLinksEnabled: this._drafts.statusAttackLinksEnabled,
@@ -989,6 +1009,8 @@ export class FFSettingsPanel extends HTMLElement {
       this._drafts.chainFFTarget = num;
     } else if (id === "gauge-marker-type") {
       this._drafts.gaugeMarkerType = target.value as GaugeMarkerType;
+    } else if (id === "gauge-marker-justify") {
+      this._drafts.gaugeMarkerJustify = target.value as GaugeMarkerJustify;
     } else if (id === "color-scheme") {
       this._drafts.colorScheme = target.value as ColorScheme;
     } else if (id === "chain-link-type") {
@@ -1265,6 +1287,15 @@ export class FFSettingsPanel extends HTMLElement {
     this.render();
   }
 
+  get gaugeMarkerJustify() {
+    return this._props.gaugeMarkerJustify;
+  }
+  set gaugeMarkerJustify(val) {
+    this._props.gaugeMarkerJustify = val;
+    this._drafts.gaugeMarkerJustify = val;
+    this.render();
+  }
+
   get colorScheme() {
     return this._props.colorScheme;
   }
@@ -1538,6 +1569,14 @@ export class FFSettingsPanel extends HTMLElement {
     this.render();
   }
 
+  get draftGaugeMarkerJustify() {
+    return this._drafts.gaugeMarkerJustify;
+  }
+  set draftGaugeMarkerJustify(val) {
+    this._drafts.gaugeMarkerJustify = val;
+    this.render();
+  }
+
   get draftColorScheme() {
     return this._drafts.colorScheme;
   }
@@ -1601,6 +1640,7 @@ export class FFSettingsPanel extends HTMLElement {
     this._drafts.warFilterEnabled = val;
     this.render();
   }
+
 }
 
 // Guard against redefinition: the script's module graph can be evaluated more

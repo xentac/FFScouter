@@ -74,6 +74,53 @@ test("ff-settings-panel dispatches ff-save event with correct gaugeMarkerType wh
   expect(saveEvents[0]?.detail?.gaugeMarkerType).toBe("bubble_ff");
 });
 
+test("ff-settings-panel shows Bubble Position only when a bubble marker style is selected, and dispatches gaugeMarkerJustify on save", async () => {
+  const el = document.createElement("ff-settings-panel") as FFSettingsPanel;
+  document.body.appendChild(el);
+  await el.updateComplete;
+
+  const typeSelect = el.querySelector(
+    "#gauge-marker-type",
+  ) as HTMLSelectElement;
+  expect(typeSelect).not.toBeNull();
+
+  // Arrow is the default style — Bubble Position is hidden entirely.
+  expect(el.querySelector("#gauge-marker-justify")).toBeNull();
+
+  typeSelect.value = "bubble_ff";
+  typeSelect.dispatchEvent(new Event("change", { bubbles: true }));
+  await el.updateComplete;
+
+  const justifySelect = el.querySelector(
+    "#gauge-marker-justify",
+  ) as HTMLSelectElement;
+  expect(justifySelect).not.toBeNull();
+
+  const saveEvents: CustomEvent[] = [];
+  el.addEventListener("ff-save", (e: Event) => {
+    saveEvents.push(e as CustomEvent);
+  });
+
+  justifySelect.value = "left";
+  justifySelect.dispatchEvent(new Event("change", { bubbles: true }));
+
+  const saveBtn = Array.from(el.querySelectorAll("button")).find(
+    (btn) => btn.textContent?.trim() === "Save Settings",
+  ) as HTMLButtonElement;
+  expect(saveBtn).not.toBeNull();
+  saveBtn.click();
+
+  expect(saveEvents.length).toBe(1);
+  expect(saveEvents[0]?.detail?.gaugeMarkerJustify).toBe("left");
+
+  // Switching back to Arrow hides the control again.
+  typeSelect.value = "arrow";
+  typeSelect.dispatchEvent(new Event("change", { bubbles: true }));
+  await el.updateComplete;
+
+  expect(el.querySelector("#gauge-marker-justify")).toBeNull();
+});
+
 test("ff-settings-panel dispatches ff-save event with correct networkInterceptionEnabled when saved", async () => {
   const el = document.createElement("ff-settings-panel") as FFSettingsPanel;
   document.body.appendChild(el);

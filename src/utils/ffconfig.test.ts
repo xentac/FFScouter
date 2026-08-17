@@ -6,6 +6,7 @@ import {
   CONFIG_DEFAULTS,
   FactionsColDisplay,
   FFConfig,
+  GaugeMarkerJustify,
 } from "./ffconfig";
 
 let config: FFConfig;
@@ -48,6 +49,9 @@ test("FFConfig gets default values when storage is empty", () => {
   expect(config.gauge_marker_border_width).toEqual(
     CONFIG_DEFAULTS.gauge_marker_border_width,
   );
+  expect(config.gauge_marker_justify).toEqual(
+    CONFIG_DEFAULTS.gauge_marker_justify,
+  );
   expect(config.settings_panel_own_profile_only).toEqual(
     CONFIG_DEFAULTS.settings_panel_own_profile_only,
   );
@@ -76,6 +80,7 @@ test("FFConfig sets and gets custom configuration values", () => {
   config.chain_factionless = true;
   config.gauge_marker_scale = 150;
   config.gauge_marker_border_width = 3;
+  config.gauge_marker_justify = GaugeMarkerJustify.LEFT;
 
   expect(config.key).toEqual("myapi-key");
   expect(config.low_ff_range).toEqual(1.5);
@@ -99,6 +104,7 @@ test("FFConfig sets and gets custom configuration values", () => {
   expect(config.chain_factionless).toBe(true);
   expect(config.gauge_marker_scale).toEqual(150);
   expect(config.gauge_marker_border_width).toEqual(3);
+  expect(config.gauge_marker_justify).toEqual(GaugeMarkerJustify.LEFT);
 
   const mockTargets = {
     targets: [{ player_id: 1, name: "p1" } as any],
@@ -139,6 +145,7 @@ test("FFConfig.reset resets values to their default states except the api key", 
   config.chain_target_index = 2;
   config.gauge_marker_scale = 150;
   config.gauge_marker_border_width = 3;
+  config.gauge_marker_justify = GaugeMarkerJustify.RIGHT;
   config.settings_panel_own_profile_only = true;
 
   config.reset();
@@ -168,6 +175,9 @@ test("FFConfig.reset resets values to their default states except the api key", 
   expect(config.gauge_marker_scale).toEqual(CONFIG_DEFAULTS.gauge_marker_scale);
   expect(config.gauge_marker_border_width).toEqual(
     CONFIG_DEFAULTS.gauge_marker_border_width,
+  );
+  expect(config.gauge_marker_justify).toEqual(
+    CONFIG_DEFAULTS.gauge_marker_justify,
   );
   expect(config.settings_panel_own_profile_only).toEqual(
     CONFIG_DEFAULTS.settings_panel_own_profile_only,

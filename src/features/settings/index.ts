@@ -84,6 +84,7 @@ export default {
     panel.gaugeMarkerType = ffconfig.gauge_marker_type;
     panel.gaugeMarkerScale = ffconfig.gauge_marker_scale;
     panel.gaugeMarkerBorderWidth = ffconfig.gauge_marker_border_width;
+    panel.gaugeMarkerJustify = ffconfig.gauge_marker_justify;
     panel.colorScheme = ffconfig.color_scheme;
     panel.warQuickAttackAction = ffconfig.war_quick_attack_action;
     panel.statusAttackLinksEnabled = ffconfig.status_attack_links_enabled;
@@ -126,6 +127,7 @@ export default {
       ffconfig.gauge_marker_type = detail.gaugeMarkerType;
       ffconfig.gauge_marker_scale = detail.gaugeMarkerScale;
       ffconfig.gauge_marker_border_width = detail.gaugeMarkerBorderWidth;
+      ffconfig.gauge_marker_justify = detail.gaugeMarkerJustify;
       document.body.style.setProperty(
         "--ffscouter-marker-scale",
         `${detail.gaugeMarkerScale / 100}`,
@@ -173,6 +175,7 @@ export default {
       panel.gaugeMarkerType = ffconfig.gauge_marker_type;
       panel.gaugeMarkerScale = ffconfig.gauge_marker_scale;
       panel.gaugeMarkerBorderWidth = ffconfig.gauge_marker_border_width;
+      panel.gaugeMarkerJustify = ffconfig.gauge_marker_justify;
       document.body.style.setProperty(
         "--ffscouter-marker-scale",
         `${ffconfig.gauge_marker_scale / 100}`,

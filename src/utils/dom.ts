@@ -3,7 +3,7 @@ import {
   extract_ff,
   extract_source,
 } from "./estimate";
-import { ffconfig, GaugeMarkerType } from "./ffconfig";
+import { ffconfig, GaugeMarkerJustify, GaugeMarkerType } from "./ffconfig";
 import { ffscouter } from "./ffscouter";
 import logger from "./logger";
 import {
@@ -322,7 +322,23 @@ export function add_ff_arrow(
         return;
       }
 
-      const percent = ff_to_percent(d);
+      // Bubble Position (gauge_marker_justify) only applies to the bubble
+      // marker styles — it overrides the same --band-percent/band-side pair
+      // ff_to_percent normally drives, forcing the marker to the edge-clamped
+      // position a gauge-plotted marker would reach at FF=0%/100%, so the
+      // existing anchor/clamp/badge-margin CSS is reused unchanged. See
+      // [[Bubble Position]] in CONTEXT.md.
+      const isBubbleMarker =
+        ffconfig.gauge_marker_type === GaugeMarkerType.BUBBLE_FF ||
+        ffconfig.gauge_marker_type === GaugeMarkerType.BUBBLE_ESTIMATE;
+      let percent = ff_to_percent(d);
+      if (isBubbleMarker) {
+        if (ffconfig.gauge_marker_justify === GaugeMarkerJustify.LEFT) {
+          percent = 0;
+        } else if (ffconfig.gauge_marker_justify === GaugeMarkerJustify.RIGHT) {
+          percent = 100;
+        }
+      }
       element.classList.add("ffscouter-gauge");
       element.style.setProperty("--band-percent", `${percent}`);
       element.setAttribute("data-ffscouter-attach-mode", attachMode);
