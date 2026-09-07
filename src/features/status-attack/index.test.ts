@@ -19,6 +19,7 @@ import itemMarketHonorOff from "./__fixtures__/torn-markup/2026-07-24/item-marke
 import itemMarketHonorOn from "./__fixtures__/torn-markup/2026-07-24/item-market-userinfobox-honor-on.html?raw";
 import warListEnemyRows from "./__fixtures__/torn-markup/2026-07-26/war-list-enemy-rows.html?raw";
 import travelPeopleList from "./__fixtures__/torn-markup/2026-08-16/travel-people-list.html?raw";
+import advancedSearchUserList from "./__fixtures__/torn-markup/2026-09-07/advanced-search-user-list.html?raw";
 import statusAttack from "./index";
 
 vi.mock("@utils/dom", async (importOriginal) => {
@@ -559,6 +560,83 @@ describe("Online Status Attack Links Feature", () => {
         "_blank",
       );
     }
+  });
+
+  test("Advanced Search user-list real markup: clicking the online/idle/offline presence dot extracts the correct player per row, unmocked", async () => {
+    // Real ~25-row capture of an Advanced Search results list
+    // (page.php?sid=UserList, 2026-09-07). Rows are li.user{ID} with the
+    // presence dot in the .expander's singleicon tray next to the faction
+    // tag and profile link; a second (non-singleicon) badge tray below the
+    // row carries Hospital/Bazaar/Faction/Company icons with userID= links.
+    // No .left-right-wrapper / userInfoBox__ here, so this is its own
+    // extraction path. The capture has only Offline and Idle rows.
+    document.body.innerHTML = advancedSearchUserList;
+    vi.mocked(torn_page).mockImplementation(() => false);
+
+    const actualDom =
+      await vi.importActual<typeof import("@utils/dom")>("@utils/dom");
+    vi.mocked(get_player_id_in_element).mockImplementation(
+      actualDom.get_player_id_in_element,
+    );
+
+    const rows: number[] = [
+      2850901, // --El_Nino: Offline, Bazaar badge
+      3134438, // -ACK-: Offline, Hospital badge
+      1826446, // -BELL-: Offline, Bazaar + Hospital badges
+      201319, // -0_0-: Idle
+      633255, // -Blue: Idle
+      378702, // -CB-: Idle
+    ];
+
+    await statusAttack.run();
+
+    for (const playerId of rows) {
+      const row = document.querySelector(`li.user${playerId}`);
+      expect(row).not.toBeNull();
+
+      // Two 2-part queries rather than a 3-part descendant chain, for the
+      // same jsdom/nwsapi repeated-id="iconTray" false negative documented
+      // in the travel presence-dot test above.
+      const presenceDot = row
+        ?.querySelector("ul.singleicon")
+        ?.querySelector("li.iconShow") as HTMLElement;
+      expect(presenceDot).not.toBeNull();
+
+      presenceDot.click();
+
+      expect(openSpy).toHaveBeenLastCalledWith(
+        `https://www.torn.com/page.php?sid=attack&user2ID=${playerId}`,
+        "_blank",
+      );
+    }
+  });
+
+  test("Advanced Search user-list real markup: clicking a lower-tray badge is not intercepted", async () => {
+    document.body.innerHTML = advancedSearchUserList;
+    vi.mocked(torn_page).mockImplementation(() => false);
+
+    const actualDom =
+      await vi.importActual<typeof import("@utils/dom")>("@utils/dom");
+    vi.mocked(get_player_id_in_element).mockImplementation(
+      actualDom.get_player_id_in_element,
+    );
+
+    await statusAttack.run();
+
+    // The Faction badge in the lower "Status:" tray links with userID=,
+    // which must stay a plain navigation, not a quick-attack.
+    const row = document.querySelector("li.user2850901");
+    const factionBadge = row
+      ?.querySelector('a[aria-label^="Faction"]')
+      ?.closest("li") as HTMLElement;
+    expect(factionBadge).not.toBeNull();
+
+    const event = new MouseEvent("click", { bubbles: true, cancelable: true });
+    factionBadge.dispatchEvent(event);
+
+    expect(event.defaultPrevented).toBe(false);
+    expect(openSpy).not.toHaveBeenCalled();
+    expect(mockLocation.href).toBe("");
   });
 
   test("Click is bypassed when status_attack_links_enabled is false", async () => {

@@ -533,6 +533,10 @@ body[data-ff-status-attack-enabled="true"] .status > [class$="-status"],
 body[data-ff-status-attack-enabled="true"]
   .left-side
   ul.singleicon
+  li[id^="icon"][id*="___"].iconShow,
+body[data-ff-status-attack-enabled="true"]
+  .user-info-list-wrap
+  ul.singleicon
   li[id^="icon"][id*="___"].iconShow {
   cursor: crosshair !important;
 }

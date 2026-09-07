@@ -138,7 +138,8 @@ function handleStatusClick(e: MouseEvent) {
     #profile-mini-root li[id^="icon"][id*="-mini-profile-"].user-status-16-Offline,
     li[id^="icon"][id*="___"].iconShow.ffscouter-forum-status,
     .status > [class$="-status"],
-    .left-side ul.singleicon li[id^="icon"][id*="___"].iconShow
+    .left-side ul.singleicon li[id^="icon"][id*="___"].iconShow,
+    .user-info-list-wrap ul.singleicon li[id^="icon"][id*="___"].iconShow
   `);
 
   if (!statusEl) return;
@@ -215,7 +216,20 @@ function handleStatusClick(e: MouseEvent) {
     }
   }
 
-  // 8. Generic userInfoBox fallback (Item Market and other pages using Torn's
+  // 8. Advanced Search user-list rows (page.php?sid=UserList): the presence
+  // dot sits in the .expander's singleicon tray. The expander's only other
+  // anchors are the faction-tag link (ID=, never matched) and the profile
+  // link (XID=), so scoping here keeps the lower "Status:" badge tray's
+  // userID=/NID= links (faction/company/bazaar/spouse) structurally out of
+  // reach.
+  if (!playerId) {
+    const container = statusEl.closest(".user-info-list-wrap .expander");
+    if (container) {
+      playerId = get_player_id_in_element(container);
+    }
+  }
+
+  // 9. Generic userInfoBox fallback (Item Market and other pages using Torn's
   // shared userInfoBox__/userInfoWrapper__ widget; scoped to the closest box
   // so a listing grid's neighboring player can't be picked up instead)
   if (!playerId) {
