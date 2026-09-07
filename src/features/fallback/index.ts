@@ -145,7 +145,10 @@ export default {
       if (href.startsWith("https://www.torn.com/companies.php")) {
         page_specific = [".employee", ".director"];
       } else if (
-        href.startsWith("https://www.torn.com/page.php?sid=competition#/team")
+        href.startsWith(
+          "https://www.torn.com/page.php?sid=competition#/team",
+        ) ||
+        href.startsWith("https://www.torn.com/page.php?sid=elimination#/team")
       ) {
         page_specific = ['[class*="name__"]'];
       } else if (href.startsWith("https://www.torn.com/joblist.php")) {
