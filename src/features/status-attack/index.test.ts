@@ -20,6 +20,8 @@ import itemMarketHonorOn from "./__fixtures__/torn-markup/2026-07-24/item-market
 import warListEnemyRows from "./__fixtures__/torn-markup/2026-07-26/war-list-enemy-rows.html?raw";
 import travelPeopleList from "./__fixtures__/torn-markup/2026-08-16/travel-people-list.html?raw";
 import advancedSearchUserList from "./__fixtures__/torn-markup/2026-09-07/advanced-search-user-list.html?raw";
+import eliminationsTeamListDesktop from "./__fixtures__/torn-markup/2026-09-07/eliminations-team-list-desktop.html?raw";
+import eliminationsTeamListMobile from "./__fixtures__/torn-markup/2026-09-07/eliminations-team-list-mobile.html?raw";
 import statusAttack from "./index";
 
 vi.mock("@utils/dom", async (importOriginal) => {
@@ -635,6 +637,145 @@ describe("Online Status Attack Links Feature", () => {
     factionBadge.dispatchEvent(event);
 
     expect(event.defaultPrevented).toBe(false);
+    expect(openSpy).not.toHaveBeenCalled();
+    expect(mockLocation.href).toBe("");
+  });
+
+  // Eliminations team-list rows (page.php?sid=elimination#/team/N, 2026-09-07
+  // capture): a virtualized dataGridRow__ grid whose name__, icons__ (full
+  // badge tray) and status__ cells are siblings. Rows are located by exact
+  // profile href, then queried inside the row one hop at a time, for the
+  // same jsdom/nwsapi repeated-id="iconTray" false negative documented in
+  // the travel presence-dot test above.
+  const eliminationRows: {
+    playerId: number;
+    presence: string;
+    status: string;
+  }[] = [
+    { playerId: 166, presence: "Offline", status: "Okay" }, // Married NID=, Bazaar userID=
+    { playerId: 35899, presence: "Idle", status: "Okay" }, // CJtheMACK
+    { playerId: 39829, presence: "Online", status: "Okay" }, // JonnyD
+    { playerId: 84976, presence: "Online", status: "Okay" }, // Jokar
+    { playerId: 213936, presence: "Offline", status: "Abroad" }, // Polinux, extra icon71 Abroad badge
+    { playerId: 246493, presence: "Offline", status: "Traveling" }, // TarmimiSiregar, extra icon71 Traveling badge
+  ];
+
+  function eliminationRow(playerId: number): HTMLElement {
+    const row = document
+      .querySelector(`a[href="/profiles.php?XID=${playerId}"]`)
+      ?.closest('[class*="dataGridRow__"]') as HTMLElement;
+    expect(row).not.toBeNull();
+    return row;
+  }
+
+  async function runUnmockedOnFixture(fixture: string) {
+    document.body.innerHTML = fixture;
+    vi.mocked(torn_page).mockImplementation(() => false);
+
+    const actualDom =
+      await vi.importActual<typeof import("@utils/dom")>("@utils/dom");
+    vi.mocked(get_player_id_in_element).mockImplementation(
+      actualDom.get_player_id_in_element,
+    );
+
+    await statusAttack.run();
+  }
+
+  test("Eliminations team-list real markup (desktop): clicking the presence icon in the badge tray extracts the correct player per row, unmocked", async () => {
+    await runUnmockedOnFixture(eliminationsTeamListDesktop);
+
+    for (const { playerId, presence } of eliminationRows) {
+      const row = eliminationRow(playerId);
+      // Dispatch on the <a>, which is what a real click lands on.
+      const presenceLink = row.querySelector(
+        `a[aria-label="${presence}"]`,
+      ) as HTMLElement;
+      expect(presenceLink).not.toBeNull();
+      expect(presenceLink.parentElement?.id).toMatch(/^icon\d+___/);
+
+      presenceLink.click();
+
+      expect(openSpy).toHaveBeenLastCalledWith(
+        `https://www.torn.com/page.php?sid=attack&user2ID=${playerId}`,
+        "_blank",
+      );
+    }
+  });
+
+  test("Eliminations team-list real markup (desktop): clicking the status text extracts the correct player per row, unmocked", async () => {
+    await runUnmockedOnFixture(eliminationsTeamListDesktop);
+
+    for (const { playerId, status } of eliminationRows) {
+      const row = eliminationRow(playerId);
+      const statusText = row.querySelector(
+        '[class*="status__"] > span',
+      ) as HTMLElement;
+      expect(statusText).not.toBeNull();
+      expect(statusText.textContent).toBe(status);
+
+      statusText.click();
+
+      expect(openSpy).toHaveBeenLastCalledWith(
+        `https://www.torn.com/page.php?sid=attack&user2ID=${playerId}`,
+        "_blank",
+      );
+    }
+  });
+
+  test("Eliminations team-list real markup (mobile): clicking the status text extracts the correct player per row, unmocked", async () => {
+    // Same grid in its narrow layout: identical rows minus the icons__ badge
+    // tray cell, so the status text is the only click target.
+    await runUnmockedOnFixture(eliminationsTeamListMobile);
+    expect(document.querySelector('[class*="icons__"]')).toBeNull();
+
+    for (const { playerId, status } of eliminationRows) {
+      const row = eliminationRow(playerId);
+      const statusText = row.querySelector(
+        '[class*="status__"] > span',
+      ) as HTMLElement;
+      expect(statusText).not.toBeNull();
+      expect(statusText.textContent).toBe(status);
+
+      statusText.click();
+
+      expect(openSpy).toHaveBeenLastCalledWith(
+        `https://www.torn.com/page.php?sid=attack&user2ID=${playerId}`,
+        "_blank",
+      );
+    }
+  });
+
+  test("Eliminations team-list real markup (desktop): clicking other badge-tray icons is not intercepted", async () => {
+    await runUnmockedOnFixture(eliminationsTeamListDesktop);
+
+    // Faction/Bazaar (userID=), Married (NID=) and the Abroad icon71 badge
+    // share the presence icon's li shape but must stay plain navigation /
+    // no-ops.
+    const badges: { playerId: number; label: string }[] = [
+      { playerId: 35899, label: "Faction" },
+      { playerId: 166, label: "Bazaar" },
+      { playerId: 166, label: "Married" },
+      { playerId: 213936, label: "Abroad" },
+    ];
+
+    for (const { playerId, label } of badges) {
+      const row = eliminationRow(playerId);
+      // Dispatched on the li (as the Advanced Search badge test does) so
+      // jsdom doesn't try to follow the badge's real href.
+      const badge = row
+        .querySelector(`a[aria-label^="${label}"]`)
+        ?.closest("li") as HTMLElement;
+      expect(badge).not.toBeNull();
+
+      const event = new MouseEvent("click", {
+        bubbles: true,
+        cancelable: true,
+      });
+      badge.dispatchEvent(event);
+
+      expect(event.defaultPrevented).toBe(false);
+    }
+
     expect(openSpy).not.toHaveBeenCalled();
     expect(mockLocation.href).toBe("");
   });

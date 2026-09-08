@@ -541,6 +541,29 @@ body[data-ff-status-attack-enabled="true"]
   cursor: crosshair !important;
 }
 
+/* Eliminations team list (dataGridRow__ grid): presence icon in the badge
+   tray (exact aria-label only — company/faction badge text is free text) and
+   the status text. Kept as its own rule because one unsupported selector
+   (:has()) would invalidate an entire comma list and drop the crosshair on
+   every page above. */
+body[data-ff-status-attack-enabled="true"] [class*="dataGridRow__"]
+  ul#iconTray
+  li[id^="icon"][id*="___"].iconShow:has(> a[aria-label="Online"]),
+body[data-ff-status-attack-enabled="true"]
+  [class*="dataGridRow__"]
+  ul#iconTray
+  li[id^="icon"][id*="___"].iconShow:has(> a[aria-label="Idle"]),
+body[data-ff-status-attack-enabled="true"]
+  [class*="dataGridRow__"]
+  ul#iconTray
+  li[id^="icon"][id*="___"].iconShow:has(> a[aria-label="Offline"]),
+body[data-ff-status-attack-enabled="true"]
+  [class*="dataGridRow__"]
+  [class*="status__"]
+  > span {
+  cursor: crosshair !important;
+}
+
 /* Grow the status dot's clickable region a few px past its tiny (~12px) SVG,
    to reduce the mis-aim case (ADR 0011) where a slightly off-target click
    lands on the adjacent honor/profile link instead. The ::after overlay is

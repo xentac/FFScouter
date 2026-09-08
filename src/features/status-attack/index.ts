@@ -139,7 +139,11 @@ function handleStatusClick(e: MouseEvent) {
     li[id^="icon"][id*="___"].iconShow.ffscouter-forum-status,
     .status > [class$="-status"],
     .left-side ul.singleicon li[id^="icon"][id*="___"].iconShow,
-    .user-info-list-wrap ul.singleicon li[id^="icon"][id*="___"].iconShow
+    .user-info-list-wrap ul.singleicon li[id^="icon"][id*="___"].iconShow,
+    [class*="dataGridRow__"] ul#iconTray li[id^="icon"][id*="___"].iconShow:has(> a[aria-label="Online"]),
+    [class*="dataGridRow__"] ul#iconTray li[id^="icon"][id*="___"].iconShow:has(> a[aria-label="Idle"]),
+    [class*="dataGridRow__"] ul#iconTray li[id^="icon"][id*="___"].iconShow:has(> a[aria-label="Offline"]),
+    [class*="dataGridRow__"] [class*="status__"] > span
   `);
 
   if (!statusEl) return;
@@ -229,7 +233,27 @@ function handleStatusClick(e: MouseEvent) {
     }
   }
 
-  // 9. Generic userInfoBox fallback (Item Market and other pages using Torn's
+  // 9. Eliminations team-list rows (page.php?sid=elimination#/team/N, a
+  // virtualized dataGridRow__ grid): the presence icon lives in the row's
+  // icons__ cell's full badge tray (Level/gender/Donator/Married/Company/
+  // Faction/Bazaar/Abroad share the same li shape, so the click target is
+  // picked by exact aria-label only), and the Okay/Hospital/Abroad/Traveling
+  // text in the status__ cell; the narrow/mobile layout drops the tray cell
+  // entirely, leaving only the status text. Both are *siblings* of the
+  // name__ cell, so hop to the row and extract from the name cell alone
+  // rather than "first ID anywhere in the row": the tray's Married (NID=)
+  // and Company/Faction/Bazaar (userID=) links never match the extraction
+  // regexes today, but the name-cell scope means that isn't load-bearing.
+  // A row without a name cell yields no ID and the click is left untouched.
+  if (!playerId) {
+    const row = statusEl.closest('[class*="dataGridRow__"]');
+    const nameCell = row?.querySelector('[class*="name__"]');
+    if (nameCell) {
+      playerId = get_player_id_in_element(nameCell);
+    }
+  }
+
+  // 10. Generic userInfoBox fallback (Item Market and other pages using Torn's
   // shared userInfoBox__/userInfoWrapper__ widget; scoped to the closest box
   // so a listing grid's neighboring player can't be picked up instead)
   if (!playerId) {
