@@ -50,8 +50,9 @@ async function main() {
   init_ui();
 
   if (ffscouter.analytics_enabled) {
-    // unsafeWindow is a userscript-manager convention; bare injection
-    // environments (e.g. Torn PDA's WebView) don't define it at all.
+    // unsafeWindow is a userscript-manager convention, not a guarantee: the
+    // Safari Userscripts extension never defines it at all (Torn PDA does,
+    // as a plain alias of window).
     if (typeof unsafeWindow !== "undefined") {
       (unsafeWindow as any).ffscouter = ffscouter;
     }

@@ -9,7 +9,9 @@ export type ReactDOMFull = typeof ReactDOMTypes & typeof ReactDOMClientTypes;
 // Prefer Torn's own already-loaded React (matches whatever version the page
 // itself runs, no duplicate copy). Where unsafeWindow doesn't bridge to it --
 // permanently broken on at least one Safari userscript-manager configuration,
-// where unsafeWindow resolves but doesn't carry over page-realm objects --
+// where unsafeWindow resolves but doesn't carry over page-realm objects, and
+// on the Safari Userscripts extension, which never defines the unsafeWindow
+// identifier at all (a bare reference throws ReferenceError) --
 // fall back to the same-realm copy set up by the react-dom bundle @require'd
 // in vite.config.ts (see ADR 0007). @require runs in this script's own realm
 // before any of our own module code, so by the time getReact()/getReactDOM()
@@ -36,6 +38,11 @@ function requiredReact(): {
 }
 
 function hasWorkingUnsafeWindowReact(): boolean {
+  // typeof is the only safe probe: on Safari Userscripts the identifier is
+  // simply undeclared, so any other read of it throws.
+  if (typeof unsafeWindow === "undefined") {
+    return false;
+  }
   const w = unsafeWindowReact();
   return Boolean(w.React && w.ReactDOM);
 }

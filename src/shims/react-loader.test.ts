@@ -53,6 +53,17 @@ test("falls back when unsafeWindow only exposes one of React/ReactDOM", () => {
   expect(getReactDOM()).toBe(requiredReactDOM);
 });
 
+test("falls back to the same-realm required globals when the unsafeWindow identifier doesn't exist at all (Safari Userscripts)", () => {
+  delete (globalThis as { unsafeWindow?: unknown }).unsafeWindow;
+  const requiredReact = { requiredReact: true };
+  const requiredReactDOM = { requiredReactDOM: true };
+  (globalThis as { React?: unknown }).React = requiredReact;
+  (globalThis as { ReactDOM?: unknown }).ReactDOM = requiredReactDOM;
+
+  expect(getReact()).toBe(requiredReact);
+  expect(getReactDOM()).toBe(requiredReactDOM);
+});
+
 test("debug_force_react_fallback forces the required globals even when unsafeWindow works, for exercising it on Chrome/Firefox", () => {
   ffconfig.debug_force_react_fallback = true;
   const requiredReact = { requiredReact: true };
