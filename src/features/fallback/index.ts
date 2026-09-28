@@ -169,6 +169,9 @@ export default {
         page_specific = [".last-poster, .starter, .last-post, .poster"];
       } else if (
         href.includes("page.php?sid=hof") ||
+        // friends/enemies/targets lists (page.php?sid=list&type=...) share
+        // the hashed userInfoBox__ markup when honor bars are off
+        torn_page("page", { sid: "list" }) ||
         torn_page("factions", { step: "profile" }) ||
         torn_page("factions", { step: "your" }, [
           "",
