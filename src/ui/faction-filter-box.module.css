@@ -207,6 +207,12 @@
   cursor: pointer;
 }
 
+/* The war-only "Out soon" checkbox, indented under Hospital in the Status
+   group to read as its sub-option. */
+.ff-filter-box__option--out-soon {
+  margin-left: 16px;
+}
+
 .ff-filter-box__range-inputs {
   display: flex;
   align-items: center;

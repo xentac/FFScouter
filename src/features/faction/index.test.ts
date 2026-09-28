@@ -253,6 +253,219 @@ test("setup_war_features leaves the filter box's hasLastActionData false when TW
   factionWar.remove();
 });
 
+test("setup_war_features detects TWSE data-until and exposes hasUntilData on the filter box", async () => {
+  vi.mocked(ffscouter.get).mockResolvedValue({
+    player_id: 111 as PlayerId,
+    no_data: true,
+  } as any);
+
+  const factionWar = document.createElement("div");
+  factionWar.className = "faction-war";
+
+  const enemyList = document.createElement("ul");
+  enemyList.className = "enemy-faction";
+  enemyList.innerHTML = `
+    <li class="table-header"><div class="lvl">Lvl</div></li>
+    <li class="enemy" id="enemy-1" data-until="0">
+      <div class="member"><a href="/profiles.php?XID=111">Enemy 111</a></div>
+      <div class="lvl">50</div>
+    </li>
+  `;
+
+  factionWar.appendChild(enemyList);
+  document.body.appendChild(factionWar);
+
+  setup_war_features(factionWar);
+
+  const filterBoxEl = factionWar.querySelector(
+    "[data-ff-filter-box][data-mode='war']",
+  );
+  const filterBox = getFilterBoxHandle(filterBoxEl)!;
+  await waitForFilterBox(filterBox);
+  // Presence is gated on the attribute existing at all — TWSE stamps
+  // data-until="0" on rows with no timer, which still proves the data source
+  // is live.
+  expect(filterBox.hasUntilData).toBe(true);
+  // The last-action flag is independent: no last-action attribute here.
+  expect(filterBox.hasLastActionData).toBe(false);
+
+  factionWar.remove();
+});
+
+test("setup_war_features leaves hasUntilData false without data-until rows, and picks it up when TWSE annotates later", async () => {
+  vi.mocked(ffscouter.get).mockResolvedValue({
+    player_id: 111 as PlayerId,
+    no_data: true,
+  } as any);
+
+  const factionWar = document.createElement("div");
+  factionWar.className = "faction-war";
+
+  const enemyList = document.createElement("ul");
+  enemyList.className = "enemy-faction";
+  enemyList.innerHTML = `
+    <li class="table-header"><div class="lvl">Lvl</div></li>
+    <li class="enemy" id="enemy-1" data-twse-last-action-timestamp="1700000000">
+      <div class="member"><a href="/profiles.php?XID=111">Enemy 111</a></div>
+      <div class="lvl">50</div>
+    </li>
+  `;
+
+  factionWar.appendChild(enemyList);
+  document.body.appendChild(factionWar);
+
+  setup_war_features(factionWar);
+
+  const filterBoxEl = factionWar.querySelector(
+    "[data-ff-filter-box][data-mode='war']",
+  );
+  const filterBox = getFilterBoxHandle(filterBoxEl)!;
+  await waitForFilterBox(filterBox);
+  // Last-action data alone doesn't turn on the (dedicated) until flag.
+  expect(filterBox.hasLastActionData).toBe(true);
+  expect(filterBox.hasUntilData).toBe(false);
+
+  // TWSE annotates the row some time later
+  const enemyRow = enemyList.querySelector("#enemy-1") as HTMLElement;
+  enemyRow.setAttribute("data-until", "1700000500");
+
+  // Wait for the attribute MutationObserver + rAF debounce to run
+  await new Promise((resolve) => setTimeout(resolve, 50));
+
+  expect(filterBox.hasUntilData).toBe(true);
+
+  factionWar.remove();
+});
+
+test("30s tick re-applies filters while Out soon is checked, so a row appears when its timer crosses the threshold", async () => {
+  vi.mocked(ffscouter.get).mockResolvedValue({
+    player_id: 111 as PlayerId,
+    no_data: true,
+  } as any);
+
+  // Fake timers from the start so the 30s tick interval is registered on the
+  // fake clock; shouldAdvanceTime keeps the React mount and rAF plumbing
+  // flowing without manual advancement.
+  vi.useFakeTimers({ shouldAdvanceTime: true });
+  try {
+    const nowSec = Math.floor(Date.now() / 1000);
+
+    const factionWar = document.createElement("div");
+    factionWar.className = "faction-war";
+    const enemyList = document.createElement("ul");
+    enemyList.className = "enemy-faction";
+    enemyList.innerHTML = `
+      <li class="table-header"><div class="lvl">Lvl</div></li>
+      <li class="enemy" id="enemy-1" data-until="${nowSec + 320}">
+        <div class="member"><a href="/profiles.php?XID=111">Enemy 111</a></div>
+        <div class="lvl">50</div>
+        <div class="status hospital">Hospital</div>
+      </li>
+    `;
+    factionWar.appendChild(enemyList);
+    document.body.appendChild(factionWar);
+
+    setup_war_features(factionWar);
+
+    const filterBox = getFilterBoxHandle(
+      factionWar.querySelector("[data-ff-filter-box][data-mode='war']"),
+    )!;
+    await waitForFilterBox(filterBox);
+    expect(filterBox.hasUntilData).toBe(true);
+
+    // Every status unchecked + Out soon checked: only imminent exits show.
+    filterBox.setFilterState({
+      status: {
+        okay: false,
+        hospital: false,
+        jail: false,
+        abroad: false,
+        traveling: false,
+        federal: false,
+        fallen: false,
+      },
+      outSoon: true,
+    });
+    filterBox.dispatchChange();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    const row = enemyList.querySelector("#enemy-1") as HTMLElement;
+    // ~320s out: not yet within the 5-minute threshold
+    expect(row.hasAttribute("data-ffscouter-hidden")).toBe(true);
+
+    // No DOM mutation happens as time passes — only the 30s tick can pick
+    // the row up once its timer crosses the threshold.
+    await vi.advanceTimersByTimeAsync(30_000);
+    expect(row.hasAttribute("data-ffscouter-hidden")).toBe(false);
+
+    factionWar.remove();
+  } finally {
+    vi.useRealTimers();
+  }
+});
+
+test("30s tick does not re-apply filters while Out soon is unchecked", async () => {
+  vi.mocked(ffscouter.get).mockResolvedValue({
+    player_id: 111 as PlayerId,
+    no_data: true,
+  } as any);
+
+  vi.useFakeTimers({ shouldAdvanceTime: true });
+  try {
+    const factionWar = document.createElement("div");
+    factionWar.className = "faction-war";
+    const enemyList = document.createElement("ul");
+    enemyList.className = "enemy-faction";
+    enemyList.innerHTML = `
+      <li class="table-header"><div class="lvl">Lvl</div></li>
+      <li class="enemy" id="enemy-1" data-until="0">
+        <div class="member"><a href="/profiles.php?XID=111">Enemy 111</a></div>
+        <div class="lvl">50</div>
+        <div class="status hospital">Hospital</div>
+      </li>
+    `;
+    factionWar.appendChild(enemyList);
+    document.body.appendChild(factionWar);
+
+    setup_war_features(factionWar);
+
+    const filterBox = getFilterBoxHandle(
+      factionWar.querySelector("[data-ff-filter-box][data-mode='war']"),
+    )!;
+    await waitForFilterBox(filterBox);
+
+    // Hospital filtered out, Out soon unchecked: row hidden by status filter
+    filterBox.setFilterState({
+      status: {
+        okay: true,
+        hospital: false,
+        jail: false,
+        abroad: false,
+        traveling: false,
+        federal: false,
+        fallen: false,
+      },
+      outSoon: false,
+    });
+    filterBox.dispatchChange();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    const row = enemyList.querySelector("#enemy-1") as HTMLElement;
+    expect(row.hasAttribute("data-ffscouter-hidden")).toBe(true);
+
+    // Manually reveal the row: a tick that re-applied filters would re-hide
+    // it, so still-visible after the tick proves the tick didn't re-apply.
+    row.removeAttribute("data-ffscouter-hidden");
+
+    await vi.advanceTimersByTimeAsync(30_000);
+    expect(row.hasAttribute("data-ffscouter-hidden")).toBe(false);
+
+    factionWar.remove();
+  } finally {
+    vi.useRealTimers();
+  }
+});
+
 test("initialize_features MutationObserver reacts to status class changes and filters correctly", async () => {
   vi.mocked(ffscouter.get).mockResolvedValue({
     player_id: 111 as PlayerId,

@@ -106,8 +106,10 @@ function mountFilterBox(
   // loadState dispatch). Until then, imperative calls are buffered so they
   // aren't clobbered by that initial dispatch — and reads return defaults.
   let ready = false;
-  // Track hasLastActionData locally so we can seed it before React mounts.
+  // Track hasLastActionData/hasUntilData locally so we can seed them before
+  // React mounts.
   let hasLastActionDataProp = false;
+  let hasUntilDataProp = false;
   // Operations invoked before the component is ready, replayed in order once
   // onReady fires. createRoot commits asynchronously, so feature code / tests
   // that call handle methods right after mounting would otherwise be lost.
@@ -149,6 +151,9 @@ function mountFilterBox(
         ? ref.current.hasLastActionData
         : hasLastActionDataProp;
     },
+    get hasUntilData() {
+      return ready && ref.current ? ref.current.hasUntilData : hasUntilDataProp;
+    },
     setSortBy: (val) => runOrBuffer((h) => h.setSortBy(val)),
     getFilterSnapshot: () =>
       ready && ref.current
@@ -166,6 +171,7 @@ function mountFilterBox(
               federal: true,
               fallen: true,
             },
+            outSoon: false,
             levelMin: null,
             levelMax: null,
             ffMin: null,
@@ -178,6 +184,10 @@ function mountFilterBox(
     setHasLastActionData: (val) => {
       hasLastActionDataProp = val;
       runOrBuffer((h) => h.setHasLastActionData(val));
+    },
+    setHasUntilData: (val) => {
+      hasUntilDataProp = val;
+      runOrBuffer((h) => h.setHasUntilData(val));
     },
     setFilterState: (patch) => runOrBuffer((h) => h.setFilterState(patch)),
     dispatchChange: () => runOrBuffer((h) => h.dispatchChange()),
@@ -194,6 +204,7 @@ function mountFilterBox(
       onFilterChange,
       ref,
       initialHasLastActionData: hasLastActionDataProp,
+      initialHasUntilData: hasUntilDataProp,
       filteringDisabled,
       onReady,
     }),
@@ -207,8 +218,12 @@ function mountFilterBox(
 // and pushes the result onto the shared filter box as a property — mirroring
 // how `mode` is set today. War mode shares one filter box across both
 // .enemy-faction/.your-faction lists, so the scan covers the whole war box,
-// not just the one list passed in.
-function update_last_action_visibility(list: HTMLElement) {
+// not just the one list passed in. The Out Soon checkbox gets its own
+// dedicated flag rather than reusing the last-action signal — each gate
+// watches the data its feature actually consumes, so independently-toggled
+// TWSE features can't strand a control (see CONTEXT.md's "TWSE Hospital
+// Until Data").
+function update_twse_presence_flags(list: HTMLElement) {
   const scope = list.closest(".faction-war") || list;
   const boxEl = (
     list.closest(".faction-war") || list.parentNode
@@ -218,28 +233,31 @@ function update_last_action_visibility(list: HTMLElement) {
   handle.setHasLastActionData(
     !!scope.querySelector("[data-twse-last-action-timestamp]"),
   );
+  handle.setHasUntilData(
+    !!scope.querySelector(".enemy[data-until], .your[data-until]"),
+  );
 }
 
 // Watches a list for the status/activity attribute changes Torn's own JS makes
 // in response to state-change events, debounces via rAF, and reapplies the
 // current filter/sort state on top of Torn's reordering. Also watches for TWSE
-// setting data-twse-last-action-timestamp on a row (TWSE runs as an
-// independent script, so it may not have annotated rows yet by the time this
-// watcher is set up) and re-runs update_last_action_visibility on the same rAF
-// pass — safe to combine with our own row-reordering since that only performs
-// childList mutations (appendChild), never attribute changes, so it can't
-// retrigger this attributes-only observer. The 30s flight-poll tick below is
-// a fallback for the rarer case where TWSE adds the attribute via a brand new
-// row element (a childList mutation this observer doesn't watch) rather than
-// annotating an existing one. Used by both the standard members flow
-// (observeTarget is the .table-body, since standard lists have one) and the
-// Ranked War flow (observeTarget is the list itself).
+// setting data-twse-last-action-timestamp or data-until on a row (TWSE runs
+// as an independent script, so it may not have annotated rows yet by the time
+// this watcher is set up) and re-runs update_twse_presence_flags on the same
+// rAF pass — safe to combine with our own row-reordering since that only
+// performs childList mutations (appendChild), never attribute changes, so it
+// can't retrigger this attributes-only observer. The 30s flight-poll tick
+// below is a fallback for the rarer case where TWSE adds an attribute via a
+// brand new row element (a childList mutation this observer doesn't watch)
+// rather than annotating an existing one. Used by both the standard members
+// flow (observeTarget is the .table-body, since standard lists have one) and
+// the Ranked War flow (observeTarget is the list itself).
 function setup_reapply_watcher(
   list: HTMLElement,
   observeTarget: Element,
   getColDisplay: () => FactionsColDisplay,
 ) {
-  update_last_action_visibility(list);
+  update_twse_presence_flags(list);
 
   let rafPending = false;
   const attributeObserver = new MutationObserver((mutations) => {
@@ -264,7 +282,10 @@ function setup_reapply_watcher(
           shouldReapply = true;
           break;
         }
-        if (m.attributeName === "data-twse-last-action-timestamp") {
+        if (
+          m.attributeName === "data-twse-last-action-timestamp" ||
+          m.attributeName === "data-until"
+        ) {
           shouldReapply = true;
           break;
         }
@@ -275,7 +296,7 @@ function setup_reapply_watcher(
       rafPending = true;
       requestAnimationFrame(() => {
         rafPending = false;
-        update_last_action_visibility(list);
+        update_twse_presence_flags(list);
         const boxEl = (
           list.closest(".faction-war") || list.parentNode
         )?.querySelector("[data-ff-filter-box]");
@@ -292,13 +313,37 @@ function setup_reapply_watcher(
 
   attributeObserver.observe(observeTarget, {
     attributes: true,
-    attributeFilter: ["class", "aria-label", "data-twse-last-action-timestamp"],
+    attributeFilter: [
+      "class",
+      "aria-label",
+      "data-twse-last-action-timestamp",
+      "data-until",
+    ],
     subtree: true,
   });
 
   const flightInterval = setInterval(() => {
     poll_traveling_flights(list);
-    update_last_action_visibility(list);
+    update_twse_presence_flags(list);
+    // Out Soon membership changes purely by time passing (a hidden row's
+    // timer crossing the threshold produces no DOM event we observe), so
+    // while the box is checked this tick also re-applies filters/sort — at
+    // most ~30s stale, immaterial at a 5-minute horizon. Unchecked, the
+    // tick's behavior is unchanged.
+    const handle = getFilterBoxHandle(
+      (list.closest(".faction-war") || list.parentNode)?.querySelector(
+        "[data-ff-filter-box]",
+      ),
+    );
+    if (handle?.ready) {
+      const snapshot = handle.getFilterSnapshot();
+      if (snapshot.filterEnabled !== false && snapshot.outSoon) {
+        apply_filters_and_sort(list, {
+          ...snapshot,
+          colDisplay: getColDisplay(),
+        });
+      }
+    }
   }, 30000);
 
   cleanup_when_detached(list, () => {

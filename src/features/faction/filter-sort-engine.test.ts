@@ -2,6 +2,7 @@
 
 import { FactionsColDisplay } from "@utils/ffconfig";
 import { afterEach, beforeEach, expect, test } from "vitest";
+import warRowHospitalUntil from "./__fixtures__/torn-markup/2026-09-28/war-row-hospital-until.html?raw";
 import { apply_filters_and_sort } from "./filter-sort-engine";
 
 beforeEach(() => {
@@ -684,4 +685,210 @@ test("apply_filters_and_sort detects and filters Fedded (federal) and Fallen sta
   expect(isHidden("row-okay")).toBe(true);
   expect(isHidden("row-federal")).toBe(true);
   expect(isHidden("row-fallen")).toBe(false);
+});
+
+function make_out_soon_war_list(nowSec: number): HTMLElement {
+  const container = document.createElement("ul");
+  container.className = "enemy-faction";
+  container.innerHTML = `
+    <li class="enemy" id="row-hospital-soon" data-until="${nowSec + 120}">
+      <div class="member"><a href="/profiles.php?XID=111">P1</a></div>
+      <div class="level">50</div>
+      <div class="status hospital">Hospital</div>
+    </li>
+    <li class="enemy" id="row-hospital-later" data-until="${nowSec + 400}">
+      <div class="member"><a href="/profiles.php?XID=222">P2</a></div>
+      <div class="level">50</div>
+      <div class="status hospital">Hospital</div>
+    </li>
+    <li class="enemy" id="row-hospital-zero" data-until="0">
+      <div class="member"><a href="/profiles.php?XID=333">P3</a></div>
+      <div class="level">50</div>
+      <div class="status hospital">Hospital</div>
+    </li>
+    <li class="enemy" id="row-hospital-no-attr">
+      <div class="member"><a href="/profiles.php?XID=444">P4</a></div>
+      <div class="level">50</div>
+      <div class="status hospital">Hospital</div>
+    </li>
+    <li class="enemy" id="row-jail-soon" data-until="${nowSec + 120}">
+      <div class="member"><a href="/profiles.php?XID=555">P5</a></div>
+      <div class="level">50</div>
+      <div class="status jail">Jail</div>
+    </li>
+    <li class="enemy" id="row-okay-soon" data-until="${nowSec + 120}">
+      <div class="member"><a href="/profiles.php?XID=666">P6</a></div>
+      <div class="level">50</div>
+      <div class="status okay">Okay</div>
+    </li>
+    <li class="enemy" id="row-traveling-soon" data-until="${nowSec + 120}">
+      <div class="member"><a href="/profiles.php?XID=777">P7</a></div>
+      <div class="level">50</div>
+      <div class="status traveling">Traveling</div>
+    </li>
+  `;
+  document.body.appendChild(container);
+  return container;
+}
+
+const OUT_SOON_BASE_FILTERS = {
+  sortBy: "none" as const,
+  colDisplay: FactionsColDisplay.FAIR_FIGHT,
+  activity: { online: true, idle: true, offline: true },
+  levelMin: null,
+  levelMax: null,
+  ffMin: null,
+  ffMax: null,
+};
+
+const ALL_STATUS_UNCHECKED = {
+  okay: false,
+  hospital: false,
+  jail: false,
+  abroad: false,
+  traveling: false,
+  federal: false,
+  fallen: false,
+};
+
+test("apply_filters_and_sort Out Soon widens the status filter to imminent hospital/jail exits only", () => {
+  const nowSec = 1_700_000_000;
+  Date.now = () => nowSec * 1000;
+  const container = make_out_soon_war_list(nowSec);
+  const isHidden = (id: string) =>
+    (container.querySelector(`#${id}`) as HTMLElement).hasAttribute(
+      "data-ffscouter-hidden",
+    );
+
+  // Hospital and Jail unchecked, Okay/Traveling checked, Out Soon checked:
+  // only imminent hospital/jail exits are admitted by the widening term.
+  apply_filters_and_sort(container, {
+    ...OUT_SOON_BASE_FILTERS,
+    status: { ...ALL_STATUS_UNCHECKED, okay: true, traveling: true },
+    outSoon: true,
+  });
+
+  expect(isHidden("row-hospital-soon")).toBe(false);
+  expect(isHidden("row-jail-soon")).toBe(false);
+  expect(isHidden("row-hospital-later")).toBe(true);
+  // Unknown exit time (0 sentinel or missing attribute) is never admitted —
+  // deliberately inverted from the range filters' missing-data-passes rule.
+  expect(isHidden("row-hospital-zero")).toBe(true);
+  expect(isHidden("row-hospital-no-attr")).toBe(true);
+  // Okay row passes via its own checked status box, not the Out Soon term.
+  expect(isHidden("row-okay-soon")).toBe(false);
+  // Traveling row with an (unexpected) imminent data-until is never admitted.
+  apply_filters_and_sort(container, {
+    ...OUT_SOON_BASE_FILTERS,
+    status: { ...ALL_STATUS_UNCHECKED, okay: true },
+    outSoon: true,
+  });
+  expect(isHidden("row-traveling-soon")).toBe(true);
+
+  document.body.removeChild(container);
+});
+
+test("apply_filters_and_sort Out Soon is superseded by the row's own checked status box", () => {
+  const nowSec = 1_700_000_000;
+  Date.now = () => nowSec * 1000;
+  const container = make_out_soon_war_list(nowSec);
+  const isHidden = (id: string) =>
+    (container.querySelector(`#${id}`) as HTMLElement).hasAttribute(
+      "data-ffscouter-hidden",
+    );
+
+  // Hospital checked: every hospital row shows regardless of Out Soon. The
+  // imminent jail row is still admitted by the Out Soon term when checked.
+  for (const outSoon of [true, false]) {
+    apply_filters_and_sort(container, {
+      ...OUT_SOON_BASE_FILTERS,
+      status: { ...ALL_STATUS_UNCHECKED, hospital: true },
+      outSoon,
+    });
+    expect(isHidden("row-hospital-soon")).toBe(false);
+    expect(isHidden("row-hospital-later")).toBe(false);
+    expect(isHidden("row-hospital-zero")).toBe(false);
+    expect(isHidden("row-hospital-no-attr")).toBe(false);
+    expect(isHidden("row-jail-soon")).toBe(!outSoon);
+  }
+
+  document.body.removeChild(container);
+});
+
+test("apply_filters_and_sort Out Soon counts as a selection in the all-statuses-unchecked guard", () => {
+  const nowSec = 1_700_000_000;
+  Date.now = () => nowSec * 1000;
+  const container = make_out_soon_war_list(nowSec);
+  const isHidden = (id: string) =>
+    (container.querySelector(`#${id}`) as HTMLElement).hasAttribute(
+      "data-ffscouter-hidden",
+    );
+
+  // Every status unchecked + Out Soon checked: only imminent hospital/jail
+  // exits show, not the guard's show-everything behavior.
+  apply_filters_and_sort(container, {
+    ...OUT_SOON_BASE_FILTERS,
+    status: ALL_STATUS_UNCHECKED,
+    outSoon: true,
+  });
+  expect(isHidden("row-hospital-soon")).toBe(false);
+  expect(isHidden("row-jail-soon")).toBe(false);
+  expect(isHidden("row-hospital-later")).toBe(true);
+  expect(isHidden("row-hospital-zero")).toBe(true);
+  expect(isHidden("row-okay-soon")).toBe(true);
+  expect(isHidden("row-traveling-soon")).toBe(true);
+
+  // Every status unchecked + Out Soon unchecked: the existing guard shows all.
+  apply_filters_and_sort(container, {
+    ...OUT_SOON_BASE_FILTERS,
+    status: ALL_STATUS_UNCHECKED,
+    outSoon: false,
+  });
+  for (const id of [
+    "row-hospital-soon",
+    "row-hospital-later",
+    "row-hospital-zero",
+    "row-hospital-no-attr",
+    "row-jail-soon",
+    "row-okay-soon",
+    "row-traveling-soon",
+  ]) {
+    expect(isHidden(id)).toBe(false);
+  }
+
+  document.body.removeChild(container);
+});
+
+test("apply_filters_and_sort Out Soon parses the 2026-09-28 TWSE hospital-row capture", () => {
+  // The capture's data-until is 1790619380 with TWSE's countdown showing
+  // 00:00:48 remaining, so pin "now" 48 seconds before the exit time.
+  const untilSec = 1_790_619_380;
+  Date.now = () => (untilSec - 48) * 1000;
+
+  const container = document.createElement("ul");
+  container.className = "your-faction";
+  container.innerHTML = warRowHospitalUntil;
+  document.body.appendChild(container);
+  const row = container.querySelector(".your") as HTMLElement;
+
+  // Every status unchecked + Out Soon checked: the row is admitted purely by
+  // the widening term, which requires both the hospital status-cell class and
+  // a parseable imminent data-until.
+  apply_filters_and_sort(container, {
+    ...OUT_SOON_BASE_FILTERS,
+    status: ALL_STATUS_UNCHECKED,
+    outSoon: true,
+  });
+  expect(row.hasAttribute("data-ffscouter-hidden")).toBe(false);
+
+  // More than 5 minutes out, the same row is no longer admitted.
+  Date.now = () => (untilSec - 400) * 1000;
+  apply_filters_and_sort(container, {
+    ...OUT_SOON_BASE_FILTERS,
+    status: ALL_STATUS_UNCHECKED,
+    outSoon: true,
+  });
+  expect(row.hasAttribute("data-ffscouter-hidden")).toBe(true);
+
+  document.body.removeChild(container);
 });

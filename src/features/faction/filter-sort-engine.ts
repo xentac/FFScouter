@@ -1,3 +1,4 @@
+import { OUT_SOON_THRESHOLD_SECONDS } from "@ui/faction-filter-box";
 import { detect_sort_icon_classes, get_activity_status } from "@utils/dom";
 import { FactionsColDisplay } from "@utils/ffconfig";
 import { get_current_time_seconds } from "@utils/time";
@@ -38,6 +39,7 @@ export function apply_filters_and_sort(
     statsMax?: number | null;
     lastActionMinSec?: number | null;
     lastActionMaxSec?: number | null;
+    outSoon?: boolean;
   },
 ) {
   if (isApplying.get(membersList)) return;
@@ -117,6 +119,9 @@ export function apply_filters_and_sort(
           status = "okay";
         }
       }
+      // Out Soon counts as an extra selection here: every status unchecked
+      // with Out Soon checked shows only imminent hospital/jail exits rather
+      // than falling into the show-everything guard.
       const allStatusUnchecked =
         !filters.status.okay &&
         !filters.status.traveling &&
@@ -124,9 +129,34 @@ export function apply_filters_and_sort(
         !filters.status.jail &&
         !filters.status.abroad &&
         !filters.status.federal &&
-        !filters.status.fallen;
+        !filters.status.fallen &&
+        !filters.outSoon;
+
+      // Out Soon (war-only; TWSE-sourced, see CONTEXT.md's "Out Soon Filter"):
+      // a pure widening term admitting hospital/jail rows whose TWSE data-until
+      // exit time is within the threshold of Torn-clock now. The row's own
+      // status-cell class must parse to hospital or jail — data-until alone is
+      // never sufficient. Unknown exit time (attribute missing, 0, or
+      // unparseable) is NEVER admitted, deliberately inverting the "missing
+      // data always passes" convention the narrowing range filters use:
+      // admitting a row here asserts "leaves within 5 minutes", which an
+      // unknown timer can't support. Do not "fix" this to match the ranges.
+      let matchesOutSoon = false;
+      if (filters.outSoon && (status === "hospital" || status === "jail")) {
+        // biome-ignore lint/complexity/useLiteralKeys: tsc requires index signature lookup
+        const untilRaw = row.dataset["until"];
+        const untilTs = untilRaw ? Number.parseInt(untilRaw, 10) : null;
+        if (untilTs !== null && !Number.isNaN(untilTs) && untilTs !== 0) {
+          // A past exit time still matches: the row still parses as
+          // hospital/jail, so the player is at most moments from leaving.
+          matchesOutSoon =
+            untilTs - get_current_time_seconds() <= OUT_SOON_THRESHOLD_SECONDS;
+        }
+      }
+
       const matchesStatus =
         allStatusUnchecked ||
+        matchesOutSoon ||
         (status === "okay" && filters.status.okay) ||
         (status === "traveling" && filters.status.traveling) ||
         (status === "hospital" && filters.status.hospital) ||

@@ -605,6 +605,121 @@ test("only renders Last Action Range group in war mode with hasLastActionData", 
   expect(findGroup()).not.toBeUndefined();
 });
 
+test("only renders the Out soon checkbox in war mode with hasUntilData, indented under Hospital", async () => {
+  const { container, ref, rerender } = setup();
+  await waitFor(() => expect(ref.current).not.toBeNull());
+
+  const findCheckbox = () =>
+    container.querySelector<HTMLInputElement>(
+      ".ff-filter-box__option--out-soon input[type='checkbox']",
+    );
+
+  expect(findCheckbox()).toBeNull();
+
+  // faction mode, data detected: still absent (war-only feature)
+  await act(async () => {
+    ref.current!.setHasUntilData(true);
+  });
+  expect(findCheckbox()).toBeNull();
+
+  // war mode, no data: absent (reset the carried-over flag first)
+  rerender(
+    <FFFactionFilterBox ref={ref} mode="war" onFilterChange={() => {}} />,
+  );
+  await act(async () => {
+    ref.current!.setHasUntilData(false);
+  });
+  expect(findCheckbox()).toBeNull();
+
+  // war mode + data detected: present, inside the Status group, immediately
+  // after the Hospital checkbox's label
+  await act(async () => {
+    ref.current!.setHasUntilData(true);
+  });
+  const checkbox = findCheckbox();
+  expect(checkbox).not.toBeNull();
+  const label = checkbox!.closest("label")!;
+  const statusGroup = Array.from(
+    container.querySelectorAll(".ff-filter-box__group"),
+  ).find((g) => g.querySelector("strong")?.textContent === "Status")!;
+  expect(statusGroup.contains(label)).toBe(true);
+  expect(label.textContent).toContain("Out soon");
+  const prevLabel = label.previousElementSibling as HTMLElement;
+  expect(prevLabel.textContent).toContain("Hospital");
+});
+
+test("Out soon checkbox dispatches outSoon, persists it, and is forced off without data", async () => {
+  const ref = createRef<FactionFilterBoxHandle | null>();
+  const events: any[] = [];
+  const { container } = render(
+    <FFFactionFilterBox
+      ref={ref}
+      mode="war"
+      onFilterChange={(s) => events.push(s)}
+    />,
+  );
+  await waitFor(() => expect(events.length).toBeGreaterThan(0));
+  act(() => {
+    ref.current!.setHasUntilData(true);
+  });
+
+  const checkbox = container.querySelector<HTMLInputElement>(
+    ".ff-filter-box__option--out-soon input[type='checkbox']",
+  )!;
+  // Checked by default
+  expect(checkbox.checked).toBe(true);
+  expect(ref.current!.getFilterSnapshot().outSoon).toBe(true);
+
+  fireEvent.click(checkbox);
+  await waitFor(() => expect(events.at(-1).outSoon).toBe(false));
+  expect(ffconfig.war_filter_state?.outSoon).toBe(false);
+
+  fireEvent.click(checkbox);
+  await waitFor(() => expect(events.at(-1).outSoon).toBe(true));
+  expect(ffconfig.war_filter_state?.outSoon).toBe(true);
+
+  // The data disappearing hides the checkbox and forces outSoon off in
+  // snapshots (so the all-unchecked guard isn't silently held open), but the
+  // stored state is left untouched.
+  act(() => {
+    ref.current!.setHasUntilData(false);
+  });
+  expect(
+    container.querySelector(".ff-filter-box__option--out-soon"),
+  ).toBeNull();
+  expect(ref.current!.getFilterSnapshot().outSoon).toBe(false);
+  expect(ffconfig.war_filter_state?.outSoon).toBe(true);
+
+  // Data returning restores the checked box and the snapshot term.
+  act(() => {
+    ref.current!.setHasUntilData(true);
+  });
+  expect(ref.current!.getFilterSnapshot().outSoon).toBe(true);
+});
+
+test("restores a saved outSoon from war filter state over the checked default", async () => {
+  ffconfig.war_filter_state = { outSoon: false };
+  const ref = createRef<FactionFilterBoxHandle | null>();
+  const events: any[] = [];
+  const { container } = render(
+    <FFFactionFilterBox
+      ref={ref}
+      mode="war"
+      onFilterChange={(s) => events.push(s)}
+    />,
+  );
+  await waitFor(() => expect(events.length).toBeGreaterThan(0));
+  act(() => {
+    ref.current!.setHasUntilData(true);
+  });
+
+  const checkbox = container.querySelector<HTMLInputElement>(
+    ".ff-filter-box__option--out-soon input[type='checkbox']",
+  )!;
+  expect(checkbox.checked).toBe(false);
+  expect(ref.current!.getFilterSnapshot().outSoon).toBe(false);
+});
+
 test("parses Last Action Range duration strings into seconds", async () => {
   vi.useFakeTimers();
   const ref = createRef<FactionFilterBoxHandle | null>();

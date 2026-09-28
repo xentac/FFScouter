@@ -35,8 +35,14 @@ const cls = {
   compareBtn: styles["ff-filter-box__compare-btn"],
   displaySelect: styles["ff-filter-box__display-select"],
   options: styles["ff-filter-box__options"],
+  optionOutSoon: styles["ff-filter-box__option--out-soon"],
   rangeInputs: styles["ff-filter-box__range-inputs"],
 };
+
+// The Out Soon filter's fixed horizon (see CONTEXT.md's "Out Soon Filter").
+// Deliberately not user-configurable: 5 minutes mirrors TWSE's own
+// chain-relevance horizon, so the two tools agree on what "soon" means.
+export const OUT_SOON_THRESHOLD_SECONDS = 5 * 60;
 
 export interface FactionFilterState {
   sortBy: "ff-asc" | "ff-desc" | "none";
@@ -55,6 +61,8 @@ export interface FactionFilterState {
     federal: boolean;
     fallen: boolean;
   };
+  // War-only Out Soon checkbox (see CONTEXT.md's "Out Soon Filter").
+  outSoon: boolean;
   levelMin: number | null;
   levelMax: number | null;
   ffMin: number | null;
@@ -85,6 +93,7 @@ export interface FactionFilterSnapshot {
   filterEnabled?: boolean;
   activity: FactionFilterState["activity"];
   status: FactionFilterState["status"];
+  outSoon: boolean;
   levelMin: number | null;
   levelMax: number | null;
   ffMin: number | null;
@@ -103,10 +112,13 @@ export interface FactionFilterBoxHandle {
   readonly activity: FactionFilterState["activity"];
   readonly hasLastActionData: boolean;
   setHasLastActionData: (val: boolean) => void;
+  readonly hasUntilData: boolean;
+  setHasUntilData: (val: boolean) => void;
   // Used in feature tests to imperatively set filter state and fire onFilterChange.
   setFilterState: (patch: {
     status?: FactionFilterState["status"];
     activity?: FactionFilterState["activity"];
+    outSoon?: boolean;
   }) => void;
   dispatchChange: () => void;
   readonly ready?: boolean;
@@ -130,6 +142,7 @@ export const DEFAULT_STATE: FactionFilterState = {
     federal: true,
     fallen: true,
   },
+  outSoon: true,
   levelMin: null,
   levelMax: null,
   ffMin: null,
@@ -160,6 +173,7 @@ type Props = {
   onFilterChange: (snapshot: FactionFilterSnapshot) => void;
   ref?: Ref<FactionFilterBoxHandle | null>;
   initialHasLastActionData?: boolean;
+  initialHasUntilData?: boolean;
   // Set when the Settings-panel "Show ... filter box" toggle for this mode is
   // off. Every snapshot then reports filterEnabled: false (riding the engine's
   // existing filterEnabled short-circuit) while the stored filter state is left
@@ -178,6 +192,7 @@ export function FFFactionFilterBox({
   onFilterChange,
   ref,
   initialHasLastActionData = false,
+  initialHasUntilData = false,
   filteringDisabled = false,
   onReady,
 }: Props) {
@@ -201,6 +216,7 @@ export function FFFactionFilterBox({
   const [hasLastActionData, setHasLastActionData] = useState(
     initialHasLastActionData,
   );
+  const [hasUntilData, setHasUntilData] = useState(initialHasUntilData);
 
   // Refs for async-safe access from debounce callbacks and the imperative handle.
   const filterStateRef = useRef(filterState);
@@ -209,6 +225,8 @@ export function FFFactionFilterBox({
   collapsedRef.current = collapsed;
   const hasLastActionDataRef = useRef(hasLastActionData);
   hasLastActionDataRef.current = hasLastActionData;
+  const hasUntilDataRef = useRef(hasUntilData);
+  hasUntilDataRef.current = hasUntilData;
   const modeRef = useRef(mode);
   modeRef.current = mode;
   const filteringDisabledRef = useRef(filteringDisabled);
@@ -239,6 +257,16 @@ export function FFFactionFilterBox({
       // ever triggering when a war user clears the remaining boxes.
       status:
         modeRef.current === "war" ? { ...s.status, fallen: false } : s.status,
+      // Like fallen above, force outSoon off whenever its checkbox isn't
+      // rendered (faction mode, or no data-until rows detected): a stored
+      // "checked" would otherwise keep counting in the engine's all-statuses-
+      // unchecked guard with no visible UI explaining it. The stored state
+      // itself is left untouched so the box reappears checked if the data
+      // returns.
+      outSoon:
+        modeRef.current === "war" && hasUntilDataRef.current
+          ? s.outSoon
+          : false,
       levelMin: s.levelMin,
       levelMax: s.levelMax,
       ffMin: s.ffMin,
@@ -348,6 +376,7 @@ export function FFFactionFilterBox({
         filterEnabled: parsed.filterEnabled ?? true,
         activity: { ...DEFAULT_STATE.activity, ...parsed.activity },
         status: { ...DEFAULT_STATE.status, ...parsed.status },
+        outSoon: parsed.outSoon ?? DEFAULT_STATE.outSoon,
         levelMin: parsed.levelMin ?? null,
         levelMax: parsed.levelMax ?? null,
         ffMin: parsed.ffMin ?? null,
@@ -446,6 +475,13 @@ export function FFFactionFilterBox({
         hasLastActionDataRef.current = val;
         setHasLastActionData(val);
       },
+      get hasUntilData() {
+        return hasUntilDataRef.current;
+      },
+      setHasUntilData(val) {
+        hasUntilDataRef.current = val;
+        setHasUntilData(val);
+      },
       setFilterState(patch) {
         applyStatePatch(patch);
         // Immediately fire onFilterChange using the freshly patched ref
@@ -519,6 +555,7 @@ export function FFFactionFilterBox({
         federal: true,
         fallen: true,
       },
+      outSoon: true,
       levelMin: null,
       levelMax: null,
       ffMin: null,
@@ -548,6 +585,11 @@ export function FFFactionFilterBox({
     applyStatePatch({
       status: { ...filterStateRef.current.status, [key]: val },
     });
+    executeChangeImmediately();
+  };
+
+  const onOutSoonChange = (val: boolean) => {
+    applyStatePatch({ outSoon: val });
     executeChangeImmediately();
   };
 
@@ -803,16 +845,35 @@ export function FFFactionFilterBox({
               // Fallen members never appear in war member lists, so the Fallen
               // option is only meaningful (and only shown) in faction mode.
               .filter(([key]) => mode !== "war" || key !== "fallen")
-              .map(([key, label]) => (
-                <label key={key}>
-                  <input
-                    type="checkbox"
-                    checked={s.status[key]}
-                    onChange={(e) => onStatusChange(key, e.target.checked)}
-                  />
-                  {label}
-                </label>
-              ))}
+              .flatMap(([key, label]) => {
+                const items = [
+                  <label key={key}>
+                    <input
+                      type="checkbox"
+                      checked={s.status[key]}
+                      onChange={(e) => onStatusChange(key, e.target.checked)}
+                    />
+                    {label}
+                  </label>,
+                ];
+                // Out Soon rides under Hospital even though it also covers
+                // jail — a second indented copy under Jail would be clutter
+                // for a marginal case. War-only, and only when a war-box row
+                // actually carries TWSE's data-until attribute.
+                if (key === "hospital" && mode === "war" && hasUntilData) {
+                  items.push(
+                    <label key="out-soon" className={cls.optionOutSoon}>
+                      <input
+                        type="checkbox"
+                        checked={s.outSoon}
+                        onChange={(e) => onOutSoonChange(e.target.checked)}
+                      />
+                      Out soon
+                    </label>,
+                  );
+                }
+                return items;
+              })}
           </div>
         </div>
 
