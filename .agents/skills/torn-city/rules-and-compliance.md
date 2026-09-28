@@ -88,12 +88,42 @@ take the whole offenses list seriously, scripting included.
 | Extension/script that scrapes a background tab for prices, war status, etc., **to alert you or send the data elsewhere**                          | **Violates — explicitly named in the rule** (scraped data, not API data — this is the key difference from the notification row above)                                                              |
 | Script that auto-submits actions (auto-attack, auto-crime) without a manual trigger each time                                                     | Violates — "not directly and manually initiated"                                                                                                                                                   |
 | CLI tool that hits the API on a schedule (cron) to log your own stats to a local file, no in-game action taken, you check the file yourself later | **Fine** — pure API data; the "manually initiated" requirement applies only to non-API requests (see checklist item 4), so scheduled/unattended API polling isn't restricted at all                |
+| AI agent or browser automation (Claude in Chrome, Playwright, etc.) loading, navigating, or reading torn.com pages on the user's behalf           | **Violates** — non-API requests not directly and manually initiated by the user; see the AI agents section below                                                                                   |
 
 A real example of the mixed pattern in checklist item 3: **Torn War Stuff
 Enhanced** (see `api.md`'s tool ecosystem section) polls the API and also
 reads some data from the faction war page itself, and only triggers
 notifications from the API-sourced data, never the scraped portion.
 That's the compliance line in practice, not just in the abstract.
+
+## AI agents: never drive torn.com with browser automation
+
+**Never use an agent-controlled browser — Claude in Chrome, Playwright,
+Puppeteer, computer-use, or anything similar — to open, navigate, click
+through, or read torn.com** (treat subdomains such as `wiki.torn.com` the
+same way). Every page load, click, or read an agent performs is a non-API
+request that was not "directly and manually initiated by the user" —
+exactly what the Scripting Abuse rule prohibits, and it's the user's
+account that takes the ban. This holds even when the user is logged in,
+watching, and asked for the information: the agent doing the driving is the
+problem, not the intent. An available browser tool is not permission to use
+it here, and don't offer it as an option.
+
+What to do instead when something can only be learned from the live site
+(DOM structure, CSS breakpoints, page layout, rendered values):
+
+1. **API first** — if the data exists in the API, use that (`api.md`).
+2. **Hand the user a console snippet.** Write JavaScript for the user to
+   paste into DevTools on a page they've loaded themselves and are looking
+   at, and have them paste the output back. The snippet must itself stay
+   inside the rule: read only the current page's DOM/CSSOM, make no
+   requests (`fetch`, XHR, injected images/iframes, navigation), click or
+   submit nothing, leave no timers or observers running after it finishes,
+   and send nothing anywhere — output goes to the console/clipboard for the
+   user to copy by hand.
+3. **Ask the user to paste or describe it** — page text, a screenshot, or a
+   saved copy of the page (this is how the current rules snapshot was
+   obtained).
 
 ## When applicability is genuinely unclear: ask Torn staff, don't guess
 

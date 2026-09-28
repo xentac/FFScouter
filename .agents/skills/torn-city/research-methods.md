@@ -75,16 +75,13 @@ them so they aren't re-tried from scratch next time.
   worth a quick check for _other_ torn.com paths in the future — it reaches
   past Cloudflare where `curl` can't — but for the wiki and rules page
   specifically it's not a substitute for Wayback.
-- **A real headless browser (Playwright)** — not attempted. The
-  `playwright` npm package is available, but the actual Chromium binary
-  isn't installed (would need `npx playwright install chromium`, a
-  ~100-300MB download). Even installed, plain headless Chromium is
-  frequently still caught by Cloudflare's managed challenge without
-  additional stealth patching (masking `navigator.webdriver` and other
-  automation fingerprints) — at that point it's less "use a browser to read
-  a page" and more purpose-built anti-bot-evasion tooling, which is a
-  different judgment call than the other methods here. Flagging as a
-  possible future option, not something to reach for by default.
+- **A real browser under agent control (Playwright, Claude in Chrome,
+  computer-use)** — **ruled out, do not use.** Automated browsing of
+  torn.com is prohibited by Torn's Scripting Abuse rule regardless of
+  whether it would get past Cloudflare — see the AI agents section of
+  `rules-and-compliance.md`. For anything that needs the live site, give
+  the user a console snippet to run on a page they've loaded themselves, or
+  ask them to paste the page content.
 
 **Conclusion: the Wayback Machine remains the most reliable available
 method** for `wiki.torn.com` and `rules.php` specifically, despite its own

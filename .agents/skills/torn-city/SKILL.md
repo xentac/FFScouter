@@ -29,6 +29,14 @@ proactively any time a design leans toward background polling, scheduled
 non-API requests, or cross-window notifications, rather than waiting to be
 asked.
 
+**Never drive torn.com with browser automation yourself** (Claude in
+Chrome, Playwright, computer-use, etc.) — an agent loading or reading Torn
+pages is itself a Scripting Abuse violation against the user's account.
+When something can only be learned from the live site, write a console
+snippet for the user to run on a page they've loaded themselves and have
+them paste the results back — see the AI agents section of
+`rules-and-compliance.md`.
+
 ## Routing
 
 - **Writing or debugging code against the Torn API** (auth, rate limits,
@@ -38,6 +46,9 @@ asked.
 - **Game mechanics questions** — energy/nerve/happy/life, battle stats,
   gym, attacking, cooldowns, crimes, Organized Crime 2.0, factions, warfare
   (ranked war/raid/territory), jail, hospital → `game-mechanics.md`
+- **Userscripts, extensions, or injected CSS that depend on page width**
+  — the three fixed layouts (976 / 784 / 386px) and the breakpoints between
+  them → `page-layout.md`
 - **Torn's rules in general**, not just scripting →
   `rules-and-compliance.md`
 - **Third-party tool ecosystem** (what's already out there, described
