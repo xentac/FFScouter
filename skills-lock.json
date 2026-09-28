@@ -73,6 +73,18 @@
       "skillPath": "skills/engineering/improve-codebase-architecture/SKILL.md",
       "computedHash": "66e8a50c83c3c724fcfe0769701b665c56cec220cc4f49cc1aee8bdfc07de94a"
     },
+    "jj-vcs": {
+      "source": "seckatie/katies-ai-skills",
+      "sourceType": "github",
+      "skillPath": "skills/jj-vcs/SKILL.md",
+      "computedHash": "031d61609a49190ffaf3357d9a038e6549c840552e919a3b5f73c99bed01f98d"
+    },
+    "just": {
+      "source": "seckatie/katies-ai-skills",
+      "sourceType": "github",
+      "skillPath": "skills/just/SKILL.md",
+      "computedHash": "1b867beae9d580c3934cddedb737cd6cd4796e26117d3fa54864bfbe322ef243"
+    },
     "markdown-lint": {
       "source": "xentac/skills",
       "sourceType": "github",
