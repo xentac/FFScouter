@@ -481,6 +481,40 @@ ff-settings-panel {
   width: 38px !important;
 }
 
+/* Regular (non-war) member list: shrink the position column so the injected
+   FF/Est cell fits on one line. The row is flex-wrap:wrap, and Torn's native
+   cell percentages differ per Width Budget bucket (see CONTEXT.md), so the
+   shrink needed differs too. Measured live (2026-09-28):
+
+   Reduced width (386px row, viewport < 784px): native cells total 90%
+   (member 34 + lvl 9 + member-icons 0 + position 20 + days 11 + status 16).
+   TornTools' tt-member-index cell adds 4% and our table-cell.lvl cell adds
+   9%, totalling 103%, which wrapped the status cell onto a second line.
+   position 20% -> 15% lands the row at 98% (94% without TornTools).
+
+   Full page (784px row, viewport >= 784px): the member-icons cell takes a
+   real 28% here and the other natives shift (member 34 + lvl 5 + days 6 +
+   status 8), so with tt-member-index 4% and our cell 5% the position column
+   must drop to 10%, landing the row at exactly 100% (measured single-line).
+
+   TornTools' spies content (.tt-faction-spy) is a 100%-width child of the
+   row, so once the member cells fit on one line it wraps onto its own line
+   below by itself. Keyed off the attribute stamped in apply_ff_columns (only
+   on non-war lists; the war flow stamps .faction-war instead) so native
+   widths are untouched when the column setting is "none". */
+.members-list[data-ffscouter-col-display="fair_fight"] .table-cell.position,
+.members-list[data-ffscouter-col-display="battle_stats"] .table-cell.position {
+  width: 15% !important;
+}
+
+@media (min-width: 784px) {
+  .members-list[data-ffscouter-col-display="fair_fight"] .table-cell.position,
+  .members-list[data-ffscouter-col-display="battle_stats"]
+    .table-cell.position {
+    width: 10% !important;
+  }
+}
+
 /* Ensure space is reserved when TornTools adds estimate rows */
 .members-list li.enemy:has(> .tt-stats-estimate),
 .members-list li.your:has(> .tt-stats-estimate),

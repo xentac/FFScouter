@@ -857,3 +857,108 @@ test("column widths are correctly reduced when custom columns are active and lev
   document.head.removeChild(styleEl);
   document.body.removeChild(factionWar);
 });
+
+test("regular member list position column shrinks to fit the injected column", async () => {
+  // 1. Read and inject the stylesheet styles.css into JSDOM head
+  const cssPath = path.resolve(__dirname, "../../ui/styles.css");
+  const cssContent = fs.readFileSync(cssPath, "utf-8");
+  const styleEl = document.createElement("style");
+  styleEl.textContent = cssContent;
+  document.head.appendChild(styleEl);
+
+  vi.mocked(ffscouter.get).mockResolvedValue(mock_ff_data(2.5, 1000000, "1M"));
+
+  // 2. Regular (non-war) members list, including TornTools' injected
+  // tt-member-index cell as seen on a live page
+  const list = document.createElement("div");
+  list.className = "members-list";
+  list.innerHTML = `
+    <ul class="table-header">
+      <li class="table-cell member">Member</li>
+      <li class="table-cell lvl">Lvl</li>
+      <li class="table-cell position">Position</li>
+      <li class="table-cell days">Days</li>
+      <li class="table-cell status">Status</li>
+    </ul>
+    <ul class="table-body">
+      <li class="table-row">
+        <div class="tt-member-index">1</div>
+        <div class="table-cell member"><a href="/profiles.php?XID=111">Player 111</a></div>
+        <div class="table-cell lvl">50</div>
+        <div class="table-cell position">Leader</div>
+        <div class="table-cell days">100</div>
+        <div class="table-cell status">Okay</div>
+      </li>
+    </ul>
+  `;
+  document.body.appendChild(list);
+
+  const headerPosition = list.querySelector(
+    ".table-header > .position",
+  ) as HTMLElement;
+  const cellPosition = list.querySelector(
+    ".table-row > .position",
+  ) as HTMLElement;
+
+  // A. With display = NONE, native widths are untouched
+  ffconfig.factions_col_display = FactionsColDisplay.NONE;
+  await apply_ff_columns(list);
+
+  expect(list.getAttribute("data-ffscouter-col-display")).toBe("none");
+  expect(window.getComputedStyle(headerPosition).width).toBe("");
+  expect(window.getComputedStyle(cellPosition).width).toBe("");
+
+  // B. With display = FAIR_FIGHT, position shrinks to make room. jsdom does
+  // not evaluate @media rules, so this sees only the 15% reduced-width base;
+  // the full-page-mode 10% override (>= 784px, see Width Budget in
+  // CONTEXT.md) is verified by live measurement only.
+  ffconfig.factions_col_display = FactionsColDisplay.FAIR_FIGHT;
+  await apply_ff_columns(list);
+
+  expect(list.getAttribute("data-ffscouter-col-display")).toBe("fair_fight");
+  expect(window.getComputedStyle(headerPosition).width).toBe("15%");
+  expect(window.getComputedStyle(cellPosition).width).toBe("15%");
+
+  // C. Same for BATTLE_STATS
+  ffconfig.factions_col_display = FactionsColDisplay.BATTLE_STATS;
+  await apply_ff_columns(list);
+
+  expect(list.getAttribute("data-ffscouter-col-display")).toBe("battle_stats");
+  expect(window.getComputedStyle(headerPosition).width).toBe("15%");
+  expect(window.getComputedStyle(cellPosition).width).toBe("15%");
+
+  document.body.removeChild(list);
+
+  // 3. A war-wrapped members list must never get the attribute (the war flow
+  // stamps .faction-war instead), so war layout stays on its own rules
+  const factionWar = document.createElement("div");
+  factionWar.className = "faction-war";
+  const warList = document.createElement("div");
+  warList.className = "members-list";
+  warList.innerHTML = `
+    <div class="white-grad">
+      <div class="member">Member</div>
+      <div class="level">Lvl</div>
+    </div>
+    <ul class="table-body">
+      <li class="table-row">
+        <div class="member"><a href="/profiles.php?XID=111">Player 111</a></div>
+        <div class="level">50</div>
+      </li>
+    </ul>
+  `;
+  factionWar.appendChild(warList);
+  document.body.appendChild(factionWar);
+
+  ffconfig.war_col_display = FactionsColDisplay.FAIR_FIGHT;
+  await apply_ff_columns(warList);
+
+  expect(warList.getAttribute("data-ffscouter-col-display")).toBeNull();
+  expect(factionWar.getAttribute("data-ffscouter-col-display")).toBe(
+    "fair_fight",
+  );
+
+  // Cleanup
+  document.head.removeChild(styleEl);
+  document.body.removeChild(factionWar);
+});

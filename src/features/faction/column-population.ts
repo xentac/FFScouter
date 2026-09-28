@@ -114,9 +114,13 @@ export async function apply_ff_columns(membersList: HTMLElement) {
   const expectedText = isEst ? "Est" : "FF";
 
   const factionWar = membersList.closest(".faction-war") as HTMLElement | null;
-  if (factionWar) {
-    factionWar.setAttribute("data-ffscouter-col-display", colDisplay);
-  }
+  // Stamp the layout root: .faction-war for war lists, otherwise the regular
+  // member list itself, so CSS can shrink its position column when our column
+  // is injected (see styles.css)
+  (factionWar ?? membersList).setAttribute(
+    "data-ffscouter-col-display",
+    colDisplay,
+  );
 
   let headerLi = membersList.querySelector(
     ".ffscouter-header",
