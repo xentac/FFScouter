@@ -17,6 +17,10 @@ import {
 import type { FFData, PlayerId } from "@utils/types";
 import { useEffect, useState } from "react";
 import styles from "./info-line.module.css";
+import {
+  ExplainerLinePrototype,
+  explainer_prototype_variant,
+} from "./info-line-explainer-prototype";
 import { SourceMarkerIcon } from "./source-marker-icon";
 
 const log = logger.child("ui");
@@ -129,6 +133,18 @@ export function FFHeaderLine({ playerId }: Props) {
           Premium Data Available - Upgrade To View
         </a>
       </span>
+    );
+  }
+
+  // PROTOTYPE hook (wayfinder #18) — remove with info-line-explainer-prototype.tsx
+  const prototypeVariant = explainer_prototype_variant();
+  if (prototypeVariant) {
+    return (
+      <ExplainerLinePrototype
+        data={data}
+        extraDetailsLine={extraDetailsLine}
+        initialVariant={prototypeVariant}
+      />
     );
   }
 
