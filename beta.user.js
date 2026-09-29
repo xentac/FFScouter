@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FF Scouter V2 beta
 // @namespace    xentac-beta
-// @version      3.3
+// @version      3.4-beta1
 // @author       xentac [3354782], MAVRI [2402357], rDacted [2670953], Weav3r [1853324], Glasnost [1844049]
 // @description  Shows the expected Fair Fight score against targets and faction war status
 // @license      GPLv3
@@ -19,7 +19,7 @@
 
   const n=new Set;const importCSS = async e=>{n.has(e)||(n.add(e),(d=>{const t=document.createElement("style");t.textContent=d,(document.head||document.documentElement).appendChild(t);})(e));};
 
-  importCSS(" ._ffscouter-info-line__label_xi5zk_1{font-weight:700;margin-right:6px}._ffscouter-info-line__badge_xi5zk_8{font-weight:700;padding:2px 6px;border-radius:4px;display:inline-block}._ffscouter-info-line__premium-upgrade_xi5zk_15{display:block;margin-top:4px;line-height:1.3;white-space:nowrap;font-size:12px;font-style:normal}@media(max-width:768px){._ffscouter-info-line__premium-upgrade_xi5zk_15{margin-top:6px;line-height:1.35;white-space:normal;overflow-wrap:anywhere}}._ff-filter-box_ursux_1,._ff-filter-box_ursux_1 *,._ff-filter-box_ursux_1 *:before,._ff-filter-box_ursux_1 *:after{box-sizing:border-box!important}._ff-filter-box_ursux_1{background-color:var(--ffscouter-bg-color);border:1px solid var(--ffscouter-border-color);border-radius:8px;padding:12px 16px;margin-bottom:16px;color:var(--ffscouter-text-color);font-family:Arial,sans-serif;box-shadow:0 2px 5px #0000000d}._ff-filter-box_ursux_1._ff-filter-box--no-borders_ursux_19{background-color:var(--default-bg-panel-color);border-top:1px solid var(--ffscouter-border-color);border-bottom:1px solid var(--ffscouter-border-color);border-left:none;border-right:none;border-radius:0;box-shadow:none;padding:12px 10px;margin:0}._ff-filter-box_ursux_1 summary{cursor:pointer;font-size:14px;font-weight:700;outline:none;-webkit-user-select:none;user-select:none}._ff-filter-box_ursux_1[open] summary{border-bottom:1px solid var(--ffscouter-border-color);padding-bottom:6px;margin-bottom:12px}._ff-filter-box_ursux_1 summary:focus-visible{outline:2px solid var(--ffscouter-glow-color);outline-offset:2px}._ff-filter-box__header_ursux_52{display:inline-flex;justify-content:space-between;align-items:center;width:calc(100% - 24px);vertical-align:middle}._ff-filter-box__header-actions_ursux_60{display:flex;gap:6px;align-items:center}._ff-filter-box_ursux_1 ._ff-filter-box__action-btn_ursux_66{background:var(--ffscouter-alt-bg-color);border:1px solid var(--ffscouter-border-color);border-radius:4px;color:var(--ffscouter-text-color);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;padding:0;transition:background-color .2s,color .2s,opacity .2s}._ff-filter-box_ursux_1 ._ff-filter-box__action-btn_ursux_66:hover{background-color:var(--ffscouter-hover-color)}._ff-filter-box_ursux_1 ._ff-filter-box__action-btn_ursux_66._ff-filter-box__action-btn--active_ursux_88{color:var(--ffscouter-text-color);opacity:1}._ff-filter-box_ursux_1 ._ff-filter-box__action-btn_ursux_66._ff-filter-box__action-btn--inactive_ursux_93{color:var(--ffscouter-text-color);opacity:.4}._ff-filter-box_ursux_1 ._ff-filter-box__action-btn_ursux_66 svg{width:14px;height:14px;fill:currentColor}._ff-filter-box_ursux_1 ._ff-filter-box__action-btn_ursux_66._ff-filter-box__action-btn--reset_ursux_104 svg{transition:transform .25s ease-in-out}._ff-filter-box_ursux_1 ._ff-filter-box__action-btn_ursux_66._ff-filter-box__action-btn--reset_ursux_104:hover svg{transform:rotate(-180deg)}._ff-filter-box__grid_ursux_114{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:12px}._ff-filter-box__group--sort_ursux_121{order:1}._ff-filter-box__group--level_ursux_125{order:2}._ff-filter-box__group--activity_ursux_129{order:3}._ff-filter-box__group--status_ursux_133{order:4}._ff-filter-box__group--ff_ursux_137{order:5}._ff-filter-box__group--stats_ursux_141{order:6}._ff-filter-box__group--last-action_ursux_145{order:7}._ff-filter-box__group--columns_ursux_149{order:8}@media(min-width:784px){._ff-filter-box__grid_ursux_114{grid-template-columns:repeat(3,1fr)}._ff-filter-box__grid_ursux_114>*{order:0}}._ff-filter-box__group_ursux_121{display:flex;flex-direction:column;gap:2px}._ff-filter-box__sort-controls_ursux_171{display:flex;flex-direction:column;gap:8px}._ff-filter-box__sort-controls_ursux_171 ._ff-filter-box__sort-btn_ursux_177{width:100%}._ff-filter-box__sort-controls_ursux_171 ._ff-filter-box__compare-btn_ursux_181{width:100%;height:32px}._ff-filter-box__display-select_ursux_186{padding:4px;border:1px solid var(--ffscouter-border-color);border-radius:4px;background:var(--ffscouter-alt-bg-color);color:var(--ffscouter-text-color);font-size:11px;cursor:pointer;height:32px}._ff-filter-box__options_ursux_197{display:flex;flex-direction:column}._ff-filter-box__options_ursux_197 label{display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer}._ff-filter-box__range-inputs_ursux_210{display:flex;align-items:center;gap:4px}._ff-filter-box__range-inputs_ursux_210 input{flex:1;width:0;min-width:30px;max-width:80px;padding:4px;border:1px solid var(--ffscouter-border-color);border-radius:4px;background:var(--ffscouter-alt-bg-color);color:var(--ffscouter-text-color);font-size:11px;text-align:center}._ff-filter-box_ursux_1 button{padding:6px 10px;border:1px solid var(--ffscouter-border-color);border-radius:4px;background:var(--ffscouter-alt-bg-color);color:var(--ffscouter-text-color);font-size:12px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;transition:background-color .2s}._ff-filter-box_ursux_1 button:hover{background-color:var(--ffscouter-hover-color)}._ff-settings-panel__accordion_6bhvd_1{margin:10px 0;padding:15px;background-color:var(--ffscouter-bg-color);border:1px solid var(--ffscouter-border-color);border-radius:5px;color:var(--ffscouter-text-color)}._ff-settings-panel__accordion_6bhvd_1._ff-settings-panel__accordion--glow_6bhvd_10{border-color:var(--ffscouter-glow-color);box-shadow:0 0 8px #4caf5080}._ff-settings-panel__accordion_6bhvd_1 summary{cursor:pointer;font-weight:700}._ff-settings-panel__body_6bhvd_20{margin-top:15px}._ff-settings-panel__input-row_6bhvd_24{display:flex;flex-direction:column;gap:5px;margin-bottom:15px}._ff-settings-panel__range-row_6bhvd_32{display:flex;gap:10px;align-items:center}._ff-settings-panel__blur_6bhvd_38{filter:blur(4px);transition:filter .2s ease}._ff-settings-panel__blur_6bhvd_38:hover,._ff-settings-panel__blur_6bhvd_38:focus{filter:blur(0)}._ff-settings-panel__error-msg_6bhvd_48{color:#f33;font-size:13px;margin-top:5px}._ff-settings-panel__accordion_6bhvd_1 input[type=text],._ff-settings-panel__accordion_6bhvd_1 input[type=number]{box-sizing:border-box!important;text-align:left;vertical-align:top;width:178px;height:34px!important;margin-right:8px;padding:9px 10px;line-height:14px;display:inline-block}._ff-settings-panel__accordion_6bhvd_1 input[type=number]._ff-settings-panel__number_6bhvd_67{width:80px}._ff-settings-panel__accordion_6bhvd_1 select{box-sizing:border-box;text-align:left;vertical-align:top;width:178px;height:34px;margin-right:8px;padding:8px 10px;line-height:14px;display:inline-block;border:var(--input-border-color, 1px solid var(--ffscouter-border-color));border-radius:5px;font-family:Arial,serif;color:var(--input-color, var(--ffscouter-text-color));background:var(--input-background-color, var(--ffscouter-alt-bg-color))}.dark-mode ._ff-settings-panel__accordion_6bhvd_1 select option{background-color:#000;color:var(--input-color)}._ff-settings-panel__api-explanation_6bhvd_94{color:var(--ffscouter-text-color);margin-bottom:20px;font-size:13px;line-height:1.5}._ff-settings-panel__accordion_6bhvd_1 a{color:var(--ffscouter-success-color);text-decoration:underline}._ff-settings-panel__premium-badge_6bhvd_107{display:inline-block;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;vertical-align:middle}._ff-settings-panel__premium-badge--enabled_6bhvd_117{background:#4caf50}._ff-settings-panel__premium-badge--disabled_6bhvd_121{background:#c62828}._ff-settings-panel__premium-badge--unknown_6bhvd_125{background:#f39c12}._ff-settings-panel__section_6bhvd_138{display:grid;grid-template-columns:1fr;gap:12px;margin-bottom:15px}@media(min-width:784px){._ff-settings-panel__section_6bhvd_138{grid-template-columns:repeat(3,1fr)}}._ff-settings-panel__span_6bhvd_152{grid-column:1 / -1;margin-bottom:0}._ff-settings-panel__cell_6bhvd_160{display:flex;flex-direction:column;gap:5px;min-width:0;margin-bottom:0}._ff-settings-panel__cell_6bhvd_160._ff-settings-panel__cell--checkbox_6bhvd_169{flex-direction:row;align-items:flex-start;gap:10px}._ff-settings-panel__cell_6bhvd_160 input[type=text]{width:100%;margin-right:0}._ff-settings-panel__cell_6bhvd_160 select{width:auto;max-width:100%;margin-right:0}._ff-settings-panel__api-block_6bhvd_193{display:flex;flex-direction:column;gap:10px}._ff-settings-panel__api-block_6bhvd_193 ._ff-settings-panel__cell_6bhvd_160 input[type=text]{max-width:360px}._ff-settings-panel__api-status-row_6bhvd_203{display:flex;flex-wrap:wrap;align-items:center;gap:10px}._ff-settings-panel__chain-suboptions_6bhvd_213{border-left:2px solid var(--ffscouter-border-color);padding-left:8px;margin-top:10px;grid-template-columns:repeat(2,1fr)}._ff-settings-panel__chain-suboptions_6bhvd_213 ._ff-settings-panel__chain-wide_6bhvd_218{grid-column:1 / -1}@media(min-width:784px){._ff-settings-panel__chain-suboptions_6bhvd_213{padding-left:16px;grid-template-columns:repeat(3,1fr)}._ff-settings-panel__chain-suboptions_6bhvd_213 ._ff-settings-panel__chain-wide_6bhvd_218{grid-column:auto}}._ff-settings-panel__group_6bhvd_242{background-color:var(--ffscouter-alt-bg-color);border:1px solid var(--ffscouter-border-color);border-radius:5px;padding:12px;margin-bottom:15px}._ff-settings-panel__group_6bhvd_242 h4{margin:0 0 12px}._ff-settings-panel__marker-size_6bhvd_256,._ff-settings-panel__marker-border-width_6bhvd_257{display:flex;flex-direction:column;gap:5px}._ff-settings-panel__marker-size-controls_6bhvd_263{display:flex;flex-wrap:wrap;align-items:center;gap:10px}._ff-settings-panel__marker-size-controls_6bhvd_263 input[type=range]{flex:1 1 120px;min-width:120px}._ff-settings-panel__color-scheme_6bhvd_276{display:flex;flex-direction:column;gap:5px}._ff-settings-panel__color-scheme-controls_6bhvd_282{display:flex;flex-wrap:wrap;align-items:center;gap:10px}._ff-settings-panel__accordion_6bhvd_1 .ffscouter-swatch-row{flex-wrap:wrap}._ff-settings-panel__actions_6bhvd_295{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:10px;margin-top:20px}._ff-settings-panel__saved-msg_6bhvd_304{color:#4caf50} ");
+  importCSS(" ._ffscouter-info-line__label_aofgj_1{font-weight:700;margin-right:6px}._ffscouter-info-line__badge_aofgj_8{font-weight:700;padding:2px 6px;border-radius:4px;display:inline-block}._ffscouter-info-line__premium-upgrade_aofgj_15{display:block;margin-top:4px;line-height:1.3;white-space:nowrap;font-size:12px;font-style:normal}@media(max-width:768px){._ffscouter-info-line__premium-upgrade_aofgj_15{margin-top:6px;line-height:1.35;white-space:normal;overflow-wrap:anywhere}}._ffscouter-info-line__freshness-trigger_aofgj_44{appearance:none!important;background:none!important;border:none!important;box-shadow:none!important;padding:0!important;margin:0!important;width:auto!important;min-width:0!important;min-height:0!important;font:inherit!important;color:inherit!important;text-transform:none!important;cursor:pointer!important;display:inline!important;vertical-align:baseline!important;text-decoration:underline dotted!important;text-underline-offset:2px!important}._ffscouter-explainer-glyph_aofgj_64{appearance:none!important;background:none!important;border:none!important;box-shadow:none!important;padding:0!important;margin:0 0 0 6px!important;width:auto!important;min-width:0!important;min-height:0!important;vertical-align:middle!important;cursor:pointer!important;display:inline-flex!important;line-height:1!important}._ffscouter-explainer-glyph_aofgj_64 svg{width:14px!important;height:14px!important}._ffscouter-explainer-card_aofgj_90{position:relative!important;display:block!important;margin:6px 0 0!important;padding:10px 30px 10px 12px!important;background:var(--ffscouter-alt-bg-color)!important;border:1px solid var(--ffscouter-border-color)!important;border-radius:6px!important;color:var(--ffscouter-text-color)!important;font-size:12px!important;font-weight:400!important;font-style:normal!important;line-height:1.5!important;text-align:left!important}._ffscouter-explainer-card_aofgj_90 p{display:block!important;float:none!important;margin:0 0 8px!important;padding:0!important}._ffscouter-explainer-card_aofgj_90 p:last-child{margin-bottom:0!important}._ffscouter-explainer-card_aofgj_90 p:before,._ffscouter-explainer-card_aofgj_90 p:after{content:none!important}._ffscouter-explainer-card_aofgj_90 a{display:inline!important;position:static!important;margin:0!important;padding:0!important;background:transparent!important;font:inherit!important;color:inherit!important;text-decoration:underline!important}._ffscouter-explainer-card__close_aofgj_140{position:absolute!important;top:2px!important;right:4px!important;appearance:none!important;background:none!important;border:none!important;box-shadow:none!important;margin:0!important;padding:4px!important;width:auto!important;min-width:0!important;min-height:0!important;cursor:pointer!important;color:inherit!important;font-size:14px!important;line-height:1!important}@media(max-width:784px){._ffscouter-explainer-card_aofgj_90{font-size:13px!important;line-height:1.55!important}}._ff-filter-box_j1w9b_1,._ff-filter-box_j1w9b_1 *,._ff-filter-box_j1w9b_1 *:before,._ff-filter-box_j1w9b_1 *:after{box-sizing:border-box!important}._ff-filter-box_j1w9b_1{background-color:var(--ffscouter-bg-color);border:1px solid var(--ffscouter-border-color);border-radius:8px;padding:12px 16px;margin-bottom:16px;color:var(--ffscouter-text-color);font-family:Arial,sans-serif;box-shadow:0 2px 5px #0000000d}._ff-filter-box_j1w9b_1._ff-filter-box--no-borders_j1w9b_19{background-color:var(--default-bg-panel-color);border-top:1px solid var(--ffscouter-border-color);border-bottom:1px solid var(--ffscouter-border-color);border-left:none;border-right:none;border-radius:0;box-shadow:none;padding:12px 10px;margin:0}._ff-filter-box_j1w9b_1 summary{cursor:pointer;font-size:14px;font-weight:700;outline:none;-webkit-user-select:none;user-select:none}._ff-filter-box_j1w9b_1[open] summary{border-bottom:1px solid var(--ffscouter-border-color);padding-bottom:6px;margin-bottom:12px}._ff-filter-box_j1w9b_1 summary:focus-visible{outline:2px solid var(--ffscouter-glow-color);outline-offset:2px}._ff-filter-box__header_j1w9b_52{display:inline-flex;justify-content:space-between;align-items:center;width:calc(100% - 24px);vertical-align:middle}._ff-filter-box__header-actions_j1w9b_60{display:flex;gap:6px;align-items:center}._ff-filter-box_j1w9b_1 ._ff-filter-box__action-btn_j1w9b_66{background:var(--ffscouter-alt-bg-color);border:1px solid var(--ffscouter-border-color);border-radius:4px;color:var(--ffscouter-text-color);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;padding:0;transition:background-color .2s,color .2s,opacity .2s}._ff-filter-box_j1w9b_1 ._ff-filter-box__action-btn_j1w9b_66:hover{background-color:var(--ffscouter-hover-color)}._ff-filter-box_j1w9b_1 ._ff-filter-box__action-btn_j1w9b_66._ff-filter-box__action-btn--active_j1w9b_88{color:var(--ffscouter-text-color);opacity:1}._ff-filter-box_j1w9b_1 ._ff-filter-box__action-btn_j1w9b_66._ff-filter-box__action-btn--inactive_j1w9b_93{color:var(--ffscouter-text-color);opacity:.4}._ff-filter-box_j1w9b_1 ._ff-filter-box__action-btn_j1w9b_66 svg{width:14px;height:14px;fill:currentColor}._ff-filter-box_j1w9b_1 ._ff-filter-box__action-btn_j1w9b_66._ff-filter-box__action-btn--reset_j1w9b_104 svg{transition:transform .25s ease-in-out}._ff-filter-box_j1w9b_1 ._ff-filter-box__action-btn_j1w9b_66._ff-filter-box__action-btn--reset_j1w9b_104:hover svg{transform:rotate(-180deg)}._ff-filter-box__grid_j1w9b_114{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:12px}._ff-filter-box__group--sort_j1w9b_121{order:1}._ff-filter-box__group--level_j1w9b_125{order:2}._ff-filter-box__group--activity_j1w9b_129{order:3}._ff-filter-box__group--status_j1w9b_133{order:4}._ff-filter-box__group--ff_j1w9b_137{order:5}._ff-filter-box__group--stats_j1w9b_141{order:6}._ff-filter-box__group--last-action_j1w9b_145{order:7}._ff-filter-box__group--columns_j1w9b_149{order:8}@media(min-width:784px){._ff-filter-box__grid_j1w9b_114{grid-template-columns:repeat(3,1fr)}._ff-filter-box__grid_j1w9b_114>*{order:0}}._ff-filter-box__group_j1w9b_121{display:flex;flex-direction:column;gap:2px}._ff-filter-box__sort-controls_j1w9b_171{display:flex;flex-direction:column;gap:8px}._ff-filter-box__sort-controls_j1w9b_171 ._ff-filter-box__sort-btn_j1w9b_177{width:100%}._ff-filter-box__sort-controls_j1w9b_171 ._ff-filter-box__compare-btn_j1w9b_181{width:100%;height:32px}._ff-filter-box__display-select_j1w9b_186{padding:4px;border:1px solid var(--ffscouter-border-color);border-radius:4px;background:var(--ffscouter-alt-bg-color);color:var(--ffscouter-text-color);font-size:11px;cursor:pointer;height:32px}._ff-filter-box__options_j1w9b_197{display:flex;flex-direction:column}._ff-filter-box__options_j1w9b_197 label{display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer}._ff-filter-box__option--out-soon_j1w9b_212{margin-left:16px}._ff-filter-box__range-inputs_j1w9b_216{display:flex;align-items:center;gap:4px}._ff-filter-box__range-inputs_j1w9b_216 input{flex:1;width:0;min-width:30px;max-width:80px;padding:4px;border:1px solid var(--ffscouter-border-color);border-radius:4px;background:var(--ffscouter-alt-bg-color);color:var(--ffscouter-text-color);font-size:11px;text-align:center}._ff-filter-box_j1w9b_1 button{padding:6px 10px;border:1px solid var(--ffscouter-border-color);border-radius:4px;background:var(--ffscouter-alt-bg-color);color:var(--ffscouter-text-color);font-size:12px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;transition:background-color .2s}._ff-filter-box_j1w9b_1 button:hover{background-color:var(--ffscouter-hover-color)}._ff-settings-panel__accordion_6bhvd_1{margin:10px 0;padding:15px;background-color:var(--ffscouter-bg-color);border:1px solid var(--ffscouter-border-color);border-radius:5px;color:var(--ffscouter-text-color)}._ff-settings-panel__accordion_6bhvd_1._ff-settings-panel__accordion--glow_6bhvd_10{border-color:var(--ffscouter-glow-color);box-shadow:0 0 8px #4caf5080}._ff-settings-panel__accordion_6bhvd_1 summary{cursor:pointer;font-weight:700}._ff-settings-panel__body_6bhvd_20{margin-top:15px}._ff-settings-panel__input-row_6bhvd_24{display:flex;flex-direction:column;gap:5px;margin-bottom:15px}._ff-settings-panel__range-row_6bhvd_32{display:flex;gap:10px;align-items:center}._ff-settings-panel__blur_6bhvd_38{filter:blur(4px);transition:filter .2s ease}._ff-settings-panel__blur_6bhvd_38:hover,._ff-settings-panel__blur_6bhvd_38:focus{filter:blur(0)}._ff-settings-panel__error-msg_6bhvd_48{color:#f33;font-size:13px;margin-top:5px}._ff-settings-panel__accordion_6bhvd_1 input[type=text],._ff-settings-panel__accordion_6bhvd_1 input[type=number]{box-sizing:border-box!important;text-align:left;vertical-align:top;width:178px;height:34px!important;margin-right:8px;padding:9px 10px;line-height:14px;display:inline-block}._ff-settings-panel__accordion_6bhvd_1 input[type=number]._ff-settings-panel__number_6bhvd_67{width:80px}._ff-settings-panel__accordion_6bhvd_1 select{box-sizing:border-box;text-align:left;vertical-align:top;width:178px;height:34px;margin-right:8px;padding:8px 10px;line-height:14px;display:inline-block;border:var(--input-border-color, 1px solid var(--ffscouter-border-color));border-radius:5px;font-family:Arial,serif;color:var(--input-color, var(--ffscouter-text-color));background:var(--input-background-color, var(--ffscouter-alt-bg-color))}.dark-mode ._ff-settings-panel__accordion_6bhvd_1 select option{background-color:#000;color:var(--input-color)}._ff-settings-panel__api-explanation_6bhvd_94{color:var(--ffscouter-text-color);margin-bottom:20px;font-size:13px;line-height:1.5}._ff-settings-panel__accordion_6bhvd_1 a{color:var(--ffscouter-success-color);text-decoration:underline}._ff-settings-panel__premium-badge_6bhvd_107{display:inline-block;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;vertical-align:middle}._ff-settings-panel__premium-badge--enabled_6bhvd_117{background:#4caf50}._ff-settings-panel__premium-badge--disabled_6bhvd_121{background:#c62828}._ff-settings-panel__premium-badge--unknown_6bhvd_125{background:#f39c12}._ff-settings-panel__section_6bhvd_138{display:grid;grid-template-columns:1fr;gap:12px;margin-bottom:15px}@media(min-width:784px){._ff-settings-panel__section_6bhvd_138{grid-template-columns:repeat(3,1fr)}}._ff-settings-panel__span_6bhvd_152{grid-column:1 / -1;margin-bottom:0}._ff-settings-panel__cell_6bhvd_160{display:flex;flex-direction:column;gap:5px;min-width:0;margin-bottom:0}._ff-settings-panel__cell_6bhvd_160._ff-settings-panel__cell--checkbox_6bhvd_169{flex-direction:row;align-items:flex-start;gap:10px}._ff-settings-panel__cell_6bhvd_160 input[type=text]{width:100%;margin-right:0}._ff-settings-panel__cell_6bhvd_160 select{width:auto;max-width:100%;margin-right:0}._ff-settings-panel__api-block_6bhvd_193{display:flex;flex-direction:column;gap:10px}._ff-settings-panel__api-block_6bhvd_193 ._ff-settings-panel__cell_6bhvd_160 input[type=text]{max-width:360px}._ff-settings-panel__api-status-row_6bhvd_203{display:flex;flex-wrap:wrap;align-items:center;gap:10px}._ff-settings-panel__chain-suboptions_6bhvd_213{border-left:2px solid var(--ffscouter-border-color);padding-left:8px;margin-top:10px;grid-template-columns:repeat(2,1fr)}._ff-settings-panel__chain-suboptions_6bhvd_213 ._ff-settings-panel__chain-wide_6bhvd_218{grid-column:1 / -1}@media(min-width:784px){._ff-settings-panel__chain-suboptions_6bhvd_213{padding-left:16px;grid-template-columns:repeat(3,1fr)}._ff-settings-panel__chain-suboptions_6bhvd_213 ._ff-settings-panel__chain-wide_6bhvd_218{grid-column:auto}}._ff-settings-panel__group_6bhvd_242{background-color:var(--ffscouter-alt-bg-color);border:1px solid var(--ffscouter-border-color);border-radius:5px;padding:12px;margin-bottom:15px}._ff-settings-panel__group_6bhvd_242 h4{margin:0 0 12px}._ff-settings-panel__marker-size_6bhvd_256,._ff-settings-panel__marker-border-width_6bhvd_257{display:flex;flex-direction:column;gap:5px}._ff-settings-panel__marker-size-controls_6bhvd_263{display:flex;flex-wrap:wrap;align-items:center;gap:10px}._ff-settings-panel__marker-size-controls_6bhvd_263 input[type=range]{flex:1 1 120px;min-width:120px}._ff-settings-panel__color-scheme_6bhvd_276{display:flex;flex-direction:column;gap:5px}._ff-settings-panel__color-scheme-controls_6bhvd_282{display:flex;flex-wrap:wrap;align-items:center;gap:10px}._ff-settings-panel__accordion_6bhvd_1 .ffscouter-swatch-row{flex-wrap:wrap}._ff-settings-panel__actions_6bhvd_295{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:10px;margin-top:20px}._ff-settings-panel__saved-msg_6bhvd_304{color:#4caf50} ");
 
   var StartTime = ((StartTime2) => {
     StartTime2[StartTime2["DocumentStart"] = 0] = "DocumentStart";
@@ -1006,7 +1006,7 @@ clearAll() {
   }
   const FF_SCOUTER_BASE_URL = "https://ffscouter.com/api/v1";
   new TornApiClient({
-    defaultComment: `FFScouterV2-${"3.3"}`,
+    defaultComment: `FFScouterV2-${"3.4-beta1"}`,
     defaultTimeout: 30
 });
   async function gmRequest(options) {
@@ -2749,6 +2749,9 @@ queryString.charCodeAt(pos - 1) === 63) {
       }
     }
   }
+  function format_age_phrase(timestamp_sec) {
+    return format_relative_time(timestamp_sec).replace(/^\((.*) old\)$/, "$1");
+  }
   function get_ff_colour(d2) {
     return get_ff_arrow_colour(d2);
   }
@@ -2997,10 +3000,106 @@ queryString.charCodeAt(pos - 1) === 63) {
     }
   );
   const styles$2 = {
-    "ffscouter-info-line__label": "_ffscouter-info-line__label_xi5zk_1",
-    "ffscouter-info-line__badge": "_ffscouter-info-line__badge_xi5zk_8",
-    "ffscouter-info-line__premium-upgrade": "_ffscouter-info-line__premium-upgrade_xi5zk_15"
+    "ffscouter-info-line__label": "_ffscouter-info-line__label_aofgj_1",
+    "ffscouter-info-line__badge": "_ffscouter-info-line__badge_aofgj_8",
+    "ffscouter-info-line__premium-upgrade": "_ffscouter-info-line__premium-upgrade_aofgj_15",
+    "ffscouter-info-line__freshness-trigger": "_ffscouter-info-line__freshness-trigger_aofgj_44",
+    "ffscouter-explainer-glyph": "_ffscouter-explainer-glyph_aofgj_64",
+    "ffscouter-explainer-card": "_ffscouter-explainer-card_aofgj_90",
+    "ffscouter-explainer-card__close": "_ffscouter-explainer-card__close_aofgj_140"
   };
+  const GUIDE_URL = "https://ffscouter.com/guides/fair-fight-explained";
+  const FAQ_URL = "https://ffscouter.com/faq#profile-stats-old-inaccurate";
+  const INFO_GLYPH_COLOR = "#607d8b";
+  function ExplainerGlyphButton({ open, onToggle }) {
+    return jsx(
+      "button",
+      {
+        type: "button",
+        className: styles$2["ffscouter-explainer-glyph"],
+        "aria-expanded": open,
+        "aria-label": "Explain this estimate",
+        onClick: onToggle,
+        children: jsxs("svg", { viewBox: "0 0 20 20", "aria-hidden": "true", children: [
+jsx(
+            "circle",
+            {
+              cx: 10,
+              cy: 10,
+              r: 9,
+              fill: INFO_GLYPH_COLOR,
+              stroke: "#000000",
+              strokeWidth: 1.5
+            }
+          ),
+jsx("circle", { cx: 10, cy: 5.8, r: 1.6, fill: "#ffffff" }),
+jsx(
+            "rect",
+            {
+              x: 8.6,
+              y: 8.4,
+              width: 2.8,
+              height: 7.2,
+              rx: 1.4,
+              fill: "#ffffff"
+            }
+          )
+        ] })
+      }
+    );
+  }
+  function GuideLink() {
+    return jsx("a", { href: GUIDE_URL, target: "_blank", rel: "noopener noreferrer", children: "Read how it works" });
+  }
+  function FaqLink() {
+    return jsx("a", { href: FAQ_URL, target: "_blank", rel: "noopener noreferrer", children: "More in the FAQ" });
+  }
+  function dynamic_line(data) {
+    const source = extract_source(data);
+    const label = get_source_marker(source)?.label ?? (source === "bss" ? "Fair Fight data" : null);
+    const age = format_age_phrase(extract_last_updated(data));
+    const agePhrase = age === "" ? "less than a day old" : `${age} old`;
+    return label ? `This player's estimate comes from ${label} and is ${agePhrase}.` : `This player's estimate is ${agePhrase}.`;
+  }
+  function EstimateExplainerCard({ data, onClose }) {
+    return jsxs("div", { className: styles$2["ffscouter-explainer-card"], children: [
+jsx(
+        "button",
+        {
+          type: "button",
+          className: styles$2["ffscouter-explainer-card__close"],
+          "aria-label": "Close",
+          onClick: onClose,
+          children: "×"
+        }
+      ),
+      data ? jsxs(Fragment, { children: [
+jsx("p", { children: jsx("strong", { children: dynamic_line(data) }) }),
+jsxs("p", { children: [
+          "Estimates come from Fair Fight scores recorded when FFScouter users attack this player. Only recent attacks with a Fair Fight score between roughly 1.05 and 3.00 count. If nobody has landed a qualifying attack lately, the estimate simply ages. ",
+jsx(GuideLink, {}),
+          "."
+        ] }),
+jsxs("p", { children: [
+          "Be more cautious with estimates over 28 days old and with brand-new players. ",
+jsx(FaqLink, {}),
+          "."
+        ] })
+      ] }) : jsxs(Fragment, { children: [
+jsx("p", { children: jsx("strong", { children: "FFScouter has no estimate for this player yet." }) }),
+jsxs("p", { children: [
+          "Estimates come from Fair Fight scores recorded when FFScouter users attack a player. Only recent attacks with a Fair Fight score between roughly 1.05 and 3.00 count, so there's no estimate when no FFScouter user has attacked this player, or when their fights fell outside that range. ",
+jsx(GuideLink, {}),
+          "."
+        ] }),
+jsxs("p", { children: [
+          "Brand-new players and rarely-attacked players often have no estimate at all. ",
+jsx(FaqLink, {}),
+          "."
+        ] })
+      ] })
+    ] });
+  }
   function SourceMarkerIcon({ marker, className }) {
     return jsxs(
       "svg",
@@ -3051,10 +3150,12 @@ jsx(
   }
   const log$e = logger.child("ui");
   const PREMIUM_UPGRADE_URL$1 = "https://ffscouter.com/premium";
-  function FFHeaderLine({ playerId }) {
+  function FFHeaderLine({ playerId, showExplainer = false }) {
     const [data, setData] = useState(null);
     const [isPremium, setIsPremium] = useState(null);
     const [premiumLoading, setPremiumLoading] = useState(false);
+    const [explainerOpen, setExplainerOpen] = useState(false);
+    const toggleExplainer = () => setExplainerOpen((open) => !open);
     useEffect(() => {
       let cancelled = false;
       ffscouter.get(playerId).then((result) => {
@@ -3097,7 +3198,23 @@ jsx(
             style: { background: "#444", color: "#fff" },
             children: "No data"
           }
-        )
+        ),
+        showExplainer && jsxs(Fragment, { children: [
+jsx(
+            ExplainerGlyphButton,
+            {
+              open: explainerOpen,
+              onToggle: toggleExplainer
+            }
+          ),
+          explainerOpen && jsx(
+            EstimateExplainerCard,
+            {
+              data: null,
+              onClose: () => setExplainerOpen(false)
+            }
+          )
+        ] })
       ] });
     }
     const ffString = format_ff_score(data);
@@ -3142,6 +3259,16 @@ jsxs("span", { style: { fontWeight: "normal" }, children: [
         }
       ) });
     }
+    const freshNode = showExplainer && fresh !== "" ? jsx(
+      "button",
+      {
+        type: "button",
+        className: styles$2["ffscouter-info-line__freshness-trigger"],
+        "aria-expanded": explainerOpen,
+        onClick: toggleExplainer,
+        children: fresh
+      }
+    ) : fresh;
     return jsxs(Fragment, { children: [
 jsx("span", { className: styles$2["ffscouter-info-line__label"], children: "FairFight:" }),
 jsxs(
@@ -3154,11 +3281,12 @@ jsxs(
             " (",
             difficulty,
             ") ",
-            fresh
+            freshNode
           ]
         }
       ),
       sourceMarker && jsx(SourceMarkerIcon, { marker: sourceMarker }),
+      showExplainer && jsx(ExplainerGlyphButton, { open: explainerOpen, onToggle: toggleExplainer }),
 jsxs(
         "span",
         {
@@ -3175,7 +3303,14 @@ jsx("span", { children: extract_bs_estimate_human(data) })
           ]
         }
       ),
-      extraDetailsLine
+      extraDetailsLine,
+      showExplainer && explainerOpen && jsx(
+        EstimateExplainerCard,
+        {
+          data,
+          onClose: () => setExplainerOpen(false)
+        }
+      )
     ] });
   }
   const log$d = logger.child("dom");
@@ -3781,30 +3916,31 @@ jsx("span", { children: extract_bs_estimate_human(data) })
     default: _deprecatedStub
   }, Symbol.toStringTag, { value: "Module" }));
   const styles$1 = {
-    "ff-filter-box": "_ff-filter-box_ursux_1",
-    "ff-filter-box--no-borders": "_ff-filter-box--no-borders_ursux_19",
-    "ff-filter-box__header": "_ff-filter-box__header_ursux_52",
-    "ff-filter-box__header-actions": "_ff-filter-box__header-actions_ursux_60",
-    "ff-filter-box__action-btn": "_ff-filter-box__action-btn_ursux_66",
-    "ff-filter-box__action-btn--active": "_ff-filter-box__action-btn--active_ursux_88",
-    "ff-filter-box__action-btn--inactive": "_ff-filter-box__action-btn--inactive_ursux_93",
-    "ff-filter-box__action-btn--reset": "_ff-filter-box__action-btn--reset_ursux_104",
-    "ff-filter-box__grid": "_ff-filter-box__grid_ursux_114",
-    "ff-filter-box__group--sort": "_ff-filter-box__group--sort_ursux_121",
-    "ff-filter-box__group--level": "_ff-filter-box__group--level_ursux_125",
-    "ff-filter-box__group--activity": "_ff-filter-box__group--activity_ursux_129",
-    "ff-filter-box__group--status": "_ff-filter-box__group--status_ursux_133",
-    "ff-filter-box__group--ff": "_ff-filter-box__group--ff_ursux_137",
-    "ff-filter-box__group--stats": "_ff-filter-box__group--stats_ursux_141",
-    "ff-filter-box__group--last-action": "_ff-filter-box__group--last-action_ursux_145",
-    "ff-filter-box__group--columns": "_ff-filter-box__group--columns_ursux_149",
-    "ff-filter-box__group": "_ff-filter-box__group_ursux_121",
-    "ff-filter-box__sort-controls": "_ff-filter-box__sort-controls_ursux_171",
-    "ff-filter-box__sort-btn": "_ff-filter-box__sort-btn_ursux_177",
-    "ff-filter-box__compare-btn": "_ff-filter-box__compare-btn_ursux_181",
-    "ff-filter-box__display-select": "_ff-filter-box__display-select_ursux_186",
-    "ff-filter-box__options": "_ff-filter-box__options_ursux_197",
-    "ff-filter-box__range-inputs": "_ff-filter-box__range-inputs_ursux_210"
+    "ff-filter-box": "_ff-filter-box_j1w9b_1",
+    "ff-filter-box--no-borders": "_ff-filter-box--no-borders_j1w9b_19",
+    "ff-filter-box__header": "_ff-filter-box__header_j1w9b_52",
+    "ff-filter-box__header-actions": "_ff-filter-box__header-actions_j1w9b_60",
+    "ff-filter-box__action-btn": "_ff-filter-box__action-btn_j1w9b_66",
+    "ff-filter-box__action-btn--active": "_ff-filter-box__action-btn--active_j1w9b_88",
+    "ff-filter-box__action-btn--inactive": "_ff-filter-box__action-btn--inactive_j1w9b_93",
+    "ff-filter-box__action-btn--reset": "_ff-filter-box__action-btn--reset_j1w9b_104",
+    "ff-filter-box__grid": "_ff-filter-box__grid_j1w9b_114",
+    "ff-filter-box__group--sort": "_ff-filter-box__group--sort_j1w9b_121",
+    "ff-filter-box__group--level": "_ff-filter-box__group--level_j1w9b_125",
+    "ff-filter-box__group--activity": "_ff-filter-box__group--activity_j1w9b_129",
+    "ff-filter-box__group--status": "_ff-filter-box__group--status_j1w9b_133",
+    "ff-filter-box__group--ff": "_ff-filter-box__group--ff_j1w9b_137",
+    "ff-filter-box__group--stats": "_ff-filter-box__group--stats_j1w9b_141",
+    "ff-filter-box__group--last-action": "_ff-filter-box__group--last-action_j1w9b_145",
+    "ff-filter-box__group--columns": "_ff-filter-box__group--columns_j1w9b_149",
+    "ff-filter-box__group": "_ff-filter-box__group_j1w9b_121",
+    "ff-filter-box__sort-controls": "_ff-filter-box__sort-controls_j1w9b_171",
+    "ff-filter-box__sort-btn": "_ff-filter-box__sort-btn_j1w9b_177",
+    "ff-filter-box__compare-btn": "_ff-filter-box__compare-btn_j1w9b_181",
+    "ff-filter-box__display-select": "_ff-filter-box__display-select_j1w9b_186",
+    "ff-filter-box__options": "_ff-filter-box__options_j1w9b_197",
+    "ff-filter-box__option--out-soon": "_ff-filter-box__option--out-soon_j1w9b_212",
+    "ff-filter-box__range-inputs": "_ff-filter-box__range-inputs_j1w9b_216"
   };
   const cls$1 = {
     box: styles$1["ff-filter-box"],
@@ -3830,8 +3966,10 @@ jsx("span", { children: extract_bs_estimate_human(data) })
     compareBtn: styles$1["ff-filter-box__compare-btn"],
     displaySelect: styles$1["ff-filter-box__display-select"],
     options: styles$1["ff-filter-box__options"],
+    optionOutSoon: styles$1["ff-filter-box__option--out-soon"],
     rangeInputs: styles$1["ff-filter-box__range-inputs"]
   };
+  const OUT_SOON_THRESHOLD_SECONDS = 5 * 60;
   const DEFAULT_HIDDEN_COLUMNS = { level: false, status: false, score: false };
   const DEFAULT_STATE = {
     sortBy: "none",
@@ -3846,6 +3984,7 @@ jsx("span", { children: extract_bs_estimate_human(data) })
       federal: true,
       fallen: true
     },
+    outSoon: true,
     levelMin: null,
     levelMax: null,
     ffMin: null,
@@ -3868,6 +4007,7 @@ jsx("span", { children: extract_bs_estimate_human(data) })
     onFilterChange,
     ref,
     initialHasLastActionData = false,
+    initialHasUntilData = false,
     filteringDisabled = false,
     onReady
   }) {
@@ -3883,12 +4023,15 @@ jsx("span", { children: extract_bs_estimate_human(data) })
     const [hasLastActionData, setHasLastActionData] = useState(
       initialHasLastActionData
     );
+    const [hasUntilData, setHasUntilData] = useState(initialHasUntilData);
     const filterStateRef = useRef(filterState);
     filterStateRef.current = filterState;
     const collapsedRef = useRef(collapsed);
     collapsedRef.current = collapsed;
     const hasLastActionDataRef = useRef(hasLastActionData);
     hasLastActionDataRef.current = hasLastActionData;
+    const hasUntilDataRef = useRef(hasUntilData);
+    hasUntilDataRef.current = hasUntilData;
     const modeRef = useRef(mode);
     modeRef.current = mode;
     const filteringDisabledRef = useRef(filteringDisabled);
@@ -3913,6 +4056,12 @@ jsx("span", { children: extract_bs_estimate_human(data) })
 
 
 status: modeRef.current === "war" ? { ...s2.status, fallen: false } : s2.status,
+
+
+
+
+
+outSoon: modeRef.current === "war" && hasUntilDataRef.current ? s2.outSoon : false,
         levelMin: s2.levelMin,
         levelMax: s2.levelMax,
         ffMin: s2.ffMin,
@@ -3991,6 +4140,7 @@ status: modeRef.current === "war" ? { ...s2.status, fallen: false } : s2.status,
           filterEnabled: parsed.filterEnabled ?? true,
           activity: { ...DEFAULT_STATE.activity, ...parsed.activity },
           status: { ...DEFAULT_STATE.status, ...parsed.status },
+          outSoon: parsed.outSoon ?? DEFAULT_STATE.outSoon,
           levelMin: parsed.levelMin ?? null,
           levelMax: parsed.levelMax ?? null,
           ffMin: parsed.ffMin ?? null,
@@ -4072,6 +4222,13 @@ status: modeRef.current === "war" ? { ...s2.status, fallen: false } : s2.status,
           hasLastActionDataRef.current = val;
           setHasLastActionData(val);
         },
+        get hasUntilData() {
+          return hasUntilDataRef.current;
+        },
+        setHasUntilData(val) {
+          hasUntilDataRef.current = val;
+          setHasUntilData(val);
+        },
         setFilterState(patch) {
           applyStatePatch(patch);
           dispatchChange();
@@ -4129,6 +4286,7 @@ status: modeRef.current === "war" ? { ...s2.status, fallen: false } : s2.status,
           federal: true,
           fallen: true
         },
+        outSoon: true,
         levelMin: null,
         levelMax: null,
         ffMin: null,
@@ -4150,6 +4308,10 @@ status: modeRef.current === "war" ? { ...s2.status, fallen: false } : s2.status,
       applyStatePatch({
         status: { ...filterStateRef.current.status, [key]: val }
       });
+      executeChangeImmediately();
+    };
+    const onOutSoonChange = (val) => {
+      applyStatePatch({ outSoon: val });
       executeChangeImmediately();
     };
     const onLevelChange = (type, valStr) => {
@@ -4372,17 +4534,37 @@ jsx("div", { className: cls$1.options, children: [
                 ["traveling", "Traveling"],
                 ["federal", "Fedded"],
                 ["fallen", "Fallen"]
-              ].filter(([key]) => mode !== "war" || key !== "fallen").map(([key, label]) => jsxs("label", { children: [
+              ].filter(([key]) => mode !== "war" || key !== "fallen").flatMap(([key, label]) => {
+                const items = [
+jsxs("label", { children: [
 jsx(
-                  "input",
-                  {
-                    type: "checkbox",
-                    checked: s.status[key],
-                    onChange: (e) => onStatusChange(key, e.target.checked)
-                  }
-                ),
-                label
-              ] }, key)) })
+                      "input",
+                      {
+                        type: "checkbox",
+                        checked: s.status[key],
+                        onChange: (e) => onStatusChange(key, e.target.checked)
+                      }
+                    ),
+                    label
+                  ] }, key)
+                ];
+                if (key === "hospital" && mode === "war" && hasUntilData) {
+                  items.push(
+jsxs("label", { className: cls$1.optionOutSoon, children: [
+jsx(
+                        "input",
+                        {
+                          type: "checkbox",
+                          checked: s.outSoon,
+                          onChange: (e) => onOutSoonChange(e.target.checked)
+                        }
+                      ),
+                      "Out soon"
+                    ] }, "out-soon")
+                  );
+                }
+                return items;
+              }) })
             ] }),
 jsxs("div", { className: `${cls$1.group} ${cls$1.groupLevel}`, children: [
 jsx("strong", { children: "Level Range" }),
@@ -4556,8 +4738,16 @@ jsx(
             status = "okay";
           }
         }
-        const allStatusUnchecked = !filters.status.okay && !filters.status.traveling && !filters.status.hospital && !filters.status.jail && !filters.status.abroad && !filters.status.federal && !filters.status.fallen;
-        const matchesStatus = allStatusUnchecked || status === "okay" && filters.status.okay || status === "traveling" && filters.status.traveling || status === "hospital" && filters.status.hospital || status === "jail" && filters.status.jail || status === "abroad" && filters.status.abroad || status === "federal" && filters.status.federal || status === "fallen" && filters.status.fallen;
+        const allStatusUnchecked = !filters.status.okay && !filters.status.traveling && !filters.status.hospital && !filters.status.jail && !filters.status.abroad && !filters.status.federal && !filters.status.fallen && !filters.outSoon;
+        let matchesOutSoon = false;
+        if (filters.outSoon && (status === "hospital" || status === "jail")) {
+          const untilRaw = row.dataset["until"];
+          const untilTs = untilRaw ? Number.parseInt(untilRaw, 10) : null;
+          if (untilTs !== null && !Number.isNaN(untilTs) && untilTs !== 0) {
+            matchesOutSoon = untilTs - get_current_time_seconds() <= OUT_SOON_THRESHOLD_SECONDS;
+          }
+        }
+        const matchesStatus = allStatusUnchecked || matchesOutSoon || status === "okay" && filters.status.okay || status === "traveling" && filters.status.traveling || status === "hospital" && filters.status.hospital || status === "jail" && filters.status.jail || status === "abroad" && filters.status.abroad || status === "federal" && filters.status.federal || status === "fallen" && filters.status.fallen;
         if (!matchesStatus) {
           hide_row(row);
           continue;
@@ -4751,9 +4941,10 @@ Number.parseInt(row.dataset["estValue"], 10)
     const isNone = colDisplay === FactionsColDisplay.NONE;
     const expectedText = isEst ? "Est" : "FF";
     const factionWar = membersList.closest(".faction-war");
-    if (factionWar) {
-      factionWar.setAttribute("data-ffscouter-col-display", colDisplay);
-    }
+    (factionWar ?? membersList).setAttribute(
+      "data-ffscouter-col-display",
+      colDisplay
+    );
     let headerLi = membersList.querySelector(
       ".ffscouter-header"
     );
@@ -4951,6 +5142,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     const ref = { current: null };
     let ready = false;
     let hasLastActionDataProp = false;
+    let hasUntilDataProp = false;
     const pending = [];
     const runOrBuffer = (fn) => {
       if (ready && ref.current) {
@@ -4979,6 +5171,9 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       get hasLastActionData() {
         return ready && ref.current ? ref.current.hasLastActionData : hasLastActionDataProp;
       },
+      get hasUntilData() {
+        return ready && ref.current ? ref.current.hasUntilData : hasUntilDataProp;
+      },
       setSortBy: (val) => runOrBuffer((h2) => h2.setSortBy(val)),
       getFilterSnapshot: () => ready && ref.current ? ref.current.getFilterSnapshot() : {
         sortBy: "none",
@@ -4993,6 +5188,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
           federal: true,
           fallen: true
         },
+        outSoon: false,
         levelMin: null,
         levelMax: null,
         ffMin: null,
@@ -5006,6 +5202,10 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
         hasLastActionDataProp = val;
         runOrBuffer((h2) => h2.setHasLastActionData(val));
       },
+      setHasUntilData: (val) => {
+        hasUntilDataProp = val;
+        runOrBuffer((h2) => h2.setHasUntilData(val));
+      },
       setFilterState: (patch) => runOrBuffer((h2) => h2.setFilterState(patch)),
       dispatchChange: () => runOrBuffer((h2) => h2.dispatchChange())
     };
@@ -5018,13 +5218,14 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
         onFilterChange,
         ref,
         initialHasLastActionData: hasLastActionDataProp,
+        initialHasUntilData: hasUntilDataProp,
         filteringDisabled,
         onReady
       })
     );
     return container;
   }
-  function update_last_action_visibility(list) {
+  function update_twse_presence_flags(list) {
     const scope = list.closest(".faction-war") || list;
     const boxEl = (list.closest(".faction-war") || list.parentNode)?.querySelector("[data-ff-filter-box]");
     const handle = getFilterBoxHandle(boxEl);
@@ -5032,9 +5233,12 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     handle.setHasLastActionData(
       !!scope.querySelector("[data-twse-last-action-timestamp]")
     );
+    handle.setHasUntilData(
+      !!scope.querySelector(".enemy[data-until], .your[data-until]")
+    );
   }
   function setup_reapply_watcher(list, observeTarget, getColDisplay) {
-    update_last_action_visibility(list);
+    update_twse_presence_flags(list);
     let rafPending = false;
     const attributeObserver = new MutationObserver((mutations) => {
       if (is_applying(list)) return;
@@ -5049,7 +5253,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
             shouldReapply = true;
             break;
           }
-          if (m2.attributeName === "data-twse-last-action-timestamp") {
+          if (m2.attributeName === "data-twse-last-action-timestamp" || m2.attributeName === "data-until") {
             shouldReapply = true;
             break;
           }
@@ -5059,7 +5263,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
         rafPending = true;
         requestAnimationFrame(() => {
           rafPending = false;
-          update_last_action_visibility(list);
+          update_twse_presence_flags(list);
           const boxEl = (list.closest(".faction-war") || list.parentNode)?.querySelector("[data-ff-filter-box]");
           const handle = getFilterBoxHandle(boxEl);
           if (handle?.activity) {
@@ -5073,12 +5277,31 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     });
     attributeObserver.observe(observeTarget, {
       attributes: true,
-      attributeFilter: ["class", "aria-label", "data-twse-last-action-timestamp"],
+      attributeFilter: [
+        "class",
+        "aria-label",
+        "data-twse-last-action-timestamp",
+        "data-until"
+      ],
       subtree: true
     });
     const flightInterval = setInterval(() => {
       poll_traveling_flights(list);
-      update_last_action_visibility(list);
+      update_twse_presence_flags(list);
+      const handle = getFilterBoxHandle(
+        (list.closest(".faction-war") || list.parentNode)?.querySelector(
+          "[data-ff-filter-box]"
+        )
+      );
+      if (handle?.ready) {
+        const snapshot = handle.getFilterSnapshot();
+        if (snapshot.filterEnabled !== false && snapshot.outSoon) {
+          apply_filters_and_sort(list, {
+            ...snapshot,
+            colDisplay: getColDisplay()
+          });
+        }
+      }
     }, 3e4);
     cleanup_when_detached(list, () => {
       clearInterval(flightInterval);
@@ -5590,7 +5813,9 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
           page_specific = ["ul.participants-list li"];
         } else if (href.startsWith("https://www.torn.com/forums.php")) {
           page_specific = [".last-poster, .starter, .last-post, .poster"];
-        } else if (href.includes("page.php?sid=hof") || torn_page("factions", { step: "profile" }) || torn_page("factions", { step: "your" }, [
+        } else if (href.includes("page.php?sid=hof") ||
+
+torn_page("page", { sid: "list" }) || torn_page("factions", { step: "profile" }) || torn_page("factions", { step: "your" }, [
           "",
           "#",
           "#/",
@@ -6664,7 +6889,7 @@ jsx("br", {}),
         return;
       }
       mountComponent(
-        createElement(FFHeaderLine, { playerId: player_id }),
+        createElement(FFHeaderLine, { playerId: player_id, showExplainer: true }),
         info_line
       );
       inject_info_line(info_line);
@@ -8937,7 +9162,7 @@ get draftApiKey() {
     httpInterceptors.push(interceptor);
     httpInterceptors.sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0));
   }
-  const stylesCss = '.ffscouter-gauge{position:relative;display:block;padding:0}.ffscouter-arrow,.ffscouter-preview-arrow{width:var(--ffscouter-arrow-width);object-fit:cover;pointer-events:none}.ffscouter-arrow{display:block;padding:0}.ffscouter-preview-arrow{display:inline-block;vertical-align:middle}.ffscouter-marker-wrapper{position:absolute;display:inline-block;pointer-events:none;line-height:0;transform:translate(var(--ffscouter-marker-tx, -50%),var(--ffscouter-marker-ty, -30%));z-index:10}.ffscouter-gauge[data-ffscouter-band-side=left]>.ffscouter-marker-wrapper{left:calc(var(--ffscouter-marker-actual-width, var(--ffscouter-arrow-width)) / 2 + var(--band-percent) * (100% - var(--ffscouter-marker-actual-width, var(--ffscouter-arrow-width))) / 100);--ffscouter-marker-tx: -50%}.ffscouter-gauge[data-ffscouter-band-side=right]>.ffscouter-marker-wrapper{right:calc(var(--ffscouter-marker-actual-width, var(--ffscouter-arrow-width)) / 2 + (100 - var(--band-percent)) * (100% - var(--ffscouter-marker-actual-width, var(--ffscouter-arrow-width))) / 100 + .35 * var(--ffscouter-source-marker-size));--ffscouter-marker-tx: 50%}.ffscouter-gauge[data-ffscouter-attach-mode=honor-bar]>.ffscouter-marker-wrapper{top:0;--ffscouter-marker-ty: -30%}.ffscouter-gauge[data-ffscouter-attach-mode=fallback]>.ffscouter-marker-wrapper{top:0;bottom:0;margin:auto 0;--ffscouter-marker-ty: 0%}.ffscouter-bubble,.ffscouter-preview-bubble{min-width:2.5882em;height:1.6471em;line-height:1.4118;border:1px solid rgba(0,0,0,.4);border-radius:999px;font-size:var(--ffscouter-bubble-font-size);font-weight:700;font-family:Geneva,Arial,sans-serif;text-align:center;padding:0 .4706em;box-sizing:border-box;white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;text-shadow:0 1px 1px rgba(0,0,0,.5);box-shadow:0 1px 2px #0000004d}.ffscouter-bubble{pointer-events:none}.ffscouter-preview-bubble{vertical-align:middle}.ffscouter-source-marker{position:absolute;top:calc(-.35 * var(--ffscouter-source-marker-size));right:calc(-.35 * var(--ffscouter-source-marker-size));width:var(--ffscouter-source-marker-size);height:var(--ffscouter-source-marker-size);pointer-events:auto;overflow:visible}.ffscouter-preview-marker-slot{position:relative;display:inline-block}.ffscouter-inline-source-marker{display:inline-block!important;float:none!important;position:static!important;width:16px!important;height:16px!important;vertical-align:middle!important;margin:0 0 0 4px!important}.ffscouter-marker-preview{display:inline-flex;align-items:center;gap:10px;--ffscouter-arrow-width: calc(20px * var(--ffscouter-marker-scale));--ffscouter-bubble-font-size: calc(8.5px * var(--ffscouter-marker-scale));--ffscouter-source-marker-size: calc(12px * var(--ffscouter-marker-scale))}.ffscouter-mini-desc{padding:0 5px}.ffscouter-swatch-row{display:inline-flex;gap:3px}.ffscouter-swatch{display:inline-block;width:20px;height:13px}body{--ffscouter-bg-color: #f0f0f0;--ffscouter-alt-bg-color: #fff;--ffscouter-border-color: #ccc;--ffscouter-input-color: #ccc;--ffscouter-text-color: #000;--ffscouter-hover-color: #ddd;--ffscouter-glow-color: #4caf50;--ffscouter-success-color: #4caf50;--ffscouter-marker-scale: 1;--ffscouter-arrow-width: calc(20px * var(--ffscouter-marker-scale));--ffscouter-bubble-font-size: calc(8.5px * var(--ffscouter-marker-scale));--ffscouter-source-marker-size: calc(12px * var(--ffscouter-marker-scale));--ffscouter-stat-badge-outline-color: #fff}body.dark-mode{--ffscouter-bg-color: #333;--ffscouter-alt-bg-color: #383838;--ffscouter-border-color: #444;--ffscouter-input-color: #504f4f;--ffscouter-text-color: #ccc;--ffscouter-hover-color: #555;--ffscouter-glow-color: #4caf50;--ffscouter-success-color: #4caf50;--ffscouter-stat-badge-outline-color: #000}ff-settings-panel{display:block}.profile-status{position:relative}.ff-flight-element{position:absolute;right:10px;bottom:2px;z-index:2}.ff-scouter-profile-flight-info{display:inline-block;text-align:right;font-size:11px;line-height:1.25;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.85)}.profile-status .ff-scouter-profile-flight-info a{color:#fff;text-decoration:underline}.faction-war .ffscouter-cell{float:left!important;width:32px!important;height:20px!important;font-size:11px!important;font-weight:700!important;border-radius:3px!important;box-sizing:border-box!important;margin:7px 4px!important;padding:0!important;text-align:center!important;line-height:20px!important;z-index:10!important}.ffscouter-cell{cursor:pointer!important;position:relative!important;overflow:visible!important}.ffscouter-stat-badge{position:absolute!important;top:6px!important;width:12px!important;height:12px!important;color:var(--ffscouter-text-color)!important;pointer-events:none!important;overflow:visible!important;z-index:11!important}.faction-war .ffscouter-stat-badge{top:0!important}.ffscouter-stat-badge path{stroke:var(--ffscouter-stat-badge-outline-color)!important;stroke-width:1px!important;stroke-linejoin:round!important;paint-order:stroke fill!important}.ffscouter-stat-badge--left{left:0!important;transform:translate(-50%,-50%)!important}.ffscouter-stat-badge--right{right:0!important;transform:translate(50%,-50%)!important}.faction-war .ffscouter-header,.table-header .ffscouter-header{float:left!important;width:38px!important;font-size:12px!important;font-weight:700!important;padding:0!important;text-align:center!important;background-color:transparent!important;cursor:pointer!important}.faction-war:has(.ffscouter-header[data-ffscouter-sort]) [class*=sortIcon___]:not(.ffscouter-sort-icon),.members-list:has(.ffscouter-header[data-ffscouter-sort]) [class*=sortIcon___]:not(.ffscouter-sort-icon){visibility:hidden!important}[data-ffscouter-hidden]{display:none!important}.faction-war[data-ffscouter-hide-level=true] .level:not(.ffscouter-cell):not(.ffscouter-header){display:none!important}.faction-war[data-ffscouter-hide-status=true] .status,.faction-war[data-ffscouter-hide-score=true] .points{display:none!important}.faction-war[data-ffscouter-col-display=fair_fight]:not([data-ffscouter-hide-level=true]) .level:not(.ffscouter-cell):not(.ffscouter-header),.faction-war[data-ffscouter-col-display=battle_stats]:not([data-ffscouter-hide-level=true]) .level:not(.ffscouter-cell):not(.ffscouter-header){width:29px!important}.faction-war[data-ffscouter-col-display=fair_fight]:not([data-ffscouter-hide-level=true]) .status,.faction-war[data-ffscouter-col-display=battle_stats]:not([data-ffscouter-hide-level=true]) .status{width:50px!important}.faction-war[data-ffscouter-col-display=fair_fight]:not([data-ffscouter-hide-level=true]) .points,.faction-war[data-ffscouter-col-display=battle_stats]:not([data-ffscouter-hide-level=true]) .points{width:38px!important}.members-list li.enemy:has(>.tt-stats-estimate),.members-list li.your:has(>.tt-stats-estimate),.members-list li.enemy:has(>div.clear~*),.members-list li.your:has(>div.clear~*){padding-bottom:22px!important;position:relative!important}.members-list li.enemy>.tt-stats-estimate,.members-list li.your>.tt-stats-estimate,.members-list li.enemy>div.clear~*,.members-list li.your>div.clear~*{position:absolute!important;bottom:2px!important;left:10px!important;height:18px!important;line-height:18px!important;font-size:11px!important;width:calc(100% - 20px)!important;display:block!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}body[data-ff-status-attack-enabled=true] [class*=userStatusWrap__],body[data-ff-status-attack-enabled=true] li[id^=icon][id*=-profile-].user-status-16-Online,body[data-ff-status-attack-enabled=true] li[id^=icon][id*=-profile-].user-status-16-Away,body[data-ff-status-attack-enabled=true] li[id^=icon][id*=-profile-].user-status-16-Offline,body[data-ff-status-attack-enabled=true] #profile-mini-root li[id^=icon][id*=-mini-profile-].user-status-16-Online,body[data-ff-status-attack-enabled=true] #profile-mini-root li[id^=icon][id*=-mini-profile-].user-status-16-Away,body[data-ff-status-attack-enabled=true] #profile-mini-root li[id^=icon][id*=-mini-profile-].user-status-16-Offline,body[data-ff-status-attack-enabled=true] li[id^=icon][id*=___].iconShow.ffscouter-forum-status,body[data-ff-status-attack-enabled=true] .status>[class$=-status],body[data-ff-status-attack-enabled=true] .left-side ul.singleicon li[id^=icon][id*=___].iconShow,body[data-ff-status-attack-enabled=true] .user-info-list-wrap ul.singleicon li[id^=icon][id*=___].iconShow{cursor:crosshair!important}body[data-ff-status-attack-enabled=true] [class*=dataGridRow__] ul#iconTray li[id^=icon][id*=___].iconShow:has(>a[aria-label=Online]),body[data-ff-status-attack-enabled=true] [class*=dataGridRow__] ul#iconTray li[id^=icon][id*=___].iconShow:has(>a[aria-label=Idle]),body[data-ff-status-attack-enabled=true] [class*=dataGridRow__] ul#iconTray li[id^=icon][id*=___].iconShow:has(>a[aria-label=Offline]),body[data-ff-status-attack-enabled=true] [class*=dataGridRow__] [class*=status__]>span{cursor:crosshair!important}body[data-ff-status-attack-enabled=true] [class*=userStatusWrap__]{position:relative}body[data-ff-status-attack-enabled=true] [class*=userStatusWrap__]:after{content:"";position:absolute;inset:-3px}.d .job-lists-wrap .item>li.company,.d .job-lists-wrap .item>li.director,.d .job-lists-wrap .item>li.salary,.d .job-lists-wrap .item>li.ranks{margin-bottom:0!important;padding-bottom:0!important}.d .users-list.links .user-wrap.ffscouter-gauge{margin-top:0!important;margin-bottom:0!important;padding-top:0!important;padding-bottom:0!important}';
+  const stylesCss = '.ffscouter-gauge{position:relative;display:block;padding:0}.ffscouter-arrow,.ffscouter-preview-arrow{width:var(--ffscouter-arrow-width);object-fit:cover;pointer-events:none}.ffscouter-arrow{display:block;padding:0}.ffscouter-preview-arrow{display:inline-block;vertical-align:middle}.ffscouter-marker-wrapper{position:absolute;display:inline-block;pointer-events:none;line-height:0;transform:translate(var(--ffscouter-marker-tx, -50%),var(--ffscouter-marker-ty, -30%));z-index:10}.ffscouter-gauge[data-ffscouter-band-side=left]>.ffscouter-marker-wrapper{left:calc(var(--ffscouter-marker-actual-width, var(--ffscouter-arrow-width)) / 2 + var(--band-percent) * (100% - var(--ffscouter-marker-actual-width, var(--ffscouter-arrow-width))) / 100);--ffscouter-marker-tx: -50%}.ffscouter-gauge[data-ffscouter-band-side=right]>.ffscouter-marker-wrapper{right:calc(var(--ffscouter-marker-actual-width, var(--ffscouter-arrow-width)) / 2 + (100 - var(--band-percent)) * (100% - var(--ffscouter-marker-actual-width, var(--ffscouter-arrow-width))) / 100 + .35 * var(--ffscouter-source-marker-size));--ffscouter-marker-tx: 50%}.ffscouter-gauge[data-ffscouter-attach-mode=honor-bar]>.ffscouter-marker-wrapper{top:0;--ffscouter-marker-ty: -30%}.ffscouter-gauge[data-ffscouter-attach-mode=fallback]>.ffscouter-marker-wrapper{top:0;bottom:0;margin:auto 0;--ffscouter-marker-ty: 0%}.ffscouter-bubble,.ffscouter-preview-bubble{min-width:2.5882em;height:1.6471em;line-height:1.4118;border:1px solid rgba(0,0,0,.4);border-radius:999px;font-size:var(--ffscouter-bubble-font-size);font-weight:700;font-family:Geneva,Arial,sans-serif;text-align:center;padding:0 .4706em;box-sizing:border-box;white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;text-shadow:0 1px 1px rgba(0,0,0,.5);box-shadow:0 1px 2px #0000004d}.ffscouter-bubble{pointer-events:none}.ffscouter-preview-bubble{vertical-align:middle}.ffscouter-source-marker{position:absolute;top:calc(-.35 * var(--ffscouter-source-marker-size));right:calc(-.35 * var(--ffscouter-source-marker-size));width:var(--ffscouter-source-marker-size);height:var(--ffscouter-source-marker-size);pointer-events:auto;overflow:visible}.ffscouter-preview-marker-slot{position:relative;display:inline-block}.ffscouter-inline-source-marker{display:inline-block!important;float:none!important;position:static!important;width:16px!important;height:16px!important;vertical-align:middle!important;margin:0 0 0 4px!important}.ffscouter-marker-preview{display:inline-flex;align-items:center;gap:10px;--ffscouter-arrow-width: calc(20px * var(--ffscouter-marker-scale));--ffscouter-bubble-font-size: calc(8.5px * var(--ffscouter-marker-scale));--ffscouter-source-marker-size: calc(12px * var(--ffscouter-marker-scale))}.ffscouter-mini-desc{padding:0 5px}.ffscouter-swatch-row{display:inline-flex;gap:3px}.ffscouter-swatch{display:inline-block;width:20px;height:13px}body{--ffscouter-bg-color: #f0f0f0;--ffscouter-alt-bg-color: #fff;--ffscouter-border-color: #ccc;--ffscouter-input-color: #ccc;--ffscouter-text-color: #000;--ffscouter-hover-color: #ddd;--ffscouter-glow-color: #4caf50;--ffscouter-success-color: #4caf50;--ffscouter-marker-scale: 1;--ffscouter-arrow-width: calc(20px * var(--ffscouter-marker-scale));--ffscouter-bubble-font-size: calc(8.5px * var(--ffscouter-marker-scale));--ffscouter-source-marker-size: calc(12px * var(--ffscouter-marker-scale));--ffscouter-stat-badge-outline-color: #fff}body.dark-mode{--ffscouter-bg-color: #333;--ffscouter-alt-bg-color: #383838;--ffscouter-border-color: #444;--ffscouter-input-color: #504f4f;--ffscouter-text-color: #ccc;--ffscouter-hover-color: #555;--ffscouter-glow-color: #4caf50;--ffscouter-success-color: #4caf50;--ffscouter-stat-badge-outline-color: #000}ff-settings-panel{display:block}.profile-status{position:relative}.ff-flight-element{position:absolute;right:10px;bottom:2px;z-index:2}.ff-scouter-profile-flight-info{display:inline-block;text-align:right;font-size:11px;line-height:1.25;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.85)}.profile-status .ff-scouter-profile-flight-info a{color:#fff;text-decoration:underline}.faction-war .ffscouter-cell{float:left!important;width:32px!important;height:20px!important;font-size:11px!important;font-weight:700!important;border-radius:3px!important;box-sizing:border-box!important;margin:7px 4px!important;padding:0!important;text-align:center!important;line-height:20px!important;z-index:10!important}.ffscouter-cell{cursor:pointer!important;position:relative!important;overflow:visible!important}.ffscouter-stat-badge{position:absolute!important;top:6px!important;width:12px!important;height:12px!important;color:var(--ffscouter-text-color)!important;pointer-events:none!important;overflow:visible!important;z-index:11!important}.faction-war .ffscouter-stat-badge{top:0!important}.ffscouter-stat-badge path{stroke:var(--ffscouter-stat-badge-outline-color)!important;stroke-width:1px!important;stroke-linejoin:round!important;paint-order:stroke fill!important}.ffscouter-stat-badge--left{left:0!important;transform:translate(-50%,-50%)!important}.ffscouter-stat-badge--right{right:0!important;transform:translate(50%,-50%)!important}.faction-war .ffscouter-header,.table-header .ffscouter-header{float:left!important;width:38px!important;font-size:12px!important;font-weight:700!important;padding:0!important;text-align:center!important;background-color:transparent!important;cursor:pointer!important}.faction-war:has(.ffscouter-header[data-ffscouter-sort]) [class*=sortIcon___]:not(.ffscouter-sort-icon),.members-list:has(.ffscouter-header[data-ffscouter-sort]) [class*=sortIcon___]:not(.ffscouter-sort-icon){visibility:hidden!important}[data-ffscouter-hidden]{display:none!important}.faction-war[data-ffscouter-hide-level=true] .level:not(.ffscouter-cell):not(.ffscouter-header){display:none!important}.faction-war[data-ffscouter-hide-status=true] .status,.faction-war[data-ffscouter-hide-score=true] .points{display:none!important}.faction-war[data-ffscouter-col-display=fair_fight]:not([data-ffscouter-hide-level=true]) .level:not(.ffscouter-cell):not(.ffscouter-header),.faction-war[data-ffscouter-col-display=battle_stats]:not([data-ffscouter-hide-level=true]) .level:not(.ffscouter-cell):not(.ffscouter-header){width:29px!important}.faction-war[data-ffscouter-col-display=fair_fight]:not([data-ffscouter-hide-level=true]) .status,.faction-war[data-ffscouter-col-display=battle_stats]:not([data-ffscouter-hide-level=true]) .status{width:50px!important}.faction-war[data-ffscouter-col-display=fair_fight]:not([data-ffscouter-hide-level=true]) .points,.faction-war[data-ffscouter-col-display=battle_stats]:not([data-ffscouter-hide-level=true]) .points{width:38px!important}.members-list[data-ffscouter-col-display=fair_fight] .table-cell.position,.members-list[data-ffscouter-col-display=battle_stats] .table-cell.position{width:15%!important}@media(min-width:784px){.members-list[data-ffscouter-col-display=fair_fight] .table-cell.position,.members-list[data-ffscouter-col-display=battle_stats] .table-cell.position{width:10%!important}}.members-list li.enemy:has(>.tt-stats-estimate),.members-list li.your:has(>.tt-stats-estimate),.members-list li.enemy:has(>div.clear~*),.members-list li.your:has(>div.clear~*){padding-bottom:22px!important;position:relative!important}.members-list li.enemy>.tt-stats-estimate,.members-list li.your>.tt-stats-estimate,.members-list li.enemy>div.clear~*,.members-list li.your>div.clear~*{position:absolute!important;bottom:2px!important;left:10px!important;height:18px!important;line-height:18px!important;font-size:11px!important;width:calc(100% - 20px)!important;display:block!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}body[data-ff-status-attack-enabled=true] [class*=userStatusWrap__],body[data-ff-status-attack-enabled=true] li[id^=icon][id*=-profile-].user-status-16-Online,body[data-ff-status-attack-enabled=true] li[id^=icon][id*=-profile-].user-status-16-Away,body[data-ff-status-attack-enabled=true] li[id^=icon][id*=-profile-].user-status-16-Offline,body[data-ff-status-attack-enabled=true] #profile-mini-root li[id^=icon][id*=-mini-profile-].user-status-16-Online,body[data-ff-status-attack-enabled=true] #profile-mini-root li[id^=icon][id*=-mini-profile-].user-status-16-Away,body[data-ff-status-attack-enabled=true] #profile-mini-root li[id^=icon][id*=-mini-profile-].user-status-16-Offline,body[data-ff-status-attack-enabled=true] li[id^=icon][id*=___].iconShow.ffscouter-forum-status,body[data-ff-status-attack-enabled=true] .status>[class$=-status],body[data-ff-status-attack-enabled=true] .left-side ul.singleicon li[id^=icon][id*=___].iconShow,body[data-ff-status-attack-enabled=true] .user-info-list-wrap ul.singleicon li[id^=icon][id*=___].iconShow{cursor:crosshair!important}body[data-ff-status-attack-enabled=true] [class*=dataGridRow__] ul#iconTray li[id^=icon][id*=___].iconShow:has(>a[aria-label=Online]),body[data-ff-status-attack-enabled=true] [class*=dataGridRow__] ul#iconTray li[id^=icon][id*=___].iconShow:has(>a[aria-label=Idle]),body[data-ff-status-attack-enabled=true] [class*=dataGridRow__] ul#iconTray li[id^=icon][id*=___].iconShow:has(>a[aria-label=Offline]),body[data-ff-status-attack-enabled=true] [class*=dataGridRow__] [class*=status__]>span{cursor:crosshair!important}body[data-ff-status-attack-enabled=true] [class*=userStatusWrap__]{position:relative}body[data-ff-status-attack-enabled=true] [class*=userStatusWrap__]:after{content:"";position:absolute;inset:-3px}.d .job-lists-wrap .item>li.company,.d .job-lists-wrap .item>li.director,.d .job-lists-wrap .item>li.salary,.d .job-lists-wrap .item>li.ranks{margin-bottom:0!important;padding-bottom:0!important}.d .users-list.links .user-wrap.ffscouter-gauge{margin-top:0!important;margin-bottom:0!important;padding-top:0!important;padding-bottom:0!important}';
   importCSS(stylesCss);
   const log = logger.child("boot");
   const INJECTION_KEY = "__FF_SCOUTER_V2_INJECTED__";
@@ -8960,7 +9185,7 @@ get draftApiKey() {
       return;
     }
     document.documentElement.setAttribute(INJECTION_KEY, "1");
-    log.info("Initializing", "3.3");
+    log.info("Initializing", "3.4-beta1");
     run_migration();
     if (ffscouter.analytics_enabled) {
       if (typeof unsafeWindow !== "undefined") {
