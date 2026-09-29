@@ -210,6 +210,15 @@ export function format_relative_time(timestamp_sec: TimestampSec) {
   }
 }
 
+// The bare age for prose that supplies its own framing ("…and is 12 days
+// old."): format_relative_time's "(12 days old)" minus the parentheses and the
+// trailing " old". Implemented by stripping format_relative_time's output
+// rather than re-deriving the buckets, so the two can never disagree on
+// wording. Still "" when the estimate is under a day old.
+export function format_age_phrase(timestamp_sec: TimestampSec) {
+  return format_relative_time(timestamp_sec).replace(/^\((.*) old\)$/, "$1");
+}
+
 export function get_ff_colour(d: FFDataComplete) {
   return get_ff_arrow_colour(d);
 }

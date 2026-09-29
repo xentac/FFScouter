@@ -16,6 +16,10 @@ import {
 } from "@utils/strings";
 import type { FFData, PlayerId } from "@utils/types";
 import { useEffect, useState } from "react";
+import {
+  EstimateExplainerCard,
+  ExplainerGlyphButton,
+} from "./estimate-explainer";
 import styles from "./info-line.module.css";
 import { SourceMarkerIcon } from "./source-marker-icon";
 
@@ -25,12 +29,17 @@ const PREMIUM_UPGRADE_URL = "https://ffscouter.com/premium";
 
 type Props = {
   playerId: PlayerId;
+  // Opts in to the Estimate-Age Explainer. Profile page only (issue #21) —
+  // the attack page shares this component and keeps the plain line.
+  showExplainer?: boolean;
 };
 
-export function FFHeaderLine({ playerId }: Props) {
+export function FFHeaderLine({ playerId, showExplainer = false }: Props) {
   const [data, setData] = useState<FFData | null>(null);
   const [isPremium, setIsPremium] = useState<boolean | null>(null);
   const [premiumLoading, setPremiumLoading] = useState(false);
+  const [explainerOpen, setExplainerOpen] = useState(false);
+  const toggleExplainer = () => setExplainerOpen((open) => !open);
 
   useEffect(() => {
     let cancelled = false;
@@ -86,6 +95,20 @@ export function FFHeaderLine({ playerId }: Props) {
         >
           No data
         </span>
+        {showExplainer && (
+          <>
+            <ExplainerGlyphButton
+              open={explainerOpen}
+              onToggle={toggleExplainer}
+            />
+            {explainerOpen && (
+              <EstimateExplainerCard
+                data={null}
+                onClose={() => setExplainerOpen(false)}
+              />
+            )}
+          </>
+        )}
       </>
     );
   }
@@ -132,6 +155,24 @@ export function FFHeaderLine({ playerId }: Props) {
     );
   }
 
+  // With the explainer on, a non-empty freshness text becomes one of the two
+  // card triggers (the other is the glyph below) — the badge around it stays
+  // non-clickable. Under a day old the freshness text is empty, so the glyph
+  // is the sole trigger.
+  const freshNode =
+    showExplainer && fresh !== "" ? (
+      <button
+        type="button"
+        className={styles["ffscouter-info-line__freshness-trigger"]}
+        aria-expanded={explainerOpen}
+        onClick={toggleExplainer}
+      >
+        {fresh}
+      </button>
+    ) : (
+      fresh
+    );
+
   return (
     <>
       <span className={styles["ffscouter-info-line__label"]}>FairFight:</span>
@@ -139,9 +180,12 @@ export function FFHeaderLine({ playerId }: Props) {
         className={styles["ffscouter-info-line__badge"]}
         style={{ background: backgroundColor, color: textColor }}
       >
-        {ffString} ({difficulty}) {fresh}
+        {ffString} ({difficulty}) {freshNode}
       </span>
       {sourceMarker && <SourceMarkerIcon marker={sourceMarker} />}
+      {showExplainer && (
+        <ExplainerGlyphButton open={explainerOpen} onToggle={toggleExplainer} />
+      )}
       <span
         style={{
           fontSize: "11px",
@@ -154,6 +198,12 @@ export function FFHeaderLine({ playerId }: Props) {
         Est. Stats: <span>{extract_bs_estimate_human(data)}</span>
       </span>
       {extraDetailsLine}
+      {showExplainer && explainerOpen && (
+        <EstimateExplainerCard
+          data={data}
+          onClose={() => setExplainerOpen(false)}
+        />
+      )}
     </>
   );
 }

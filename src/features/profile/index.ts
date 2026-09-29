@@ -54,7 +54,7 @@ export default {
     }
 
     mountComponent(
-      createElement(FFHeaderLine, { playerId: player_id }),
+      createElement(FFHeaderLine, { playerId: player_id, showExplainer: true }),
       info_line,
     );
     inject_info_line(info_line);

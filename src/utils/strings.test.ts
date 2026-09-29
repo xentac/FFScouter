@@ -3,6 +3,7 @@ import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { ColorScheme, ffconfig } from "./ffconfig";
 import {
   ff_to_percent,
+  format_age_phrase,
   format_difficulty_text,
   format_ff_score,
   format_relative_time,
@@ -140,6 +141,18 @@ test("format_relative_time handles various time differences", () => {
   expect(format_relative_time(nowSec - 90 * DAY)).toEqual("(3 months old)");
   expect(format_relative_time(nowSec - 365 * DAY)).toEqual("(1 year old)");
   expect(format_relative_time(nowSec - 800 * DAY)).toEqual("(2 years old)");
+});
+
+test("format_age_phrase strips format_relative_time down to the bare age", () => {
+  const nowSec = Date.now() / 1000;
+
+  expect(format_age_phrase(nowSec - 0.5 * DAY)).toEqual("");
+  expect(format_age_phrase(nowSec - 1.2 * DAY)).toEqual("1 day");
+  expect(format_age_phrase(nowSec - 12 * DAY)).toEqual("12 days");
+  expect(format_age_phrase(nowSec - 45 * DAY)).toEqual("1 month");
+  expect(format_age_phrase(nowSec - 90 * DAY)).toEqual("3 months");
+  expect(format_age_phrase(nowSec - 365 * DAY)).toEqual("1 year");
+  expect(format_age_phrase(nowSec - 800 * DAY)).toEqual("2 years");
 });
 
 test("get_ff_arrow_colour returns correct hex colors with clamping", () => {

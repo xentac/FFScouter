@@ -29,3 +29,139 @@
     overflow-wrap: anywhere;
   }
 }
+
+/* Estimate-Age Explainer (issue #21).
+
+   Every declaration below is !important on purpose: these elements sit inside
+   Torn's own profile-title markup, where Torn's stylesheets style button/p/a
+   with higher-specificity descendant rules that beat a lone CSS-module class.
+   The approved prototype survived only because it used inline styles;
+   !important is this repo's established equivalent (see styles.css). */
+
+/* The freshness text inside the badge, promoted to a toggle button: keeps the
+   badge's own font/colors, signalling interactivity via the dotted underline
+   alone — the badge around it stays a plain non-clickable span. */
+.ffscouter-info-line__freshness-trigger {
+  appearance: none !important;
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  width: auto !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  font: inherit !important;
+  color: inherit !important;
+  text-transform: none !important;
+  cursor: pointer !important;
+  display: inline !important;
+  vertical-align: baseline !important;
+  text-decoration: underline dotted !important;
+  text-underline-offset: 2px !important;
+}
+
+.ffscouter-explainer-glyph {
+  appearance: none !important;
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin: 0 0 0 6px !important;
+  width: auto !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  vertical-align: middle !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  line-height: 1 !important;
+}
+
+.ffscouter-explainer-glyph svg {
+  width: 14px !important;
+  height: 14px !important;
+}
+
+/* Inline push-down expander: a block card below the info line that pushes
+   page content down — deliberately not an overlay/popover (issue #21). The
+   font/style resets counter the italic 11px context the profile header sets
+   on parts of the line. position: relative must hold for the × button's
+   absolute anchor. */
+.ffscouter-explainer-card {
+  position: relative !important;
+  display: block !important;
+  margin: 6px 0 0 !important;
+  padding: 10px 30px 10px 12px !important;
+  background: var(--ffscouter-alt-bg-color) !important;
+  border: 1px solid var(--ffscouter-border-color) !important;
+  border-radius: 6px !important;
+  color: var(--ffscouter-text-color) !important;
+  font-size: 12px !important;
+  font-weight: normal !important;
+  font-style: normal !important;
+  line-height: 1.5 !important;
+  text-align: left !important;
+}
+
+.ffscouter-explainer-card p {
+  display: block !important;
+  float: none !important;
+  margin: 0 0 8px !important;
+  padding: 0 !important;
+}
+
+.ffscouter-explainer-card p:last-child {
+  margin-bottom: 0 !important;
+}
+
+/* Torn's stylesheets attach an old-school clearfix (generated "." content) to
+   paragraphs, which shows up as stray periods between the card's paragraphs —
+   suppress all generated content inside the card. */
+.ffscouter-explainer-card p::before,
+.ffscouter-explainer-card p::after {
+  content: none !important;
+}
+
+/* Torn's .d .content-title a rule makes anchors flex blocks with bold text
+   and a 22px right margin, which knocked each card link (and the sentence's
+   trailing period) onto its own line — force the links back to plain inline
+   prose. */
+.ffscouter-explainer-card a {
+  display: inline !important;
+  position: static !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+  font: inherit !important;
+  color: inherit !important;
+  text-decoration: underline !important;
+}
+
+.ffscouter-explainer-card__close {
+  position: absolute !important;
+  top: 2px !important;
+  right: 4px !important;
+  appearance: none !important;
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  margin: 0 !important;
+  padding: 4px !important;
+  width: auto !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  cursor: pointer !important;
+  color: inherit !important;
+  font-size: 14px !important;
+  line-height: 1 !important;
+}
+
+/* Below Torn's 784px content-wrapper threshold the card's wrapped lines get
+   long relative to the type — bump the size slightly for readability (card
+   readability was flagged on the prototype, issue #21). */
+@media (max-width: 784px) {
+  .ffscouter-explainer-card {
+    font-size: 13px !important;
+    line-height: 1.55 !important;
+  }
+}
