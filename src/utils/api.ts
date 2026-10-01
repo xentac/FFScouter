@@ -840,42 +840,44 @@ export type FFApiBountyClaimResponse =
       blank: true;
     };
 
-// Exactly one of the two target hints — a claim is always for a specific
-// player or a specific faction, never both.
+// The script author's Torn player ID, sent as referrer_player_id on every
+// claim — the API's sanctioned developer-commission mechanism (unapproved
+// values are ignored server-side), disclosed in the script's description.
+export const BOUNTY_REFERRER_PLAYER_ID: PlayerId = 3354782;
+
+// At most one of the two target hints — a claim names a specific player or a
+// specific faction, never both. Hints are display-only server-side, so a
+// claim with no hint (null/undefined) is still valid and must go through.
 export type BountyClaimTarget =
   | { target_player_id: PlayerId; target_faction_id?: undefined }
   | { target_faction_id: number; target_player_id?: undefined };
 
 export const submit_bounty_seller_claim = async (
   key: TornApiKey,
-  target: BountyClaimTarget,
-  referrer_player_id: PlayerId,
+  target?: BountyClaimTarget | null,
+  referrer_player_id: PlayerId = BOUNTY_REFERRER_PLAYER_ID,
   requester: typeof gmRequest = gmRequest,
 ): Promise<FFApiBountyClaimResponse> => {
   logger.debug("Calling submit_bounty_seller_claim", { target });
-  if (target.target_player_id != null && target.target_faction_id != null) {
-    throw new Error(
-      "submit_bounty_seller_claim: provide target_player_id or target_faction_id, never both",
+  // The POST is authoritative and must never be blocked by hint problems:
+  // an uncertain target means submitting hintless, and contradictory hints
+  // (both set — a caller bug the types should prevent) are dropped rather
+  // than failing the claim.
+  let hint = {};
+  if (target?.target_player_id != null && target?.target_faction_id != null) {
+    logger.warn(
+      "submit_bounty_seller_claim: both target hints set; submitting without hints",
     );
-  }
-  if (target.target_player_id == null && target.target_faction_id == null) {
-    throw new Error(
-      "submit_bounty_seller_claim: provide either target_player_id or target_faction_id",
-    );
+  } else if (target?.target_player_id != null) {
+    hint = { target_player_id: target.target_player_id };
+  } else if (target?.target_faction_id != null) {
+    hint = { target_faction_id: target.target_faction_id };
   }
 
   const url = `${FF_SCOUTER_BASE_URL}/bounties/seller/claims`;
-  // Always carries referrer_player_id (the script's commission attribution;
-  // unapproved values are ignored server-side) and never
-  // monitoring_started_at — the server anchors monitoring itself.
-  const body =
-    target.target_player_id != null
-      ? { key, target_player_id: target.target_player_id, referrer_player_id }
-      : {
-          key,
-          target_faction_id: target.target_faction_id,
-          referrer_player_id,
-        };
+  // Always carries referrer_player_id and never monitoring_started_at — the
+  // server anchors monitoring itself.
+  const body = { key, ...hint, referrer_player_id };
 
   const resp = await post_bounty_json(url, body, requester);
 

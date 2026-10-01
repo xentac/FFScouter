@@ -12,6 +12,7 @@ import {
 } from "./__fixtures__/bounty_board";
 import {
   accept_bounty_seller_policy,
+  BOUNTY_REFERRER_PLAYER_ID,
   type BountyClaimTarget,
   check_key,
   FFApiError,
@@ -870,33 +871,73 @@ test("submit_bounty_seller_claim posts faction target and accepts 200 reuse", as
   });
 });
 
-test("submit_bounty_seller_claim rejects both target fields without a request", async () => {
-  const requester = vi.fn();
-  await expect(
-    submit_bounty_seller_claim(
+test("submit_bounty_seller_claim defaults referrer_player_id to the script author", async () => {
+  const created: typeof gmRequest = vi.fn().mockImplementation((options) => {
+    expect(JSON.parse(options.data)).toEqual({
+      key: "test-key",
+      target_player_id: 267456763,
+      referrer_player_id: BOUNTY_REFERRER_PLAYER_ID,
+    });
+    return Promise.resolve(bounty_mock_response(201, CLAIM_CREATE_RESPONSE));
+  });
+
+  await submit_bounty_seller_claim(
+    "test-key",
+    { target_player_id: 267456763 },
+    undefined,
+    created,
+  );
+  expect(BOUNTY_REFERRER_PLAYER_ID).toBe(3354782);
+  expect(created).toHaveBeenCalledTimes(1);
+});
+
+test("submit_bounty_seller_claim submits without hints when no target is known", async () => {
+  const created: typeof gmRequest = vi.fn().mockImplementation((options) => {
+    const body = JSON.parse(options.data);
+    expect(body).toEqual({
+      key: "test-key",
+      referrer_player_id: 1844049,
+    });
+    expect(body).not.toHaveProperty("target_player_id");
+    expect(body).not.toHaveProperty("target_faction_id");
+    return Promise.resolve(bounty_mock_response(201, CLAIM_CREATE_RESPONSE));
+  });
+
+  expect(
+    await submit_bounty_seller_claim("test-key", null, 1844049, created),
+  ).toEqual({
+    result: CLAIM_CREATE_RESPONSE,
+    blank: false,
+    limits: undefined,
+  });
+});
+
+test("submit_bounty_seller_claim drops contradictory hints but still submits", async () => {
+  const created: typeof gmRequest = vi.fn().mockImplementation((options) => {
+    const body = JSON.parse(options.data);
+    expect(body).toEqual({
+      key: "test-key",
+      referrer_player_id: 1844049,
+    });
+    return Promise.resolve(bounty_mock_response(201, CLAIM_CREATE_RESPONSE));
+  });
+
+  expect(
+    await submit_bounty_seller_claim(
       "test-key",
       {
         target_player_id: 267456763,
         target_faction_id: 6731,
       } as unknown as BountyClaimTarget,
       1844049,
-      requester as unknown as typeof gmRequest,
+      created,
     ),
-  ).rejects.toThrow(/never both/);
-  expect(requester).not.toHaveBeenCalled();
-});
-
-test("submit_bounty_seller_claim rejects neither target field without a request", async () => {
-  const requester = vi.fn();
-  await expect(
-    submit_bounty_seller_claim(
-      "test-key",
-      {} as unknown as BountyClaimTarget,
-      1844049,
-      requester as unknown as typeof gmRequest,
-    ),
-  ).rejects.toThrow(/either target_player_id or target_faction_id/);
-  expect(requester).not.toHaveBeenCalled();
+  ).toEqual({
+    result: CLAIM_CREATE_RESPONSE,
+    blank: false,
+    limits: undefined,
+  });
+  expect(created).toHaveBeenCalledTimes(1);
 });
 
 test("submit_bounty_seller_claim surfaces no-open-bounties (409 code 91)", async () => {
