@@ -95,6 +95,12 @@ const EMPTY_AVAILABLE_ESTIMATES: AvailableEstimates = {
 export type FFError = {
   code: number;
   error: string;
+  // Optional fields from the spec's Error schema; retry_after_seconds is set
+  // on 429 (code 21) responses so callers can back off appropriately.
+  source?: "ffscouter" | "torn";
+  torn_code?: number | null;
+  retry_after_seconds?: number | null;
+  detail?: string | null;
 };
 
 function is_ff_success(resp: FFSuccess[] | FFError): resp is FFSuccess[] {
@@ -555,4 +561,333 @@ export const query_targets = async (
     throw new Error(parsed.error);
   }
   return parsed as FFTargetsResponse;
+};
+
+/**
+ * Bounty Board seller endpoints (OpenAPI spec v1.9.0, "Bounty Board" tag).
+ * Types mirror the spec's component schemas of the same names.
+ */
+
+export type BountyTier = {
+  price_per_hit: number;
+  quantity_remaining: number;
+};
+
+export type BountyBoardMember = {
+  player_id: PlayerId;
+  name: string;
+  estimate: number | null;
+  estimate_available: boolean;
+};
+
+export type BountyBoardTarget = {
+  // Set for player targets, null/absent for faction targets
+  target_player_id?: PlayerId | null;
+  // Faction-target-only fields, null/absent for player targets
+  target_faction_id?: number | null;
+  target_faction_name?: string | null;
+  target_faction_tag?: string | null;
+  member_count?: number | null;
+  // Present for faction targets; capped by the board member limit
+  members?: BountyBoardMember[] | null;
+  members_truncated?: boolean | null;
+  all_members_stronger?: boolean | null;
+  target_name: string;
+  // Player targets only
+  estimate?: number | null;
+  estimate_available?: boolean | null;
+  tiers: BountyTier[];
+  max_price_per_hit: number;
+  // For faction targets this is the single shared pool across all members
+  total_remaining: number;
+  first_activated_at: number;
+  updated_at: number;
+  disabled: boolean;
+  disabled_reason: "buyer" | "target" | "member" | null;
+};
+
+export type BountyBoard = {
+  targets: BountyBoardTarget[];
+  seller: {
+    player_id: PlayerId;
+    estimate: number | null;
+  };
+  generated_at: number;
+};
+
+export type BountyPendingClaim = {
+  claim_id: number;
+  // Optional hints supplied at claim submission, stored for display only
+  target_player_id: PlayerId | null;
+  target_faction_id: number | null;
+  target_name: string;
+  state: string;
+  successful_checks: number;
+  required_checks: number;
+  failed_attempts: number;
+  last_failure_reason: string | null;
+  credited_hits: number;
+  created_at: number;
+};
+
+export type BountyRecentHit = {
+  hit_id: number;
+  target_player_id: PlayerId;
+  target_faction_id?: number | null;
+  target_name: string;
+  reward_amount: number;
+  credited_at: number;
+  payout_status: "queued" | "pending" | "paid" | "cancelled";
+  payment_reference: string | null;
+  paid_at: number | null;
+};
+
+export type BountyClaimHistoryEntry = {
+  claim_id: number;
+  target_player_id: PlayerId | null;
+  target_faction_id?: number | null;
+  target_name: string;
+  state: string;
+  successful_checks: number;
+  required_checks: number;
+  credited_hits: number;
+  created_at: number;
+  completed_at: number | null;
+};
+
+export type BountyClaims = {
+  pending_claims: BountyPendingClaim[];
+  recent_hits: BountyRecentHit[];
+  claim_history: BountyClaimHistoryEntry[];
+};
+
+export type BountySellerBoardResponse = {
+  board: BountyBoard;
+  claims: BountyClaims;
+};
+
+export type BountyPolicyAcceptResponse = {
+  ok: boolean;
+  player_id: PlayerId;
+  tool: string;
+  policy_version: number;
+};
+
+export type BountyClaimSummary = {
+  id: number;
+  target_player_id: PlayerId | null;
+  target_faction_id: number | null;
+  state: string;
+  successful_checks: number;
+  required_checks: number;
+  credited_hits: number;
+};
+
+export type BountyClaimCreateResponse = {
+  claim: BountyClaimSummary;
+  claims: BountyClaims;
+};
+
+export type FFApiBountyBoardResponse =
+  | {
+      result: BountySellerBoardResponse;
+      blank: false;
+      limits?: FFApiRateLimits;
+    }
+  | {
+      blank: true;
+    };
+
+// Shared parse/validate step for the bounty endpoints: surfaces the API's
+// code + message (consent 86, unregistered key 6, no open bounties 91,
+// attacks access 87, rate limit 21 with retry_after_seconds) as FFApiError
+// so UI slices can branch on them.
+const parse_bounty_response = <T>(
+  resp: Tampermonkey.Response<object>,
+  label: string,
+  ok_statuses: number[] = [200],
+): { result: T; limits?: FFApiRateLimits } => {
+  const limits = parse_limit_headers(resp.responseHeaders);
+  let parsed: T | FFError | null = null;
+  try {
+    parsed = JSON.parse(resp.responseText);
+  } catch {
+    logger.warn(
+      `${label}: unparseable response. status=${resp.status}, body=${resp.responseText?.substring(0, 200)}`,
+    );
+    throw new FFApiError(
+      `API request failed. Couldn't parse response. HTTP status code: ${resp.status}`,
+      { ff_api_limits: limits },
+    );
+  }
+  if (parsed == null) {
+    // Shouldn't happen
+    logger.warn(`${label}: null response after parse. status=${resp.status}`);
+    throw new FFApiError(
+      `API request failed. Response not set. HTTP status code: ${resp.status}`,
+      { ff_api_limits: limits },
+    );
+  }
+
+  const maybe_error = parsed as FFError;
+  if (maybe_error.code !== undefined) {
+    throw new FFApiError(
+      `API request failed. Error: ${maybe_error.error}; Code: ${maybe_error.code}`,
+      { ff_api_error: maybe_error, ff_api_limits: limits },
+    );
+  }
+
+  if (!ok_statuses.includes(resp.status)) {
+    logger.warn(
+      `${label}: unexpected HTTP status. status=${resp.status}, body=${resp.responseText?.substring(0, 200)}`,
+    );
+    throw new FFApiError(
+      `API request failed. HTTP status code: ${resp.status}`,
+      { ff_api_limits: limits },
+    );
+  }
+
+  return { result: parsed as T, limits };
+};
+
+export const make_bounty_board_url = (key: TornApiKey) => {
+  const query = new URLSearchParams([["key", key]]);
+  return `${FF_SCOUTER_BASE_URL}/bounties/seller/board?${query.toString()}`;
+};
+
+export const query_bounty_seller_board = async (
+  key: TornApiKey,
+  requester: typeof gmRequest = gmRequest,
+): Promise<FFApiBountyBoardResponse> => {
+  logger.debug("Calling query_bounty_seller_board");
+  const url = make_bounty_board_url(key);
+
+  const resp = await requester({
+    method: "GET",
+    url: url,
+  });
+
+  if (!resp) {
+    return { blank: true };
+  }
+
+  const { result, limits } = parse_bounty_response<BountySellerBoardResponse>(
+    resp,
+    "query_bounty_seller_board",
+  );
+  return { result, blank: false, limits };
+};
+
+export type FFApiBountyPolicyAcceptResponse =
+  | {
+      result: BountyPolicyAcceptResponse;
+      blank: false;
+      limits?: FFApiRateLimits;
+    }
+  | {
+      blank: true;
+    };
+
+// First POSTs to FFScouter from the script: both bounty POSTs go through
+// gmRequest's dual dispatch (ADR 0001), which routes POST to PDA_httpPost in
+// Torn PDA and GM_xmlhttpRequest elsewhere. The key travels in the JSON body
+// per the spec, not as a query param like the GET endpoints.
+const post_bounty_json = (
+  url: string,
+  body: object,
+  requester: typeof gmRequest,
+) => {
+  return requester({
+    method: "POST",
+    url: url,
+    headers: { "Content-Type": "application/json" },
+    data: JSON.stringify(body),
+  });
+};
+
+export const accept_bounty_seller_policy = async (
+  key: TornApiKey,
+  i_have_read_rules_and_data_policy: boolean,
+  requester: typeof gmRequest = gmRequest,
+): Promise<FFApiBountyPolicyAcceptResponse> => {
+  logger.debug("Calling accept_bounty_seller_policy");
+  const url = `${FF_SCOUTER_BASE_URL}/bounties/seller/policy/accept`;
+
+  const resp = await post_bounty_json(
+    url,
+    { key, i_have_read_rules_and_data_policy },
+    requester,
+  );
+
+  if (!resp) {
+    return { blank: true };
+  }
+
+  const { result, limits } = parse_bounty_response<BountyPolicyAcceptResponse>(
+    resp,
+    "accept_bounty_seller_policy",
+  );
+  return { result, blank: false, limits };
+};
+
+export type FFApiBountyClaimResponse =
+  | {
+      result: BountyClaimCreateResponse;
+      blank: false;
+      limits?: FFApiRateLimits;
+    }
+  | {
+      blank: true;
+    };
+
+// Exactly one of the two target hints — a claim is always for a specific
+// player or a specific faction, never both.
+export type BountyClaimTarget =
+  | { target_player_id: PlayerId; target_faction_id?: undefined }
+  | { target_faction_id: number; target_player_id?: undefined };
+
+export const submit_bounty_seller_claim = async (
+  key: TornApiKey,
+  target: BountyClaimTarget,
+  referrer_player_id: PlayerId,
+  requester: typeof gmRequest = gmRequest,
+): Promise<FFApiBountyClaimResponse> => {
+  logger.debug("Calling submit_bounty_seller_claim", { target });
+  if (target.target_player_id != null && target.target_faction_id != null) {
+    throw new Error(
+      "submit_bounty_seller_claim: provide target_player_id or target_faction_id, never both",
+    );
+  }
+  if (target.target_player_id == null && target.target_faction_id == null) {
+    throw new Error(
+      "submit_bounty_seller_claim: provide either target_player_id or target_faction_id",
+    );
+  }
+
+  const url = `${FF_SCOUTER_BASE_URL}/bounties/seller/claims`;
+  // Always carries referrer_player_id (the script's commission attribution;
+  // unapproved values are ignored server-side) and never
+  // monitoring_started_at — the server anchors monitoring itself.
+  const body =
+    target.target_player_id != null
+      ? { key, target_player_id: target.target_player_id, referrer_player_id }
+      : {
+          key,
+          target_faction_id: target.target_faction_id,
+          referrer_player_id,
+        };
+
+  const resp = await post_bounty_json(url, body, requester);
+
+  if (!resp) {
+    return { blank: true };
+  }
+
+  // 200 = existing open claim reused, 201 = claim created
+  const { result, limits } = parse_bounty_response<BountyClaimCreateResponse>(
+    resp,
+    "submit_bounty_seller_claim",
+    [200, 201],
+  );
+  return { result, blank: false, limits };
 };

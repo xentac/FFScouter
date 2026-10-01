@@ -1,15 +1,59 @@
 import { expect, test, vi } from "vitest";
 import {
+  CLAIM_CREATE_RESPONSE,
+  ERROR_CONSENT_REQUIRED,
+  ERROR_INVALID_KEY,
+  ERROR_NO_OPEN_BOUNTIES,
+  ERROR_RATE_LIMITED,
+  ERROR_TORN_REJECTED_KEY,
+  FACTION_CLAIM_CREATE_RESPONSE,
+  POLICY_ACCEPT_RESPONSE,
+  SELLER_BOARD_RESPONSE,
+} from "./__fixtures__/bounty_board";
+import {
+  accept_bounty_seller_policy,
+  type BountyClaimTarget,
   check_key,
   FFApiError,
   type gmRequest,
   make_flights_url,
   make_stats_url,
+  query_bounty_seller_board,
   query_flights,
   query_stats,
   query_targets,
+  submit_bounty_seller_claim,
 } from "./api";
 import { generate_test_ff_data } from "./test";
+
+// gmRequest-shaped mock response for the bounty endpoint tests
+const bounty_mock_response = (
+  status: number,
+  body: unknown,
+  responseHeaders = "",
+) => ({
+  responseHeaders,
+  readyState: 4,
+  response: "",
+  responseText: JSON.stringify(body),
+  responseXML: null,
+  status,
+  statusText: "",
+  finalUrl: "",
+  context: {},
+});
+
+const RATE_LIMIT_HEADERS =
+  "x-ratelimit-reset-timestamp: 1768192440\n\
+x-ratelimit-limit: 120\n\
+x-ratelimit-remaining: 118\n";
+
+const PARSED_RATE_LIMITS = {
+  rate_limit: 120,
+  remaining: 118,
+  reset_time: new Date("2026-01-12T04:34:00.000Z"),
+  this_minute: 2,
+};
 
 test("make_stats_url generates proper url", () => {
   expect(make_stats_url("a", [1])).toEqual(
@@ -651,4 +695,242 @@ test("query_targets HTTP error response", async () => {
   await expect(query_targets("test-key", {}, error400)).rejects.toThrow(
     "Invalid preset",
   );
+});
+
+test("query_bounty_seller_board success includes faction target and rate limits", async () => {
+  const success: typeof gmRequest = vi.fn().mockImplementation((options) => {
+    expect(options.method).toBe("GET");
+    expect(options.url).toBe(
+      "https://ffscouter.com/api/v1/bounties/seller/board?key=test-key",
+    );
+    return Promise.resolve(
+      bounty_mock_response(200, SELLER_BOARD_RESPONSE, RATE_LIMIT_HEADERS),
+    );
+  });
+
+  const resp = await query_bounty_seller_board("test-key", success);
+  expect(resp).toEqual({
+    result: SELLER_BOARD_RESPONSE,
+    blank: false,
+    limits: PARSED_RATE_LIMITS,
+  });
+  if (!resp.blank) {
+    const faction = resp.result.board.targets[1];
+    expect(faction?.target_faction_id).toBe(6731);
+    expect(faction?.members).toHaveLength(3);
+  }
+});
+
+test("query_bounty_seller_board blank response", async () => {
+  const empty: typeof gmRequest = vi.fn().mockResolvedValue(null);
+  expect(await query_bounty_seller_board("test-key", empty)).toEqual({
+    blank: true,
+  });
+});
+
+test("query_bounty_seller_board surfaces consent-required (403 code 86)", async () => {
+  const consent: typeof gmRequest = vi
+    .fn()
+    .mockResolvedValue(bounty_mock_response(403, ERROR_CONSENT_REQUIRED));
+
+  const err = await query_bounty_seller_board("test-key", consent).then(
+    () => null,
+    (e) => e as FFApiError,
+  );
+  expect(err).toBeInstanceOf(FFApiError);
+  expect(err?.ff_api_error).toEqual(ERROR_CONSENT_REQUIRED);
+});
+
+test("query_bounty_seller_board surfaces unregistered key (401 code 6)", async () => {
+  const unregistered: typeof gmRequest = vi
+    .fn()
+    .mockResolvedValue(bounty_mock_response(401, ERROR_INVALID_KEY));
+
+  const err = await query_bounty_seller_board("test-key", unregistered).then(
+    () => null,
+    (e) => e as FFApiError,
+  );
+  expect(err).toBeInstanceOf(FFApiError);
+  expect(err?.ff_api_error).toEqual(ERROR_INVALID_KEY);
+});
+
+test("query_bounty_seller_board surfaces rate limit with retry_after_seconds (429 code 21)", async () => {
+  const throttled: typeof gmRequest = vi
+    .fn()
+    .mockResolvedValue(bounty_mock_response(429, ERROR_RATE_LIMITED));
+
+  const err = await query_bounty_seller_board("test-key", throttled).then(
+    () => null,
+    (e) => e as FFApiError,
+  );
+  expect(err).toBeInstanceOf(FFApiError);
+  expect(err?.ff_api_error?.code).toBe(21);
+  expect(err?.ff_api_error?.retry_after_seconds).toBe(12);
+});
+
+test("accept_bounty_seller_policy posts explicit consent boolean", async () => {
+  const success: typeof gmRequest = vi.fn().mockImplementation((options) => {
+    expect(options.method).toBe("POST");
+    expect(options.url).toBe(
+      "https://ffscouter.com/api/v1/bounties/seller/policy/accept",
+    );
+    expect(options.headers).toEqual({ "Content-Type": "application/json" });
+    expect(JSON.parse(options.data)).toEqual({
+      key: "test-key",
+      i_have_read_rules_and_data_policy: true,
+    });
+    return Promise.resolve(
+      bounty_mock_response(200, POLICY_ACCEPT_RESPONSE, RATE_LIMIT_HEADERS),
+    );
+  });
+
+  expect(await accept_bounty_seller_policy("test-key", true, success)).toEqual({
+    result: POLICY_ACCEPT_RESPONSE,
+    blank: false,
+    limits: PARSED_RATE_LIMITS,
+  });
+});
+
+test("accept_bounty_seller_policy surfaces unregistered key (401 code 6)", async () => {
+  const unregistered: typeof gmRequest = vi
+    .fn()
+    .mockResolvedValue(bounty_mock_response(401, ERROR_INVALID_KEY));
+
+  const err = await accept_bounty_seller_policy(
+    "test-key",
+    true,
+    unregistered,
+  ).then(
+    () => null,
+    (e) => e as FFApiError,
+  );
+  expect(err).toBeInstanceOf(FFApiError);
+  expect(err?.ff_api_error).toEqual(ERROR_INVALID_KEY);
+});
+
+test("submit_bounty_seller_claim posts player target with referrer and no monitoring_started_at", async () => {
+  const created: typeof gmRequest = vi.fn().mockImplementation((options) => {
+    expect(options.method).toBe("POST");
+    expect(options.url).toBe(
+      "https://ffscouter.com/api/v1/bounties/seller/claims",
+    );
+    const body = JSON.parse(options.data);
+    expect(body).toEqual({
+      key: "test-key",
+      target_player_id: 267456763,
+      referrer_player_id: 1844049,
+    });
+    expect(body).not.toHaveProperty("monitoring_started_at");
+    expect(body).not.toHaveProperty("target_faction_id");
+    return Promise.resolve(
+      bounty_mock_response(201, CLAIM_CREATE_RESPONSE, RATE_LIMIT_HEADERS),
+    );
+  });
+
+  expect(
+    await submit_bounty_seller_claim(
+      "test-key",
+      { target_player_id: 267456763 },
+      1844049,
+      created,
+    ),
+  ).toEqual({
+    result: CLAIM_CREATE_RESPONSE,
+    blank: false,
+    limits: PARSED_RATE_LIMITS,
+  });
+});
+
+test("submit_bounty_seller_claim posts faction target and accepts 200 reuse", async () => {
+  const reused: typeof gmRequest = vi.fn().mockImplementation((options) => {
+    const body = JSON.parse(options.data);
+    expect(body).toEqual({
+      key: "test-key",
+      target_faction_id: 6731,
+      referrer_player_id: 1844049,
+    });
+    expect(body).not.toHaveProperty("target_player_id");
+    expect(body).not.toHaveProperty("monitoring_started_at");
+    return Promise.resolve(
+      bounty_mock_response(200, FACTION_CLAIM_CREATE_RESPONSE),
+    );
+  });
+
+  expect(
+    await submit_bounty_seller_claim(
+      "test-key",
+      { target_faction_id: 6731 },
+      1844049,
+      reused,
+    ),
+  ).toEqual({
+    result: FACTION_CLAIM_CREATE_RESPONSE,
+    blank: false,
+    limits: undefined,
+  });
+});
+
+test("submit_bounty_seller_claim rejects both target fields without a request", async () => {
+  const requester = vi.fn();
+  await expect(
+    submit_bounty_seller_claim(
+      "test-key",
+      {
+        target_player_id: 267456763,
+        target_faction_id: 6731,
+      } as unknown as BountyClaimTarget,
+      1844049,
+      requester as unknown as typeof gmRequest,
+    ),
+  ).rejects.toThrow(/never both/);
+  expect(requester).not.toHaveBeenCalled();
+});
+
+test("submit_bounty_seller_claim rejects neither target field without a request", async () => {
+  const requester = vi.fn();
+  await expect(
+    submit_bounty_seller_claim(
+      "test-key",
+      {} as unknown as BountyClaimTarget,
+      1844049,
+      requester as unknown as typeof gmRequest,
+    ),
+  ).rejects.toThrow(/either target_player_id or target_faction_id/);
+  expect(requester).not.toHaveBeenCalled();
+});
+
+test("submit_bounty_seller_claim surfaces no-open-bounties (409 code 91)", async () => {
+  const conflict: typeof gmRequest = vi
+    .fn()
+    .mockResolvedValue(bounty_mock_response(409, ERROR_NO_OPEN_BOUNTIES));
+
+  const err = await submit_bounty_seller_claim(
+    "test-key",
+    { target_player_id: 267456763 },
+    1844049,
+    conflict,
+  ).then(
+    () => null,
+    (e) => e as FFApiError,
+  );
+  expect(err).toBeInstanceOf(FFApiError);
+  expect(err?.ff_api_error).toEqual(ERROR_NO_OPEN_BOUNTIES);
+});
+
+test("submit_bounty_seller_claim surfaces key-lacks-attacks-access (400 code 87)", async () => {
+  const rejected: typeof gmRequest = vi
+    .fn()
+    .mockResolvedValue(bounty_mock_response(400, ERROR_TORN_REJECTED_KEY));
+
+  const err = await submit_bounty_seller_claim(
+    "test-key",
+    { target_player_id: 267456763 },
+    1844049,
+    rejected,
+  ).then(
+    () => null,
+    (e) => e as FFApiError,
+  );
+  expect(err).toBeInstanceOf(FFApiError);
+  expect(err?.ff_api_error).toEqual(ERROR_TORN_REJECTED_KEY);
 });
