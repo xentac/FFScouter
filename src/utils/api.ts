@@ -129,6 +129,9 @@ export type FFApiQueryResponse = {
 export class FFApiError extends Error {
   ff_api_limits?: FFApiRateLimits;
   ff_api_error?: FFError;
+  // HTTP status of the failed response, when known — lets callers separate
+  // retriable server faults (5xx) from persistent 4xx states.
+  ff_http_status?: number;
 
   constructor(
     message: string,
@@ -136,11 +139,13 @@ export class FFApiError extends Error {
       cause?: Error;
       ff_api_limits?: FFApiRateLimits;
       ff_api_error?: FFError;
+      ff_http_status?: number;
     },
   ) {
     super(message, options);
     this.ff_api_limits = options?.ff_api_limits;
     this.ff_api_error = options?.ff_api_error;
+    this.ff_http_status = options?.ff_http_status;
   }
 }
 
@@ -717,7 +722,7 @@ const parse_bounty_response = <T>(
     );
     throw new FFApiError(
       `API request failed. Couldn't parse response. HTTP status code: ${resp.status}`,
-      { ff_api_limits: limits },
+      { ff_api_limits: limits, ff_http_status: resp.status },
     );
   }
   if (parsed == null) {
@@ -725,7 +730,7 @@ const parse_bounty_response = <T>(
     logger.warn(`${label}: null response after parse. status=${resp.status}`);
     throw new FFApiError(
       `API request failed. Response not set. HTTP status code: ${resp.status}`,
-      { ff_api_limits: limits },
+      { ff_api_limits: limits, ff_http_status: resp.status },
     );
   }
 
@@ -733,7 +738,11 @@ const parse_bounty_response = <T>(
   if (maybe_error.code !== undefined) {
     throw new FFApiError(
       `API request failed. Error: ${maybe_error.error}; Code: ${maybe_error.code}`,
-      { ff_api_error: maybe_error, ff_api_limits: limits },
+      {
+        ff_api_error: maybe_error,
+        ff_api_limits: limits,
+        ff_http_status: resp.status,
+      },
     );
   }
 
@@ -743,7 +752,7 @@ const parse_bounty_response = <T>(
     );
     throw new FFApiError(
       `API request failed. HTTP status code: ${resp.status}`,
-      { ff_api_limits: limits },
+      { ff_api_limits: limits, ff_http_status: resp.status },
     );
   }
 

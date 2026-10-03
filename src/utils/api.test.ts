@@ -740,6 +740,7 @@ test("query_bounty_seller_board surfaces consent-required (403 code 86)", async 
   );
   expect(err).toBeInstanceOf(FFApiError);
   expect(err?.ff_api_error).toEqual(ERROR_CONSENT_REQUIRED);
+  expect(err?.ff_http_status).toBe(403);
 });
 
 test("query_bounty_seller_board surfaces unregistered key (401 code 6)", async () => {
@@ -767,6 +768,7 @@ test("query_bounty_seller_board surfaces rate limit with retry_after_seconds (42
   expect(err).toBeInstanceOf(FFApiError);
   expect(err?.ff_api_error?.code).toBe(21);
   expect(err?.ff_api_error?.retry_after_seconds).toBe(12);
+  expect(err?.ff_http_status).toBe(429);
 });
 
 test("accept_bounty_seller_policy posts explicit consent boolean", async () => {
