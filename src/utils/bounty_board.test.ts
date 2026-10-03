@@ -1,10 +1,16 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import {
+  CLAIM_CREATE_RESPONSE,
   ERROR_CONSENT_REQUIRED,
+  ERROR_NO_OPEN_BOUNTIES,
   SELLER_BOARD_RESPONSE,
 } from "./__fixtures__/bounty_board";
-import { FFApiError, type query_bounty_seller_board } from "./api";
+import {
+  FFApiError,
+  type query_bounty_seller_board,
+  type submit_bounty_seller_claim,
+} from "./api";
 import {
   BOUNTY_BOARD_FRESHNESS_FLOOR_MS,
   BountyBoardCache,
@@ -359,4 +365,149 @@ test("the missing-key error is not cached as a failure", async () => {
   set_key();
   expect(await cache.get_board()).toEqual(SELLER_BOARD_RESPONSE);
   expect(query).toHaveBeenCalledTimes(1);
+});
+
+const make_page_load_with_submit = (
+  query: typeof query_bounty_seller_board,
+  submit: typeof submit_bounty_seller_claim,
+) => {
+  const config = new FFConfig(TEST_PREFIX);
+  return new BountyBoardCache(config, new Storage(TEST_PREFIX), query, submit);
+};
+
+test("submit_claim folds the response claims into the cached board", async () => {
+  set_key();
+  const query = vi
+    .fn()
+    .mockResolvedValue({ result: SELLER_BOARD_RESPONSE, blank: false });
+  const submit = vi
+    .fn()
+    .mockResolvedValue({ result: CLAIM_CREATE_RESPONSE, blank: false });
+  const cache = make_page_load_with_submit(query, submit);
+
+  await cache.get_board();
+  expect(await cache.submit_claim({ target_player_id: 267456763 })).toEqual(
+    CLAIM_CREATE_RESPONSE,
+  );
+  expect(submit).toHaveBeenCalledExactlyOnceWith(
+    "test-key",
+    { target_player_id: 267456763 },
+    undefined,
+  );
+
+  // A later page load inside the freshness window serves the merged state
+  // with no extra fetch: fresh claims, unchanged board
+  const board = await make_page_load(query).get_board();
+  expect(board.claims).toEqual(CLAIM_CREATE_RESPONSE.claims);
+  expect(board.board).toEqual(SELLER_BOARD_RESPONSE.board);
+  expect(query).toHaveBeenCalledTimes(1);
+});
+
+test("submit_claim does not extend the board freshness window", async () => {
+  set_key();
+  const query = vi
+    .fn()
+    .mockResolvedValue({ result: SELLER_BOARD_RESPONSE, blank: false });
+  const submit = vi
+    .fn()
+    .mockResolvedValue({ result: CLAIM_CREATE_RESPONSE, blank: false });
+  const cache = make_page_load_with_submit(query, submit);
+
+  await cache.get_board();
+  vi.advanceTimersByTime(45_000);
+  await cache.submit_claim({ target_player_id: 267456763 });
+
+  // 61s after the board fetch (16s after the claim) the board is stale
+  vi.advanceTimersByTime(16_000);
+  await cache.get_board();
+  expect(query).toHaveBeenCalledTimes(2);
+});
+
+test("submit_claim without a cached board records nothing", async () => {
+  set_key();
+  const query = vi
+    .fn()
+    .mockResolvedValue({ result: SELLER_BOARD_RESPONSE, blank: false });
+  const submit = vi
+    .fn()
+    .mockResolvedValue({ result: CLAIM_CREATE_RESPONSE, blank: false });
+  const cache = make_page_load_with_submit(query, submit);
+
+  expect(await cache.submit_claim({ target_faction_id: 6731 })).toEqual(
+    CLAIM_CREATE_RESPONSE,
+  );
+  // The next board consult still needs a real fetch
+  expect(await cache.get_board()).toEqual(SELLER_BOARD_RESPONSE);
+  expect(query).toHaveBeenCalledTimes(1);
+});
+
+test("submit_claim posts despite a remembered board failure and clears it on success", async () => {
+  set_key();
+  const query = vi
+    .fn()
+    .mockRejectedValueOnce(consent_error())
+    .mockResolvedValue({ result: SELLER_BOARD_RESPONSE, blank: false });
+  const submit = vi
+    .fn()
+    .mockResolvedValue({ result: CLAIM_CREATE_RESPONSE, blank: false });
+  const cache = make_page_load_with_submit(query, submit);
+
+  await expect(cache.get_board()).rejects.toThrow();
+  // The claim POST is authoritative — it goes out even inside the board's
+  // retry window
+  expect(await cache.submit_claim({ target_player_id: 267456763 })).toEqual(
+    CLAIM_CREATE_RESPONSE,
+  );
+  // Its success disproves the remembered failure: the board refetches
+  // immediately instead of waiting out the window
+  expect(await cache.get_board()).toEqual(SELLER_BOARD_RESPONSE);
+  expect(query).toHaveBeenCalledTimes(2);
+});
+
+test("a failed submit_claim leaves the cached board and retry state untouched", async () => {
+  set_key();
+  const query = vi
+    .fn()
+    .mockResolvedValue({ result: SELLER_BOARD_RESPONSE, blank: false });
+  const submit = vi
+    .fn()
+    .mockRejectedValue(
+      new FFApiError(
+        "API request failed. Error: No open bounties available.; Code: 91",
+        { ff_api_error: ERROR_NO_OPEN_BOUNTIES, ff_http_status: 409 },
+      ),
+    );
+  const cache = make_page_load_with_submit(query, submit);
+
+  await cache.get_board();
+  await expect(
+    cache.submit_claim({ target_player_id: 267456763 }),
+  ).rejects.toThrow(/Code: 91/);
+
+  // Cached board still served untouched, and no board backoff window exists
+  expect((await cache.get_board()).claims).toEqual(
+    SELLER_BOARD_RESPONSE.claims,
+  );
+  expect(query).toHaveBeenCalledTimes(1);
+  vi.advanceTimersByTime(61_000);
+  await cache.get_board();
+  expect(query).toHaveBeenCalledTimes(2);
+});
+
+test("submit_claim treats a blank (PDA empty) response as an error", async () => {
+  set_key();
+  const submit = vi.fn().mockResolvedValue({ blank: true });
+  const cache = make_page_load_with_submit(vi.fn() as never, submit);
+
+  await expect(cache.submit_claim({ target_player_id: 1 })).rejects.toThrow(
+    /Empty/,
+  );
+});
+
+test("submit_claim without a configured key throws without posting", async () => {
+  const submit = vi.fn();
+  const cache = make_page_load_with_submit(vi.fn() as never, submit as never);
+
+  await expect(cache.submit_claim({ target_player_id: 1 })).rejects.toThrow();
+  expect(submit).not.toHaveBeenCalled();
 });

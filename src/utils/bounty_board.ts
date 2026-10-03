@@ -1,13 +1,16 @@
 import {
+  type BountyClaimCreateResponse,
+  type BountyClaimTarget,
   type BountySellerBoardResponse,
   FFApiError,
   type FFError,
   query_bounty_seller_board,
+  submit_bounty_seller_claim,
 } from "./api";
 import { type FFConfig, ffconfig } from "./ffconfig";
 import logger from "./logger";
 import default_storage, { type Storage } from "./storage";
-import type { Timestamp } from "./types";
+import type { PlayerId, Timestamp } from "./types";
 
 const log = logger.child("bounty-board");
 
@@ -61,16 +64,19 @@ export class BountyBoardCache {
   private config: FFConfig;
   private storage: Storage;
   private query: typeof query_bounty_seller_board;
+  private submit: typeof submit_bounty_seller_claim;
   private inflight: Promise<BountySellerBoardResponse> | null = null;
 
   constructor(
     config: FFConfig,
     storage: Storage = default_storage,
     query: typeof query_bounty_seller_board = query_bounty_seller_board,
+    submit: typeof submit_bounty_seller_claim = submit_bounty_seller_claim,
   ) {
     this.config = config;
     this.storage = storage;
     this.query = query;
+    this.submit = submit;
   }
 
   // Read-through access: serves the stored response while it is younger than
@@ -102,6 +108,43 @@ export class BountyBoardCache {
     } finally {
       this.inflight = null;
     }
+  };
+
+  // Submit a claim through the cache. The POST is authoritative and never
+  // waits on freshness or the failure retry window; errors propagate to the
+  // caller (a 409 means exhausted or raced — reported honestly) and never
+  // create a board backoff window. On success the response's claims block —
+  // the authoritative current state, given to us for free — is folded into
+  // the cached board entry.
+  submit_claim = async (
+    target?: BountyClaimTarget | null,
+    referrer_player_id?: PlayerId,
+  ): Promise<BountyClaimCreateResponse> => {
+    if (!this.config.key) {
+      throw new Error("No API key configured");
+    }
+    const resp = await this.submit(this.config.key, target, referrer_player_id);
+    if (resp.blank) {
+      throw new Error("Empty bounty claim response");
+    }
+
+    // fetched_at is deliberately kept: board targets don't change at claim
+    // time (tiers deplete at credit time), so the claim must not extend the
+    // board's freshness window.
+    const cached = this.storage.get<CachedBoard>(BOARD_CACHE_KEY);
+    if (cached) {
+      this.storage.set<CachedBoard>(BOARD_CACHE_KEY, {
+        response: {
+          board: cached.response.board,
+          claims: resp.result.claims,
+        },
+        fetched_at: cached.fetched_at,
+      });
+    }
+    // A successful seller call disproves any remembered board failure
+    // (e.g. consent accepted since the 403 was cached)
+    this.storage.remove(BOARD_FAILURE_KEY);
+    return resp.result;
   };
 
   // Explicit refresh hook for surfaces that want to warm the cache without
