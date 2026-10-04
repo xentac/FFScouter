@@ -147,6 +147,14 @@ export class BountyBoardCache {
     return resp.result;
   };
 
+  // Consent is accepted outside this cache (accept_bounty_seller_policy), so
+  // expose an explicit hook to drop the remembered failure; without it
+  // get_board() would keep rethrowing the stale code-86 403 until
+  // next_retry_at even though consent has just been granted.
+  clear_failure = (): void => {
+    this.storage.remove(BOARD_FAILURE_KEY);
+  };
+
   // Explicit refresh hook for surfaces that want to warm the cache without
   // consuming the board (attack-page open, Start/Join Attack clicks). Same
   // freshness floor as get_board; failures are logged, never thrown.

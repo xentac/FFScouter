@@ -96,6 +96,8 @@ export default {
     panel.warFilterEnabled = ffconfig.war_filter_enabled;
     panel.statDistributionBadgeEnabled =
       ffconfig.stat_distribution_badge_enabled;
+    panel.bountyBoardEnabled = ffconfig.bounty_board_enabled;
+    panel.bountyAttackAction = ffconfig.bounty_attack_action;
     // isPremium starts as null (Unknown) and is resolved asynchronously after injection
 
     // Listen for the custom save event
@@ -145,6 +147,8 @@ export default {
       ffconfig.war_filter_enabled = detail.warFilterEnabled;
       ffconfig.stat_distribution_badge_enabled =
         detail.statDistributionBadgeEnabled;
+      ffconfig.bounty_board_enabled = detail.bountyBoardEnabled;
+      ffconfig.bounty_attack_action = detail.bountyAttackAction;
       panel.isPremium = await check_key_status.is_premium(true);
       panel.isKeyRegistered = await check_key_status.is_registered(false);
       toast("Settings saved successfully!");
@@ -195,6 +199,8 @@ export default {
       panel.warFilterEnabled = ffconfig.war_filter_enabled;
       panel.statDistributionBadgeEnabled =
         ffconfig.stat_distribution_badge_enabled;
+      panel.bountyBoardEnabled = ffconfig.bounty_board_enabled;
+      panel.bountyAttackAction = ffconfig.bounty_attack_action;
 
       toast("Settings reset to defaults!");
       window.dispatchEvent(new CustomEvent("ff-config-updated"));

@@ -88,6 +88,8 @@ const DEFAULT_VALUES = {
   factionFilterEnabled: CONFIG_DEFAULTS.faction_filter_enabled,
   warFilterEnabled: CONFIG_DEFAULTS.war_filter_enabled,
   statDistributionBadgeEnabled: CONFIG_DEFAULTS.stat_distribution_badge_enabled,
+  bountyBoardEnabled: CONFIG_DEFAULTS.bounty_board_enabled,
+  bountyAttackAction: CONFIG_DEFAULTS.bounty_attack_action,
   isPremium: null as boolean | null,
   isKeyRegistered: null as boolean | null,
 };
@@ -651,6 +653,30 @@ export function SettingsPanelComponent({
 
             <div className={`${cls.cell} ${cls.cellCheckbox}`}>
               <input
+                id="bounty-board-toggle"
+                type="checkbox"
+                checked={drafts.bountyBoardEnabled}
+                onChange={onChange}
+              />
+              <label htmlFor="bounty-board-toggle">
+                Enable FF Scouter Bounties
+              </label>
+            </div>
+
+            <div className={cls.cell}>
+              <label htmlFor="bounty-attack-action">Bounty Attack Opens:</label>
+              <select
+                id="bounty-attack-action"
+                value={drafts.bountyAttackAction}
+                onChange={onChange}
+              >
+                <option value="new_tab">New Tab</option>
+                <option value="current">Same Tab</option>
+              </select>
+            </div>
+
+            <div className={`${cls.cell} ${cls.cellCheckbox}`}>
+              <input
                 id="settings-panel-own-profile-only-toggle"
                 type="checkbox"
                 checked={drafts.settingsPanelOwnProfileOnly}
@@ -831,6 +857,8 @@ export class FFSettingsPanel extends HTMLElement {
       factionFilterEnabled: this._props.factionFilterEnabled,
       warFilterEnabled: this._props.warFilterEnabled,
       statDistributionBadgeEnabled: this._props.statDistributionBadgeEnabled,
+      bountyBoardEnabled: this._props.bountyBoardEnabled,
+      bountyAttackAction: this._props.bountyAttackAction,
     };
   }
 
@@ -964,6 +992,8 @@ export class FFSettingsPanel extends HTMLElement {
           warFilterEnabled: this._drafts.warFilterEnabled,
           statDistributionBadgeEnabled:
             this._drafts.statDistributionBadgeEnabled,
+          bountyBoardEnabled: this._drafts.bountyBoardEnabled,
+          bountyAttackAction: this._drafts.bountyAttackAction,
         },
         bubbles: true,
         composed: true,
@@ -1035,6 +1065,8 @@ export class FFSettingsPanel extends HTMLElement {
       this._drafts.chainTabType = target.value as ChainTabType;
     } else if (id === "war-quick-attack-action") {
       this._drafts.warQuickAttackAction = target.value as WarQuickAttackAction;
+    } else if (id === "bounty-attack-action") {
+      this._drafts.bountyAttackAction = target.value as WarQuickAttackAction;
     } else if (id === "factions-col-display") {
       this._drafts.factionsColDisplay = target.value as FactionsColDisplay;
     } else if (id === "war-col-display") {
@@ -1077,6 +1109,8 @@ export class FFSettingsPanel extends HTMLElement {
       this._drafts.statDistributionBadgeEnabled = (
         target as HTMLInputElement
       ).checked;
+    } else if (id === "bounty-board-toggle") {
+      this._drafts.bountyBoardEnabled = (target as HTMLInputElement).checked;
     }
 
     this.render();
@@ -1379,6 +1413,24 @@ export class FFSettingsPanel extends HTMLElement {
     this.render();
   }
 
+  get bountyBoardEnabled() {
+    return this._props.bountyBoardEnabled;
+  }
+  set bountyBoardEnabled(val) {
+    this._props.bountyBoardEnabled = val;
+    this._drafts.bountyBoardEnabled = val;
+    this.render();
+  }
+
+  get bountyAttackAction() {
+    return this._props.bountyAttackAction;
+  }
+  set bountyAttackAction(val) {
+    this._props.bountyAttackAction = val;
+    this._drafts.bountyAttackAction = val;
+    this.render();
+  }
+
   get debugDisablePdaHttp() {
     return this._props.debugDisablePdaHttp;
   }
@@ -1675,6 +1727,22 @@ export class FFSettingsPanel extends HTMLElement {
   }
   set draftStatDistributionBadgeEnabled(val) {
     this._drafts.statDistributionBadgeEnabled = val;
+    this.render();
+  }
+
+  get draftBountyBoardEnabled() {
+    return this._drafts.bountyBoardEnabled;
+  }
+  set draftBountyBoardEnabled(val) {
+    this._drafts.bountyBoardEnabled = val;
+    this.render();
+  }
+
+  get draftBountyAttackAction() {
+    return this._drafts.bountyAttackAction;
+  }
+  set draftBountyAttackAction(val) {
+    this._drafts.bountyAttackAction = val;
     this.render();
   }
 }

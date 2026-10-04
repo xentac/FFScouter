@@ -7,6 +7,7 @@ import {
   format_difficulty_text,
   format_ff_score,
   format_relative_time,
+  format_suffix_number,
   format_timestamp,
   get_contrast_color,
   get_ff_arrow_colour,
@@ -284,6 +285,25 @@ test("parse_suffix_number parses numeric suffixes correctly", () => {
   expect(parse_suffix_number("1,000")).toEqual(1000);
   expect(parse_suffix_number("1,500k")).toEqual(1500000);
   expect(parse_suffix_number("1,000,000m")).toEqual(1000000000000);
+});
+
+test("format_suffix_number renders numbers with k/m/b/t suffixes", () => {
+  expect(format_suffix_number(0)).toEqual("0");
+  expect(format_suffix_number(999)).toEqual("999");
+  expect(format_suffix_number(1000)).toEqual("1k");
+  expect(format_suffix_number(700_000)).toEqual("700k");
+  expect(format_suffix_number(1_500_000)).toEqual("1.5m");
+  expect(format_suffix_number(2_500_000_000)).toEqual("2.5b");
+  expect(format_suffix_number(1_000_000_000_000)).toEqual("1t");
+
+  // Up to 2 decimals, rounded, trailing zeros trimmed.
+  expect(format_suffix_number(2_989_885_521)).toEqual("2.99b");
+  expect(format_suffix_number(1_204_000)).toEqual("1.2m");
+  expect(format_suffix_number(1_999_999)).toEqual("2m");
+
+  // Round-trips through parse_suffix_number within rounding tolerance.
+  const parsed = parse_suffix_number(format_suffix_number(2_989_885_521));
+  expect(parsed).toEqual(2_990_000_000);
 });
 
 test("get_source_marker returns an icon descriptor for spies and premium, and null for bss", () => {

@@ -476,6 +476,26 @@ export function parse_suffix_number(valStr: string): number | null {
   return num * (multiplier[suffix] ?? 1);
 }
 
+// Inverse of parse_suffix_number: "700k", "1.5m", "2.99b". Up to 2 decimals,
+// rounded, trailing zeros trimmed. Used for bounty prices and board estimates
+// (board targets carry a raw number, unlike FFData's server-side
+// bs_estimate_human).
+export function format_suffix_number(n: number): string {
+  const units: [number, string][] = [
+    [1_000_000_000_000, "t"],
+    [1_000_000_000, "b"],
+    [1_000_000, "m"],
+    [1_000, "k"],
+  ];
+  for (const [divisor, suffix] of units) {
+    if (Math.abs(n) >= divisor) {
+      const scaled = Math.round((n / divisor) * 100) / 100;
+      return `${scaled}${suffix}`;
+    }
+  }
+  return `${n}`;
+}
+
 export function parse_duration_to_seconds(valStr: string): number | null {
   const trimmed = valStr.trim();
   if (!trimmed) return null;

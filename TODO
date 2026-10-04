@@ -40,7 +40,7 @@ Remount Leak]] in CONTEXT.md) has been confirmed and fixed. The rest are not yet
 
 # React Doctor follow-ups (re-run: v0.5.8, after CSS-modules migration + Fedded/Fallen)
 
-59 warnings total (Bugs 9, Performance 16, Accessibility 14, Maintainability 20).
+60 warnings total (Bugs 9, Performance 17, Accessibility 14, Maintainability 20).
 Run `bun run react-doctor` to re-check. The prop-sync bug
 (no-adjust-state-on-prop-change in flight-status) is already fixed. Line numbers
 below are post-CSS-modules; confirm each against the code before acting.
@@ -83,6 +83,9 @@ into `faction-filter-box.module.css`.
 - `js-set-map-lookups` at `ffscouter.ts:67`, `js-combine-iterations` at `storage.ts:128`,
   `async-await-in-loop` (faction/index.ts:540, index.ts:67/83, dom.ts:384, ffcache.ts:277/293):
   pre-existing non-React hot-path nits; low priority.
+- DELIBERATE — `js-tosorted-immutable` at `bounty-board-rows.ts:61`: `[...tiers].sort()`
+  is already non-mutating; `toSorted()` is an ES2023 runtime method the build doesn't
+  polyfill, and older iOS WebViews (Torn PDA) lack it. Revisit if the support floor rises.
 
 ## Accessibility
 - `control-has-associated-label` ×13 (faction-filter-box checkboxes/inputs at

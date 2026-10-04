@@ -7,6 +7,7 @@ import {
   FactionsColDisplay,
   FFConfig,
   GaugeMarkerJustify,
+  WarQuickAttackAction,
 } from "./ffconfig";
 
 let config: FFConfig;
@@ -58,6 +59,12 @@ test("FFConfig gets default values when storage is empty", () => {
   expect(config.stat_distribution_badge_enabled).toEqual(
     CONFIG_DEFAULTS.stat_distribution_badge_enabled,
   );
+  expect(config.bounty_board_enabled).toEqual(
+    CONFIG_DEFAULTS.bounty_board_enabled,
+  );
+  expect(config.bounty_attack_action).toEqual(
+    CONFIG_DEFAULTS.bounty_attack_action,
+  );
 });
 
 test("FFConfig sets and gets custom configuration values", () => {
@@ -85,6 +92,8 @@ test("FFConfig sets and gets custom configuration values", () => {
   config.gauge_marker_border_width = 3;
   config.gauge_marker_justify = GaugeMarkerJustify.LEFT;
   config.stat_distribution_badge_enabled = false;
+  config.bounty_board_enabled = false;
+  config.bounty_attack_action = WarQuickAttackAction.CURRENT;
 
   expect(config.key).toEqual("myapi-key");
   expect(config.low_ff_range).toEqual(1.5);
@@ -110,6 +119,8 @@ test("FFConfig sets and gets custom configuration values", () => {
   expect(config.gauge_marker_border_width).toEqual(3);
   expect(config.gauge_marker_justify).toEqual(GaugeMarkerJustify.LEFT);
   expect(config.stat_distribution_badge_enabled).toBe(false);
+  expect(config.bounty_board_enabled).toBe(false);
+  expect(config.bounty_attack_action).toEqual(WarQuickAttackAction.CURRENT);
 
   const mockTargets = {
     targets: [{ player_id: 1, name: "p1" } as any],
@@ -153,6 +164,8 @@ test("FFConfig.reset resets values to their default states except the api key", 
   config.gauge_marker_justify = GaugeMarkerJustify.RIGHT;
   config.settings_panel_own_profile_only = true;
   config.stat_distribution_badge_enabled = false;
+  config.bounty_board_enabled = false;
+  config.bounty_attack_action = WarQuickAttackAction.CURRENT;
 
   config.reset();
 
@@ -190,5 +203,11 @@ test("FFConfig.reset resets values to their default states except the api key", 
   );
   expect(config.stat_distribution_badge_enabled).toEqual(
     CONFIG_DEFAULTS.stat_distribution_badge_enabled,
+  );
+  expect(config.bounty_board_enabled).toEqual(
+    CONFIG_DEFAULTS.bounty_board_enabled,
+  );
+  expect(config.bounty_attack_action).toEqual(
+    CONFIG_DEFAULTS.bounty_attack_action,
   );
 });

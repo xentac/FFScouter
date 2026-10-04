@@ -814,6 +814,13 @@ const post_bounty_json = (
   });
 };
 
+// The Bounty Board Data Policy and Rules the consent UI links to and
+// accept_bounty_seller_policy records acceptance of.
+// TODO: replace with the published Bounty Board Data Policy URL once it
+// exists — Torn's rules make the real URL a release blocker (issue #9,
+// CONTEXT.md "Bounty Policy Consent").
+export const BOUNTY_POLICY_URL = "https://ffscouter.com/";
+
 export const accept_bounty_seller_policy = async (
   key: TornApiKey,
   i_have_read_rules_and_data_policy: boolean,

@@ -98,6 +98,8 @@ export const CONFIG_DEFAULTS = {
   faction_filter_enabled: true,
   war_filter_enabled: true,
   stat_distribution_badge_enabled: true,
+  bounty_board_enabled: true,
+  bounty_attack_action: WarQuickAttackAction.NEW_TAB,
 } as const;
 
 enum CONFIG {
@@ -141,6 +143,8 @@ enum CONFIG {
   FACTION_FILTER_ENABLED = "faction_filter_enabled",
   WAR_FILTER_ENABLED = "war_filter_enabled",
   STAT_DISTRIBUTION_BADGE_ENABLED = "stat_distribution_badge_enabled",
+  BOUNTY_BOARD_ENABLED = "bounty_board_enabled",
+  BOUNTY_ATTACK_ACTION = "bounty_attack_action",
 }
 
 export class FFConfig {
@@ -443,6 +447,28 @@ export class FFConfig {
     this.storage.set(CONFIG.STAT_DISTRIBUTION_BADGE_ENABLED, val);
   }
 
+  get bounty_board_enabled(): boolean {
+    return (
+      this.storage.get(CONFIG.BOUNTY_BOARD_ENABLED) ??
+      CONFIG_DEFAULTS.bounty_board_enabled
+    );
+  }
+
+  set bounty_board_enabled(val: boolean) {
+    this.storage.set(CONFIG.BOUNTY_BOARD_ENABLED, val);
+  }
+
+  get bounty_attack_action(): WarQuickAttackAction {
+    return (
+      this.storage.get(CONFIG.BOUNTY_ATTACK_ACTION) ??
+      CONFIG_DEFAULTS.bounty_attack_action
+    );
+  }
+
+  set bounty_attack_action(val: WarQuickAttackAction) {
+    this.storage.set(CONFIG.BOUNTY_ATTACK_ACTION, val);
+  }
+
   get debug_disable_pda_http(): boolean {
     return (
       this.storage.get(CONFIG.DEBUG_DISABLE_PDA_HTTP) ??
@@ -625,6 +651,8 @@ export class FFConfig {
     this.storage.remove(CONFIG.FACTION_FILTER_ENABLED);
     this.storage.remove(CONFIG.WAR_FILTER_ENABLED);
     this.storage.remove(CONFIG.STAT_DISTRIBUTION_BADGE_ENABLED);
+    this.storage.remove(CONFIG.BOUNTY_BOARD_ENABLED);
+    this.storage.remove(CONFIG.BOUNTY_ATTACK_ACTION);
   }
 }
 

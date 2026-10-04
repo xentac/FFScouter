@@ -1,0 +1,210 @@
+/* FF Scouter Bounties (Bounty Board Modal). Branded and floating on purpose:
+   it sits on Torn's own bounties page and must never read as Torn's native
+   bounty list (see CONTEXT.md "Torn Bounty" vs "FF Scouter Bounty"). */
+
+.ff-bounty-modal,
+.ff-bounty-modal *,
+.ff-bounty-modal *::before,
+.ff-bounty-modal *::after {
+  box-sizing: border-box;
+}
+
+.ff-bounty-modal {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 9999;
+  width: 380px;
+  max-width: calc(100vw - 32px);
+  max-height: 70vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--ffscouter-bg-color);
+  color: var(--ffscouter-text-color);
+  border: 2px solid var(--ffscouter-glow-color);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  font-family: Arial, sans-serif;
+  font-size: 13px;
+}
+
+.ff-bounty-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 12px;
+  background-color: var(--ffscouter-glow-color);
+  color: #fff;
+  border-radius: 5px 5px 0 0;
+}
+
+.ff-bounty-modal--minimized .ff-bounty-modal__header {
+  border-radius: 5px;
+}
+
+.ff-bounty-modal__title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.ff-bounty-modal__header-btn {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 16px;
+  font-weight: bold;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 4px;
+}
+
+.ff-bounty-modal__body {
+  overflow-y: auto;
+  padding: 8px 12px 12px;
+}
+
+.ff-bounty-modal__notice {
+  margin: 4px 0;
+  line-height: 1.4;
+}
+
+.ff-bounty-modal__notice a {
+  color: inherit;
+  font-weight: bold;
+  text-decoration: underline;
+}
+
+.ff-bounty-modal__primary-btn {
+  margin-top: 8px;
+  padding: 6px 10px;
+  background-color: var(--ffscouter-glow-color);
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.ff-bounty-modal__primary-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.ff-bounty-modal__filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.ff-bounty-modal__filter {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.ff-bounty-modal__filter input {
+  width: 70px;
+  padding: 2px 4px;
+  font-size: 13px;
+  background-color: var(--ffscouter-alt-bg-color);
+  color: var(--ffscouter-text-color);
+  border: 1px solid var(--ffscouter-input-color);
+  border-radius: 3px;
+}
+
+.ff-bounty-modal__list,
+.ff-bounty-modal__member-list,
+.ff-bounty-modal__tier-ladder {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.ff-bounty-modal__row,
+.ff-bounty-modal__faction-card {
+  border-top: 1px solid var(--ffscouter-border-color);
+  padding: 4px 0;
+}
+
+.ff-bounty-modal__row-main,
+.ff-bounty-modal__faction-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ff-bounty-modal__faction-header {
+  width: 100%;
+  background: none;
+  border: none;
+  color: inherit;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+  padding: 2px 0;
+}
+
+.ff-bounty-modal__member-list {
+  margin-left: 12px;
+}
+
+.ff-bounty-modal__name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: bold;
+  color: inherit;
+}
+
+.ff-bounty-modal__estimate {
+  flex: 0 0 auto;
+  min-width: 44px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  text-align: center;
+  font-weight: bold;
+  background-color: var(--ffscouter-alt-bg-color);
+}
+
+.ff-bounty-modal__tier-label,
+.ff-bounty-modal__tier-toggle,
+.ff-bounty-modal__pool {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.ff-bounty-modal__tier-toggle {
+  background: none;
+  border: none;
+  color: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 0;
+}
+
+.ff-bounty-modal__tier-ladder {
+  margin: 2px 0 2px 12px;
+  font-size: 12px;
+}
+
+.ff-bounty-modal__action {
+  flex: 0 0 auto;
+  padding: 2px 6px;
+  font-size: 12px;
+  background-color: var(--ffscouter-alt-bg-color);
+  color: var(--ffscouter-text-color);
+  border: 1px solid var(--ffscouter-border-color);
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.ff-bounty-modal__action:disabled {
+  opacity: 0.6;
+  cursor: default;
+}

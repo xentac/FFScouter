@@ -195,6 +195,26 @@ test("a coded 4xx failure is remembered for the floor across page loads", async 
   expect(query).toHaveBeenCalledTimes(2);
 });
 
+test("clear_failure drops the remembered failure so the next get_board fetches", async () => {
+  set_key();
+  const query = vi
+    .fn()
+    .mockRejectedValueOnce(consent_error())
+    .mockResolvedValue({ result: SELLER_BOARD_RESPONSE, blank: false });
+
+  const first = await consult(query);
+  expect(first).toBeInstanceOf(FFApiError);
+  expect(query).toHaveBeenCalledTimes(1);
+
+  // Still inside the retry window: without clearing, this would rethrow
+  // the remembered code-86 without fetching.
+  vi.advanceTimersByTime(1_000);
+  make_page_load(query).clear_failure();
+
+  expect(await consult(query)).toEqual(SELLER_BOARD_RESPONSE);
+  expect(query).toHaveBeenCalledTimes(2);
+});
+
 test("a 429 failure honors retry_after_seconds when longer than the floor", async () => {
   set_key();
   const query = vi

@@ -283,6 +283,41 @@ test("ff-settings-panel dispatches ff-save event with correct statDistributionBa
   expect(saveEvents[0]?.detail?.statDistributionBadgeEnabled).toBe(false);
 });
 
+test("ff-settings-panel dispatches ff-save event with the bounty settings when saved", async () => {
+  const el = document.createElement("ff-settings-panel") as FFSettingsPanel;
+  document.body.appendChild(el);
+  await el.updateComplete;
+
+  const saveEvents: CustomEvent[] = [];
+  el.addEventListener("ff-save", (e: Event) => {
+    saveEvents.push(e as CustomEvent);
+  });
+
+  const toggle = el.querySelector("#bounty-board-toggle") as HTMLInputElement;
+  expect(toggle).not.toBeNull();
+  // Master toggle defaults on; a real click toggles it off.
+  expect(toggle.checked).toBe(true);
+  toggle.click();
+  await el.updateComplete;
+  expect(toggle.checked).toBe(false);
+
+  const select = el.querySelector("#bounty-attack-action") as HTMLSelectElement;
+  expect(select).not.toBeNull();
+  expect(select.value).toBe("new_tab");
+  select.value = "current";
+  select.dispatchEvent(new Event("change", { bubbles: true }));
+  await el.updateComplete;
+
+  const saveBtn = Array.from(el.querySelectorAll("button")).find(
+    (btn) => btn.textContent?.trim() === "Save Settings",
+  ) as HTMLButtonElement;
+  saveBtn.click();
+
+  expect(saveEvents.length).toBe(1);
+  expect(saveEvents[0]?.detail?.bountyBoardEnabled).toBe(false);
+  expect(saveEvents[0]?.detail?.bountyAttackAction).toBe("current");
+});
+
 test("ff-settings-panel syncs the marker-size slider and number input, clamps out-of-range values, and dispatches gaugeMarkerScale on save", async () => {
   const el = document.createElement("ff-settings-panel") as FFSettingsPanel;
   document.body.appendChild(el);
