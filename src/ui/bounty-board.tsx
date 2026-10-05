@@ -1,7 +1,7 @@
-// FF Scouter Bounties: the Bounty Board Modal (desktop floating shell) and
-// its body. The body is container-agnostic so the narrow/mobile in-flow
-// section can re-wrap it, and the consent state then renders in whichever
-// container is active.
+// FF Scouter Bounties: the Bounty Board Modal (desktop floating shell), the
+// narrow/mobile in-flow section, and the body they share. The body is
+// container-agnostic, so the consent state renders in whichever container is
+// active.
 import {
   accept_bounty_seller_policy,
   BOUNTY_POLICY_URL,
@@ -415,13 +415,45 @@ function BountyBoardBody({
 }
 
 // ============================================================================
-// Desktop floating shell
+// Shell: one component, two variants
 // ============================================================================
-export function BountyBoardModal() {
+// "modal" floats (desktop); "section" sits in the page flow above Torn's own
+// bounty list (narrow/mobile), where the branded header is what keeps it from
+// reading as Torn's native list. Being one component with the body at the
+// same tree position, a variant switch (layout change) keeps the loaded board
+// and transient state. Collapse state is the same persisted `minimized` view
+// field for both.
+export type BountyBoardVariant = "modal" | "section";
+
+const SHELL: Record<
+  BountyBoardVariant,
+  {
+    className: string | undefined;
+    collapse: string;
+    collapsed: string;
+    expanded: string;
+  }
+> = {
+  modal: {
+    className: cls.modal,
+    collapse: "Minimize",
+    collapsed: "+",
+    expanded: "−",
+  },
+  section: {
+    className: `${cls.modal} ${cls.inFlow}`,
+    collapse: "Collapse",
+    collapsed: "▾",
+    expanded: "▴",
+  },
+};
+
+export function BountyBoard({ variant }: { variant: BountyBoardVariant }) {
   const [view, updateView] = useViewState();
+  const shell = SHELL[variant];
   return (
     <section
-      className={`${cls.modal}${view.minimized ? ` ${cls.modalMinimized}` : ""}`}
+      className={`${shell.className}${view.minimized ? ` ${cls.modalMinimized}` : ""}`}
       aria-label="FF Scouter Bounties"
     >
       <div className={cls.header}>
@@ -433,11 +465,11 @@ export function BountyBoardModal() {
           aria-label={
             view.minimized
               ? "Expand FF Scouter Bounties"
-              : "Minimize FF Scouter Bounties"
+              : `${shell.collapse} FF Scouter Bounties`
           }
           onClick={() => updateView({ minimized: !view.minimized })}
         >
-          {view.minimized ? "+" : "−"}
+          {view.minimized ? shell.collapsed : shell.expanded}
         </button>
       </div>
       {view.minimized ? null : (

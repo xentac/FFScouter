@@ -544,15 +544,19 @@ export function apply_ff_gauge(
  * Waits for an element matching the querySelector to appear in the DOM
  * @param querySelector CSS selector to find the element
  * @param timeout Optional timeout in milliseconds
+ * @param options.signal Aborting it stops waiting and resolves null
  * @returns Promise resolving to the found element or null if timeout reached
  */
 export async function wait_for_element<T extends Element>(
   querySelector: string,
   timeout: number,
   root?: Node,
+  options: { signal?: AbortSignal } = {},
 ): Promise<T | null> {
   const existingElement = document.querySelector<T>(querySelector);
   if (existingElement) return existingElement;
+  const { signal } = options;
+  if (signal?.aborted) return null;
 
   return new Promise<T | null>((resolve) => {
     let timer: ReturnType<typeof setTimeout> | undefined;
@@ -580,9 +584,18 @@ export async function wait_for_element<T extends Element>(
       }, timeout);
     }
 
+    // Aborting stops the observer and resolves null, so a caller that no
+    // longer wants the element doesn't leave a subtree observer running.
+    const onAbort = () => {
+      cleanup();
+      resolve(null);
+    };
+    signal?.addEventListener("abort", onAbort);
+
     function cleanup() {
       observer.disconnect();
       if (timer) clearTimeout(timer);
+      signal?.removeEventListener("abort", onAbort);
     }
   });
 }
@@ -823,6 +836,21 @@ export function create_info_line() {
   info_line.style.margin = "5px 0";
 
   return info_line;
+}
+
+// Torn's narrow layout: the 386px/320px Content Wrapper Width buckets (and
+// Torn PDA). Only 784px is a real breakpoint; see CONTEXT.md. The check and
+// the change listener share one media query, so they can't disagree at a
+// fractional (zoomed) width; "not (min-width)" is exactly below 784px.
+export const DESKTOP_LAYOUT_MIN_WIDTH = 784;
+export const NARROW_LAYOUT_QUERY = `not all and (min-width: ${DESKTOP_LAYOUT_MIN_WIDTH}px)`;
+
+export function is_narrow_layout(): boolean {
+  if (typeof window === "undefined") return false;
+  if (typeof window.matchMedia === "function") {
+    return window.matchMedia(NARROW_LAYOUT_QUERY).matches;
+  }
+  return window.innerWidth < DESKTOP_LAYOUT_MIN_WIDTH;
 }
 
 /**

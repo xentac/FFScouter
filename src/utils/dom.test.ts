@@ -11,6 +11,7 @@ import {
   apply_ff_gauge,
   create_ff_element,
   create_info_line,
+  DESKTOP_LAYOUT_MIN_WIDTH,
   extract_id_from_url,
   GaugeAttachMode,
   get_activity_status,
@@ -19,8 +20,10 @@ import {
   getHashParameters,
   getLocalUserId,
   getRFC,
+  is_narrow_layout,
   MonitorElements,
   make_stat_icon_svg,
+  NARROW_LAYOUT_QUERY,
   open_attack_link,
   torn_page,
   wait_for_body,
@@ -452,6 +455,46 @@ test("wait_for_element resolves element when present or added", async () => {
 test("wait_for_element returns null on timeout", async () => {
   const result = await wait_for_element("#never-appears", 50);
   expect(result).toBeNull();
+});
+
+test("wait_for_element resolves null and stops observing when aborted", async () => {
+  const controller = new AbortController();
+  const disconnect = vi.spyOn(MutationObserver.prototype, "disconnect");
+  const promise = wait_for_element("#aborted", 10_000, undefined, {
+    signal: controller.signal,
+  });
+  controller.abort();
+  expect(await promise).toBeNull();
+  expect(disconnect).toHaveBeenCalled();
+
+  // An already-aborted signal never starts waiting.
+  expect(
+    await wait_for_element("#aborted", 10_000, undefined, {
+      signal: controller.signal,
+    }),
+  ).toBeNull();
+  disconnect.mockRestore();
+});
+
+test("is_narrow_layout follows the media query, so listener and check agree", () => {
+  // A fractional (zoomed) viewport: innerWidth rounds to 783, but the query
+  // still reports the desktop width.
+  vi.stubGlobal("innerWidth", 783);
+  vi.stubGlobal(
+    "matchMedia",
+    vi.fn((query: string) => ({ matches: false, media: query })),
+  );
+  expect(is_narrow_layout()).toBe(false);
+  expect(window.matchMedia).toHaveBeenCalledWith(NARROW_LAYOUT_QUERY);
+  vi.unstubAllGlobals();
+});
+
+test("is_narrow_layout falls back to innerWidth without matchMedia", () => {
+  vi.stubGlobal("innerWidth", DESKTOP_LAYOUT_MIN_WIDTH - 1);
+  expect(is_narrow_layout()).toBe(true);
+  vi.stubGlobal("innerWidth", DESKTOP_LAYOUT_MIN_WIDTH);
+  expect(is_narrow_layout()).toBe(false);
+  vi.unstubAllGlobals();
 });
 
 test("wait_for_body resolves to true as body always exists in JSDOM", async () => {

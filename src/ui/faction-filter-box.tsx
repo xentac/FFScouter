@@ -1,3 +1,4 @@
+import { is_narrow_layout } from "@utils/dom";
 import { FactionsColDisplay, ffconfig } from "@utils/ffconfig";
 import { parse_duration_to_seconds, parse_suffix_number } from "@utils/strings";
 import {
@@ -164,10 +165,6 @@ export function getFilterBoxHandle(
   );
 }
 
-function isMobileView(): boolean {
-  return typeof window !== "undefined" && window.innerWidth < 784;
-}
-
 type Props = {
   mode: "faction" | "war";
   onFilterChange: (snapshot: FactionFilterSnapshot) => void;
@@ -235,7 +232,7 @@ export function FFFactionFilterBox({
   onFilterChangeRef.current = onFilterChange;
 
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const wasMobileRef = useRef(isMobileView());
+  const wasMobileRef = useRef(is_narrow_layout());
   const rootRef = useRef<HTMLDetailsElement>(null);
 
   // Patch both the ref (immediate) and React state (async render).
@@ -288,7 +285,7 @@ export function FFFactionFilterBox({
 
   const saveState = (state: FactionFilterState) => {
     const isWar = modeRef.current === "war";
-    const isMobile = isMobileView();
+    const isMobile = is_narrow_layout();
     const existing = isWar
       ? ffconfig.war_filter_state
       : ffconfig.faction_filter_state;
@@ -337,7 +334,7 @@ export function FFFactionFilterBox({
 
   const loadState = () => {
     const isWar = modeRef.current === "war";
-    const isMobile = isMobileView();
+    const isMobile = is_narrow_layout();
     const newCollapsed = isWar
       ? ffconfig.war_filter_collapsed
       : ffconfig.faction_filter_collapsed;
@@ -417,7 +414,7 @@ export function FFFactionFilterBox({
     };
 
     const onResize = () => {
-      const isMobile = isMobileView();
+      const isMobile = is_narrow_layout();
       if (isMobile !== wasMobileRef.current) {
         wasMobileRef.current = isMobile;
         loadState();

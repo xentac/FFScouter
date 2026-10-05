@@ -6,6 +6,7 @@ import styles from "./bounty-board.module.css";
 export const cls = {
   modal: styles["ff-bounty-modal"],
   modalMinimized: styles["ff-bounty-modal--minimized"],
+  inFlow: styles["ff-bounty-modal--in-flow"],
   header: styles["ff-bounty-modal__header"],
   title: styles["ff-bounty-modal__title"],
   headerBtn: styles["ff-bounty-modal__header-btn"],

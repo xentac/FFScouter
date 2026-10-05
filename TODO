@@ -73,7 +73,7 @@ into `faction-filter-box.module.css`.
   into a reducer.
 
 ## Performance
-- `rerender-lazy-ref-init` at `faction-filter-box.tsx:198`: `useRef(isMobileView())`
+- `rerender-lazy-ref-init` at `faction-filter-box.tsx:235`: `useRef(is_narrow_layout())`
   recomputes every render — use `useRef<…>(null)` + lazy init or `useState(() => …)`.
 - `js-combine-iterations` at `faction-filter-box.tsx:766`: the status-options
   `.filter(...).map(...)` (added for the war-mode Fallen exclusion) loops twice over a

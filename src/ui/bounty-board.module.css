@@ -45,6 +45,18 @@
   border-radius: 7px;
 }
 
+/* Narrow/mobile in-flow section: same shell and body, but in the page flow
+   above Torn's bounty list instead of floating. The inherited max-height keeps
+   a long board scrolling inside the section so Torn's list stays reachable. */
+.ff-bounty-modal--in-flow {
+  position: static;
+  width: auto;
+  max-width: 100%;
+  z-index: auto;
+  margin-bottom: 10px;
+  box-shadow: none;
+}
+
 /* Two classes to outrank Torn's `.d h2` (size, margins, alignment). */
 .ff-bounty-modal__header .ff-bounty-modal__title {
   margin: 0;
