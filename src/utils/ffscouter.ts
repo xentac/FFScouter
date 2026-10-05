@@ -20,7 +20,7 @@ import type {
 
 const log = logger.child("api");
 
-const DB_NAME = "FFSV3-cache";
+export const DB_NAME = "FFSV3-cache";
 
 const RECHECK_RETRY_DELAY = 60 * 1000; // 60 seconds (1 minute)
 const RECHECK_WINDOW_DURATION = 3 * 60 * 1000; // 3 minutes

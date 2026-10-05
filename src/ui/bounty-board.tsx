@@ -24,6 +24,7 @@ import {
   build_board_view,
   classify_board_error,
   ff_ids_to_load,
+  is_shown_target,
   type PlayerRowModel,
 } from "./bounty-board-rows";
 import { BountyRow, FactionBountyCard } from "./bounty-row";
@@ -179,7 +180,7 @@ function ConsentGate({ onAccepted }: { onAccepted: () => void }) {
       if (resp.blank || !resp.result.ok) {
         throw new Error("Bounty policy acceptance was not recorded");
       }
-      bounty_board_cache.clear_failure();
+      await bounty_board_cache.clear_failure();
       onAccepted();
     } catch (err) {
       toast(api_error_message(err), TOAST_LEVEL.ERROR);
@@ -355,7 +356,7 @@ function BountyBoardBody({
       break;
   }
 
-  const anyEnabled = state.response.board.targets.some((t) => !t.disabled);
+  const anyShown = state.response.board.targets.some(is_shown_target);
   return (
     <div>
       <div className={cls.filters}>
@@ -384,7 +385,7 @@ function BountyBoardBody({
       </div>
       {rows.length === 0 ? (
         <p className={cls.notice}>
-          {anyEnabled
+          {anyShown
             ? "No FF Scouter Bounties match your filters."
             : "No open FF Scouter Bounties right now."}
         </p>

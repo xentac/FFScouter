@@ -214,6 +214,31 @@ test("clean_expired cleans flight cache", async () => {
   await c.delete_db();
 });
 
+test("bounty board entries save, expire, delete, and clean_expired removes them", async () => {
+  const c = new FFCache("test-bounty-board");
+
+  await c.put_bounty_board("board", { a: 1 }, Date.now() + 10 * MINUTE);
+  await c.put_bounty_board("failure", { b: 2 }, Date.now() + 5 * MINUTE);
+  expect(await c.get_bounty_board("board")).toEqual({
+    key: "board",
+    value: { a: 1 },
+    expiry: Date.now() + 10 * MINUTE,
+  });
+  expect(await c.get_bounty_board("missing")).toBeNull();
+
+  await c.delete_bounty_board("board");
+  expect(await c.get_bounty_board("board")).toBeNull();
+
+  // Expired entries are not returned, and clean_expired drops the row
+  vi.advanceTimersByTime(6 * MINUTE);
+  expect(await c.get_bounty_board("failure")).toBeNull();
+  await c.clean_expired(true);
+  vi.setSystemTime(Date.now() - 6 * MINUTE);
+  expect(await c.get_bounty_board("failure")).toBeNull();
+
+  await c.delete_db();
+});
+
 test("can save, recover, and purge analytics entries", async () => {
   const c = new FFCache("test-analytics");
 

@@ -83,7 +83,7 @@ const api_error = (body: FFError, status: number) =>
   );
 
 // SELLER_BOARD_RESPONSE (a player target and the faction target) plus a
-// disabled player target.
+// player target disabled because the user is the target.
 const BOARD: BountySellerBoardResponse = {
   ...SELLER_BOARD_RESPONSE,
   board: {
@@ -223,6 +223,35 @@ test("view state (filters, expansion) survives a remount", async () => {
   ).toBe("3");
   // Arcanine's FF 4.5 is hidden by the persisted FF filter.
   await waitFor(() => expect(screen.queryByText("Arcanine")).toBeNull());
+});
+
+test("the user's own bounty is shown and marked, with no Attack or Claim", async () => {
+  vi.mocked(bounty_board_cache.get_board).mockResolvedValue({
+    ...SELLER_BOARD_RESPONSE,
+    board: {
+      ...SELLER_BOARD_RESPONSE.board,
+      targets: [
+        {
+          ...PLAYER_TARGET,
+          target_player_id: 998,
+          target_name: "OwnTarget",
+          disabled: true,
+          disabled_reason: "buyer",
+        },
+      ],
+    },
+  });
+  render(<BountyBoardModal />);
+  await screen.findByText("OwnTarget");
+  expect(screen.getByText("Your bounty – not claimable by you")).toBeTruthy();
+  expect(screen.queryByRole("button", { name: "Attack OwnTarget" })).toBeNull();
+  expect(
+    screen.queryByRole("button", { name: "Claim bounty on OwnTarget" }),
+  ).toBeNull();
+  expect(document.body.textContent).not.toContain(
+    "No open FF Scouter Bounties",
+  );
+  expect(ffscouter.get).not.toHaveBeenCalledWith(998);
 });
 
 test("Attack honors the bounty attack-open setting", async () => {

@@ -12,29 +12,36 @@ import {
   type submit_bounty_seller_claim,
 } from "./api";
 import {
+  BOUNTY_BOARD_EXPIRY_MS,
   BOUNTY_BOARD_FRESHNESS_FLOOR_MS,
   BountyBoardCache,
 } from "./bounty_board";
+import { FFCache } from "./ffcache";
 import { FFConfig } from "./ffconfig";
-import { Storage } from "./storage";
 
 const TEST_PREFIX = "ffscouter-bounty-test.";
+
+// A fresh IndexedDB per test, so no test sees another's board or failure.
+let db_counter = 0;
+let test_db = "";
 
 beforeEach(() => {
   vi.useFakeTimers();
   vi.setSystemTime(new Date("2026-02-02T00:00:00Z"));
   localStorage.clear();
+  test_db = `ffscouter-bounty-test-${db_counter++}`;
 });
 
-afterEach(() => {
+afterEach(async () => {
   vi.useRealTimers();
+  await new FFCache(test_db).delete_db();
 });
 
-// A fresh cache instance with its own FFConfig/Storage objects over the same
-// localStorage, simulating a new page load.
+// A fresh cache instance with its own FFConfig/FFCache objects over the same
+// IndexedDB, simulating a new page load.
 const make_page_load = (query: typeof query_bounty_seller_board) => {
   const config = new FFConfig(TEST_PREFIX);
-  return new BountyBoardCache(config, new Storage(TEST_PREFIX), query);
+  return new BountyBoardCache(config, new FFCache(test_db), query);
 };
 
 const set_key = () => {
@@ -209,7 +216,7 @@ test("clear_failure drops the remembered failure so the next get_board fetches",
   // Still inside the retry window: without clearing, this would rethrow
   // the remembered code-86 without fetching.
   vi.advanceTimersByTime(1_000);
-  make_page_load(query).clear_failure();
+  await make_page_load(query).clear_failure();
 
   expect(await consult(query)).toEqual(SELLER_BOARD_RESPONSE);
   expect(query).toHaveBeenCalledTimes(2);
@@ -372,6 +379,46 @@ test("a coded failure does not inherit the transient backoff count", async () =>
   expect(query).toHaveBeenCalledTimes(5);
 });
 
+test("the board is stored with an expiry, the failure past its retry window", async () => {
+  set_key();
+  const query = vi
+    .fn()
+    .mockRejectedValueOnce(server_error(502))
+    .mockResolvedValue({ result: SELLER_BOARD_RESPONSE, blank: false });
+  const store = new FFCache(test_db);
+
+  await consult(query); // transient failure 1 → retry in 30s
+  const failure = await store.get_bounty_board("failure");
+  // Kept an hour past next_retry_at so the next failure can escalate from
+  // its count.
+  expect(failure?.expiry).toBe(Date.now() + 30_000 + 60 * 60_000);
+
+  vi.advanceTimersByTime(31_000);
+  await consult(query);
+  expect(await store.get_bounty_board("failure")).toBeNull();
+  const board = await store.get_bounty_board("board");
+  expect(board?.expiry).toBe(Date.now() + BOUNTY_BOARD_EXPIRY_MS);
+
+  // Past the expiry the row is gone, not just stale
+  vi.advanceTimersByTime(BOUNTY_BOARD_EXPIRY_MS);
+  expect(await store.get_bounty_board("board")).toBeNull();
+});
+
+test("an IndexedDB fault is a cache miss, not a board failure", async () => {
+  set_key();
+  const query = vi
+    .fn()
+    .mockResolvedValue({ result: SELLER_BOARD_RESPONSE, blank: false });
+  const broken = new FFCache(test_db);
+  broken.get_bounty_board = vi.fn().mockRejectedValue(new Error("idb down"));
+  broken.put_bounty_board = vi.fn().mockRejectedValue(new Error("idb down"));
+  broken.delete_bounty_board = vi.fn().mockRejectedValue(new Error("idb down"));
+  const cache = new BountyBoardCache(new FFConfig(TEST_PREFIX), broken, query);
+
+  expect(await cache.get_board()).toEqual(SELLER_BOARD_RESPONSE);
+  expect(query).toHaveBeenCalledTimes(1);
+});
+
 test("the missing-key error is not cached as a failure", async () => {
   const query = vi
     .fn()
@@ -392,7 +439,7 @@ const make_page_load_with_submit = (
   submit: typeof submit_bounty_seller_claim,
 ) => {
   const config = new FFConfig(TEST_PREFIX);
-  return new BountyBoardCache(config, new Storage(TEST_PREFIX), query, submit);
+  return new BountyBoardCache(config, new FFCache(test_db), query, submit);
 };
 
 test("submit_claim folds the response claims into the cached board", async () => {

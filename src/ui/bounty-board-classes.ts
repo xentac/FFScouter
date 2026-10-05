@@ -27,4 +27,6 @@ export const cls = {
   factionHeader: styles["ff-bounty-modal__faction-header"],
   pool: styles["ff-bounty-modal__pool"],
   memberList: styles["ff-bounty-modal__member-list"],
+  own: styles["ff-bounty-modal--own"],
+  ownLabel: styles["ff-bounty-modal__own-label"],
 };

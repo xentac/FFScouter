@@ -16,6 +16,7 @@ import type {
   FFData,
   PlayerFlightsResponse,
   PlayerId,
+  Timestamp,
 } from "./types";
 
 const log = logger.child("storage");
@@ -24,7 +25,16 @@ export const STORES = {
   CACHE: "cache",
   FLIGHTS: "flights",
   ANALYTICS: "analytics",
+  BOUNTY_BOARD: "bounty_board",
 } as const;
+
+// Bounty Board Cache rows, keyed by name ("board", "failure"). The value is
+// opaque here — its shape belongs to BountyBoardCache.
+export type BountyBoardEntry<T = unknown> = {
+  key: string;
+  value: T;
+  expiry: Timestamp;
+};
 
 interface CacheDB extends DBSchema {
   [STORES.CACHE]: {
@@ -42,6 +52,11 @@ interface CacheDB extends DBSchema {
     value: AnalyticsEntry;
     indexes: { timestamp: number };
   };
+  [STORES.BOUNTY_BOARD]: {
+    key: string;
+    value: BountyBoardEntry;
+    indexes: { expiry: number };
+  };
 }
 
 type MigrationFn = (
@@ -52,7 +67,7 @@ type MigrationFn = (
 export class FFCache {
   private db_name: string;
   private db: IDBPDatabase<CacheDB> | null = null;
-  private db_version = 3;
+  private db_version = 4;
 
   private cache_interval: number = 60 * 60 * 1000; // one hour cache
   private last_clean = 0;
@@ -96,6 +111,17 @@ export class FFCache {
           autoIncrement: true,
         });
         store.createIndex("timestamp", "timestamp", {
+          unique: false,
+        });
+      },
+    ],
+    [
+      4,
+      (db, _) => {
+        const store = db.createObjectStore(STORES.BOUNTY_BOARD, {
+          keyPath: "key",
+        });
+        store.createIndex("expiry", "expiry", {
           unique: false,
         });
       },
@@ -389,6 +415,19 @@ export class FFCache {
           await Promise.all(r.map((id) => tx.store.delete(id)));
           await tx.done;
         }
+
+        // Clean BOUNTY_BOARD
+        {
+          const tx = db.transaction(STORES.BOUNTY_BOARD, "readwrite");
+          const index = tx.store.index("expiry");
+          const range = IDBKeyRange.upperBound(Date.now());
+          const r = await index.getAllKeys(range);
+          log.info(
+            `Found ${r.length} expired values to delete from bounty_board.`,
+          );
+          await Promise.all(r.map((key) => tx.store.delete(key)));
+          await tx.done;
+        }
       } finally {
         this.end_op();
       }
@@ -448,6 +487,50 @@ export class FFCache {
     try {
       const tx = db.transaction(STORES.FLIGHTS, "readwrite");
       await tx.store.delete(player_id);
+      await tx.done;
+    } finally {
+      this.end_op();
+    }
+  };
+
+  get_bounty_board = async <T>(
+    key: string,
+  ): Promise<BountyBoardEntry<T> | null> => {
+    const db = await this.start_op();
+    try {
+      const tx = db.transaction(STORES.BOUNTY_BOARD, "readonly");
+      const entry = await tx.store.get(key);
+      await tx.done;
+
+      if (!entry || entry.expiry <= Date.now()) {
+        return null;
+      }
+      return entry as BountyBoardEntry<T>;
+    } finally {
+      this.end_op();
+    }
+  };
+
+  put_bounty_board = async <T>(
+    key: string,
+    value: T,
+    expiry: Timestamp,
+  ): Promise<void> => {
+    const db = await this.start_op();
+    try {
+      const tx = db.transaction(STORES.BOUNTY_BOARD, "readwrite");
+      await tx.store.put({ key, value, expiry });
+      await tx.done;
+    } finally {
+      this.end_op();
+    }
+  };
+
+  delete_bounty_board = async (key: string): Promise<void> => {
+    const db = await this.start_op();
+    try {
+      const tx = db.transaction(STORES.BOUNTY_BOARD, "readwrite");
+      await tx.store.delete(key);
       await tx.done;
     } finally {
       this.end_op();

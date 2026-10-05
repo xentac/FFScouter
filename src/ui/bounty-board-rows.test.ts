@@ -65,14 +65,41 @@ test("targets are sorted by max price per hit descending", () => {
   ]);
 });
 
-test("disabled targets never appear", () => {
+test("targets disabled because the user is the target or a member never appear", () => {
   const rows = build_board_view(
-    [player({ disabled: true, disabled_reason: "target" }), faction()],
+    [
+      player({ disabled: true, disabled_reason: "target" }),
+      faction({ disabled: true, disabled_reason: "member" }),
+    ],
     EMPTY_FF,
     NO_FILTERS,
   );
-  expect(rows).toHaveLength(1);
-  expect(rows[0]?.kind).toEqual("faction");
+  expect(rows).toHaveLength(0);
+});
+
+test("the user's own (buyer-disabled) bounties appear marked, sorted by price", () => {
+  const rows = build_board_view(
+    [
+      player({ target_player_id: 1, max_price_per_hit: 100000 }),
+      faction({ disabled: true, disabled_reason: "buyer" }), // 300000
+      player({
+        target_player_id: 2,
+        max_price_per_hit: 700000,
+        disabled: true,
+        disabled_reason: "buyer",
+      }),
+    ],
+    EMPTY_FF,
+    NO_FILTERS,
+  );
+  expect(rows.map((r) => [r.max_price_per_hit, r.own_bounty])).toEqual([
+    [700000, true],
+    [300000, true],
+    [100000, false],
+  ]);
+  const card = rows[1];
+  if (card?.kind !== "faction") throw new Error("expected faction card");
+  expect(card.members.every((m) => m.own_bounty)).toBe(true);
 });
 
 test("player targets become player rows with keys, tiers, and names", () => {
@@ -249,6 +276,7 @@ test("ff_ids_to_load covers player targets and only expanded factions' members",
     player(),
     faction(),
     player({ disabled: true, target_player_id: 9 }),
+    player({ disabled: true, disabled_reason: "buyer", target_player_id: 10 }),
   ];
   expect(ff_ids_to_load(targets, [])).toEqual([267456763]);
   expect(ff_ids_to_load(targets, [6731])).toEqual([

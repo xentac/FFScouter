@@ -36,6 +36,9 @@ export type PlayerRowModel = {
   // A faction member's claim hints the faction bounty, not the member: the
   // bounty entity is the faction's shared pool.
   claim_target: BountyClaimTarget;
+  // The local user posted this bounty: shown, but never attackable or
+  // claimable by them.
+  own_bounty: boolean;
 };
 
 export type FactionCardModel = {
@@ -48,9 +51,22 @@ export type FactionCardModel = {
   max_price_per_hit: number;
   tiers: BountyTier[];
   members: PlayerRowModel[];
+  own_bounty: boolean;
 };
 
 export type BoardRowModel = PlayerRowModel | FactionCardModel;
+
+// The board disables a target per viewer. "buyer" means the viewer posted the
+// bounty — still open to everyone else, so it's shown (marked, no actions).
+// "target"/"member" mean the viewer is the target or in the targeted faction,
+// so those stay hidden.
+function is_own_bounty(target: BountyBoardTarget): boolean {
+  return target.disabled && target.disabled_reason === "buyer";
+}
+
+export function is_shown_target(target: BountyBoardTarget): boolean {
+  return !target.disabled || is_own_bounty(target);
+}
 
 export function format_tier_label(tier: BountyTier): string {
   return `$${format_suffix_number(tier.price_per_hit)} × ${tier.quantity_remaining}`;
@@ -97,6 +113,7 @@ function player_row(target: BountyBoardTarget): PlayerRowModel | null {
     tiers: sort_tiers(target.tiers),
     max_price_per_hit: target.max_price_per_hit,
     claim_target: { target_player_id: target.target_player_id },
+    own_bounty: is_own_bounty(target),
   };
 }
 
@@ -106,6 +123,7 @@ function faction_card(target: BountyBoardTarget): FactionCardModel | null {
     return null;
   }
   const tiers = sort_tiers(target.tiers);
+  const own_bounty = is_own_bounty(target);
   const members: PlayerRowModel[] = (target.members ?? []).map((member) => ({
     kind: "player",
     row_key: `f${faction_id}:m${member.player_id}`,
@@ -118,6 +136,7 @@ function faction_card(target: BountyBoardTarget): FactionCardModel | null {
     tiers,
     max_price_per_hit: target.max_price_per_hit,
     claim_target: { target_faction_id: faction_id },
+    own_bounty,
   }));
   return {
     kind: "faction",
@@ -129,6 +148,7 @@ function faction_card(target: BountyBoardTarget): FactionCardModel | null {
     max_price_per_hit: target.max_price_per_hit,
     tiers,
     members,
+    own_bounty,
   };
 }
 
@@ -139,7 +159,7 @@ export function build_board_view(
 ): BoardRowModel[] {
   const rows: BoardRowModel[] = [];
   for (const target of targets) {
-    if (target.disabled) {
+    if (!is_shown_target(target)) {
       continue;
     }
     if (target.target_faction_id != null) {
@@ -171,7 +191,8 @@ export function build_board_view(
 // Player ids whose FF the board needs: every enabled player target, plus the
 // members of faction cards the user has expanded — collapsed rosters are not
 // looked up, so a large faction bounty doesn't trigger a bulk stats query
-// nobody is looking at.
+// nobody is looking at. The user's own bounties are disabled too: they can't
+// act on them, so no FF is fetched for them.
 export function ff_ids_to_load(
   targets: BountyBoardTarget[],
   expanded_factions: number[],

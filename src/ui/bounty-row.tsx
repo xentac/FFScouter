@@ -13,6 +13,9 @@ import { cls } from "./bounty-board-classes";
 import type { FactionCardModel, PlayerRowModel } from "./bounty-board-rows";
 import { format_tier_label } from "./bounty-board-rows";
 
+const OWN_LABEL = "Your bounty – not claimable by you";
+const OWN_TITLE = "You posted this bounty, so you can't attack or claim it.";
+
 type BountyRowProps = {
   row: PlayerRowModel;
   // undefined = FF lookup not resolved yet.
@@ -68,7 +71,7 @@ export function BountyRow({
 }: BountyRowProps) {
   const [top, ...rest] = row.tiers;
   return (
-    <li className={cls.row}>
+    <li className={row.own_bounty ? `${cls.row} ${cls.own}` : cls.row}>
       <div className={cls.rowMain}>
         <a
           className={cls.name}
@@ -92,24 +95,33 @@ export function BountyRow({
             {top ? format_tier_label(top) : ""}
           </span>
         )}
-        <button
-          type="button"
-          className={cls.action}
-          aria-label={`Attack ${row.name}`}
-          onClick={() => onAttack(row)}
-        >
-          Attack
-        </button>
-        <button
-          type="button"
-          className={cls.action}
-          aria-label={`Claim bounty on ${row.name}`}
-          disabled={claimPending}
-          onClick={() => onClaim(row)}
-        >
-          Claim
-        </button>
+        {row.own_bounty ? null : (
+          <>
+            <button
+              type="button"
+              className={cls.action}
+              aria-label={`Attack ${row.name}`}
+              onClick={() => onAttack(row)}
+            >
+              Attack
+            </button>
+            <button
+              type="button"
+              className={cls.action}
+              aria-label={`Claim bounty on ${row.name}`}
+              disabled={claimPending}
+              onClick={() => onClaim(row)}
+            >
+              Claim
+            </button>
+          </>
+        )}
       </div>
+      {row.own_bounty ? (
+        <div className={cls.ownLabel} title={OWN_TITLE}>
+          {OWN_LABEL}
+        </div>
+      ) : null}
       {expanded && rest.length > 0 ? (
         <ul className={cls.tierLadder}>
           {rest.map((tier) => (
@@ -139,7 +151,11 @@ export function FactionBountyCard({
     ? `[${card.faction_tag}] ${card.faction_name}`
     : card.faction_name;
   return (
-    <li className={cls.factionCard}>
+    <li
+      className={
+        card.own_bounty ? `${cls.factionCard} ${cls.own}` : cls.factionCard
+      }
+    >
       <button
         type="button"
         className={cls.factionHeader}
@@ -155,6 +171,11 @@ export function FactionBountyCard({
           {card.total_remaining} hits shared {expanded ? "▴" : "▾"}
         </span>
       </button>
+      {card.own_bounty ? (
+        <div className={cls.ownLabel} title={OWN_TITLE}>
+          {OWN_LABEL}
+        </div>
+      ) : null}
       {expanded ? (
         <ul className={cls.memberList}>{card.members.map(renderMember)}</ul>
       ) : null}
