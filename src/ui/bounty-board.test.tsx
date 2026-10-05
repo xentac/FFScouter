@@ -299,7 +299,7 @@ test("consent: 403 code 86 → explicit confirmation → acceptance POST → boa
     screen
       .getByRole("link", { name: "Bounty Board Data Policy and Rules" })
       .getAttribute("href"),
-  ).toBeTruthy();
+  ).toBe("https://ffscouter.com/claim-bounties");
   // Nothing is accepted on the user's behalf before the click.
   expect(accept_bounty_seller_policy).not.toHaveBeenCalled();
 
