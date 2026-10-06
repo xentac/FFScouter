@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FF Scouter V2 beta
 // @namespace    xentac-beta
-// @version      3.4-beta1
+// @version      3.4-beta2
 // @author       xentac [3354782], MAVRI [2402357], rDacted [2670953], Weav3r [1853324], Glasnost [1844049]
 // @description  Shows the expected Fair Fight score against targets and faction war status
 // @license      GPLv3
@@ -19,7 +19,7 @@
 
   const n=new Set;const importCSS = async e=>{n.has(e)||(n.add(e),(d=>{const t=document.createElement("style");t.textContent=d,(document.head||document.documentElement).appendChild(t);})(e));};
 
-  importCSS(" ._ffscouter-info-line__label_aofgj_1{font-weight:700;margin-right:6px}._ffscouter-info-line__badge_aofgj_8{font-weight:700;padding:2px 6px;border-radius:4px;display:inline-block}._ffscouter-info-line__premium-upgrade_aofgj_15{display:block;margin-top:4px;line-height:1.3;white-space:nowrap;font-size:12px;font-style:normal}@media(max-width:768px){._ffscouter-info-line__premium-upgrade_aofgj_15{margin-top:6px;line-height:1.35;white-space:normal;overflow-wrap:anywhere}}._ffscouter-info-line__freshness-trigger_aofgj_44{appearance:none!important;background:none!important;border:none!important;box-shadow:none!important;padding:0!important;margin:0!important;width:auto!important;min-width:0!important;min-height:0!important;font:inherit!important;color:inherit!important;text-transform:none!important;cursor:pointer!important;display:inline!important;vertical-align:baseline!important;text-decoration:underline dotted!important;text-underline-offset:2px!important}._ffscouter-explainer-glyph_aofgj_64{appearance:none!important;background:none!important;border:none!important;box-shadow:none!important;padding:0!important;margin:0 0 0 6px!important;width:auto!important;min-width:0!important;min-height:0!important;vertical-align:middle!important;cursor:pointer!important;display:inline-flex!important;line-height:1!important}._ffscouter-explainer-glyph_aofgj_64 svg{width:14px!important;height:14px!important}._ffscouter-explainer-card_aofgj_90{position:relative!important;display:block!important;margin:6px 0 0!important;padding:10px 30px 10px 12px!important;background:var(--ffscouter-alt-bg-color)!important;border:1px solid var(--ffscouter-border-color)!important;border-radius:6px!important;color:var(--ffscouter-text-color)!important;font-size:12px!important;font-weight:400!important;font-style:normal!important;line-height:1.5!important;text-align:left!important}._ffscouter-explainer-card_aofgj_90 p{display:block!important;float:none!important;margin:0 0 8px!important;padding:0!important}._ffscouter-explainer-card_aofgj_90 p:last-child{margin-bottom:0!important}._ffscouter-explainer-card_aofgj_90 p:before,._ffscouter-explainer-card_aofgj_90 p:after{content:none!important}._ffscouter-explainer-card_aofgj_90 a{display:inline!important;position:static!important;margin:0!important;padding:0!important;background:transparent!important;font:inherit!important;color:inherit!important;text-decoration:underline!important}._ffscouter-explainer-card__close_aofgj_140{position:absolute!important;top:2px!important;right:4px!important;appearance:none!important;background:none!important;border:none!important;box-shadow:none!important;margin:0!important;padding:4px!important;width:auto!important;min-width:0!important;min-height:0!important;cursor:pointer!important;color:inherit!important;font-size:14px!important;line-height:1!important}@media(max-width:784px){._ffscouter-explainer-card_aofgj_90{font-size:13px!important;line-height:1.55!important}}._ff-filter-box_j1w9b_1,._ff-filter-box_j1w9b_1 *,._ff-filter-box_j1w9b_1 *:before,._ff-filter-box_j1w9b_1 *:after{box-sizing:border-box!important}._ff-filter-box_j1w9b_1{background-color:var(--ffscouter-bg-color);border:1px solid var(--ffscouter-border-color);border-radius:8px;padding:12px 16px;margin-bottom:16px;color:var(--ffscouter-text-color);font-family:Arial,sans-serif;box-shadow:0 2px 5px #0000000d}._ff-filter-box_j1w9b_1._ff-filter-box--no-borders_j1w9b_19{background-color:var(--default-bg-panel-color);border-top:1px solid var(--ffscouter-border-color);border-bottom:1px solid var(--ffscouter-border-color);border-left:none;border-right:none;border-radius:0;box-shadow:none;padding:12px 10px;margin:0}._ff-filter-box_j1w9b_1 summary{cursor:pointer;font-size:14px;font-weight:700;outline:none;-webkit-user-select:none;user-select:none}._ff-filter-box_j1w9b_1[open] summary{border-bottom:1px solid var(--ffscouter-border-color);padding-bottom:6px;margin-bottom:12px}._ff-filter-box_j1w9b_1 summary:focus-visible{outline:2px solid var(--ffscouter-glow-color);outline-offset:2px}._ff-filter-box__header_j1w9b_52{display:inline-flex;justify-content:space-between;align-items:center;width:calc(100% - 24px);vertical-align:middle}._ff-filter-box__header-actions_j1w9b_60{display:flex;gap:6px;align-items:center}._ff-filter-box_j1w9b_1 ._ff-filter-box__action-btn_j1w9b_66{background:var(--ffscouter-alt-bg-color);border:1px solid var(--ffscouter-border-color);border-radius:4px;color:var(--ffscouter-text-color);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;padding:0;transition:background-color .2s,color .2s,opacity .2s}._ff-filter-box_j1w9b_1 ._ff-filter-box__action-btn_j1w9b_66:hover{background-color:var(--ffscouter-hover-color)}._ff-filter-box_j1w9b_1 ._ff-filter-box__action-btn_j1w9b_66._ff-filter-box__action-btn--active_j1w9b_88{color:var(--ffscouter-text-color);opacity:1}._ff-filter-box_j1w9b_1 ._ff-filter-box__action-btn_j1w9b_66._ff-filter-box__action-btn--inactive_j1w9b_93{color:var(--ffscouter-text-color);opacity:.4}._ff-filter-box_j1w9b_1 ._ff-filter-box__action-btn_j1w9b_66 svg{width:14px;height:14px;fill:currentColor}._ff-filter-box_j1w9b_1 ._ff-filter-box__action-btn_j1w9b_66._ff-filter-box__action-btn--reset_j1w9b_104 svg{transition:transform .25s ease-in-out}._ff-filter-box_j1w9b_1 ._ff-filter-box__action-btn_j1w9b_66._ff-filter-box__action-btn--reset_j1w9b_104:hover svg{transform:rotate(-180deg)}._ff-filter-box__grid_j1w9b_114{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:12px}._ff-filter-box__group--sort_j1w9b_121{order:1}._ff-filter-box__group--level_j1w9b_125{order:2}._ff-filter-box__group--activity_j1w9b_129{order:3}._ff-filter-box__group--status_j1w9b_133{order:4}._ff-filter-box__group--ff_j1w9b_137{order:5}._ff-filter-box__group--stats_j1w9b_141{order:6}._ff-filter-box__group--last-action_j1w9b_145{order:7}._ff-filter-box__group--columns_j1w9b_149{order:8}@media(min-width:784px){._ff-filter-box__grid_j1w9b_114{grid-template-columns:repeat(3,1fr)}._ff-filter-box__grid_j1w9b_114>*{order:0}}._ff-filter-box__group_j1w9b_121{display:flex;flex-direction:column;gap:2px}._ff-filter-box__sort-controls_j1w9b_171{display:flex;flex-direction:column;gap:8px}._ff-filter-box__sort-controls_j1w9b_171 ._ff-filter-box__sort-btn_j1w9b_177{width:100%}._ff-filter-box__sort-controls_j1w9b_171 ._ff-filter-box__compare-btn_j1w9b_181{width:100%;height:32px}._ff-filter-box__display-select_j1w9b_186{padding:4px;border:1px solid var(--ffscouter-border-color);border-radius:4px;background:var(--ffscouter-alt-bg-color);color:var(--ffscouter-text-color);font-size:11px;cursor:pointer;height:32px}._ff-filter-box__options_j1w9b_197{display:flex;flex-direction:column}._ff-filter-box__options_j1w9b_197 label{display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer}._ff-filter-box__option--out-soon_j1w9b_212{margin-left:16px}._ff-filter-box__range-inputs_j1w9b_216{display:flex;align-items:center;gap:4px}._ff-filter-box__range-inputs_j1w9b_216 input{flex:1;width:0;min-width:30px;max-width:80px;padding:4px;border:1px solid var(--ffscouter-border-color);border-radius:4px;background:var(--ffscouter-alt-bg-color);color:var(--ffscouter-text-color);font-size:11px;text-align:center}._ff-filter-box_j1w9b_1 button{padding:6px 10px;border:1px solid var(--ffscouter-border-color);border-radius:4px;background:var(--ffscouter-alt-bg-color);color:var(--ffscouter-text-color);font-size:12px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;transition:background-color .2s}._ff-filter-box_j1w9b_1 button:hover{background-color:var(--ffscouter-hover-color)}._ff-settings-panel__accordion_6bhvd_1{margin:10px 0;padding:15px;background-color:var(--ffscouter-bg-color);border:1px solid var(--ffscouter-border-color);border-radius:5px;color:var(--ffscouter-text-color)}._ff-settings-panel__accordion_6bhvd_1._ff-settings-panel__accordion--glow_6bhvd_10{border-color:var(--ffscouter-glow-color);box-shadow:0 0 8px #4caf5080}._ff-settings-panel__accordion_6bhvd_1 summary{cursor:pointer;font-weight:700}._ff-settings-panel__body_6bhvd_20{margin-top:15px}._ff-settings-panel__input-row_6bhvd_24{display:flex;flex-direction:column;gap:5px;margin-bottom:15px}._ff-settings-panel__range-row_6bhvd_32{display:flex;gap:10px;align-items:center}._ff-settings-panel__blur_6bhvd_38{filter:blur(4px);transition:filter .2s ease}._ff-settings-panel__blur_6bhvd_38:hover,._ff-settings-panel__blur_6bhvd_38:focus{filter:blur(0)}._ff-settings-panel__error-msg_6bhvd_48{color:#f33;font-size:13px;margin-top:5px}._ff-settings-panel__accordion_6bhvd_1 input[type=text],._ff-settings-panel__accordion_6bhvd_1 input[type=number]{box-sizing:border-box!important;text-align:left;vertical-align:top;width:178px;height:34px!important;margin-right:8px;padding:9px 10px;line-height:14px;display:inline-block}._ff-settings-panel__accordion_6bhvd_1 input[type=number]._ff-settings-panel__number_6bhvd_67{width:80px}._ff-settings-panel__accordion_6bhvd_1 select{box-sizing:border-box;text-align:left;vertical-align:top;width:178px;height:34px;margin-right:8px;padding:8px 10px;line-height:14px;display:inline-block;border:var(--input-border-color, 1px solid var(--ffscouter-border-color));border-radius:5px;font-family:Arial,serif;color:var(--input-color, var(--ffscouter-text-color));background:var(--input-background-color, var(--ffscouter-alt-bg-color))}.dark-mode ._ff-settings-panel__accordion_6bhvd_1 select option{background-color:#000;color:var(--input-color)}._ff-settings-panel__api-explanation_6bhvd_94{color:var(--ffscouter-text-color);margin-bottom:20px;font-size:13px;line-height:1.5}._ff-settings-panel__accordion_6bhvd_1 a{color:var(--ffscouter-success-color);text-decoration:underline}._ff-settings-panel__premium-badge_6bhvd_107{display:inline-block;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;vertical-align:middle}._ff-settings-panel__premium-badge--enabled_6bhvd_117{background:#4caf50}._ff-settings-panel__premium-badge--disabled_6bhvd_121{background:#c62828}._ff-settings-panel__premium-badge--unknown_6bhvd_125{background:#f39c12}._ff-settings-panel__section_6bhvd_138{display:grid;grid-template-columns:1fr;gap:12px;margin-bottom:15px}@media(min-width:784px){._ff-settings-panel__section_6bhvd_138{grid-template-columns:repeat(3,1fr)}}._ff-settings-panel__span_6bhvd_152{grid-column:1 / -1;margin-bottom:0}._ff-settings-panel__cell_6bhvd_160{display:flex;flex-direction:column;gap:5px;min-width:0;margin-bottom:0}._ff-settings-panel__cell_6bhvd_160._ff-settings-panel__cell--checkbox_6bhvd_169{flex-direction:row;align-items:flex-start;gap:10px}._ff-settings-panel__cell_6bhvd_160 input[type=text]{width:100%;margin-right:0}._ff-settings-panel__cell_6bhvd_160 select{width:auto;max-width:100%;margin-right:0}._ff-settings-panel__api-block_6bhvd_193{display:flex;flex-direction:column;gap:10px}._ff-settings-panel__api-block_6bhvd_193 ._ff-settings-panel__cell_6bhvd_160 input[type=text]{max-width:360px}._ff-settings-panel__api-status-row_6bhvd_203{display:flex;flex-wrap:wrap;align-items:center;gap:10px}._ff-settings-panel__chain-suboptions_6bhvd_213{border-left:2px solid var(--ffscouter-border-color);padding-left:8px;margin-top:10px;grid-template-columns:repeat(2,1fr)}._ff-settings-panel__chain-suboptions_6bhvd_213 ._ff-settings-panel__chain-wide_6bhvd_218{grid-column:1 / -1}@media(min-width:784px){._ff-settings-panel__chain-suboptions_6bhvd_213{padding-left:16px;grid-template-columns:repeat(3,1fr)}._ff-settings-panel__chain-suboptions_6bhvd_213 ._ff-settings-panel__chain-wide_6bhvd_218{grid-column:auto}}._ff-settings-panel__group_6bhvd_242{background-color:var(--ffscouter-alt-bg-color);border:1px solid var(--ffscouter-border-color);border-radius:5px;padding:12px;margin-bottom:15px}._ff-settings-panel__group_6bhvd_242 h4{margin:0 0 12px}._ff-settings-panel__marker-size_6bhvd_256,._ff-settings-panel__marker-border-width_6bhvd_257{display:flex;flex-direction:column;gap:5px}._ff-settings-panel__marker-size-controls_6bhvd_263{display:flex;flex-wrap:wrap;align-items:center;gap:10px}._ff-settings-panel__marker-size-controls_6bhvd_263 input[type=range]{flex:1 1 120px;min-width:120px}._ff-settings-panel__color-scheme_6bhvd_276{display:flex;flex-direction:column;gap:5px}._ff-settings-panel__color-scheme-controls_6bhvd_282{display:flex;flex-wrap:wrap;align-items:center;gap:10px}._ff-settings-panel__accordion_6bhvd_1 .ffscouter-swatch-row{flex-wrap:wrap}._ff-settings-panel__actions_6bhvd_295{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:10px;margin-top:20px}._ff-settings-panel__saved-msg_6bhvd_304{color:#4caf50} ");
+  importCSS(" ._ffscouter-attack-bounty-row_60dre_2{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:4px;font-size:12px}._ffscouter-attack-bounty-row__label_60dre_11{font-weight:700}._ffscouter-attack-bounty-row__claim_60dre_15{padding:2px 8px;font-size:12px;background-color:var(--ffscouter-alt-bg-color);color:var(--ffscouter-text-color);border:1px solid var(--ffscouter-border-color);border-radius:3px;cursor:pointer}._ffscouter-attack-bounty-row__claim_60dre_15:disabled{opacity:.6;cursor:default}._ffscouter-info-line__label_aofgj_1{font-weight:700;margin-right:6px}._ffscouter-info-line__badge_aofgj_8{font-weight:700;padding:2px 6px;border-radius:4px;display:inline-block}._ffscouter-info-line__premium-upgrade_aofgj_15{display:block;margin-top:4px;line-height:1.3;white-space:nowrap;font-size:12px;font-style:normal}@media(max-width:768px){._ffscouter-info-line__premium-upgrade_aofgj_15{margin-top:6px;line-height:1.35;white-space:normal;overflow-wrap:anywhere}}._ffscouter-info-line__freshness-trigger_aofgj_44{appearance:none!important;background:none!important;border:none!important;box-shadow:none!important;padding:0!important;margin:0!important;width:auto!important;min-width:0!important;min-height:0!important;font:inherit!important;color:inherit!important;text-transform:none!important;cursor:pointer!important;display:inline!important;vertical-align:baseline!important;text-decoration:underline dotted!important;text-underline-offset:2px!important}._ffscouter-explainer-glyph_aofgj_64{appearance:none!important;background:none!important;border:none!important;box-shadow:none!important;padding:0!important;margin:0 0 0 6px!important;width:auto!important;min-width:0!important;min-height:0!important;vertical-align:middle!important;cursor:pointer!important;display:inline-flex!important;line-height:1!important}._ffscouter-explainer-glyph_aofgj_64 svg{width:14px!important;height:14px!important}._ffscouter-explainer-card_aofgj_90{position:relative!important;display:block!important;margin:6px 0 0!important;padding:10px 30px 10px 12px!important;background:var(--ffscouter-alt-bg-color)!important;border:1px solid var(--ffscouter-border-color)!important;border-radius:6px!important;color:var(--ffscouter-text-color)!important;font-size:12px!important;font-weight:400!important;font-style:normal!important;line-height:1.5!important;text-align:left!important}._ffscouter-explainer-card_aofgj_90 p{display:block!important;float:none!important;margin:0 0 8px!important;padding:0!important}._ffscouter-explainer-card_aofgj_90 p:last-child{margin-bottom:0!important}._ffscouter-explainer-card_aofgj_90 p:before,._ffscouter-explainer-card_aofgj_90 p:after{content:none!important}._ffscouter-explainer-card_aofgj_90 a{display:inline!important;position:static!important;margin:0!important;padding:0!important;background:transparent!important;font:inherit!important;color:inherit!important;text-decoration:underline!important}._ffscouter-explainer-card__close_aofgj_140{position:absolute!important;top:2px!important;right:4px!important;appearance:none!important;background:none!important;border:none!important;box-shadow:none!important;margin:0!important;padding:4px!important;width:auto!important;min-width:0!important;min-height:0!important;cursor:pointer!important;color:inherit!important;font-size:14px!important;line-height:1!important}@media(max-width:784px){._ffscouter-explainer-card_aofgj_90{font-size:13px!important;line-height:1.55!important}}._ff-bounty-modal_jfgjb_5,._ff-bounty-modal_jfgjb_5 *,._ff-bounty-modal_jfgjb_5 *:before,._ff-bounty-modal_jfgjb_5 *:after{box-sizing:border-box}._ff-bounty-modal_jfgjb_5{position:fixed;right:16px;bottom:64px;z-index:9999;width:380px;max-width:calc(100vw - 32px);max-height:70vh;display:flex;flex-direction:column;background-color:var(--ffscouter-bg-color);color:var(--ffscouter-text-color);border:1px solid var(--ffscouter-border-color);border-radius:8px;box-shadow:0 4px 16px #0000004d;font-family:Arial,sans-serif;font-size:13px}._ff-bounty-modal__header_jfgjb_32{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 12px;background-color:var(--ffscouter-alt-bg-color);border-bottom:1px solid var(--ffscouter-border-color);border-radius:7px 7px 0 0}._ff-bounty-modal--minimized_jfgjb_43 ._ff-bounty-modal__header_jfgjb_32{border-bottom:none;border-radius:7px}._ff-bounty-modal--in-flow_jfgjb_51{position:static;width:auto;max-width:100%;z-index:auto;margin-bottom:10px;box-shadow:none}._ff-bounty-modal__header_jfgjb_32 ._ff-bounty-modal__title_jfgjb_61{margin:0;font-size:14px;font-weight:700}._ff-bounty-modal__header-btn_jfgjb_67{background:none;border:none;color:inherit;font-size:16px;font-weight:700;line-height:1;cursor:pointer;padding:0 4px}._ff-bounty-modal__body_jfgjb_78{overflow-y:auto;padding:8px 12px 12px}._ff-bounty-modal__notice_jfgjb_83{margin:4px 0;line-height:1.4}._ff-bounty-modal__notice_jfgjb_83 a{color:inherit;font-weight:700;text-decoration:underline}._ff-bounty-modal__primary-btn_jfgjb_94{margin-top:8px;padding:6px 10px;background-color:var(--ffscouter-alt-bg-color);color:var(--ffscouter-text-color);border:1px solid var(--ffscouter-border-color);border-radius:4px;font-size:13px;font-weight:700;cursor:pointer}._ff-bounty-modal__primary-btn_jfgjb_94:disabled{opacity:.6;cursor:default}._ff-bounty-modal__filters_jfgjb_111{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px}._ff-bounty-modal__filter_jfgjb_111{display:flex;align-items:center;gap:4px}._ff-bounty-modal__filter_jfgjb_111 input{width:70px;padding:2px 4px;font-size:13px;background-color:var(--ffscouter-alt-bg-color);color:var(--ffscouter-text-color);border:1px solid var(--ffscouter-input-color);border-radius:3px}._ff-bounty-modal__list_jfgjb_134,._ff-bounty-modal__member-list_jfgjb_135,._ff-bounty-modal__tier-ladder_jfgjb_136{list-style:none;margin:0;padding:0}._ff-bounty-modal__row_jfgjb_142,._ff-bounty-modal__faction-card_jfgjb_143{border-top:1px solid var(--ffscouter-border-color);padding:4px 0}._ff-bounty-modal__row-main_jfgjb_148,._ff-bounty-modal__faction-header_jfgjb_149{display:flex;align-items:center;gap:6px}._ff-bounty-modal__faction-header_jfgjb_149{width:100%;background:none;border:none;color:inherit;font-size:13px;text-align:left;cursor:pointer;padding:2px 0}._ff-bounty-modal__member-list_jfgjb_135{margin-left:12px}._ff-bounty-modal__name_jfgjb_170{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:700;color:inherit}._ff-bounty-modal__estimate_jfgjb_180{flex:0 0 auto;min-width:44px;padding:1px 6px;border-radius:4px;text-align:center;font-weight:700;background-color:var(--ffscouter-alt-bg-color)}._ff-bounty-modal__tier-label_jfgjb_190,._ff-bounty-modal__tier-toggle_jfgjb_191,._ff-bounty-modal__pool_jfgjb_192{flex:0 0 auto;white-space:nowrap}._ff-bounty-modal__tier-toggle_jfgjb_191{background:none;border:none;color:inherit;font-size:13px;cursor:pointer;padding:0}._ff-bounty-modal__tier-ladder_jfgjb_136{margin:2px 0 2px 12px;font-size:12px}._ff-bounty-modal__action_jfgjb_211{flex:0 0 auto;padding:2px 6px;font-size:12px;background-color:var(--ffscouter-alt-bg-color);color:var(--ffscouter-text-color);border:1px solid var(--ffscouter-border-color);border-radius:3px;cursor:pointer}._ff-bounty-modal--own_jfgjb_222{opacity:.6}._ff-bounty-modal--own_jfgjb_222 ._ff-bounty-modal--own_jfgjb_222{opacity:1}._ff-bounty-modal__own-label_jfgjb_232{margin-top:2px;font-size:12px;font-style:italic;font-weight:700}._ff-bounty-modal__action_jfgjb_211:disabled{opacity:.6;cursor:default}._ff-filter-box_j1w9b_1,._ff-filter-box_j1w9b_1 *,._ff-filter-box_j1w9b_1 *:before,._ff-filter-box_j1w9b_1 *:after{box-sizing:border-box!important}._ff-filter-box_j1w9b_1{background-color:var(--ffscouter-bg-color);border:1px solid var(--ffscouter-border-color);border-radius:8px;padding:12px 16px;margin-bottom:16px;color:var(--ffscouter-text-color);font-family:Arial,sans-serif;box-shadow:0 2px 5px #0000000d}._ff-filter-box_j1w9b_1._ff-filter-box--no-borders_j1w9b_19{background-color:var(--default-bg-panel-color);border-top:1px solid var(--ffscouter-border-color);border-bottom:1px solid var(--ffscouter-border-color);border-left:none;border-right:none;border-radius:0;box-shadow:none;padding:12px 10px;margin:0}._ff-filter-box_j1w9b_1 summary{cursor:pointer;font-size:14px;font-weight:700;outline:none;-webkit-user-select:none;user-select:none}._ff-filter-box_j1w9b_1[open] summary{border-bottom:1px solid var(--ffscouter-border-color);padding-bottom:6px;margin-bottom:12px}._ff-filter-box_j1w9b_1 summary:focus-visible{outline:2px solid var(--ffscouter-glow-color);outline-offset:2px}._ff-filter-box__header_j1w9b_52{display:inline-flex;justify-content:space-between;align-items:center;width:calc(100% - 24px);vertical-align:middle}._ff-filter-box__header-actions_j1w9b_60{display:flex;gap:6px;align-items:center}._ff-filter-box_j1w9b_1 ._ff-filter-box__action-btn_j1w9b_66{background:var(--ffscouter-alt-bg-color);border:1px solid var(--ffscouter-border-color);border-radius:4px;color:var(--ffscouter-text-color);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;padding:0;transition:background-color .2s,color .2s,opacity .2s}._ff-filter-box_j1w9b_1 ._ff-filter-box__action-btn_j1w9b_66:hover{background-color:var(--ffscouter-hover-color)}._ff-filter-box_j1w9b_1 ._ff-filter-box__action-btn_j1w9b_66._ff-filter-box__action-btn--active_j1w9b_88{color:var(--ffscouter-text-color);opacity:1}._ff-filter-box_j1w9b_1 ._ff-filter-box__action-btn_j1w9b_66._ff-filter-box__action-btn--inactive_j1w9b_93{color:var(--ffscouter-text-color);opacity:.4}._ff-filter-box_j1w9b_1 ._ff-filter-box__action-btn_j1w9b_66 svg{width:14px;height:14px;fill:currentColor}._ff-filter-box_j1w9b_1 ._ff-filter-box__action-btn_j1w9b_66._ff-filter-box__action-btn--reset_j1w9b_104 svg{transition:transform .25s ease-in-out}._ff-filter-box_j1w9b_1 ._ff-filter-box__action-btn_j1w9b_66._ff-filter-box__action-btn--reset_j1w9b_104:hover svg{transform:rotate(-180deg)}._ff-filter-box__grid_j1w9b_114{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:12px}._ff-filter-box__group--sort_j1w9b_121{order:1}._ff-filter-box__group--level_j1w9b_125{order:2}._ff-filter-box__group--activity_j1w9b_129{order:3}._ff-filter-box__group--status_j1w9b_133{order:4}._ff-filter-box__group--ff_j1w9b_137{order:5}._ff-filter-box__group--stats_j1w9b_141{order:6}._ff-filter-box__group--last-action_j1w9b_145{order:7}._ff-filter-box__group--columns_j1w9b_149{order:8}@media(min-width:784px){._ff-filter-box__grid_j1w9b_114{grid-template-columns:repeat(3,1fr)}._ff-filter-box__grid_j1w9b_114>*{order:0}}._ff-filter-box__group_j1w9b_121{display:flex;flex-direction:column;gap:2px}._ff-filter-box__sort-controls_j1w9b_171{display:flex;flex-direction:column;gap:8px}._ff-filter-box__sort-controls_j1w9b_171 ._ff-filter-box__sort-btn_j1w9b_177{width:100%}._ff-filter-box__sort-controls_j1w9b_171 ._ff-filter-box__compare-btn_j1w9b_181{width:100%;height:32px}._ff-filter-box__display-select_j1w9b_186{padding:4px;border:1px solid var(--ffscouter-border-color);border-radius:4px;background:var(--ffscouter-alt-bg-color);color:var(--ffscouter-text-color);font-size:11px;cursor:pointer;height:32px}._ff-filter-box__options_j1w9b_197{display:flex;flex-direction:column}._ff-filter-box__options_j1w9b_197 label{display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer}._ff-filter-box__option--out-soon_j1w9b_212{margin-left:16px}._ff-filter-box__range-inputs_j1w9b_216{display:flex;align-items:center;gap:4px}._ff-filter-box__range-inputs_j1w9b_216 input{flex:1;width:0;min-width:30px;max-width:80px;padding:4px;border:1px solid var(--ffscouter-border-color);border-radius:4px;background:var(--ffscouter-alt-bg-color);color:var(--ffscouter-text-color);font-size:11px;text-align:center}._ff-filter-box_j1w9b_1 button{padding:6px 10px;border:1px solid var(--ffscouter-border-color);border-radius:4px;background:var(--ffscouter-alt-bg-color);color:var(--ffscouter-text-color);font-size:12px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;transition:background-color .2s}._ff-filter-box_j1w9b_1 button:hover{background-color:var(--ffscouter-hover-color)}._ff-settings-panel__accordion_6bhvd_1{margin:10px 0;padding:15px;background-color:var(--ffscouter-bg-color);border:1px solid var(--ffscouter-border-color);border-radius:5px;color:var(--ffscouter-text-color)}._ff-settings-panel__accordion_6bhvd_1._ff-settings-panel__accordion--glow_6bhvd_10{border-color:var(--ffscouter-glow-color);box-shadow:0 0 8px #4caf5080}._ff-settings-panel__accordion_6bhvd_1 summary{cursor:pointer;font-weight:700}._ff-settings-panel__body_6bhvd_20{margin-top:15px}._ff-settings-panel__input-row_6bhvd_24{display:flex;flex-direction:column;gap:5px;margin-bottom:15px}._ff-settings-panel__range-row_6bhvd_32{display:flex;gap:10px;align-items:center}._ff-settings-panel__blur_6bhvd_38{filter:blur(4px);transition:filter .2s ease}._ff-settings-panel__blur_6bhvd_38:hover,._ff-settings-panel__blur_6bhvd_38:focus{filter:blur(0)}._ff-settings-panel__error-msg_6bhvd_48{color:#f33;font-size:13px;margin-top:5px}._ff-settings-panel__accordion_6bhvd_1 input[type=text],._ff-settings-panel__accordion_6bhvd_1 input[type=number]{box-sizing:border-box!important;text-align:left;vertical-align:top;width:178px;height:34px!important;margin-right:8px;padding:9px 10px;line-height:14px;display:inline-block}._ff-settings-panel__accordion_6bhvd_1 input[type=number]._ff-settings-panel__number_6bhvd_67{width:80px}._ff-settings-panel__accordion_6bhvd_1 select{box-sizing:border-box;text-align:left;vertical-align:top;width:178px;height:34px;margin-right:8px;padding:8px 10px;line-height:14px;display:inline-block;border:var(--input-border-color, 1px solid var(--ffscouter-border-color));border-radius:5px;font-family:Arial,serif;color:var(--input-color, var(--ffscouter-text-color));background:var(--input-background-color, var(--ffscouter-alt-bg-color))}.dark-mode ._ff-settings-panel__accordion_6bhvd_1 select option{background-color:#000;color:var(--input-color)}._ff-settings-panel__api-explanation_6bhvd_94{color:var(--ffscouter-text-color);margin-bottom:20px;font-size:13px;line-height:1.5}._ff-settings-panel__accordion_6bhvd_1 a{color:var(--ffscouter-success-color);text-decoration:underline}._ff-settings-panel__premium-badge_6bhvd_107{display:inline-block;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;vertical-align:middle}._ff-settings-panel__premium-badge--enabled_6bhvd_117{background:#4caf50}._ff-settings-panel__premium-badge--disabled_6bhvd_121{background:#c62828}._ff-settings-panel__premium-badge--unknown_6bhvd_125{background:#f39c12}._ff-settings-panel__section_6bhvd_138{display:grid;grid-template-columns:1fr;gap:12px;margin-bottom:15px}@media(min-width:784px){._ff-settings-panel__section_6bhvd_138{grid-template-columns:repeat(3,1fr)}}._ff-settings-panel__span_6bhvd_152{grid-column:1 / -1;margin-bottom:0}._ff-settings-panel__cell_6bhvd_160{display:flex;flex-direction:column;gap:5px;min-width:0;margin-bottom:0}._ff-settings-panel__cell_6bhvd_160._ff-settings-panel__cell--checkbox_6bhvd_169{flex-direction:row;align-items:flex-start;gap:10px}._ff-settings-panel__cell_6bhvd_160 input[type=text]{width:100%;margin-right:0}._ff-settings-panel__cell_6bhvd_160 select{width:auto;max-width:100%;margin-right:0}._ff-settings-panel__api-block_6bhvd_193{display:flex;flex-direction:column;gap:10px}._ff-settings-panel__api-block_6bhvd_193 ._ff-settings-panel__cell_6bhvd_160 input[type=text]{max-width:360px}._ff-settings-panel__api-status-row_6bhvd_203{display:flex;flex-wrap:wrap;align-items:center;gap:10px}._ff-settings-panel__chain-suboptions_6bhvd_213{border-left:2px solid var(--ffscouter-border-color);padding-left:8px;margin-top:10px;grid-template-columns:repeat(2,1fr)}._ff-settings-panel__chain-suboptions_6bhvd_213 ._ff-settings-panel__chain-wide_6bhvd_218{grid-column:1 / -1}@media(min-width:784px){._ff-settings-panel__chain-suboptions_6bhvd_213{padding-left:16px;grid-template-columns:repeat(3,1fr)}._ff-settings-panel__chain-suboptions_6bhvd_213 ._ff-settings-panel__chain-wide_6bhvd_218{grid-column:auto}}._ff-settings-panel__group_6bhvd_242{background-color:var(--ffscouter-alt-bg-color);border:1px solid var(--ffscouter-border-color);border-radius:5px;padding:12px;margin-bottom:15px}._ff-settings-panel__group_6bhvd_242 h4{margin:0 0 12px}._ff-settings-panel__marker-size_6bhvd_256,._ff-settings-panel__marker-border-width_6bhvd_257{display:flex;flex-direction:column;gap:5px}._ff-settings-panel__marker-size-controls_6bhvd_263{display:flex;flex-wrap:wrap;align-items:center;gap:10px}._ff-settings-panel__marker-size-controls_6bhvd_263 input[type=range]{flex:1 1 120px;min-width:120px}._ff-settings-panel__color-scheme_6bhvd_276{display:flex;flex-direction:column;gap:5px}._ff-settings-panel__color-scheme-controls_6bhvd_282{display:flex;flex-wrap:wrap;align-items:center;gap:10px}._ff-settings-panel__accordion_6bhvd_1 .ffscouter-swatch-row{flex-wrap:wrap}._ff-settings-panel__actions_6bhvd_295{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:10px;margin-top:20px}._ff-settings-panel__saved-msg_6bhvd_304{color:#4caf50} ");
 
   var StartTime = ((StartTime2) => {
     StartTime2[StartTime2["DocumentStart"] = 0] = "DocumentStart";
@@ -193,7 +193,7 @@ formatArgs(args) {
     "FFSV2",
     0
 );
-  const log$i = logger.child("storage");
+  const log$l = logger.child("storage");
   var Time = ((Time2) => {
     Time2[Time2["Seconds"] = 1e3] = "Seconds";
     Time2[Time2["Minutes"] = 6e4] = "Minutes";
@@ -215,7 +215,7 @@ set(key, value, expireConfig) {
         };
         localStorage.setItem(this.prefix + key, JSON.stringify(item));
       } catch (error) {
-        log$i.error(`Error storing item '${key}':`, error);
+        log$l.error(`Error storing item '${key}':`, error);
       }
     }
 get(key) {
@@ -231,18 +231,18 @@ get(key) {
           item = null;
         }
         if (!item) {
-          log$i.warn(`Key '${key}' has invalid JSON in it.`);
+          log$l.warn(`Key '${key}' has invalid JSON in it.`);
           this.remove(key);
           return null;
         }
         if (item.expiration && Date.now() > item.expiration) {
           this.remove(key);
-          log$i.debug(`Key ${key} has expired.`);
+          log$l.debug(`Key ${key} has expired.`);
           return null;
         }
         return item.value;
       } catch (error) {
-        log$i.error(`Error retrieving item '${key}':`, error);
+        log$l.error(`Error retrieving item '${key}':`, error);
         return null;
       }
     }
@@ -250,7 +250,7 @@ remove(key) {
       try {
         localStorage.removeItem(this.prefix + key);
       } catch (error) {
-        log$i.error(`Error removing item [${key}]:`, error);
+        log$l.error(`Error removing item [${key}]:`, error);
       }
     }
 has(key) {
@@ -262,10 +262,16 @@ clearAll() {
           localStorage.removeItem(key);
         });
       } catch (error) {
-        log$i.error("Error clearing storage:", error);
+        log$l.error("Error clearing storage:", error);
       }
     }
   }
+  const default_storage = new Storage("ffscouterv3.");
+  var WarQuickAttackAction = ((WarQuickAttackAction2) => {
+    WarQuickAttackAction2["NEW_TAB"] = "new_tab";
+    WarQuickAttackAction2["CURRENT"] = "current";
+    return WarQuickAttackAction2;
+  })(WarQuickAttackAction || {});
   var FactionsColDisplay = ((FactionsColDisplay2) => {
     FactionsColDisplay2["FAIR_FIGHT"] = "fair_fight";
     FactionsColDisplay2["BATTLE_STATS"] = "battle_stats";
@@ -329,8 +335,10 @@ clearAll() {
     settings_panel_own_profile_only: false,
     faction_filter_enabled: true,
     war_filter_enabled: true,
-    stat_distribution_badge_enabled: true
-  };
+    stat_distribution_badge_enabled: true,
+    bounty_board_enabled: true,
+    bounty_attack_action: "new_tab"
+};
   class FFConfig {
     constructor(name) {
       this.name = name;
@@ -566,6 +574,22 @@ clearAll() {
     }
     set stat_distribution_badge_enabled(val) {
       this.storage.set("stat_distribution_badge_enabled", val);
+    }
+    get bounty_board_enabled() {
+      return this.storage.get(
+        "bounty_board_enabled"
+) ?? CONFIG_DEFAULTS.bounty_board_enabled;
+    }
+    set bounty_board_enabled(val) {
+      this.storage.set("bounty_board_enabled", val);
+    }
+    get bounty_attack_action() {
+      return this.storage.get(
+        "bounty_attack_action"
+) ?? CONFIG_DEFAULTS.bounty_attack_action;
+    }
+    set bounty_attack_action(val) {
+      this.storage.set("bounty_attack_action", val);
     }
     get debug_disable_pda_http() {
       return this.storage.get(
@@ -809,6 +833,12 @@ clearAll() {
       this.storage.remove(
         "stat_distribution_badge_enabled"
 );
+      this.storage.remove(
+        "bounty_board_enabled"
+);
+      this.storage.remove(
+        "bounty_attack_action"
+);
     }
   }
   const ffconfig = new FFConfig("ffsv3-config");
@@ -850,1757 +880,6 @@ clearAll() {
     return Array.isArray(children) ? createElement2(realType, props, ...children) : createElement2(realType, props, children);
   }
   const jsxs = jsx;
-  var TornApiError;
-  (function(TornApiError2) {
-    TornApiError2[TornApiError2["UNKNOWN_ERROR"] = 0] = "UNKNOWN_ERROR";
-    TornApiError2[TornApiError2["KEY_EMPTY"] = 1] = "KEY_EMPTY";
-    TornApiError2[TornApiError2["INCORRECT_KEY"] = 2] = "INCORRECT_KEY";
-    TornApiError2[TornApiError2["WRONG_TYPE"] = 3] = "WRONG_TYPE";
-    TornApiError2[TornApiError2["WRONG_FIELDS"] = 4] = "WRONG_FIELDS";
-    TornApiError2[TornApiError2["TOO_MANY_REQUESTS"] = 5] = "TOO_MANY_REQUESTS";
-    TornApiError2[TornApiError2["INCORRECT_ID"] = 6] = "INCORRECT_ID";
-    TornApiError2[TornApiError2["INCORRECT_RELATION"] = 7] = "INCORRECT_RELATION";
-    TornApiError2[TornApiError2["IP_BLOCK"] = 8] = "IP_BLOCK";
-    TornApiError2[TornApiError2["API_DISABLED"] = 9] = "API_DISABLED";
-    TornApiError2[TornApiError2["KEY_FEDERAL_JAIL"] = 10] = "KEY_FEDERAL_JAIL";
-    TornApiError2[TornApiError2["KEY_CHANGE_ERROR"] = 11] = "KEY_CHANGE_ERROR";
-    TornApiError2[TornApiError2["KEY_READ_ERROR"] = 12] = "KEY_READ_ERROR";
-    TornApiError2[TornApiError2["KEY_TEMPORARILY_DISABLED_TO_INACTIVITY"] = 13] = "KEY_TEMPORARILY_DISABLED_TO_INACTIVITY";
-    TornApiError2[TornApiError2["DAILY_READ_LIMIT_REACHED"] = 14] = "DAILY_READ_LIMIT_REACHED";
-    TornApiError2[TornApiError2["TEMPORARY_ERROR"] = 15] = "TEMPORARY_ERROR";
-    TornApiError2[TornApiError2["ACCESS_LEVEL_KEY_NOT_HIGH"] = 16] = "ACCESS_LEVEL_KEY_NOT_HIGH";
-    TornApiError2[TornApiError2["BACKEND_ERROR_OCCURRED"] = 17] = "BACKEND_ERROR_OCCURRED";
-    TornApiError2[TornApiError2["API_KEY_HAS_BEEN_PAUSED"] = 18] = "API_KEY_HAS_BEEN_PAUSED";
-    TornApiError2[TornApiError2["MUST_BE_MIGRATED_TO_CRIMES"] = 19] = "MUST_BE_MIGRATED_TO_CRIMES";
-    TornApiError2[TornApiError2["RACE_NOT_YET_FINISHED"] = 20] = "RACE_NOT_YET_FINISHED";
-    TornApiError2[TornApiError2["INCORRECT_CATEGORY"] = 21] = "INCORRECT_CATEGORY";
-    TornApiError2[TornApiError2["SELECTION_ONLY_AVAILABLE_API_V1"] = 22] = "SELECTION_ONLY_AVAILABLE_API_V1";
-    TornApiError2[TornApiError2["SELECTION_ONLY_AVAILABLE_API_V2"] = 23] = "SELECTION_ONLY_AVAILABLE_API_V2";
-    TornApiError2[TornApiError2["CLOSED_TEMPORARILY"] = 24] = "CLOSED_TEMPORARILY";
-    TornApiError2[TornApiError2["INVALID_STAT_REQUESTED"] = 25] = "INVALID_STAT_REQUESTED";
-    TornApiError2[TornApiError2["ONLY_CATEGORY_OR_STATS_CAN"] = 26] = "ONLY_CATEGORY_OR_STATS_CAN";
-    TornApiError2[TornApiError2["MUST_BE_MIGRATED_TO_ORGANIZED"] = 27] = "MUST_BE_MIGRATED_TO_ORGANIZED";
-    TornApiError2[TornApiError2["INCORRECT_LOG_ID"] = 28] = "INCORRECT_LOG_ID";
-    TornApiError2[TornApiError2["CATEGORY_SELECTION_NOT_AVAILABLE_FOR"] = 29] = "CATEGORY_SELECTION_NOT_AVAILABLE_FOR";
-  })(TornApiError || (TornApiError = {}));
-  class HTTPClient {
-    canAbort() {
-      return false;
-    }
-  }
-  class AbortableHTTPClient extends HTTPClient {
-    canAbort() {
-      return true;
-    }
-  }
-  class FetchHTTPClient extends AbortableHTTPClient {
-    async getJson(url, timeout = void 0) {
-      let response;
-      if (timeout !== void 0) {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), timeout);
-        response = await fetch(url, { signal: controller.signal });
-        clearTimeout(timeoutId);
-      } else {
-        response = await fetch(url);
-      }
-      return await response.json();
-    }
-  }
-  class TornApiClient {
-    httpClient;
-    defaultComment;
-    defaultTimeout;
-    constructor(options = {}) {
-      this.httpClient = options.httpClient ?? new FetchHTTPClient();
-      this.defaultComment = options.defaultComment;
-      this.defaultTimeout = options.defaultTimeout;
-    }
-    async getV1({ section, selections, id, params = {}, key, comment, cache, expiry, timeout }) {
-      const cached = await cache?.get({
-        section,
-        selections,
-        id,
-        params,
-        key
-      });
-      if (cached)
-        return cached;
-      let url = `https://api.torn.com/${section}/${id ?? ""}`;
-      url = this.populateUrl(url, key, selections ?? [], comment, params ?? {});
-      if (this.httpClient.canAbort() && typeof timeout === "number") {
-        return this.httpClient.getJson(url, timeout).then(addToCache).catch(this.handleError);
-      } else {
-        return this.httpClient.getJson(url).then(addToCache).catch(this.handleError);
-      }
-      function addToCache(response) {
-        if ("error" in response)
-          return response;
-        cache?.set({
-          section,
-          selections,
-          id,
-          params,
-          key
-        }, response, expiry ?? Date.now() + 3e4);
-        return response;
-      }
-    }
-    async getV2({ section, selections, id, params = {}, key, comment, cache, expiry, timeout }) {
-      const cached = await cache?.get({
-        section,
-        selections,
-        id,
-        params,
-        key
-      });
-      if (cached)
-        return cached;
-      let url = `https://api.torn.com/v2/${section}/${id ?? ""}`;
-      url = this.populateUrl(url, key, selections ?? [], comment, params ?? {});
-      if (this.httpClient.canAbort() && typeof timeout === "number") {
-        return this.httpClient.getJson(url, timeout).then(addToCache).catch(this.handleError);
-      } else {
-        return this.httpClient.getJson(url).then(addToCache).catch(this.handleError);
-      }
-      function addToCache(response) {
-        if ("error" in response)
-          return response;
-        cache?.set({
-          section,
-          selections,
-          id,
-          params,
-          key
-        }, response, expiry ?? Date.now() + 3e4);
-        return response;
-      }
-    }
-    handleError(error) {
-      console.error(error);
-      return { error: { code: -1, error: generateErrorString(error) } };
-      function generateErrorString(e) {
-        switch (typeof e) {
-          case "string":
-            return e;
-          case "object": {
-            if (e instanceof Error)
-              return e.message;
-            return JSON.stringify(e);
-          }
-          default:
-            return e.toString();
-        }
-      }
-    }
-    populateUrl(url, key, selections, comment, params) {
-      const allParams = {
-        key,
-        comment: comment ?? this.defaultComment,
-        selections: selections.length ? selections.join(",") : void 0,
-        ...params
-      };
-      const query = Object.entries(allParams).filter((entry) => !!entry[1]).map(([key2, value]) => `${key2}=${value}`).join("&");
-      return `${url}?${query}`;
-    }
-  }
-  const FF_SCOUTER_BASE_URL = "https://ffscouter.com/api/v1";
-  new TornApiClient({
-    defaultComment: `FFScouterV2-${"3.4-beta1"}`,
-    defaultTimeout: 30
-});
-  async function gmRequest(options) {
-    if (isInPDA() && !ffconfig.debug_disable_pda_http) {
-      const url = options.url;
-      const headers = options.headers ?? {};
-      const method = (options.method ?? "GET").toUpperCase();
-      const pdaResp = method === "POST" ? await window.PDA_httpPost(url, headers, options.data) : await window.PDA_httpGet(url, headers);
-      return pdaResp;
-    }
-    return new Promise((resolve, reject) => {
-      GM_xmlhttpRequest({
-        ...options,
-        onload: (response) => resolve(response),
-        onerror: (err) => reject(err),
-        ontimeout: () => reject(new Error("Timeout making GM_xmlhttpRequest"))
-      });
-    });
-  }
-  const make_stats_url = (key, player_ids) => {
-    const query = new URLSearchParams([
-      ["key", key],
-      ["targets", player_ids.toString()]
-    ]);
-    return `${FF_SCOUTER_BASE_URL}/get-stats?${query.toString()}`;
-  };
-  const EMPTY_AVAILABLE_ESTIMATES = {
-    bss: null,
-    premium: null,
-    spies: null
-  };
-  function is_ff_success(resp) {
-    return resp.code === void 0;
-  }
-  function is_ff_check_success(resp) {
-    return resp.code === void 0;
-  }
-  class FFApiError extends Error {
-    constructor(message, options) {
-      super(message, options);
-      this.ff_api_limits = options?.ff_api_limits;
-      this.ff_api_error = options?.ff_api_error;
-    }
-  }
-  const query_stats = async (key, player_ids, requester = gmRequest) => {
-    logger.debug("Calling query_stats with arguments", { key, player_ids });
-    const url = make_stats_url(key, player_ids);
-    const resp = await requester({
-      method: "GET",
-      url
-    });
-    if (!resp) {
-      return { result: new Map(), blank: true };
-    }
-    const limits = parse_limit_headers(resp.responseHeaders);
-    let ff_response = null;
-    try {
-      ff_response = JSON.parse(resp.responseText);
-    } catch {
-      logger.warn(
-        `query_stats: unparseable response. status=${resp.status}, body=${resp.responseText?.substring(0, 200)}, url=${url}`
-      );
-      throw new FFApiError(
-        `API request failed. Couldn't parse response. HTTP status code: ${resp.status}`,
-        { ff_api_limits: limits }
-      );
-    }
-    if (ff_response == null) {
-      logger.warn(
-        `query_stats: null response after parse. status=${resp.status}, url=${url}`
-      );
-      throw new FFApiError(
-        `API request failed. Response not set. HTTP status code: ${resp.status}`,
-        { ff_api_limits: limits }
-      );
-    }
-    if (!is_ff_success(ff_response)) {
-      throw new FFApiError(
-        `API request failed. Error: ${ff_response.error}; Code: ${ff_response.code}`,
-        { ff_api_error: ff_response, ff_api_limits: limits }
-      );
-    }
-    if (resp.status !== 200) {
-      logger.warn(
-        `query_stats: unexpected HTTP status. status=${resp.status}, body=${resp.responseText?.substring(0, 200)}, url=${url}`
-      );
-      throw new FFApiError(
-        `API request failed. HTTP status code: ${resp.status}`,
-        { ff_api_limits: limits }
-      );
-    }
-    const results = new Map();
-    ff_response.forEach((result) => {
-      if (result?.player_id) {
-        if (!result.fair_fight || !result.last_updated || !result.bs_estimate || !result.bs_estimate_human || !result.bss_public || !result.source) {
-          results.set(result.player_id, {
-            no_data: true,
-            player_id: result.player_id
-          });
-        } else {
-          let distribution;
-          if (result.distribution) {
-            distribution = {
-              last_updated: result.distribution.last_updated,
-              distribution_human: result.distribution.distribution_human,
-              stats_percentage: {
-                strength: result.distribution.stats_percentage?.strength,
-                speed: result.distribution.stats_percentage?.speed,
-                defense: result.distribution.stats_percentage?.defense,
-                dexterity: result.distribution.stats_percentage?.dexterity
-              }
-            };
-          }
-          results.set(result.player_id, {
-            no_data: false,
-            fair_fight: result.fair_fight,
-            last_updated: result.last_updated,
-            bs_estimate: result.bs_estimate,
-            bs_estimate_human: result.bs_estimate_human,
-            bss_public: result.bss_public,
-            source: result.source ?? "bss",
-            premium_insights_available: result.premium_insights_available ?? false,
-            distribution,
-            available_estimates: result.available_estimates ?? EMPTY_AVAILABLE_ESTIMATES,
-            spies: result.spies ?? [],
-            player_id: result.player_id
-          });
-        }
-      }
-    });
-    for (const id of player_ids) {
-      if (!results.get(id)) {
-        results.set(id, {
-          no_data: true,
-          player_id: id
-        });
-      }
-    }
-    return { result: results, blank: false, limits };
-  };
-  const parse_limit_headers = (responseHeaders) => {
-    if (typeof responseHeaders !== "string") {
-      return void 0;
-    }
-    const headerLines = responseHeaders.split("\n");
-    const headers = new Map();
-    for (const line of headerLines) {
-      const [key, value] = line.split(":", 2);
-      if (!key || !value) {
-        continue;
-      }
-      headers.set(key, value.trim());
-    }
-    const reset_time_str = headers.get("x-ratelimit-reset-timestamp");
-    const remaining_str = headers.get("x-ratelimit-remaining");
-    const rate_limit_str = headers.get("x-ratelimit-limit");
-    if (reset_time_str && remaining_str && rate_limit_str) {
-      const remaining = parseInt(remaining_str, 10);
-      const rate_limit = parseInt(rate_limit_str, 10);
-      const this_minute = rate_limit - remaining;
-      return {
-        reset_time: new Date(parseInt(reset_time_str, 10) * 1e3),
-        remaining,
-        rate_limit,
-        this_minute
-      };
-    }
-  };
-  const check_key = async (key, requester = gmRequest) => {
-    if (!key) {
-      return { blank: true };
-    }
-    const query = new URLSearchParams([["key", key]]);
-    const url = `${FF_SCOUTER_BASE_URL}/check-key?${query.toString()}`;
-    const resp = await requester({
-      method: "GET",
-      url
-    });
-    if (!resp) {
-      return { blank: true };
-    }
-    const limits = parse_limit_headers(resp.responseHeaders);
-    let ff_response = null;
-    try {
-      ff_response = JSON.parse(resp.responseText);
-    } catch {
-      logger.warn(
-        `check_key: unparseable response. status=${resp.status}, body=${resp.responseText?.substring(0, 200)}, url=${url}`
-      );
-      throw new FFApiError(
-        `API request failed. Couldn't parse response. HTTP status code: ${resp.status}`,
-        { ff_api_limits: limits }
-      );
-    }
-    if (ff_response == null) {
-      logger.warn(
-        `check_key: null response after parse. status=${resp.status}, url=${url}`
-      );
-      throw new FFApiError(
-        `API request failed. Response not set. HTTP status code: ${resp.status}`,
-        { ff_api_limits: limits }
-      );
-    }
-    if (!is_ff_check_success(ff_response)) {
-      throw new FFApiError(
-        `API request failed. Error: ${ff_response.error}; Code: ${ff_response.code}`,
-        { ff_api_error: ff_response, ff_api_limits: limits }
-      );
-    }
-    if (resp.status !== 200) {
-      logger.warn(
-        `check_key: unexpected HTTP status. status=${resp.status}, body=${resp.responseText?.substring(0, 200)}, url=${url}`
-      );
-      throw new FFApiError(
-        `API request failed. HTTP status code: ${resp.status}`,
-        { ff_api_limits: limits }
-      );
-    }
-    return { result: ff_response, blank: false, limits };
-  };
-  const make_flights_url = (key, target) => {
-    const query = new URLSearchParams([
-      ["key", key],
-      ["target", target.toString()]
-    ]);
-    return `${FF_SCOUTER_BASE_URL}/player-flights?${query.toString()}`;
-  };
-  function is_flight_success(resp) {
-    return resp.code === void 0;
-  }
-  const query_flights = async (key, target, requester = gmRequest) => {
-    logger.debug("Calling query_flights with arguments", { key, target });
-    const url = make_flights_url(key, target);
-    const resp = await requester({
-      method: "GET",
-      url
-    });
-    if (!resp) {
-      return { blank: true };
-    }
-    const limits = parse_limit_headers(resp.responseHeaders);
-    let ff_response = null;
-    try {
-      ff_response = JSON.parse(resp.responseText);
-    } catch {
-      logger.warn(
-        `query_flights: unparseable response. status=${resp.status}, body=${resp.responseText?.substring(0, 200)}, url=${url}`
-      );
-      throw new FFApiError(
-        `API request failed. Couldn't parse response. HTTP status code: ${resp.status}`,
-        { ff_api_limits: limits }
-      );
-    }
-    if (ff_response == null) {
-      logger.warn(
-        `query_flights: null response after parse. status=${resp.status}, url=${url}`
-      );
-      throw new FFApiError(
-        `API request failed. Response not set. HTTP status code: ${resp.status}`,
-        { ff_api_limits: limits }
-      );
-    }
-    if (!is_flight_success(ff_response)) {
-      throw new FFApiError(
-        `API request failed. Error: ${ff_response.error}; Code: ${ff_response.code}`,
-        { ff_api_error: ff_response, ff_api_limits: limits }
-      );
-    }
-    if (resp.status !== 200) {
-      logger.warn(
-        `query_flights: unexpected HTTP status. status=${resp.status}, body=${resp.responseText?.substring(0, 200)}, url=${url}`
-      );
-      throw new FFApiError(
-        `API request failed. HTTP status code: ${resp.status}`,
-        { ff_api_limits: limits }
-      );
-    }
-    return { result: ff_response, blank: false, limits };
-  };
-  const query_targets = async (key, params, requester = gmRequest) => {
-    logger.debug("Calling query_targets with arguments", { key, params });
-    const query = new URLSearchParams([["key", key]]);
-    if (params.minlevel !== void 0 && params.minlevel !== null) {
-      query.append("minlevel", params.minlevel.toString());
-    }
-    if (params.maxlevel !== void 0 && params.maxlevel !== null) {
-      query.append("maxlevel", params.maxlevel.toString());
-    }
-    if (params.minff !== void 0 && params.minff !== null) {
-      query.append("minff", params.minff.toString());
-    }
-    if (params.maxff !== void 0 && params.maxff !== null) {
-      query.append("maxff", params.maxff.toString());
-    }
-    if (params.inactiveonly !== void 0 && params.inactiveonly !== null) {
-      query.append("inactiveonly", params.inactiveonly.toString());
-    }
-    if (params.factionless !== void 0 && params.factionless !== null) {
-      query.append("factionless", params.factionless.toString());
-    }
-    if (params.limit !== void 0 && params.limit !== null) {
-      query.append("limit", params.limit.toString());
-    }
-    const url = `${FF_SCOUTER_BASE_URL}/get-targets?${query.toString()}`;
-    const resp = await requester({
-      method: "GET",
-      url
-    });
-    if (!resp) {
-      throw new Error("Empty response from get-targets");
-    }
-    if (resp.status !== 200) {
-      let errMessage = `API request failed with HTTP ${resp.status}`;
-      try {
-        const errJson = JSON.parse(resp.responseText);
-        if (errJson?.error) {
-          errMessage = errJson.error;
-        }
-      } catch {
-      }
-      throw new Error(errMessage);
-    }
-    const parsed = JSON.parse(resp.responseText);
-    if (parsed.error) {
-      throw new Error(parsed.error);
-    }
-    return parsed;
-  };
-  const log$h = logger.child("api");
-  const CHECK_KEY = "check-key-status";
-  class CheckKeyStatus {
-    constructor(config, storage) {
-      this.check_key_status = async (force = false) => {
-        if (!force) {
-          const cached = this.storage.get(CHECK_KEY);
-          if (cached) {
-            return cached;
-          }
-        }
-        let result;
-        try {
-          result = await check_key(this.config.key);
-        } catch (err) {
-          log$h.error(
-            "Received error response querying ffscouter check-key api:",
-            err
-          );
-          throw err;
-        }
-        if (result.blank) {
-          return null;
-        }
-        this.storage.set(CHECK_KEY, result.result, {
-          amount: 5,
-          unit: Time.Minutes
-        });
-        return result.result;
-      };
-      this.is_premium = async (force = false) => {
-        try {
-          const status = await this.check_key_status(force);
-          if (!status) return null;
-          return status.is_premium;
-        } catch (err) {
-          log$h.warn("Failed to check premium status:", err);
-          return null;
-        }
-      };
-      this.is_registered = async (force = false) => {
-        try {
-          const status = await this.check_key_status(force);
-          if (!status) return null;
-          return status.is_registered;
-        } catch (err) {
-          log$h.warn("Failed to check key registration status:", err);
-          return null;
-        }
-      };
-      this.clear = () => {
-        this.storage.remove(CHECK_KEY);
-      };
-      this.config = config;
-      this.storage = storage;
-    }
-  }
-  const check_key_status = new CheckKeyStatus(
-    ffconfig,
-    new Storage("ffsv3-check")
-  );
-  function resolve_estimate(data) {
-    const candidate = data.available_estimates?.[data.source];
-    return {
-      source: data.source,
-      bs_estimate: candidate?.bs_estimate ?? data.bs_estimate,
-      bs_estimate_human: candidate?.bs_estimate_human ?? data.bs_estimate_human,
-      last_updated: candidate?.last_updated ?? data.last_updated,
-      fair_fight: candidate?.fair_fight ?? data.fair_fight
-    };
-  }
-  function extract_ff(data) {
-    return resolve_estimate(data).fair_fight;
-  }
-  function extract_bs_estimate(data) {
-    return resolve_estimate(data).bs_estimate;
-  }
-  function extract_bs_estimate_human(data) {
-    return resolve_estimate(data).bs_estimate_human;
-  }
-  function extract_source(data) {
-    return resolve_estimate(data).source;
-  }
-  function extract_last_updated(data) {
-    return resolve_estimate(data).last_updated;
-  }
-  const instanceOfAny = (object, constructors) => constructors.some((c) => object instanceof c);
-  let idbProxyableTypes;
-  let cursorAdvanceMethods;
-  function getIdbProxyableTypes() {
-    return idbProxyableTypes || (idbProxyableTypes = [
-      IDBDatabase,
-      IDBObjectStore,
-      IDBIndex,
-      IDBCursor,
-      IDBTransaction
-    ]);
-  }
-  function getCursorAdvanceMethods() {
-    return cursorAdvanceMethods || (cursorAdvanceMethods = [
-      IDBCursor.prototype.advance,
-      IDBCursor.prototype.continue,
-      IDBCursor.prototype.continuePrimaryKey
-    ]);
-  }
-  const transactionDoneMap = new WeakMap();
-  const transformCache = new WeakMap();
-  const reverseTransformCache = new WeakMap();
-  function promisifyRequest(request) {
-    const promise = new Promise((resolve, reject) => {
-      const unlisten = () => {
-        request.removeEventListener("success", success);
-        request.removeEventListener("error", error);
-      };
-      const success = () => {
-        resolve(wrap(request.result));
-        unlisten();
-      };
-      const error = () => {
-        reject(request.error);
-        unlisten();
-      };
-      request.addEventListener("success", success);
-      request.addEventListener("error", error);
-    });
-    reverseTransformCache.set(promise, request);
-    return promise;
-  }
-  function cacheDonePromiseForTransaction(tx) {
-    if (transactionDoneMap.has(tx))
-      return;
-    const done = new Promise((resolve, reject) => {
-      const unlisten = () => {
-        tx.removeEventListener("complete", complete);
-        tx.removeEventListener("error", error);
-        tx.removeEventListener("abort", error);
-      };
-      const complete = () => {
-        resolve();
-        unlisten();
-      };
-      const error = () => {
-        reject(tx.error || new DOMException("AbortError", "AbortError"));
-        unlisten();
-      };
-      tx.addEventListener("complete", complete);
-      tx.addEventListener("error", error);
-      tx.addEventListener("abort", error);
-    });
-    transactionDoneMap.set(tx, done);
-  }
-  let idbProxyTraps = {
-    get(target, prop, receiver) {
-      if (target instanceof IDBTransaction) {
-        if (prop === "done")
-          return transactionDoneMap.get(target);
-        if (prop === "store") {
-          return receiver.objectStoreNames[1] ? void 0 : receiver.objectStore(receiver.objectStoreNames[0]);
-        }
-      }
-      return wrap(target[prop]);
-    },
-    set(target, prop, value) {
-      target[prop] = value;
-      return true;
-    },
-    has(target, prop) {
-      if (target instanceof IDBTransaction && (prop === "done" || prop === "store")) {
-        return true;
-      }
-      return prop in target;
-    }
-  };
-  function replaceTraps(callback) {
-    idbProxyTraps = callback(idbProxyTraps);
-  }
-  function wrapFunction(func) {
-    if (getCursorAdvanceMethods().includes(func)) {
-      return function(...args) {
-        func.apply(unwrap(this), args);
-        return wrap(this.request);
-      };
-    }
-    return function(...args) {
-      return wrap(func.apply(unwrap(this), args));
-    };
-  }
-  function transformCachableValue(value) {
-    if (typeof value === "function")
-      return wrapFunction(value);
-    if (value instanceof IDBTransaction)
-      cacheDonePromiseForTransaction(value);
-    if (instanceOfAny(value, getIdbProxyableTypes()))
-      return new Proxy(value, idbProxyTraps);
-    return value;
-  }
-  function wrap(value) {
-    if (value instanceof IDBRequest)
-      return promisifyRequest(value);
-    if (transformCache.has(value))
-      return transformCache.get(value);
-    const newValue = transformCachableValue(value);
-    if (newValue !== value) {
-      transformCache.set(value, newValue);
-      reverseTransformCache.set(newValue, value);
-    }
-    return newValue;
-  }
-  const unwrap = (value) => reverseTransformCache.get(value);
-  function openDB(name, version, { blocked, upgrade, blocking, terminated } = {}) {
-    const request = indexedDB.open(name, version);
-    const openPromise = wrap(request);
-    if (upgrade) {
-      request.addEventListener("upgradeneeded", (event) => {
-        upgrade(wrap(request.result), event.oldVersion, event.newVersion, wrap(request.transaction), event);
-      });
-    }
-    if (blocked) {
-      request.addEventListener("blocked", (event) => blocked(
-event.oldVersion,
-        event.newVersion,
-        event
-      ));
-    }
-    openPromise.then((db) => {
-      if (terminated)
-        db.addEventListener("close", () => terminated());
-      if (blocking) {
-        db.addEventListener("versionchange", (event) => blocking(event.oldVersion, event.newVersion, event));
-      }
-    }).catch(() => {
-    });
-    return openPromise;
-  }
-  function deleteDB(name, { blocked } = {}) {
-    const request = indexedDB.deleteDatabase(name);
-    if (blocked) {
-      request.addEventListener("blocked", (event) => blocked(
-event.oldVersion,
-        event
-      ));
-    }
-    return wrap(request).then(() => void 0);
-  }
-  const readMethods = ["get", "getKey", "getAll", "getAllKeys", "count"];
-  const writeMethods = ["put", "add", "delete", "clear"];
-  const cachedMethods = new Map();
-  function getMethod(target, prop) {
-    if (!(target instanceof IDBDatabase && !(prop in target) && typeof prop === "string")) {
-      return;
-    }
-    if (cachedMethods.get(prop))
-      return cachedMethods.get(prop);
-    const targetFuncName = prop.replace(/FromIndex$/, "");
-    const useIndex = prop !== targetFuncName;
-    const isWrite = writeMethods.includes(targetFuncName);
-    if (
-!(targetFuncName in (useIndex ? IDBIndex : IDBObjectStore).prototype) || !(isWrite || readMethods.includes(targetFuncName))
-    ) {
-      return;
-    }
-    const method = async function(storeName, ...args) {
-      const tx = this.transaction(storeName, isWrite ? "readwrite" : "readonly");
-      let target2 = tx.store;
-      if (useIndex)
-        target2 = target2.index(args.shift());
-      return (await Promise.all([
-        target2[targetFuncName](...args),
-        isWrite && tx.done
-      ]))[0];
-    };
-    cachedMethods.set(prop, method);
-    return method;
-  }
-  replaceTraps((oldTraps) => ({
-    ...oldTraps,
-    get: (target, prop, receiver) => getMethod(target, prop) || oldTraps.get(target, prop, receiver),
-    has: (target, prop) => !!getMethod(target, prop) || oldTraps.has(target, prop)
-  }));
-  const advanceMethodProps = ["continue", "continuePrimaryKey", "advance"];
-  const methodMap = {};
-  const advanceResults = new WeakMap();
-  const ittrProxiedCursorToOriginalProxy = new WeakMap();
-  const cursorIteratorTraps = {
-    get(target, prop) {
-      if (!advanceMethodProps.includes(prop))
-        return target[prop];
-      let cachedFunc = methodMap[prop];
-      if (!cachedFunc) {
-        cachedFunc = methodMap[prop] = function(...args) {
-          advanceResults.set(this, ittrProxiedCursorToOriginalProxy.get(this)[prop](...args));
-        };
-      }
-      return cachedFunc;
-    }
-  };
-  async function* iterate(...args) {
-    let cursor = this;
-    if (!(cursor instanceof IDBCursor)) {
-      cursor = await cursor.openCursor(...args);
-    }
-    if (!cursor)
-      return;
-    cursor = cursor;
-    const proxiedCursor = new Proxy(cursor, cursorIteratorTraps);
-    ittrProxiedCursorToOriginalProxy.set(proxiedCursor, cursor);
-    reverseTransformCache.set(proxiedCursor, unwrap(cursor));
-    while (cursor) {
-      yield proxiedCursor;
-      cursor = await (advanceResults.get(proxiedCursor) || cursor.continue());
-      advanceResults.delete(proxiedCursor);
-    }
-  }
-  function isIteratorProp(target, prop) {
-    return prop === Symbol.asyncIterator && instanceOfAny(target, [IDBIndex, IDBObjectStore, IDBCursor]) || prop === "iterate" && instanceOfAny(target, [IDBIndex, IDBObjectStore]);
-  }
-  replaceTraps((oldTraps) => ({
-    ...oldTraps,
-    get(target, prop, receiver) {
-      if (isIteratorProp(target, prop))
-        return iterate;
-      return oldTraps.get(target, prop, receiver);
-    },
-    has(target, prop) {
-      return isIteratorProp(target, prop) || oldTraps.has(target, prop);
-    }
-  }));
-  const log$g = logger.child("storage");
-  const STORES = {
-    CACHE: "cache",
-    FLIGHTS: "flights",
-    ANALYTICS: "analytics"
-  };
-  class FFCache {
-    constructor(db_name) {
-      this.db = null;
-      this.db_version = 3;
-      this.cache_interval = 60 * 60 * 1e3;
-      this.last_clean = 0;
-      this.active_operations = 0;
-      this.close_timer = null;
-      this.open_promise = null;
-      this.channel = null;
-      this.state = "CLOSED";
-      this.deletion_promise = null;
-      this.resolve_deletion = null;
-      this.migrations = new Map([
-        [
-          1,
-          (db, _) => {
-            const store = db.createObjectStore(STORES.CACHE, {
-              keyPath: "player_id"
-            });
-            store.createIndex("expiry", "expiry", {
-              unique: false
-            });
-          }
-        ],
-        [
-          2,
-          (db, _) => {
-            const store = db.createObjectStore(STORES.FLIGHTS, {
-              keyPath: "player_id"
-            });
-            store.createIndex("expiry", "expiry", {
-              unique: false
-            });
-          }
-        ],
-        [
-          3,
-          (db, _) => {
-            const store = db.createObjectStore(STORES.ANALYTICS, {
-              keyPath: "id",
-              autoIncrement: true
-            });
-            store.createIndex("timestamp", "timestamp", {
-              unique: false
-            });
-          }
-        ]
-      ]);
-      this.open = async () => {
-        if (this.db) {
-          return this.db;
-        }
-        if (this.open_promise) {
-          return this.open_promise;
-        }
-        if (typeof BroadcastChannel !== "undefined" && !this.channel) {
-          this.channel = new BroadcastChannel(`ffcache-channel-${this.db_name}`);
-          this.channel.onmessage = (event) => {
-            this.handle_broadcast(event.data);
-          };
-          if (typeof this.channel.unref === "function") {
-            this.channel.unref();
-          }
-        }
-        const cache = this;
-        this.open_promise = (async () => {
-          try {
-            const db = await openDB(this.db_name, this.db_version, {
-              upgrade(db2, oldVersion, newVersion, transaction, _event) {
-                log$g.info("Need to upgrade from", oldVersion, "to", newVersion);
-                for (let i = (oldVersion ?? 0) + 1; i <= cache.db_version; i++) {
-                  log$g.debug(`Migration: ${i}`);
-                  const m2 = cache.migrations.get(i);
-                  if (m2) {
-                    m2(db2, transaction);
-                  } else {
-                    log$g.debug(`Migration not found: ${i}`);
-                  }
-                  log$g.debug(`Migration complete: ${i}`);
-                }
-              },
-              blocking(currentVersion, blockedVersion, event) {
-                log$g.debug(
-                  `Can't open ${blockedVersion} because ${currentVersion} is open. Closing.`
-                );
-                cache.close();
-                if (event?.target && typeof event.target.close === "function") {
-                  event.target.close();
-                }
-              }
-});
-            cache.db = db;
-            cache.state = "OPEN";
-            return db;
-          } finally {
-            cache.open_promise = null;
-          }
-        })();
-        return this.open_promise;
-      };
-      this.close = () => {
-        if (this.db) {
-          this.db.close();
-          this.db = null;
-        }
-        this.state = "CLOSED";
-      };
-      this.start_op = async () => {
-        if (this.state === "DELETING_LOCAL" || this.state === "DELETING_REMOTE") {
-          await this.wait_for_deletion_complete();
-        }
-        this.active_operations++;
-        if (this.close_timer) {
-          clearTimeout(this.close_timer);
-          this.close_timer = null;
-        }
-        return await this.open();
-      };
-      this.end_op = () => {
-        this.active_operations = Math.max(0, this.active_operations - 1);
-        if (this.active_operations === 0) {
-          if (this.close_timer) {
-            clearTimeout(this.close_timer);
-          }
-          this.close_timer = setTimeout(() => {
-            this.close();
-            this.close_timer = null;
-          }, 1e3);
-        }
-      };
-      this.delete_db = async () => {
-        if (this.close_timer) {
-          clearTimeout(this.close_timer);
-          this.close_timer = null;
-        }
-        this.state = "DELETING_LOCAL";
-        this.channel?.postMessage({ type: "deleting" });
-        await this.wait_for_active_ops();
-        this.close();
-        try {
-          await deleteDB(this.db_name, {
-            blocked: () => {
-              log$g.debug("deleteDB blocked callback called!");
-            }
-          });
-          log$g.info(`Successfully deleted ${this.db_name} IndexedDB.`);
-        } finally {
-          this.channel?.postMessage({ type: "deleted" });
-          this.state = "CLOSED";
-          if (this.resolve_deletion) {
-            this.resolve_deletion();
-            this.resolve_deletion = null;
-            this.deletion_promise = null;
-          }
-          if (this.channel) {
-            this.channel.close();
-            this.channel = null;
-          }
-        }
-      };
-      this.handle_broadcast = (data) => {
-        if (data && typeof data === "object") {
-          if (data.type === "deleting") {
-            this.state = "DELETING_REMOTE";
-            if (!this.deletion_promise) {
-              this.deletion_promise = new Promise((resolve) => {
-                this.resolve_deletion = resolve;
-              });
-            }
-            this.close();
-          } else if (data.type === "deleted") {
-            this.state = "CLOSED";
-            if (this.resolve_deletion) {
-              this.resolve_deletion();
-              this.resolve_deletion = null;
-              this.deletion_promise = null;
-            }
-          }
-        }
-      };
-      this.wait_for_deletion_complete = async () => {
-        while (this.state === "DELETING_LOCAL" || this.state === "DELETING_REMOTE") {
-          if (this.deletion_promise) {
-            await this.deletion_promise;
-          } else {
-            await new Promise((resolve) => setTimeout(resolve, 10));
-          }
-        }
-      };
-      this.wait_for_active_ops = async () => {
-        if (this.open_promise) {
-          try {
-            await this.open_promise;
-          } catch {
-          }
-        }
-        while (this.active_operations > 0) {
-          await new Promise((resolve) => setTimeout(resolve, 10));
-        }
-      };
-      this.get = async (player_ids) => {
-        const db = await this.start_op();
-        try {
-          const tx = db.transaction(STORES.CACHE, "readonly");
-          const requests = player_ids.map((id) => tx.store.get(id));
-          const entries = await Promise.all(requests);
-          await tx.done;
-          const result = new Map();
-          player_ids.forEach((id, idx) => {
-            const value = entries[idx];
-            result.set(id, !value || value.expiry <= Date.now() ? null : value);
-          });
-          return result;
-        } finally {
-          this.end_op();
-        }
-      };
-      this.update = async (values) => {
-        const db = await this.start_op();
-        try {
-          const tx = db.transaction(STORES.CACHE, "readwrite");
-          const values_expiry = values.map((value) => {
-            return {
-              ...value,
-              expiry: Date.now() + this.cache_interval
-            };
-          });
-          const requests = values_expiry.map((value) => {
-            return tx.store.put(value);
-          });
-          await Promise.all(requests);
-          await tx.done;
-        } finally {
-          this.end_op();
-        }
-      };
-      this.clean_expired = (force = false) => {
-        const now = Date.now();
-        if (!force && now - this.last_clean < 60 * 60 * 1e3) {
-          return Promise.resolve();
-        }
-        this.last_clean = now;
-        const runClean = async () => {
-          const db = await this.start_op();
-          try {
-            {
-              const tx = db.transaction(STORES.CACHE, "readwrite");
-              const index2 = tx.store.index("expiry");
-              const range = IDBKeyRange.upperBound(Date.now());
-              const r = await index2.getAllKeys(range);
-              log$g.info(`Found ${r.length} expired values to delete from cache.`);
-              await Promise.all(r.map((id) => tx.store.delete(id)));
-              await tx.done;
-            }
-            {
-              const tx = db.transaction(STORES.FLIGHTS, "readwrite");
-              const index2 = tx.store.index("expiry");
-              const range = IDBKeyRange.upperBound(Date.now());
-              const r = await index2.getAllKeys(range);
-              log$g.info(`Found ${r.length} expired values to delete from flights.`);
-              await Promise.all(r.map((id) => tx.store.delete(id)));
-              await tx.done;
-            }
-            {
-              const tx = db.transaction(STORES.ANALYTICS, "readwrite");
-              const index2 = tx.store.index("timestamp");
-              const thirty_days_ago = Date.now() - 30 * 24 * 60 * 60 * 1e3;
-              const range = IDBKeyRange.upperBound(thirty_days_ago);
-              const r = await index2.getAllKeys(range);
-              log$g.info(
-                `Found ${r.length} expired values to delete from analytics.`
-              );
-              await Promise.all(r.map((id) => tx.store.delete(id)));
-              await tx.done;
-            }
-          } finally {
-            this.end_op();
-          }
-        };
-        if (typeof window !== "undefined" && "requestIdleCallback" in window) {
-          return new Promise((resolve, reject) => {
-            window.requestIdleCallback(() => {
-              runClean().then(resolve, reject);
-            });
-          });
-        }
-        return runClean();
-      };
-      this.get_flight = async (player_id) => {
-        const db = await this.start_op();
-        try {
-          const tx = db.transaction(STORES.FLIGHTS, "readonly");
-          const entry = await tx.store.get(player_id);
-          await tx.done;
-          if (!entry || entry.expiry <= Date.now()) {
-            return null;
-          }
-          return entry;
-        } finally {
-          this.end_op();
-        }
-      };
-      this.update_flight = async (value, cache_interval = 60 * 1e3) => {
-        const db = await this.start_op();
-        try {
-          const tx = db.transaction(STORES.FLIGHTS, "readwrite");
-          const value_expiry = {
-            ...value,
-            expiry: Date.now() + cache_interval
-          };
-          await tx.store.put(value_expiry);
-          await tx.done;
-        } finally {
-          this.end_op();
-        }
-      };
-      this.delete_flight = async (player_id) => {
-        const db = await this.start_op();
-        try {
-          const tx = db.transaction(STORES.FLIGHTS, "readwrite");
-          await tx.store.delete(player_id);
-          await tx.done;
-        } finally {
-          this.end_op();
-        }
-      };
-      this.add_analytics = async (entry) => {
-        const db = await this.start_op();
-        try {
-          const tx = db.transaction(STORES.ANALYTICS, "readwrite");
-          const value = {
-            ...entry,
-            timestamp: Date.now()
-          };
-          await tx.store.add(value);
-          await tx.done;
-        } finally {
-          this.end_op();
-        }
-      };
-      this.get_analytics = async () => {
-        const db = await this.start_op();
-        try {
-          const tx = db.transaction(STORES.ANALYTICS, "readonly");
-          const res = await tx.store.getAll();
-          await tx.done;
-          return res;
-        } finally {
-          this.end_op();
-        }
-      };
-      this.clear_analytics = async () => {
-        const db = await this.start_op();
-        try {
-          const tx = db.transaction(STORES.ANALYTICS, "readwrite");
-          await tx.store.clear();
-          await tx.done;
-        } finally {
-          this.end_op();
-        }
-      };
-      this.dump = async () => {
-        const db = await this.start_op();
-        try {
-          const tx = db.transaction(STORES.CACHE, "readonly");
-          const res = await tx.store.getAll();
-          await tx.done;
-          return res;
-        } finally {
-          this.end_op();
-        }
-      };
-      this.dump_flights = async () => {
-        const db = await this.start_op();
-        try {
-          const tx = db.transaction(STORES.FLIGHTS, "readonly");
-          const res = await tx.store.getAll();
-          await tx.done;
-          return res;
-        } finally {
-          this.end_op();
-        }
-      };
-      this.db_name = db_name;
-      if (typeof BroadcastChannel !== "undefined") {
-        this.channel = new BroadcastChannel(`ffcache-channel-${db_name}`);
-        this.channel.onmessage = (event) => {
-          this.handle_broadcast(event.data);
-        };
-        if (typeof this.channel.unref === "function") {
-          this.channel.unref();
-        }
-      }
-    }
-  }
-  const log$f = logger.child("api");
-  const DB_NAME = "FFSV3-cache";
-  const RECHECK_RETRY_DELAY = 60 * 1e3;
-  const RECHECK_WINDOW_DURATION = 3 * 60 * 1e3;
-  const FINALIZED_NO_FLIGHT_TTL = 30 * 60 * 1e3;
-  const FLIGHT_PACING_DELAY = 1e3;
-  const GLOBAL_BUDGET_RESERVE = 50;
-  function getParamFast(queryString, paramName) {
-    if (!queryString) return null;
-    const target = `${paramName}=`;
-    if (!queryString.includes(target)) return null;
-    let startIdx = 0;
-    if (queryString.charCodeAt(0) === 63) {
-      startIdx = 1;
-    }
-    let pos = queryString.indexOf(target, startIdx);
-    while (pos !== -1) {
-      if (pos === startIdx || queryString.charCodeAt(pos - 1) === 38 ||
-queryString.charCodeAt(pos - 1) === 63) {
-        const valStart = pos + target.length;
-        let valEnd = queryString.indexOf("&", valStart);
-        if (valEnd === -1) {
-          valEnd = queryString.length;
-        }
-        const rawVal = queryString.substring(valStart, valEnd);
-        if (rawVal.indexOf("%") === -1 && rawVal.indexOf("+") === -1) {
-          return rawVal;
-        }
-        try {
-          return decodeURIComponent(rawVal.replace(/\+/g, " "));
-        } catch {
-          return rawVal;
-        }
-      }
-      pos = queryString.indexOf(target, pos + 1);
-    }
-    return null;
-  }
-  class FFScouter {
-    constructor(config, cache) {
-      this.cache = new FFCache(DB_NAME);
-      this.pending = new Map();
-      this.flight_queue = [];
-      this.flight_timer = null;
-      this.flight_recheck_until = new Map();
-      this.pending_flights = new Map();
-      this.cache_queue = new Set();
-      this.cache_delay = 10;
-      this.cache_timer = null;
-      this.api_queue = new Set();
-      this.api_max_batch_size = 200;
-      this.api_initial_delay = 100;
-      this.api_default_delay = 1e3;
-      this.api_timer = null;
-      this.api_attempts = 5;
-      this.schedule = (fn, delay) => {
-        return setTimeout(fn, delay);
-      };
-      this.clear = (timer) => {
-        if (timer) {
-          clearTimeout(timer);
-        }
-      };
-      this.get = (player_id) => {
-        const p = this.pending.get(player_id);
-        if (p) {
-          return p.promise;
-        }
-        let resolve;
-        let reject;
-        const promise = new Promise((res, rej) => {
-          resolve = res;
-          reject = rej;
-        });
-        this.pending.set(player_id, { promise, resolve, reject, api_attempts: 0 });
-        if (!this.config.key) {
-          this.resolve(player_id, { player_id, no_data: true });
-          return promise;
-        }
-        this.enqueue_cache(player_id);
-        return promise;
-      };
-      this.clear_flight_cache = async (player_id) => {
-        try {
-          await this.cache.delete_flight(player_id);
-        } catch (err) {
-          log$f.error("Failed to delete flight from cache", err);
-        }
-      };
-      this.calculate_flight_cache_ttl = (result) => {
-        if (result.current) {
-          const now = Date.now();
-          const latest_arrival_time_ms = result.current.latest_arrival_time * 1e3;
-          const time_remaining = latest_arrival_time_ms - now;
-          if (time_remaining > 0) {
-            const segment = Math.floor(time_remaining / 2);
-            const min_ttl = 60 * 1e3;
-            return Math.max(min_ttl, segment);
-          }
-        }
-        return FINALIZED_NO_FLIGHT_TTL;
-      };
-      this.enqueue_flight_api = (player_id, recheck_until) => {
-        let resolve;
-        let reject;
-        const promise = new Promise((res, rej) => {
-          resolve = res;
-          reject = rej;
-        });
-        if (recheck_until !== void 0) {
-          this.flight_recheck_until.set(player_id, recheck_until);
-        }
-        const pending = this.pending_flights.get(player_id);
-        if (pending) {
-          pending.push({ resolve, reject });
-          return promise;
-        }
-        this.pending_flights.set(player_id, [{ resolve, reject }]);
-        this.flight_queue.push(player_id);
-        this.schedule_flight_processor();
-        return promise;
-      };
-      this.schedule_flight_processor = (delay = 0) => {
-        if (this.flight_timer) {
-          return;
-        }
-        this.flight_timer = this.schedule(this.process_flight_queue, delay);
-      };
-      this.process_flight_queue = async () => {
-        this.flight_timer = null;
-        if (this.flight_queue.length === 0) {
-          return;
-        }
-        if (this.last_limits && this.last_limits.reset_time > new Date() && this.last_limits.remaining <= GLOBAL_BUDGET_RESERVE) {
-          log$f.warn(
-            `Total API quota <= ${GLOBAL_BUDGET_RESERVE}. Deferring flight status checks to prioritize stats.`
-          );
-          this.schedule_flight_processor(5e3);
-          return;
-        }
-        const player_id = this.flight_queue.shift();
-        if (player_id === void 0) {
-          return;
-        }
-        const pending = this.pending_flights.get(player_id);
-        if (!pending) {
-          this.schedule_flight_processor(0);
-          return;
-        }
-        log$f.debug(`Querying paced flight API for player ${player_id}`);
-        try {
-          const response = await query_flights(this.config.key, player_id);
-          if (response.blank) {
-            throw new Error(
-              `Empty flight response returned for player ${player_id}`
-            );
-          }
-          if (response.limits) {
-            this.last_limits = response.limits;
-          }
-          let finalResult = response.result;
-          if (response.result.current) {
-            try {
-              const ttl = this.calculate_flight_cache_ttl(response.result);
-              await this.cache.update_flight(response.result, ttl);
-            } catch (err) {
-              log$f.error("Failed to update flight cache", err);
-            }
-          } else {
-            log$f.debug(`Start rechecking cycle for player ${player_id}`);
-            const now = Date.now();
-            const next_retry_at = now + RECHECK_RETRY_DELAY;
-            const existing_recheck_until = this.flight_recheck_until.get(player_id);
-            const recheck_until = existing_recheck_until ?? now + RECHECK_WINDOW_DURATION;
-            const rechecking_response = {
-              player_id: response.result.player_id,
-              current: null,
-              recent_flights: response.result.recent_flights,
-              rechecking: true,
-              next_retry_at,
-              recheck_until
-            };
-            try {
-              const remaining_ttl = Math.max(0, recheck_until - now);
-              await this.cache.update_flight(rechecking_response, remaining_ttl);
-            } catch (err) {
-              log$f.error("Failed to update flight cache during recheck", err);
-            }
-            finalResult = rechecking_response;
-          }
-          for (const job of pending) {
-            job.resolve(finalResult);
-          }
-        } catch (err) {
-          log$f.error(`Paced flight API query failed for ${player_id}:`, err);
-          const apiErr = err;
-          if (apiErr?.ff_api_limits) {
-            this.last_limits = apiErr.ff_api_limits;
-          }
-          for (const job of pending) {
-            job.reject(err);
-          }
-        } finally {
-          this.pending_flights.delete(player_id);
-          this.flight_recheck_until.delete(player_id);
-          try {
-            await this.cache.clean_expired();
-          } catch (err) {
-            log$f.error("Failed to clean expired cache entries", err);
-          }
-          if (this.flight_queue.length > 0) {
-            this.schedule_flight_processor(FLIGHT_PACING_DELAY);
-          }
-        }
-      };
-      this.get_flights = async (player_id) => {
-        log$f.debug(`get_flights called for ${player_id}`);
-        if (!this.config.key) {
-          return {
-            player_id,
-            current: null,
-            recent_flights: []
-          };
-        }
-        let cached = null;
-        try {
-          cached = await this.cache.get_flight(player_id);
-        } catch (err) {
-          log$f.error("Failed to query flight cache", err);
-        }
-        if (cached) {
-          log$f.debug(`Flight cache hit for player ${player_id}`);
-          if (cached.rechecking) {
-            const now = Date.now();
-            if (cached.recheck_until && now >= cached.recheck_until) {
-              log$f.debug(
-                `Rechecking window expired for player ${player_id}. Finalizing no data.`
-              );
-              const final_response = {
-                player_id: cached.player_id,
-                current: null,
-                recent_flights: cached.recent_flights,
-                rechecking: false
-              };
-              try {
-                await this.cache.update_flight(
-                  final_response,
-                  FINALIZED_NO_FLIGHT_TTL
-                );
-              } catch (err) {
-                log$f.error("Failed to finalize flight cache", err);
-              }
-              return final_response;
-            }
-            if (cached.next_retry_at && now >= cached.next_retry_at) {
-              log$f.debug(
-                `Retrying API call for player ${player_id} during recheck window`
-              );
-              const result2 = await this.enqueue_flight_api(
-                player_id,
-                cached.recheck_until
-              );
-              return result2;
-            }
-            return {
-              player_id: cached.player_id,
-              current: cached.current,
-              recent_flights: cached.recent_flights,
-              rechecking: true,
-              next_retry_at: cached.next_retry_at,
-              recheck_until: cached.recheck_until
-            };
-          }
-          return {
-            player_id: cached.player_id,
-            current: cached.current,
-            recent_flights: cached.recent_flights
-          };
-        }
-        log$f.debug(`Flight cache miss for player ${player_id}. Querying API paced.`);
-        const result = await this.enqueue_flight_api(player_id);
-        return result;
-      };
-      this.complete = () => {
-        this.process_cache();
-      };
-      this.enqueue_cache = (player_id) => {
-        log$f.debug(`Enqueuing cache ${player_id}`);
-        this.cache_queue.add(player_id);
-        this.schedule_cache();
-      };
-      this.schedule_cache = () => {
-        if (this.cache_timer) {
-          log$f.debug(`schedule_cache called but job already scheduled`);
-          return;
-        }
-        log$f.debug(
-          `schedule_cache called and job scheduled for ${this.cache_delay} ms`
-        );
-        this.cache_timer = this.schedule(this.process_cache, this.cache_delay);
-      };
-      this.process_cache = async () => {
-        if (this.cache_timer) {
-          this.clear(this.cache_timer);
-          this.cache_timer = null;
-        }
-        const ids = Array.from(this.cache_queue);
-        this.cache_queue.clear();
-        if (ids.length <= 0) {
-          return;
-        }
-        let results;
-        try {
-          results = await this.cache.get(ids);
-        } catch (_) {
-          results = new Map();
-        }
-        log$f.debug(`Received ${results.size} cache results`);
-        for (const id of ids) {
-          const v = results.get(id);
-          if (v) {
-            log$f.debug("Id", id, "found in cache. Resolving value.");
-            this.resolve(id, v);
-          } else {
-            log$f.debug("Id", id, "not found in cache. Scheduling api call.");
-            this.enqueue_api(id);
-          }
-        }
-      };
-      this.clear_cache = () => {
-        this.cache.delete_db().catch((err) => {
-          log$f.error("Failed to delete IndexedDB cache", err);
-        });
-        check_key_status.clear();
-      };
-      this.enqueue_api = (player_id) => {
-        log$f.debug(`Enqueuing api ${player_id}`);
-        this.api_queue.add(player_id);
-        this.schedule_api();
-      };
-      this.schedule_api = (delay = this.api_initial_delay) => {
-        if (this.api_timer) {
-          log$f.debug(`schedule_api called but job already scheduled`);
-          return;
-        }
-        log$f.debug(`schedule_api called and job scheduled for ${delay} ms`);
-        this.api_timer = this.schedule(this.process_api, delay);
-      };
-      this.process_api = async () => {
-        log$f.debug("process_api called");
-        if (this.api_timer) {
-          this.clear(this.api_timer);
-          this.api_timer = null;
-        }
-        let ids = Array.from(this.api_queue);
-        if (ids.length > this.api_max_batch_size) {
-          ids = ids.slice(0, this.api_max_batch_size);
-        }
-        for (const id of ids) {
-          this.api_queue.delete(id);
-        }
-        log$f.debug(`Processing ${ids} api requests`);
-        if (ids.length <= 0) {
-          log$f.debug("No ids found to query");
-          return;
-        }
-        let next_run = this.api_default_delay;
-        let results;
-        try {
-          log$f.debug(`Calling query_stats with key=*** ids=[${ids}]`);
-          results = await query_stats(this.config.key, ids);
-        } catch (err) {
-          log$f.error("Received error response querying ffscouter api:", err);
-          for (const id of ids) {
-            this.reject(id, err);
-          }
-          const ff_error = err;
-          results = {
-            result: new Map(),
-            blank: true,
-            limits: ff_error.ff_api_limits
-          };
-        }
-        log$f.debug(
-          `Received api results: blank=${results.blank}, count=${results.result.size}`
-        );
-        if (results.blank) {
-          for (const id of ids) {
-            this.requeue_api(id);
-          }
-        } else {
-          try {
-            await this.cache.update(Array.from(results.result.values()));
-          } catch (err) {
-            log$f.error("Failed to update cache", err);
-          }
-          for (const id of ids) {
-            const v = results.result.get(id);
-            if (v) {
-              log$f.debug("Id", id, "found in results. Resolving value.");
-              this.resolve(id, v);
-            } else {
-              log$f.debug("Id", id, "not found in results. Resolving no_data.");
-              this.resolve(id, { player_id: id, no_data: true });
-            }
-          }
-        }
-        if (results.limits) {
-          this.last_limits = results.limits;
-          next_run = this.calculate_next_api_run(results.limits);
-        }
-        this.schedule_api(next_run);
-        try {
-          await this.cache.clean_expired();
-        } catch (err) {
-          log$f.error("Failed to clean expired cache entries", err);
-        }
-      };
-      this.calculate_next_api_run = (limits) => {
-        if (limits.remaining <= 0) {
-          return limits.reset_time.getTime() - Date.now();
-        } else if (limits.reset_time < new Date()) {
-          return this.api_initial_delay;
-        } else if (limits.rate_limit * 0.75 < limits.remaining) {
-          return this.api_default_delay;
-        } else {
-          const ms_left = limits.reset_time.getTime() - Date.now();
-          return ms_left / limits.remaining;
-        }
-      };
-      this.resolve = (id, value) => {
-        const entry = this.pending.get(id);
-        if (!entry) return;
-        entry.resolve(value);
-        this.pending.delete(id);
-      };
-      this.reject = (id, err) => {
-        const entry = this.pending.get(id);
-        if (!entry) return;
-        entry.reject(err);
-        this.pending.delete(id);
-      };
-      this.requeue_api = (id) => {
-        const entry = this.pending.get(id);
-        if (!entry) return;
-        entry.api_attempts++;
-        if (entry.api_attempts > this.api_attempts) {
-          this.reject(
-            id,
-            new Error(`Too many failed attempts to get stats for ${id}.`)
-          );
-          return false;
-        }
-        this.enqueue_api(id);
-        return true;
-      };
-      this.add_analytics_entry = async (feature, player_id, status) => {
-        if (!this.config.analytics_enabled) {
-          return;
-        }
-        try {
-          const url = window.location.origin + window.location.pathname;
-          const params = window.location.search;
-          const hash = window.location.hash;
-          await this.cache.add_analytics({
-            feature,
-            player_id,
-            status,
-            url,
-            params,
-            hash
-          });
-        } catch (err) {
-          log$f.error("Failed to add analytics entry", err);
-        }
-      };
-      this.get_analytics_entries = async () => {
-        try {
-          return await this.cache.get_analytics();
-        } catch (err) {
-          log$f.error("Failed to get analytics entries", err);
-          return [];
-        }
-      };
-      this.get_aggregated_analytics = async () => {
-        const entries = await this.get_analytics_entries();
-        const aggregationMap = new Map();
-        for (const entry of entries) {
-          let param = "";
-          if (entry.params) {
-            param = getParamFast(entry.params, "sid") || getParamFast(entry.params, "step") || "";
-          }
-          if (!param && entry.hash) {
-            let hashClean = entry.hash;
-            if (hashClean.startsWith("#/")) {
-              hashClean = hashClean.substring(2);
-            } else if (hashClean.startsWith("#") || hashClean.startsWith("/")) {
-              hashClean = hashClean.substring(1);
-            }
-            if (!hashClean.startsWith("!") && !hashClean.startsWith("?")) {
-              hashClean = `?${hashClean}`;
-            }
-            param = getParamFast(hashClean, "sid") || getParamFast(hashClean, "step") || "";
-          }
-          const key = `${entry.url}|${param}|${entry.feature}|${entry.status}`;
-          const existing = aggregationMap.get(key);
-          if (existing) {
-            existing.count++;
-          } else {
-            aggregationMap.set(key, {
-              url: entry.url,
-              param: param || "-",
-              feature: entry.feature,
-              status: entry.status,
-              count: 1
-            });
-          }
-        }
-        return Array.from(aggregationMap.values());
-      };
-      this.clear_analytics = async () => {
-        try {
-          await this.cache.clear_analytics();
-        } catch (err) {
-          log$f.error("Failed to clear analytics entries", err);
-        }
-      };
-      this.config = config;
-      if (cache) {
-        this.cache = cache;
-      }
-    }
-    get analytics_enabled() {
-      return this.config.analytics_enabled;
-    }
-  }
-  const ffscouter = new FFScouter(ffconfig);
   const unit = Object.create(null);
   const m = 6e4, h = m * 60, d = h * 24, y = d * 365.25;
   unit.year = unit.yr = unit.y = y;
@@ -2633,6 +912,31 @@ queryString.charCodeAt(pos - 1) === 63) {
       if (units) result = (result || 0) + n * units;
     });
     return result && result / (parse.unit[format] || 1) * (str[0] === "-" ? -1 : 1);
+  }
+  function resolve_estimate(data) {
+    const candidate = data.available_estimates?.[data.source];
+    return {
+      source: data.source,
+      bs_estimate: candidate?.bs_estimate ?? data.bs_estimate,
+      bs_estimate_human: candidate?.bs_estimate_human ?? data.bs_estimate_human,
+      last_updated: candidate?.last_updated ?? data.last_updated,
+      fair_fight: candidate?.fair_fight ?? data.fair_fight
+    };
+  }
+  function extract_ff(data) {
+    return resolve_estimate(data).fair_fight;
+  }
+  function extract_bs_estimate(data) {
+    return resolve_estimate(data).bs_estimate;
+  }
+  function extract_bs_estimate_human(data) {
+    return resolve_estimate(data).bs_estimate_human;
+  }
+  function extract_source(data) {
+    return resolve_estimate(data).source;
+  }
+  function extract_last_updated(data) {
+    return resolve_estimate(data).last_updated;
   }
   const HOUR = 60 * 60;
   const DAY = HOUR * 24;
@@ -2950,10 +1254,2391 @@ queryString.charCodeAt(pos - 1) === 63) {
     };
     return num * (multiplier[suffix] ?? 1);
   }
+  function format_suffix_number(n) {
+    const units = [
+      [1e12, "t"],
+      [1e9, "b"],
+      [1e6, "m"],
+      [1e3, "k"]
+    ];
+    for (const [divisor, suffix] of units) {
+      if (Math.abs(n) >= divisor) {
+        const scaled = Math.round(n / divisor * 100) / 100;
+        return `${scaled}${suffix}`;
+      }
+    }
+    return `${n}`;
+  }
   function parse_duration_to_seconds(valStr) {
     const trimmed = valStr.trim();
     if (!trimmed) return null;
     return parse(trimmed, "s");
+  }
+  const styles$4 = {
+    "ffscouter-attack-bounty-row": "_ffscouter-attack-bounty-row_60dre_2",
+    "ffscouter-attack-bounty-row__label": "_ffscouter-attack-bounty-row__label_60dre_11",
+    "ffscouter-attack-bounty-row__claim": "_ffscouter-attack-bounty-row__claim_60dre_15"
+  };
+  var TornApiError;
+  (function(TornApiError2) {
+    TornApiError2[TornApiError2["UNKNOWN_ERROR"] = 0] = "UNKNOWN_ERROR";
+    TornApiError2[TornApiError2["KEY_EMPTY"] = 1] = "KEY_EMPTY";
+    TornApiError2[TornApiError2["INCORRECT_KEY"] = 2] = "INCORRECT_KEY";
+    TornApiError2[TornApiError2["WRONG_TYPE"] = 3] = "WRONG_TYPE";
+    TornApiError2[TornApiError2["WRONG_FIELDS"] = 4] = "WRONG_FIELDS";
+    TornApiError2[TornApiError2["TOO_MANY_REQUESTS"] = 5] = "TOO_MANY_REQUESTS";
+    TornApiError2[TornApiError2["INCORRECT_ID"] = 6] = "INCORRECT_ID";
+    TornApiError2[TornApiError2["INCORRECT_RELATION"] = 7] = "INCORRECT_RELATION";
+    TornApiError2[TornApiError2["IP_BLOCK"] = 8] = "IP_BLOCK";
+    TornApiError2[TornApiError2["API_DISABLED"] = 9] = "API_DISABLED";
+    TornApiError2[TornApiError2["KEY_FEDERAL_JAIL"] = 10] = "KEY_FEDERAL_JAIL";
+    TornApiError2[TornApiError2["KEY_CHANGE_ERROR"] = 11] = "KEY_CHANGE_ERROR";
+    TornApiError2[TornApiError2["KEY_READ_ERROR"] = 12] = "KEY_READ_ERROR";
+    TornApiError2[TornApiError2["KEY_TEMPORARILY_DISABLED_TO_INACTIVITY"] = 13] = "KEY_TEMPORARILY_DISABLED_TO_INACTIVITY";
+    TornApiError2[TornApiError2["DAILY_READ_LIMIT_REACHED"] = 14] = "DAILY_READ_LIMIT_REACHED";
+    TornApiError2[TornApiError2["TEMPORARY_ERROR"] = 15] = "TEMPORARY_ERROR";
+    TornApiError2[TornApiError2["ACCESS_LEVEL_KEY_NOT_HIGH"] = 16] = "ACCESS_LEVEL_KEY_NOT_HIGH";
+    TornApiError2[TornApiError2["BACKEND_ERROR_OCCURRED"] = 17] = "BACKEND_ERROR_OCCURRED";
+    TornApiError2[TornApiError2["API_KEY_HAS_BEEN_PAUSED"] = 18] = "API_KEY_HAS_BEEN_PAUSED";
+    TornApiError2[TornApiError2["MUST_BE_MIGRATED_TO_CRIMES"] = 19] = "MUST_BE_MIGRATED_TO_CRIMES";
+    TornApiError2[TornApiError2["RACE_NOT_YET_FINISHED"] = 20] = "RACE_NOT_YET_FINISHED";
+    TornApiError2[TornApiError2["INCORRECT_CATEGORY"] = 21] = "INCORRECT_CATEGORY";
+    TornApiError2[TornApiError2["SELECTION_ONLY_AVAILABLE_API_V1"] = 22] = "SELECTION_ONLY_AVAILABLE_API_V1";
+    TornApiError2[TornApiError2["SELECTION_ONLY_AVAILABLE_API_V2"] = 23] = "SELECTION_ONLY_AVAILABLE_API_V2";
+    TornApiError2[TornApiError2["CLOSED_TEMPORARILY"] = 24] = "CLOSED_TEMPORARILY";
+    TornApiError2[TornApiError2["INVALID_STAT_REQUESTED"] = 25] = "INVALID_STAT_REQUESTED";
+    TornApiError2[TornApiError2["ONLY_CATEGORY_OR_STATS_CAN"] = 26] = "ONLY_CATEGORY_OR_STATS_CAN";
+    TornApiError2[TornApiError2["MUST_BE_MIGRATED_TO_ORGANIZED"] = 27] = "MUST_BE_MIGRATED_TO_ORGANIZED";
+    TornApiError2[TornApiError2["INCORRECT_LOG_ID"] = 28] = "INCORRECT_LOG_ID";
+    TornApiError2[TornApiError2["CATEGORY_SELECTION_NOT_AVAILABLE_FOR"] = 29] = "CATEGORY_SELECTION_NOT_AVAILABLE_FOR";
+  })(TornApiError || (TornApiError = {}));
+  class HTTPClient {
+    canAbort() {
+      return false;
+    }
+  }
+  class AbortableHTTPClient extends HTTPClient {
+    canAbort() {
+      return true;
+    }
+  }
+  class FetchHTTPClient extends AbortableHTTPClient {
+    async getJson(url, timeout = void 0) {
+      let response;
+      if (timeout !== void 0) {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), timeout);
+        response = await fetch(url, { signal: controller.signal });
+        clearTimeout(timeoutId);
+      } else {
+        response = await fetch(url);
+      }
+      return await response.json();
+    }
+  }
+  class TornApiClient {
+    httpClient;
+    defaultComment;
+    defaultTimeout;
+    constructor(options = {}) {
+      this.httpClient = options.httpClient ?? new FetchHTTPClient();
+      this.defaultComment = options.defaultComment;
+      this.defaultTimeout = options.defaultTimeout;
+    }
+    async getV1({ section, selections, id, params = {}, key, comment, cache, expiry, timeout }) {
+      const cached = await cache?.get({
+        section,
+        selections,
+        id,
+        params,
+        key
+      });
+      if (cached)
+        return cached;
+      let url = `https://api.torn.com/${section}/${id ?? ""}`;
+      url = this.populateUrl(url, key, selections ?? [], comment, params ?? {});
+      if (this.httpClient.canAbort() && typeof timeout === "number") {
+        return this.httpClient.getJson(url, timeout).then(addToCache).catch(this.handleError);
+      } else {
+        return this.httpClient.getJson(url).then(addToCache).catch(this.handleError);
+      }
+      function addToCache(response) {
+        if ("error" in response)
+          return response;
+        cache?.set({
+          section,
+          selections,
+          id,
+          params,
+          key
+        }, response, expiry ?? Date.now() + 3e4);
+        return response;
+      }
+    }
+    async getV2({ section, selections, id, params = {}, key, comment, cache, expiry, timeout }) {
+      const cached = await cache?.get({
+        section,
+        selections,
+        id,
+        params,
+        key
+      });
+      if (cached)
+        return cached;
+      let url = `https://api.torn.com/v2/${section}/${id ?? ""}`;
+      url = this.populateUrl(url, key, selections ?? [], comment, params ?? {});
+      if (this.httpClient.canAbort() && typeof timeout === "number") {
+        return this.httpClient.getJson(url, timeout).then(addToCache).catch(this.handleError);
+      } else {
+        return this.httpClient.getJson(url).then(addToCache).catch(this.handleError);
+      }
+      function addToCache(response) {
+        if ("error" in response)
+          return response;
+        cache?.set({
+          section,
+          selections,
+          id,
+          params,
+          key
+        }, response, expiry ?? Date.now() + 3e4);
+        return response;
+      }
+    }
+    handleError(error) {
+      console.error(error);
+      return { error: { code: -1, error: generateErrorString(error) } };
+      function generateErrorString(e) {
+        switch (typeof e) {
+          case "string":
+            return e;
+          case "object": {
+            if (e instanceof Error)
+              return e.message;
+            return JSON.stringify(e);
+          }
+          default:
+            return e.toString();
+        }
+      }
+    }
+    populateUrl(url, key, selections, comment, params) {
+      const allParams = {
+        key,
+        comment: comment ?? this.defaultComment,
+        selections: selections.length ? selections.join(",") : void 0,
+        ...params
+      };
+      const query = Object.entries(allParams).filter((entry) => !!entry[1]).map(([key2, value]) => `${key2}=${value}`).join("&");
+      return `${url}?${query}`;
+    }
+  }
+  const FF_SCOUTER_BASE_URL = "https://ffscouter.com/api/v1";
+  new TornApiClient({
+    defaultComment: `FFScouterV2-${"3.4-beta2"}`,
+    defaultTimeout: 30
+});
+  async function gmRequest(options) {
+    if (isInPDA() && !ffconfig.debug_disable_pda_http) {
+      const url = options.url;
+      const headers = options.headers ?? {};
+      const method = (options.method ?? "GET").toUpperCase();
+      const pdaResp = method === "POST" ? await window.PDA_httpPost(url, headers, options.data) : await window.PDA_httpGet(url, headers);
+      return pdaResp;
+    }
+    return new Promise((resolve, reject) => {
+      GM_xmlhttpRequest({
+        ...options,
+        onload: (response) => resolve(response),
+        onerror: (err) => reject(err),
+        ontimeout: () => reject(new Error("Timeout making GM_xmlhttpRequest"))
+      });
+    });
+  }
+  const make_stats_url = (key, player_ids) => {
+    const query = new URLSearchParams([
+      ["key", key],
+      ["targets", player_ids.toString()]
+    ]);
+    return `${FF_SCOUTER_BASE_URL}/get-stats?${query.toString()}`;
+  };
+  const EMPTY_AVAILABLE_ESTIMATES = {
+    bss: null,
+    premium: null,
+    spies: null
+  };
+  function is_ff_success(resp) {
+    return resp.code === void 0;
+  }
+  function is_ff_check_success(resp) {
+    return resp.code === void 0;
+  }
+  class FFApiError extends Error {
+    constructor(message, options) {
+      super(message, options);
+      this.ff_api_limits = options?.ff_api_limits;
+      this.ff_api_error = options?.ff_api_error;
+      this.ff_http_status = options?.ff_http_status;
+    }
+  }
+  const query_stats = async (key, player_ids, requester = gmRequest) => {
+    logger.debug("Calling query_stats with arguments", { key, player_ids });
+    const url = make_stats_url(key, player_ids);
+    const resp = await requester({
+      method: "GET",
+      url
+    });
+    if (!resp) {
+      return { result: new Map(), blank: true };
+    }
+    const limits = parse_limit_headers(resp.responseHeaders);
+    let ff_response = null;
+    try {
+      ff_response = JSON.parse(resp.responseText);
+    } catch {
+      logger.warn(
+        `query_stats: unparseable response. status=${resp.status}, body=${resp.responseText?.substring(0, 200)}, url=${url}`
+      );
+      throw new FFApiError(
+        `API request failed. Couldn't parse response. HTTP status code: ${resp.status}`,
+        { ff_api_limits: limits }
+      );
+    }
+    if (ff_response == null) {
+      logger.warn(
+        `query_stats: null response after parse. status=${resp.status}, url=${url}`
+      );
+      throw new FFApiError(
+        `API request failed. Response not set. HTTP status code: ${resp.status}`,
+        { ff_api_limits: limits }
+      );
+    }
+    if (!is_ff_success(ff_response)) {
+      throw new FFApiError(
+        `API request failed. Error: ${ff_response.error}; Code: ${ff_response.code}`,
+        { ff_api_error: ff_response, ff_api_limits: limits }
+      );
+    }
+    if (resp.status !== 200) {
+      logger.warn(
+        `query_stats: unexpected HTTP status. status=${resp.status}, body=${resp.responseText?.substring(0, 200)}, url=${url}`
+      );
+      throw new FFApiError(
+        `API request failed. HTTP status code: ${resp.status}`,
+        { ff_api_limits: limits }
+      );
+    }
+    const results = new Map();
+    ff_response.forEach((result) => {
+      if (result?.player_id) {
+        if (!result.fair_fight || !result.last_updated || !result.bs_estimate || !result.bs_estimate_human || !result.bss_public || !result.source) {
+          results.set(result.player_id, {
+            no_data: true,
+            player_id: result.player_id
+          });
+        } else {
+          let distribution;
+          if (result.distribution) {
+            distribution = {
+              last_updated: result.distribution.last_updated,
+              distribution_human: result.distribution.distribution_human,
+              stats_percentage: {
+                strength: result.distribution.stats_percentage?.strength,
+                speed: result.distribution.stats_percentage?.speed,
+                defense: result.distribution.stats_percentage?.defense,
+                dexterity: result.distribution.stats_percentage?.dexterity
+              }
+            };
+          }
+          results.set(result.player_id, {
+            no_data: false,
+            fair_fight: result.fair_fight,
+            last_updated: result.last_updated,
+            bs_estimate: result.bs_estimate,
+            bs_estimate_human: result.bs_estimate_human,
+            bss_public: result.bss_public,
+            source: result.source ?? "bss",
+            premium_insights_available: result.premium_insights_available ?? false,
+            distribution,
+            available_estimates: result.available_estimates ?? EMPTY_AVAILABLE_ESTIMATES,
+            spies: result.spies ?? [],
+            player_id: result.player_id
+          });
+        }
+      }
+    });
+    for (const id of player_ids) {
+      if (!results.get(id)) {
+        results.set(id, {
+          no_data: true,
+          player_id: id
+        });
+      }
+    }
+    return { result: results, blank: false, limits };
+  };
+  const parse_limit_headers = (responseHeaders) => {
+    if (typeof responseHeaders !== "string") {
+      return void 0;
+    }
+    const headerLines = responseHeaders.split("\n");
+    const headers = new Map();
+    for (const line of headerLines) {
+      const [key, value] = line.split(":", 2);
+      if (!key || !value) {
+        continue;
+      }
+      headers.set(key, value.trim());
+    }
+    const reset_time_str = headers.get("x-ratelimit-reset-timestamp");
+    const remaining_str = headers.get("x-ratelimit-remaining");
+    const rate_limit_str = headers.get("x-ratelimit-limit");
+    if (reset_time_str && remaining_str && rate_limit_str) {
+      const remaining = parseInt(remaining_str, 10);
+      const rate_limit = parseInt(rate_limit_str, 10);
+      const this_minute = rate_limit - remaining;
+      return {
+        reset_time: new Date(parseInt(reset_time_str, 10) * 1e3),
+        remaining,
+        rate_limit,
+        this_minute
+      };
+    }
+  };
+  const check_key = async (key, requester = gmRequest) => {
+    if (!key) {
+      return { blank: true };
+    }
+    const query = new URLSearchParams([["key", key]]);
+    const url = `${FF_SCOUTER_BASE_URL}/check-key?${query.toString()}`;
+    const resp = await requester({
+      method: "GET",
+      url
+    });
+    if (!resp) {
+      return { blank: true };
+    }
+    const limits = parse_limit_headers(resp.responseHeaders);
+    let ff_response = null;
+    try {
+      ff_response = JSON.parse(resp.responseText);
+    } catch {
+      logger.warn(
+        `check_key: unparseable response. status=${resp.status}, body=${resp.responseText?.substring(0, 200)}, url=${url}`
+      );
+      throw new FFApiError(
+        `API request failed. Couldn't parse response. HTTP status code: ${resp.status}`,
+        { ff_api_limits: limits }
+      );
+    }
+    if (ff_response == null) {
+      logger.warn(
+        `check_key: null response after parse. status=${resp.status}, url=${url}`
+      );
+      throw new FFApiError(
+        `API request failed. Response not set. HTTP status code: ${resp.status}`,
+        { ff_api_limits: limits }
+      );
+    }
+    if (!is_ff_check_success(ff_response)) {
+      throw new FFApiError(
+        `API request failed. Error: ${ff_response.error}; Code: ${ff_response.code}`,
+        { ff_api_error: ff_response, ff_api_limits: limits }
+      );
+    }
+    if (resp.status !== 200) {
+      logger.warn(
+        `check_key: unexpected HTTP status. status=${resp.status}, body=${resp.responseText?.substring(0, 200)}, url=${url}`
+      );
+      throw new FFApiError(
+        `API request failed. HTTP status code: ${resp.status}`,
+        { ff_api_limits: limits }
+      );
+    }
+    return { result: ff_response, blank: false, limits };
+  };
+  const make_flights_url = (key, target) => {
+    const query = new URLSearchParams([
+      ["key", key],
+      ["target", target.toString()]
+    ]);
+    return `${FF_SCOUTER_BASE_URL}/player-flights?${query.toString()}`;
+  };
+  function is_flight_success(resp) {
+    return resp.code === void 0;
+  }
+  const query_flights = async (key, target, requester = gmRequest) => {
+    logger.debug("Calling query_flights with arguments", { key, target });
+    const url = make_flights_url(key, target);
+    const resp = await requester({
+      method: "GET",
+      url
+    });
+    if (!resp) {
+      return { blank: true };
+    }
+    const limits = parse_limit_headers(resp.responseHeaders);
+    let ff_response = null;
+    try {
+      ff_response = JSON.parse(resp.responseText);
+    } catch {
+      logger.warn(
+        `query_flights: unparseable response. status=${resp.status}, body=${resp.responseText?.substring(0, 200)}, url=${url}`
+      );
+      throw new FFApiError(
+        `API request failed. Couldn't parse response. HTTP status code: ${resp.status}`,
+        { ff_api_limits: limits }
+      );
+    }
+    if (ff_response == null) {
+      logger.warn(
+        `query_flights: null response after parse. status=${resp.status}, url=${url}`
+      );
+      throw new FFApiError(
+        `API request failed. Response not set. HTTP status code: ${resp.status}`,
+        { ff_api_limits: limits }
+      );
+    }
+    if (!is_flight_success(ff_response)) {
+      throw new FFApiError(
+        `API request failed. Error: ${ff_response.error}; Code: ${ff_response.code}`,
+        { ff_api_error: ff_response, ff_api_limits: limits }
+      );
+    }
+    if (resp.status !== 200) {
+      logger.warn(
+        `query_flights: unexpected HTTP status. status=${resp.status}, body=${resp.responseText?.substring(0, 200)}, url=${url}`
+      );
+      throw new FFApiError(
+        `API request failed. HTTP status code: ${resp.status}`,
+        { ff_api_limits: limits }
+      );
+    }
+    return { result: ff_response, blank: false, limits };
+  };
+  const query_targets = async (key, params, requester = gmRequest) => {
+    logger.debug("Calling query_targets with arguments", { key, params });
+    const query = new URLSearchParams([["key", key]]);
+    if (params.minlevel !== void 0 && params.minlevel !== null) {
+      query.append("minlevel", params.minlevel.toString());
+    }
+    if (params.maxlevel !== void 0 && params.maxlevel !== null) {
+      query.append("maxlevel", params.maxlevel.toString());
+    }
+    if (params.minff !== void 0 && params.minff !== null) {
+      query.append("minff", params.minff.toString());
+    }
+    if (params.maxff !== void 0 && params.maxff !== null) {
+      query.append("maxff", params.maxff.toString());
+    }
+    if (params.inactiveonly !== void 0 && params.inactiveonly !== null) {
+      query.append("inactiveonly", params.inactiveonly.toString());
+    }
+    if (params.factionless !== void 0 && params.factionless !== null) {
+      query.append("factionless", params.factionless.toString());
+    }
+    if (params.limit !== void 0 && params.limit !== null) {
+      query.append("limit", params.limit.toString());
+    }
+    const url = `${FF_SCOUTER_BASE_URL}/get-targets?${query.toString()}`;
+    const resp = await requester({
+      method: "GET",
+      url
+    });
+    if (!resp) {
+      throw new Error("Empty response from get-targets");
+    }
+    if (resp.status !== 200) {
+      let errMessage = `API request failed with HTTP ${resp.status}`;
+      try {
+        const errJson = JSON.parse(resp.responseText);
+        if (errJson?.error) {
+          errMessage = errJson.error;
+        }
+      } catch {
+      }
+      throw new Error(errMessage);
+    }
+    const parsed = JSON.parse(resp.responseText);
+    if (parsed.error) {
+      throw new Error(parsed.error);
+    }
+    return parsed;
+  };
+  const parse_bounty_response = (resp, label, ok_statuses = [200]) => {
+    const limits = parse_limit_headers(resp.responseHeaders);
+    let parsed = null;
+    try {
+      parsed = JSON.parse(resp.responseText);
+    } catch {
+      logger.warn(
+        `${label}: unparseable response. status=${resp.status}, body=${resp.responseText?.substring(0, 200)}`
+      );
+      throw new FFApiError(
+        `API request failed. Couldn't parse response. HTTP status code: ${resp.status}`,
+        { ff_api_limits: limits, ff_http_status: resp.status }
+      );
+    }
+    if (parsed == null) {
+      logger.warn(`${label}: null response after parse. status=${resp.status}`);
+      throw new FFApiError(
+        `API request failed. Response not set. HTTP status code: ${resp.status}`,
+        { ff_api_limits: limits, ff_http_status: resp.status }
+      );
+    }
+    const maybe_error = parsed;
+    if (maybe_error.code !== void 0) {
+      throw new FFApiError(
+        `API request failed. Error: ${maybe_error.error}; Code: ${maybe_error.code}`,
+        {
+          ff_api_error: maybe_error,
+          ff_api_limits: limits,
+          ff_http_status: resp.status
+        }
+      );
+    }
+    if (!ok_statuses.includes(resp.status)) {
+      logger.warn(
+        `${label}: unexpected HTTP status. status=${resp.status}, body=${resp.responseText?.substring(0, 200)}`
+      );
+      throw new FFApiError(
+        `API request failed. HTTP status code: ${resp.status}`,
+        { ff_api_limits: limits, ff_http_status: resp.status }
+      );
+    }
+    return { result: parsed, limits };
+  };
+  const make_bounty_board_url = (key) => {
+    const query = new URLSearchParams([["key", key]]);
+    return `${FF_SCOUTER_BASE_URL}/bounties/seller/board?${query.toString()}`;
+  };
+  const query_bounty_seller_board = async (key, requester = gmRequest) => {
+    logger.debug("Calling query_bounty_seller_board");
+    const url = make_bounty_board_url(key);
+    const resp = await requester({
+      method: "GET",
+      url
+    });
+    if (!resp) {
+      return { blank: true };
+    }
+    const { result, limits } = parse_bounty_response(
+      resp,
+      "query_bounty_seller_board"
+    );
+    return { result, blank: false, limits };
+  };
+  const post_bounty_json = (url, body, requester) => {
+    return requester({
+      method: "POST",
+      url,
+      headers: { "Content-Type": "application/json" },
+      data: JSON.stringify(body)
+    });
+  };
+  const BOUNTY_POLICY_URL = "https://ffscouter.com/claim-bounties";
+  const accept_bounty_seller_policy = async (key, i_have_read_rules_and_data_policy, requester = gmRequest) => {
+    logger.debug("Calling accept_bounty_seller_policy");
+    const url = `${FF_SCOUTER_BASE_URL}/bounties/seller/policy/accept`;
+    const resp = await post_bounty_json(
+      url,
+      { key, i_have_read_rules_and_data_policy },
+      requester
+    );
+    if (!resp) {
+      return { blank: true };
+    }
+    const { result, limits } = parse_bounty_response(
+      resp,
+      "accept_bounty_seller_policy"
+    );
+    return { result, blank: false, limits };
+  };
+  const BOUNTY_REFERRER_PLAYER_ID = 3354782;
+  const submit_bounty_seller_claim = async (key, target, referrer_player_id = BOUNTY_REFERRER_PLAYER_ID, requester = gmRequest) => {
+    logger.debug("Calling submit_bounty_seller_claim", { target });
+    let hint = {};
+    if (target?.target_player_id != null && target?.target_faction_id != null) {
+      logger.warn(
+        "submit_bounty_seller_claim: both target hints set; submitting without hints"
+      );
+    } else if (target?.target_player_id != null) {
+      hint = { target_player_id: target.target_player_id };
+    } else if (target?.target_faction_id != null) {
+      hint = { target_faction_id: target.target_faction_id };
+    }
+    const url = `${FF_SCOUTER_BASE_URL}/bounties/seller/claims`;
+    const body = { key, ...hint, referrer_player_id };
+    const resp = await post_bounty_json(url, body, requester);
+    if (!resp) {
+      return { blank: true };
+    }
+    const { result, limits } = parse_bounty_response(
+      resp,
+      "submit_bounty_seller_claim",
+      [200, 201]
+    );
+    return { result, blank: false, limits };
+  };
+  function sort_tiers(tiers) {
+    return [...tiers].sort((a, b) => b.price_per_hit - a.price_per_hit);
+  }
+  function covers(target, player_id) {
+    if (target.target_faction_id != null) {
+      return (target.members ?? []).some((m2) => m2.player_id === player_id);
+    }
+    return target.target_player_id === player_id;
+  }
+  function find_bounty_match(targets, player_id) {
+    let best = null;
+    for (const target of targets) {
+      if (target.disabled || !covers(target, player_id)) {
+        continue;
+      }
+      if (!best || target.max_price_per_hit > best.max_price_per_hit || target.max_price_per_hit === best.max_price_per_hit && target.target_faction_id == null) {
+        best = target;
+      }
+    }
+    if (!best) {
+      return null;
+    }
+    return {
+      claim_target: best.target_faction_id != null ? { target_faction_id: best.target_faction_id } : { target_player_id: player_id },
+      tiers: sort_tiers(best.tiers),
+      total_remaining: best.total_remaining
+    };
+  }
+  function is_own_bounty(target) {
+    return target.disabled && target.disabled_reason === "buyer";
+  }
+  function is_shown_target(target) {
+    return !target.disabled || is_own_bounty(target);
+  }
+  function format_tier_label(tier) {
+    return `$${format_suffix_number(tier.price_per_hit)} × ${tier.quantity_remaining}`;
+  }
+  function row_passes_filters(row, ff_lookup, filters) {
+    if (filters.stats_less_than !== null && row.estimate_available && row.estimate !== null && row.estimate >= filters.stats_less_than) {
+      return false;
+    }
+    if (filters.ff_less_than !== null) {
+      const ff = ff_lookup.get(row.player_id);
+      if (ff && !ff.no_data && extract_ff(ff) >= filters.ff_less_than) {
+        return false;
+      }
+    }
+    return true;
+  }
+  function player_row(target) {
+    if (target.target_player_id == null) {
+      return null;
+    }
+    return {
+      kind: "player",
+      row_key: `p${target.target_player_id}`,
+      player_id: target.target_player_id,
+      name: target.target_name,
+      estimate: target.estimate ?? null,
+      estimate_available: target.estimate_available ?? false,
+      tiers: sort_tiers(target.tiers),
+      max_price_per_hit: target.max_price_per_hit,
+      claim_target: { target_player_id: target.target_player_id },
+      own_bounty: is_own_bounty(target)
+    };
+  }
+  function faction_card(target) {
+    const faction_id = target.target_faction_id;
+    if (faction_id == null) {
+      return null;
+    }
+    const tiers = sort_tiers(target.tiers);
+    const own_bounty = is_own_bounty(target);
+    const members = (target.members ?? []).map((member) => ({
+      kind: "player",
+      row_key: `f${faction_id}:m${member.player_id}`,
+      player_id: member.player_id,
+      name: member.name,
+      estimate: member.estimate,
+      estimate_available: member.estimate_available,
+
+tiers,
+      max_price_per_hit: target.max_price_per_hit,
+      claim_target: { target_faction_id: faction_id },
+      own_bounty
+    }));
+    return {
+      kind: "faction",
+      row_key: `f${faction_id}`,
+      faction_id,
+      faction_name: target.target_faction_name ?? target.target_name,
+      faction_tag: target.target_faction_tag ?? null,
+      total_remaining: target.total_remaining,
+      max_price_per_hit: target.max_price_per_hit,
+      tiers,
+      members,
+      own_bounty
+    };
+  }
+  function build_board_view(targets, ff_lookup, filters) {
+    const rows = [];
+    for (const target of targets) {
+      if (!is_shown_target(target)) {
+        continue;
+      }
+      if (target.target_faction_id != null) {
+        const card = faction_card(target);
+        if (!card) {
+          continue;
+        }
+        const had_members = card.members.length > 0;
+        card.members = card.members.filter(
+          (m2) => row_passes_filters(m2, ff_lookup, filters)
+        );
+        if (had_members && card.members.length === 0) {
+          continue;
+        }
+        rows.push(card);
+      } else {
+        const row = player_row(target);
+        if (row && row_passes_filters(row, ff_lookup, filters)) {
+          rows.push(row);
+        }
+      }
+    }
+    rows.sort((a, b) => b.max_price_per_hit - a.max_price_per_hit);
+    return rows;
+  }
+  function ff_ids_to_load(targets, expanded_factions) {
+    const expanded = new Set(expanded_factions);
+    const ids = [];
+    for (const target of targets) {
+      if (target.disabled) {
+        continue;
+      }
+      if (target.target_faction_id != null) {
+        if (expanded.has(target.target_faction_id)) {
+          for (const member of target.members ?? []) {
+            ids.push(member.player_id);
+          }
+        }
+      } else if (target.target_player_id != null) {
+        ids.push(target.target_player_id);
+      }
+    }
+    return ids;
+  }
+  function api_error_message(err) {
+    if (err instanceof FFApiError && err.ff_api_error?.error) {
+      return err.ff_api_error.error;
+    }
+    if (err instanceof Error) {
+      return err.message;
+    }
+    return String(err);
+  }
+  const CODE_INVALID_KEY = 6;
+  const CODE_CONSENT_REQUIRED = 86;
+  function classify_board_error(err) {
+    if (err instanceof FFApiError) {
+      const code = err.ff_api_error?.code;
+      if (code === CODE_CONSENT_REQUIRED) {
+        return { phase: "consent" };
+      }
+      if (code === CODE_INVALID_KEY) {
+        return { phase: "key_unregistered" };
+      }
+    } else if (err instanceof Error && err.message === "No API key configured") {
+      return { phase: "key_missing" };
+    }
+    return { phase: "error", message: api_error_message(err) };
+  }
+  const cls$3 = {
+    row: styles$4["ffscouter-attack-bounty-row"],
+    label: styles$4["ffscouter-attack-bounty-row__label"],
+    claim: styles$4["ffscouter-attack-bounty-row__claim"]
+  };
+  const CLAIM_SUBMITTED = "Bounty claim submitted";
+  function AttackBountyRow({
+    match,
+    claimPending,
+    claimed,
+    onClaim
+  }) {
+    const top = match.tiers[0];
+    const remaining = match.total_remaining;
+    return jsxs("div", { id: "ffscouter-attack-bounty-row", className: cls$3.row, children: [
+jsx("span", { className: cls$3.label, children: "FF Scouter Bounty:" }),
+      top ? (
+
+
+jsxs("span", { title: match.tiers.map(format_tier_label).join(", then "), children: [
+          "$",
+          format_suffix_number(top.price_per_hit),
+          " per hit"
+        ] })
+      ) : null,
+jsxs("span", { children: [
+        remaining,
+        " ",
+        remaining === 1 ? "hit" : "hits",
+        " remaining"
+      ] }),
+jsx(
+        "button",
+        {
+          type: "button",
+          className: cls$3.claim,
+          disabled: claimPending,
+          title: claimed ? CLAIM_SUBMITTED : void 0,
+          onClick: onClaim,
+          children: claimed ? "Claim ✓" : "Claim"
+        }
+      )
+    ] });
+  }
+  const instanceOfAny = (object, constructors) => constructors.some((c) => object instanceof c);
+  let idbProxyableTypes;
+  let cursorAdvanceMethods;
+  function getIdbProxyableTypes() {
+    return idbProxyableTypes || (idbProxyableTypes = [
+      IDBDatabase,
+      IDBObjectStore,
+      IDBIndex,
+      IDBCursor,
+      IDBTransaction
+    ]);
+  }
+  function getCursorAdvanceMethods() {
+    return cursorAdvanceMethods || (cursorAdvanceMethods = [
+      IDBCursor.prototype.advance,
+      IDBCursor.prototype.continue,
+      IDBCursor.prototype.continuePrimaryKey
+    ]);
+  }
+  const transactionDoneMap = new WeakMap();
+  const transformCache = new WeakMap();
+  const reverseTransformCache = new WeakMap();
+  function promisifyRequest(request) {
+    const promise = new Promise((resolve, reject) => {
+      const unlisten = () => {
+        request.removeEventListener("success", success);
+        request.removeEventListener("error", error);
+      };
+      const success = () => {
+        resolve(wrap(request.result));
+        unlisten();
+      };
+      const error = () => {
+        reject(request.error);
+        unlisten();
+      };
+      request.addEventListener("success", success);
+      request.addEventListener("error", error);
+    });
+    reverseTransformCache.set(promise, request);
+    return promise;
+  }
+  function cacheDonePromiseForTransaction(tx) {
+    if (transactionDoneMap.has(tx))
+      return;
+    const done = new Promise((resolve, reject) => {
+      const unlisten = () => {
+        tx.removeEventListener("complete", complete);
+        tx.removeEventListener("error", error);
+        tx.removeEventListener("abort", error);
+      };
+      const complete = () => {
+        resolve();
+        unlisten();
+      };
+      const error = () => {
+        reject(tx.error || new DOMException("AbortError", "AbortError"));
+        unlisten();
+      };
+      tx.addEventListener("complete", complete);
+      tx.addEventListener("error", error);
+      tx.addEventListener("abort", error);
+    });
+    transactionDoneMap.set(tx, done);
+  }
+  let idbProxyTraps = {
+    get(target, prop, receiver) {
+      if (target instanceof IDBTransaction) {
+        if (prop === "done")
+          return transactionDoneMap.get(target);
+        if (prop === "store") {
+          return receiver.objectStoreNames[1] ? void 0 : receiver.objectStore(receiver.objectStoreNames[0]);
+        }
+      }
+      return wrap(target[prop]);
+    },
+    set(target, prop, value) {
+      target[prop] = value;
+      return true;
+    },
+    has(target, prop) {
+      if (target instanceof IDBTransaction && (prop === "done" || prop === "store")) {
+        return true;
+      }
+      return prop in target;
+    }
+  };
+  function replaceTraps(callback) {
+    idbProxyTraps = callback(idbProxyTraps);
+  }
+  function wrapFunction(func) {
+    if (getCursorAdvanceMethods().includes(func)) {
+      return function(...args) {
+        func.apply(unwrap(this), args);
+        return wrap(this.request);
+      };
+    }
+    return function(...args) {
+      return wrap(func.apply(unwrap(this), args));
+    };
+  }
+  function transformCachableValue(value) {
+    if (typeof value === "function")
+      return wrapFunction(value);
+    if (value instanceof IDBTransaction)
+      cacheDonePromiseForTransaction(value);
+    if (instanceOfAny(value, getIdbProxyableTypes()))
+      return new Proxy(value, idbProxyTraps);
+    return value;
+  }
+  function wrap(value) {
+    if (value instanceof IDBRequest)
+      return promisifyRequest(value);
+    if (transformCache.has(value))
+      return transformCache.get(value);
+    const newValue = transformCachableValue(value);
+    if (newValue !== value) {
+      transformCache.set(value, newValue);
+      reverseTransformCache.set(newValue, value);
+    }
+    return newValue;
+  }
+  const unwrap = (value) => reverseTransformCache.get(value);
+  function openDB(name, version, { blocked, upgrade, blocking, terminated } = {}) {
+    const request = indexedDB.open(name, version);
+    const openPromise = wrap(request);
+    if (upgrade) {
+      request.addEventListener("upgradeneeded", (event) => {
+        upgrade(wrap(request.result), event.oldVersion, event.newVersion, wrap(request.transaction), event);
+      });
+    }
+    if (blocked) {
+      request.addEventListener("blocked", (event) => blocked(
+event.oldVersion,
+        event.newVersion,
+        event
+      ));
+    }
+    openPromise.then((db) => {
+      if (terminated)
+        db.addEventListener("close", () => terminated());
+      if (blocking) {
+        db.addEventListener("versionchange", (event) => blocking(event.oldVersion, event.newVersion, event));
+      }
+    }).catch(() => {
+    });
+    return openPromise;
+  }
+  function deleteDB(name, { blocked } = {}) {
+    const request = indexedDB.deleteDatabase(name);
+    if (blocked) {
+      request.addEventListener("blocked", (event) => blocked(
+event.oldVersion,
+        event
+      ));
+    }
+    return wrap(request).then(() => void 0);
+  }
+  const readMethods = ["get", "getKey", "getAll", "getAllKeys", "count"];
+  const writeMethods = ["put", "add", "delete", "clear"];
+  const cachedMethods = new Map();
+  function getMethod(target, prop) {
+    if (!(target instanceof IDBDatabase && !(prop in target) && typeof prop === "string")) {
+      return;
+    }
+    if (cachedMethods.get(prop))
+      return cachedMethods.get(prop);
+    const targetFuncName = prop.replace(/FromIndex$/, "");
+    const useIndex = prop !== targetFuncName;
+    const isWrite = writeMethods.includes(targetFuncName);
+    if (
+!(targetFuncName in (useIndex ? IDBIndex : IDBObjectStore).prototype) || !(isWrite || readMethods.includes(targetFuncName))
+    ) {
+      return;
+    }
+    const method = async function(storeName, ...args) {
+      const tx = this.transaction(storeName, isWrite ? "readwrite" : "readonly");
+      let target2 = tx.store;
+      if (useIndex)
+        target2 = target2.index(args.shift());
+      return (await Promise.all([
+        target2[targetFuncName](...args),
+        isWrite && tx.done
+      ]))[0];
+    };
+    cachedMethods.set(prop, method);
+    return method;
+  }
+  replaceTraps((oldTraps) => ({
+    ...oldTraps,
+    get: (target, prop, receiver) => getMethod(target, prop) || oldTraps.get(target, prop, receiver),
+    has: (target, prop) => !!getMethod(target, prop) || oldTraps.has(target, prop)
+  }));
+  const advanceMethodProps = ["continue", "continuePrimaryKey", "advance"];
+  const methodMap = {};
+  const advanceResults = new WeakMap();
+  const ittrProxiedCursorToOriginalProxy = new WeakMap();
+  const cursorIteratorTraps = {
+    get(target, prop) {
+      if (!advanceMethodProps.includes(prop))
+        return target[prop];
+      let cachedFunc = methodMap[prop];
+      if (!cachedFunc) {
+        cachedFunc = methodMap[prop] = function(...args) {
+          advanceResults.set(this, ittrProxiedCursorToOriginalProxy.get(this)[prop](...args));
+        };
+      }
+      return cachedFunc;
+    }
+  };
+  async function* iterate(...args) {
+    let cursor = this;
+    if (!(cursor instanceof IDBCursor)) {
+      cursor = await cursor.openCursor(...args);
+    }
+    if (!cursor)
+      return;
+    cursor = cursor;
+    const proxiedCursor = new Proxy(cursor, cursorIteratorTraps);
+    ittrProxiedCursorToOriginalProxy.set(proxiedCursor, cursor);
+    reverseTransformCache.set(proxiedCursor, unwrap(cursor));
+    while (cursor) {
+      yield proxiedCursor;
+      cursor = await (advanceResults.get(proxiedCursor) || cursor.continue());
+      advanceResults.delete(proxiedCursor);
+    }
+  }
+  function isIteratorProp(target, prop) {
+    return prop === Symbol.asyncIterator && instanceOfAny(target, [IDBIndex, IDBObjectStore, IDBCursor]) || prop === "iterate" && instanceOfAny(target, [IDBIndex, IDBObjectStore]);
+  }
+  replaceTraps((oldTraps) => ({
+    ...oldTraps,
+    get(target, prop, receiver) {
+      if (isIteratorProp(target, prop))
+        return iterate;
+      return oldTraps.get(target, prop, receiver);
+    },
+    has(target, prop) {
+      return isIteratorProp(target, prop) || oldTraps.has(target, prop);
+    }
+  }));
+  const log$k = logger.child("storage");
+  const STORES = {
+    CACHE: "cache",
+    FLIGHTS: "flights",
+    ANALYTICS: "analytics",
+    BOUNTY_BOARD: "bounty_board"
+  };
+  class FFCache {
+    constructor(db_name) {
+      this.db = null;
+      this.db_version = 4;
+      this.cache_interval = 60 * 60 * 1e3;
+      this.last_clean = 0;
+      this.active_operations = 0;
+      this.close_timer = null;
+      this.open_promise = null;
+      this.channel = null;
+      this.state = "CLOSED";
+      this.deletion_promise = null;
+      this.resolve_deletion = null;
+      this.migrations = new Map([
+        [
+          1,
+          (db, _) => {
+            const store = db.createObjectStore(STORES.CACHE, {
+              keyPath: "player_id"
+            });
+            store.createIndex("expiry", "expiry", {
+              unique: false
+            });
+          }
+        ],
+        [
+          2,
+          (db, _) => {
+            const store = db.createObjectStore(STORES.FLIGHTS, {
+              keyPath: "player_id"
+            });
+            store.createIndex("expiry", "expiry", {
+              unique: false
+            });
+          }
+        ],
+        [
+          3,
+          (db, _) => {
+            const store = db.createObjectStore(STORES.ANALYTICS, {
+              keyPath: "id",
+              autoIncrement: true
+            });
+            store.createIndex("timestamp", "timestamp", {
+              unique: false
+            });
+          }
+        ],
+        [
+          4,
+          (db, _) => {
+            const store = db.createObjectStore(STORES.BOUNTY_BOARD, {
+              keyPath: "key"
+            });
+            store.createIndex("expiry", "expiry", {
+              unique: false
+            });
+          }
+        ]
+      ]);
+      this.open = async () => {
+        if (this.db) {
+          return this.db;
+        }
+        if (this.open_promise) {
+          return this.open_promise;
+        }
+        if (typeof BroadcastChannel !== "undefined" && !this.channel) {
+          this.channel = new BroadcastChannel(`ffcache-channel-${this.db_name}`);
+          this.channel.onmessage = (event) => {
+            this.handle_broadcast(event.data);
+          };
+          if (typeof this.channel.unref === "function") {
+            this.channel.unref();
+          }
+        }
+        const cache = this;
+        this.open_promise = (async () => {
+          try {
+            const db = await openDB(this.db_name, this.db_version, {
+              upgrade(db2, oldVersion, newVersion, transaction, _event) {
+                log$k.info("Need to upgrade from", oldVersion, "to", newVersion);
+                for (let i = (oldVersion ?? 0) + 1; i <= cache.db_version; i++) {
+                  log$k.debug(`Migration: ${i}`);
+                  const m2 = cache.migrations.get(i);
+                  if (m2) {
+                    m2(db2, transaction);
+                  } else {
+                    log$k.debug(`Migration not found: ${i}`);
+                  }
+                  log$k.debug(`Migration complete: ${i}`);
+                }
+              },
+              blocking(currentVersion, blockedVersion, event) {
+                log$k.debug(
+                  `Can't open ${blockedVersion} because ${currentVersion} is open. Closing.`
+                );
+                cache.close();
+                if (event?.target && typeof event.target.close === "function") {
+                  event.target.close();
+                }
+              }
+});
+            cache.db = db;
+            cache.state = "OPEN";
+            return db;
+          } finally {
+            cache.open_promise = null;
+          }
+        })();
+        return this.open_promise;
+      };
+      this.close = () => {
+        if (this.db) {
+          this.db.close();
+          this.db = null;
+        }
+        this.state = "CLOSED";
+      };
+      this.start_op = async () => {
+        if (this.state === "DELETING_LOCAL" || this.state === "DELETING_REMOTE") {
+          await this.wait_for_deletion_complete();
+        }
+        this.active_operations++;
+        if (this.close_timer) {
+          clearTimeout(this.close_timer);
+          this.close_timer = null;
+        }
+        return await this.open();
+      };
+      this.end_op = () => {
+        this.active_operations = Math.max(0, this.active_operations - 1);
+        if (this.active_operations === 0) {
+          if (this.close_timer) {
+            clearTimeout(this.close_timer);
+          }
+          this.close_timer = setTimeout(() => {
+            this.close();
+            this.close_timer = null;
+          }, 1e3);
+        }
+      };
+      this.delete_db = async () => {
+        if (this.close_timer) {
+          clearTimeout(this.close_timer);
+          this.close_timer = null;
+        }
+        this.state = "DELETING_LOCAL";
+        this.channel?.postMessage({ type: "deleting" });
+        await this.wait_for_active_ops();
+        this.close();
+        try {
+          await deleteDB(this.db_name, {
+            blocked: () => {
+              log$k.debug("deleteDB blocked callback called!");
+            }
+          });
+          log$k.info(`Successfully deleted ${this.db_name} IndexedDB.`);
+        } finally {
+          this.channel?.postMessage({ type: "deleted" });
+          this.state = "CLOSED";
+          if (this.resolve_deletion) {
+            this.resolve_deletion();
+            this.resolve_deletion = null;
+            this.deletion_promise = null;
+          }
+          if (this.channel) {
+            this.channel.close();
+            this.channel = null;
+          }
+        }
+      };
+      this.handle_broadcast = (data) => {
+        if (data && typeof data === "object") {
+          if (data.type === "deleting") {
+            this.state = "DELETING_REMOTE";
+            if (!this.deletion_promise) {
+              this.deletion_promise = new Promise((resolve) => {
+                this.resolve_deletion = resolve;
+              });
+            }
+            this.close();
+          } else if (data.type === "deleted") {
+            this.state = "CLOSED";
+            if (this.resolve_deletion) {
+              this.resolve_deletion();
+              this.resolve_deletion = null;
+              this.deletion_promise = null;
+            }
+          }
+        }
+      };
+      this.wait_for_deletion_complete = async () => {
+        while (this.state === "DELETING_LOCAL" || this.state === "DELETING_REMOTE") {
+          if (this.deletion_promise) {
+            await this.deletion_promise;
+          } else {
+            await new Promise((resolve) => setTimeout(resolve, 10));
+          }
+        }
+      };
+      this.wait_for_active_ops = async () => {
+        if (this.open_promise) {
+          try {
+            await this.open_promise;
+          } catch {
+          }
+        }
+        while (this.active_operations > 0) {
+          await new Promise((resolve) => setTimeout(resolve, 10));
+        }
+      };
+      this.get = async (player_ids) => {
+        const db = await this.start_op();
+        try {
+          const tx = db.transaction(STORES.CACHE, "readonly");
+          const requests = player_ids.map((id) => tx.store.get(id));
+          const entries = await Promise.all(requests);
+          await tx.done;
+          const result = new Map();
+          player_ids.forEach((id, idx) => {
+            const value = entries[idx];
+            result.set(id, !value || value.expiry <= Date.now() ? null : value);
+          });
+          return result;
+        } finally {
+          this.end_op();
+        }
+      };
+      this.update = async (values) => {
+        const db = await this.start_op();
+        try {
+          const tx = db.transaction(STORES.CACHE, "readwrite");
+          const values_expiry = values.map((value) => {
+            return {
+              ...value,
+              expiry: Date.now() + this.cache_interval
+            };
+          });
+          const requests = values_expiry.map((value) => {
+            return tx.store.put(value);
+          });
+          await Promise.all(requests);
+          await tx.done;
+        } finally {
+          this.end_op();
+        }
+      };
+      this.clean_expired = (force = false) => {
+        const now = Date.now();
+        if (!force && now - this.last_clean < 60 * 60 * 1e3) {
+          return Promise.resolve();
+        }
+        this.last_clean = now;
+        const runClean = async () => {
+          const db = await this.start_op();
+          try {
+            {
+              const tx = db.transaction(STORES.CACHE, "readwrite");
+              const index2 = tx.store.index("expiry");
+              const range = IDBKeyRange.upperBound(Date.now());
+              const r = await index2.getAllKeys(range);
+              log$k.info(`Found ${r.length} expired values to delete from cache.`);
+              await Promise.all(r.map((id) => tx.store.delete(id)));
+              await tx.done;
+            }
+            {
+              const tx = db.transaction(STORES.FLIGHTS, "readwrite");
+              const index2 = tx.store.index("expiry");
+              const range = IDBKeyRange.upperBound(Date.now());
+              const r = await index2.getAllKeys(range);
+              log$k.info(`Found ${r.length} expired values to delete from flights.`);
+              await Promise.all(r.map((id) => tx.store.delete(id)));
+              await tx.done;
+            }
+            {
+              const tx = db.transaction(STORES.ANALYTICS, "readwrite");
+              const index2 = tx.store.index("timestamp");
+              const thirty_days_ago = Date.now() - 30 * 24 * 60 * 60 * 1e3;
+              const range = IDBKeyRange.upperBound(thirty_days_ago);
+              const r = await index2.getAllKeys(range);
+              log$k.info(
+                `Found ${r.length} expired values to delete from analytics.`
+              );
+              await Promise.all(r.map((id) => tx.store.delete(id)));
+              await tx.done;
+            }
+            {
+              const tx = db.transaction(STORES.BOUNTY_BOARD, "readwrite");
+              const index2 = tx.store.index("expiry");
+              const range = IDBKeyRange.upperBound(Date.now());
+              const r = await index2.getAllKeys(range);
+              log$k.info(
+                `Found ${r.length} expired values to delete from bounty_board.`
+              );
+              await Promise.all(r.map((key) => tx.store.delete(key)));
+              await tx.done;
+            }
+          } finally {
+            this.end_op();
+          }
+        };
+        if (typeof window !== "undefined" && "requestIdleCallback" in window) {
+          return new Promise((resolve, reject) => {
+            window.requestIdleCallback(() => {
+              runClean().then(resolve, reject);
+            });
+          });
+        }
+        return runClean();
+      };
+      this.get_flight = async (player_id) => {
+        const db = await this.start_op();
+        try {
+          const tx = db.transaction(STORES.FLIGHTS, "readonly");
+          const entry = await tx.store.get(player_id);
+          await tx.done;
+          if (!entry || entry.expiry <= Date.now()) {
+            return null;
+          }
+          return entry;
+        } finally {
+          this.end_op();
+        }
+      };
+      this.update_flight = async (value, cache_interval = 60 * 1e3) => {
+        const db = await this.start_op();
+        try {
+          const tx = db.transaction(STORES.FLIGHTS, "readwrite");
+          const value_expiry = {
+            ...value,
+            expiry: Date.now() + cache_interval
+          };
+          await tx.store.put(value_expiry);
+          await tx.done;
+        } finally {
+          this.end_op();
+        }
+      };
+      this.delete_flight = async (player_id) => {
+        const db = await this.start_op();
+        try {
+          const tx = db.transaction(STORES.FLIGHTS, "readwrite");
+          await tx.store.delete(player_id);
+          await tx.done;
+        } finally {
+          this.end_op();
+        }
+      };
+      this.get_bounty_board = async (key) => {
+        const db = await this.start_op();
+        try {
+          const tx = db.transaction(STORES.BOUNTY_BOARD, "readonly");
+          const entry = await tx.store.get(key);
+          await tx.done;
+          if (!entry || entry.expiry <= Date.now()) {
+            return null;
+          }
+          return entry;
+        } finally {
+          this.end_op();
+        }
+      };
+      this.put_bounty_board = async (key, value, expiry) => {
+        const db = await this.start_op();
+        try {
+          const tx = db.transaction(STORES.BOUNTY_BOARD, "readwrite");
+          await tx.store.put({ key, value, expiry });
+          await tx.done;
+        } finally {
+          this.end_op();
+        }
+      };
+      this.delete_bounty_board = async (key) => {
+        const db = await this.start_op();
+        try {
+          const tx = db.transaction(STORES.BOUNTY_BOARD, "readwrite");
+          await tx.store.delete(key);
+          await tx.done;
+        } finally {
+          this.end_op();
+        }
+      };
+      this.add_analytics = async (entry) => {
+        const db = await this.start_op();
+        try {
+          const tx = db.transaction(STORES.ANALYTICS, "readwrite");
+          const value = {
+            ...entry,
+            timestamp: Date.now()
+          };
+          await tx.store.add(value);
+          await tx.done;
+        } finally {
+          this.end_op();
+        }
+      };
+      this.get_analytics = async () => {
+        const db = await this.start_op();
+        try {
+          const tx = db.transaction(STORES.ANALYTICS, "readonly");
+          const res = await tx.store.getAll();
+          await tx.done;
+          return res;
+        } finally {
+          this.end_op();
+        }
+      };
+      this.clear_analytics = async () => {
+        const db = await this.start_op();
+        try {
+          const tx = db.transaction(STORES.ANALYTICS, "readwrite");
+          await tx.store.clear();
+          await tx.done;
+        } finally {
+          this.end_op();
+        }
+      };
+      this.dump = async () => {
+        const db = await this.start_op();
+        try {
+          const tx = db.transaction(STORES.CACHE, "readonly");
+          const res = await tx.store.getAll();
+          await tx.done;
+          return res;
+        } finally {
+          this.end_op();
+        }
+      };
+      this.dump_flights = async () => {
+        const db = await this.start_op();
+        try {
+          const tx = db.transaction(STORES.FLIGHTS, "readonly");
+          const res = await tx.store.getAll();
+          await tx.done;
+          return res;
+        } finally {
+          this.end_op();
+        }
+      };
+      this.db_name = db_name;
+      if (typeof BroadcastChannel !== "undefined") {
+        this.channel = new BroadcastChannel(`ffcache-channel-${db_name}`);
+        this.channel.onmessage = (event) => {
+          this.handle_broadcast(event.data);
+        };
+        if (typeof this.channel.unref === "function") {
+          this.channel.unref();
+        }
+      }
+    }
+  }
+  const log$j = logger.child("api");
+  const CHECK_KEY = "check-key-status";
+  class CheckKeyStatus {
+    constructor(config, storage) {
+      this.check_key_status = async (force = false) => {
+        if (!force) {
+          const cached = this.storage.get(CHECK_KEY);
+          if (cached) {
+            return cached;
+          }
+        }
+        let result;
+        try {
+          result = await check_key(this.config.key);
+        } catch (err) {
+          log$j.error(
+            "Received error response querying ffscouter check-key api:",
+            err
+          );
+          throw err;
+        }
+        if (result.blank) {
+          return null;
+        }
+        this.storage.set(CHECK_KEY, result.result, {
+          amount: 5,
+          unit: Time.Minutes
+        });
+        return result.result;
+      };
+      this.is_premium = async (force = false) => {
+        try {
+          const status = await this.check_key_status(force);
+          if (!status) return null;
+          return status.is_premium;
+        } catch (err) {
+          log$j.warn("Failed to check premium status:", err);
+          return null;
+        }
+      };
+      this.is_registered = async (force = false) => {
+        try {
+          const status = await this.check_key_status(force);
+          if (!status) return null;
+          return status.is_registered;
+        } catch (err) {
+          log$j.warn("Failed to check key registration status:", err);
+          return null;
+        }
+      };
+      this.clear = () => {
+        this.storage.remove(CHECK_KEY);
+      };
+      this.config = config;
+      this.storage = storage;
+    }
+  }
+  const check_key_status = new CheckKeyStatus(
+    ffconfig,
+    new Storage("ffsv3-check")
+  );
+  const log$i = logger.child("api");
+  const DB_NAME = "FFSV3-cache";
+  const RECHECK_RETRY_DELAY = 60 * 1e3;
+  const RECHECK_WINDOW_DURATION = 3 * 60 * 1e3;
+  const FINALIZED_NO_FLIGHT_TTL = 30 * 60 * 1e3;
+  const FLIGHT_PACING_DELAY = 1e3;
+  const GLOBAL_BUDGET_RESERVE = 50;
+  function getParamFast(queryString, paramName) {
+    if (!queryString) return null;
+    const target = `${paramName}=`;
+    if (!queryString.includes(target)) return null;
+    let startIdx = 0;
+    if (queryString.charCodeAt(0) === 63) {
+      startIdx = 1;
+    }
+    let pos = queryString.indexOf(target, startIdx);
+    while (pos !== -1) {
+      if (pos === startIdx || queryString.charCodeAt(pos - 1) === 38 ||
+queryString.charCodeAt(pos - 1) === 63) {
+        const valStart = pos + target.length;
+        let valEnd = queryString.indexOf("&", valStart);
+        if (valEnd === -1) {
+          valEnd = queryString.length;
+        }
+        const rawVal = queryString.substring(valStart, valEnd);
+        if (rawVal.indexOf("%") === -1 && rawVal.indexOf("+") === -1) {
+          return rawVal;
+        }
+        try {
+          return decodeURIComponent(rawVal.replace(/\+/g, " "));
+        } catch {
+          return rawVal;
+        }
+      }
+      pos = queryString.indexOf(target, pos + 1);
+    }
+    return null;
+  }
+  class FFScouter {
+    constructor(config, cache) {
+      this.cache = new FFCache(DB_NAME);
+      this.pending = new Map();
+      this.flight_queue = [];
+      this.flight_timer = null;
+      this.flight_recheck_until = new Map();
+      this.pending_flights = new Map();
+      this.cache_queue = new Set();
+      this.cache_delay = 10;
+      this.cache_timer = null;
+      this.api_queue = new Set();
+      this.api_max_batch_size = 200;
+      this.api_initial_delay = 100;
+      this.api_default_delay = 1e3;
+      this.api_timer = null;
+      this.api_attempts = 5;
+      this.schedule = (fn, delay) => {
+        return setTimeout(fn, delay);
+      };
+      this.clear = (timer) => {
+        if (timer) {
+          clearTimeout(timer);
+        }
+      };
+      this.get = (player_id) => {
+        const p = this.pending.get(player_id);
+        if (p) {
+          return p.promise;
+        }
+        let resolve;
+        let reject;
+        const promise = new Promise((res, rej) => {
+          resolve = res;
+          reject = rej;
+        });
+        this.pending.set(player_id, { promise, resolve, reject, api_attempts: 0 });
+        if (!this.config.key) {
+          this.resolve(player_id, { player_id, no_data: true });
+          return promise;
+        }
+        this.enqueue_cache(player_id);
+        return promise;
+      };
+      this.clear_flight_cache = async (player_id) => {
+        try {
+          await this.cache.delete_flight(player_id);
+        } catch (err) {
+          log$i.error("Failed to delete flight from cache", err);
+        }
+      };
+      this.calculate_flight_cache_ttl = (result) => {
+        if (result.current) {
+          const now = Date.now();
+          const latest_arrival_time_ms = result.current.latest_arrival_time * 1e3;
+          const time_remaining = latest_arrival_time_ms - now;
+          if (time_remaining > 0) {
+            const segment = Math.floor(time_remaining / 2);
+            const min_ttl = 60 * 1e3;
+            return Math.max(min_ttl, segment);
+          }
+        }
+        return FINALIZED_NO_FLIGHT_TTL;
+      };
+      this.enqueue_flight_api = (player_id, recheck_until) => {
+        let resolve;
+        let reject;
+        const promise = new Promise((res, rej) => {
+          resolve = res;
+          reject = rej;
+        });
+        if (recheck_until !== void 0) {
+          this.flight_recheck_until.set(player_id, recheck_until);
+        }
+        const pending = this.pending_flights.get(player_id);
+        if (pending) {
+          pending.push({ resolve, reject });
+          return promise;
+        }
+        this.pending_flights.set(player_id, [{ resolve, reject }]);
+        this.flight_queue.push(player_id);
+        this.schedule_flight_processor();
+        return promise;
+      };
+      this.schedule_flight_processor = (delay = 0) => {
+        if (this.flight_timer) {
+          return;
+        }
+        this.flight_timer = this.schedule(this.process_flight_queue, delay);
+      };
+      this.process_flight_queue = async () => {
+        this.flight_timer = null;
+        if (this.flight_queue.length === 0) {
+          return;
+        }
+        if (this.last_limits && this.last_limits.reset_time > new Date() && this.last_limits.remaining <= GLOBAL_BUDGET_RESERVE) {
+          log$i.warn(
+            `Total API quota <= ${GLOBAL_BUDGET_RESERVE}. Deferring flight status checks to prioritize stats.`
+          );
+          this.schedule_flight_processor(5e3);
+          return;
+        }
+        const player_id = this.flight_queue.shift();
+        if (player_id === void 0) {
+          return;
+        }
+        const pending = this.pending_flights.get(player_id);
+        if (!pending) {
+          this.schedule_flight_processor(0);
+          return;
+        }
+        log$i.debug(`Querying paced flight API for player ${player_id}`);
+        try {
+          const response = await query_flights(this.config.key, player_id);
+          if (response.blank) {
+            throw new Error(
+              `Empty flight response returned for player ${player_id}`
+            );
+          }
+          if (response.limits) {
+            this.last_limits = response.limits;
+          }
+          let finalResult = response.result;
+          if (response.result.current) {
+            try {
+              const ttl = this.calculate_flight_cache_ttl(response.result);
+              await this.cache.update_flight(response.result, ttl);
+            } catch (err) {
+              log$i.error("Failed to update flight cache", err);
+            }
+          } else {
+            log$i.debug(`Start rechecking cycle for player ${player_id}`);
+            const now = Date.now();
+            const next_retry_at = now + RECHECK_RETRY_DELAY;
+            const existing_recheck_until = this.flight_recheck_until.get(player_id);
+            const recheck_until = existing_recheck_until ?? now + RECHECK_WINDOW_DURATION;
+            const rechecking_response = {
+              player_id: response.result.player_id,
+              current: null,
+              recent_flights: response.result.recent_flights,
+              rechecking: true,
+              next_retry_at,
+              recheck_until
+            };
+            try {
+              const remaining_ttl = Math.max(0, recheck_until - now);
+              await this.cache.update_flight(rechecking_response, remaining_ttl);
+            } catch (err) {
+              log$i.error("Failed to update flight cache during recheck", err);
+            }
+            finalResult = rechecking_response;
+          }
+          for (const job of pending) {
+            job.resolve(finalResult);
+          }
+        } catch (err) {
+          log$i.error(`Paced flight API query failed for ${player_id}:`, err);
+          const apiErr = err;
+          if (apiErr?.ff_api_limits) {
+            this.last_limits = apiErr.ff_api_limits;
+          }
+          for (const job of pending) {
+            job.reject(err);
+          }
+        } finally {
+          this.pending_flights.delete(player_id);
+          this.flight_recheck_until.delete(player_id);
+          try {
+            await this.cache.clean_expired();
+          } catch (err) {
+            log$i.error("Failed to clean expired cache entries", err);
+          }
+          if (this.flight_queue.length > 0) {
+            this.schedule_flight_processor(FLIGHT_PACING_DELAY);
+          }
+        }
+      };
+      this.get_flights = async (player_id) => {
+        log$i.debug(`get_flights called for ${player_id}`);
+        if (!this.config.key) {
+          return {
+            player_id,
+            current: null,
+            recent_flights: []
+          };
+        }
+        let cached = null;
+        try {
+          cached = await this.cache.get_flight(player_id);
+        } catch (err) {
+          log$i.error("Failed to query flight cache", err);
+        }
+        if (cached) {
+          log$i.debug(`Flight cache hit for player ${player_id}`);
+          if (cached.rechecking) {
+            const now = Date.now();
+            if (cached.recheck_until && now >= cached.recheck_until) {
+              log$i.debug(
+                `Rechecking window expired for player ${player_id}. Finalizing no data.`
+              );
+              const final_response = {
+                player_id: cached.player_id,
+                current: null,
+                recent_flights: cached.recent_flights,
+                rechecking: false
+              };
+              try {
+                await this.cache.update_flight(
+                  final_response,
+                  FINALIZED_NO_FLIGHT_TTL
+                );
+              } catch (err) {
+                log$i.error("Failed to finalize flight cache", err);
+              }
+              return final_response;
+            }
+            if (cached.next_retry_at && now >= cached.next_retry_at) {
+              log$i.debug(
+                `Retrying API call for player ${player_id} during recheck window`
+              );
+              const result2 = await this.enqueue_flight_api(
+                player_id,
+                cached.recheck_until
+              );
+              return result2;
+            }
+            return {
+              player_id: cached.player_id,
+              current: cached.current,
+              recent_flights: cached.recent_flights,
+              rechecking: true,
+              next_retry_at: cached.next_retry_at,
+              recheck_until: cached.recheck_until
+            };
+          }
+          return {
+            player_id: cached.player_id,
+            current: cached.current,
+            recent_flights: cached.recent_flights
+          };
+        }
+        log$i.debug(`Flight cache miss for player ${player_id}. Querying API paced.`);
+        const result = await this.enqueue_flight_api(player_id);
+        return result;
+      };
+      this.complete = () => {
+        this.process_cache();
+      };
+      this.enqueue_cache = (player_id) => {
+        log$i.debug(`Enqueuing cache ${player_id}`);
+        this.cache_queue.add(player_id);
+        this.schedule_cache();
+      };
+      this.schedule_cache = () => {
+        if (this.cache_timer) {
+          log$i.debug(`schedule_cache called but job already scheduled`);
+          return;
+        }
+        log$i.debug(
+          `schedule_cache called and job scheduled for ${this.cache_delay} ms`
+        );
+        this.cache_timer = this.schedule(this.process_cache, this.cache_delay);
+      };
+      this.process_cache = async () => {
+        if (this.cache_timer) {
+          this.clear(this.cache_timer);
+          this.cache_timer = null;
+        }
+        const ids = Array.from(this.cache_queue);
+        this.cache_queue.clear();
+        if (ids.length <= 0) {
+          return;
+        }
+        let results;
+        try {
+          results = await this.cache.get(ids);
+        } catch (_) {
+          results = new Map();
+        }
+        log$i.debug(`Received ${results.size} cache results`);
+        for (const id of ids) {
+          const v = results.get(id);
+          if (v) {
+            log$i.debug("Id", id, "found in cache. Resolving value.");
+            this.resolve(id, v);
+          } else {
+            log$i.debug("Id", id, "not found in cache. Scheduling api call.");
+            this.enqueue_api(id);
+          }
+        }
+      };
+      this.clear_cache = () => {
+        this.cache.delete_db().catch((err) => {
+          log$i.error("Failed to delete IndexedDB cache", err);
+        });
+        check_key_status.clear();
+      };
+      this.enqueue_api = (player_id) => {
+        log$i.debug(`Enqueuing api ${player_id}`);
+        this.api_queue.add(player_id);
+        this.schedule_api();
+      };
+      this.schedule_api = (delay = this.api_initial_delay) => {
+        if (this.api_timer) {
+          log$i.debug(`schedule_api called but job already scheduled`);
+          return;
+        }
+        log$i.debug(`schedule_api called and job scheduled for ${delay} ms`);
+        this.api_timer = this.schedule(this.process_api, delay);
+      };
+      this.process_api = async () => {
+        log$i.debug("process_api called");
+        if (this.api_timer) {
+          this.clear(this.api_timer);
+          this.api_timer = null;
+        }
+        let ids = Array.from(this.api_queue);
+        if (ids.length > this.api_max_batch_size) {
+          ids = ids.slice(0, this.api_max_batch_size);
+        }
+        for (const id of ids) {
+          this.api_queue.delete(id);
+        }
+        log$i.debug(`Processing ${ids} api requests`);
+        if (ids.length <= 0) {
+          log$i.debug("No ids found to query");
+          return;
+        }
+        let next_run = this.api_default_delay;
+        let results;
+        try {
+          log$i.debug(`Calling query_stats with key=*** ids=[${ids}]`);
+          results = await query_stats(this.config.key, ids);
+        } catch (err) {
+          log$i.error("Received error response querying ffscouter api:", err);
+          for (const id of ids) {
+            this.reject(id, err);
+          }
+          const ff_error = err;
+          results = {
+            result: new Map(),
+            blank: true,
+            limits: ff_error.ff_api_limits
+          };
+        }
+        log$i.debug(
+          `Received api results: blank=${results.blank}, count=${results.result.size}`
+        );
+        if (results.blank) {
+          for (const id of ids) {
+            this.requeue_api(id);
+          }
+        } else {
+          try {
+            await this.cache.update(Array.from(results.result.values()));
+          } catch (err) {
+            log$i.error("Failed to update cache", err);
+          }
+          for (const id of ids) {
+            const v = results.result.get(id);
+            if (v) {
+              log$i.debug("Id", id, "found in results. Resolving value.");
+              this.resolve(id, v);
+            } else {
+              log$i.debug("Id", id, "not found in results. Resolving no_data.");
+              this.resolve(id, { player_id: id, no_data: true });
+            }
+          }
+        }
+        if (results.limits) {
+          this.last_limits = results.limits;
+          next_run = this.calculate_next_api_run(results.limits);
+        }
+        this.schedule_api(next_run);
+        try {
+          await this.cache.clean_expired();
+        } catch (err) {
+          log$i.error("Failed to clean expired cache entries", err);
+        }
+      };
+      this.calculate_next_api_run = (limits) => {
+        if (limits.remaining <= 0) {
+          return limits.reset_time.getTime() - Date.now();
+        } else if (limits.reset_time < new Date()) {
+          return this.api_initial_delay;
+        } else if (limits.rate_limit * 0.75 < limits.remaining) {
+          return this.api_default_delay;
+        } else {
+          const ms_left = limits.reset_time.getTime() - Date.now();
+          return ms_left / limits.remaining;
+        }
+      };
+      this.resolve = (id, value) => {
+        const entry = this.pending.get(id);
+        if (!entry) return;
+        entry.resolve(value);
+        this.pending.delete(id);
+      };
+      this.reject = (id, err) => {
+        const entry = this.pending.get(id);
+        if (!entry) return;
+        entry.reject(err);
+        this.pending.delete(id);
+      };
+      this.requeue_api = (id) => {
+        const entry = this.pending.get(id);
+        if (!entry) return;
+        entry.api_attempts++;
+        if (entry.api_attempts > this.api_attempts) {
+          this.reject(
+            id,
+            new Error(`Too many failed attempts to get stats for ${id}.`)
+          );
+          return false;
+        }
+        this.enqueue_api(id);
+        return true;
+      };
+      this.add_analytics_entry = async (feature, player_id, status) => {
+        if (!this.config.analytics_enabled) {
+          return;
+        }
+        try {
+          const url = window.location.origin + window.location.pathname;
+          const params = window.location.search;
+          const hash = window.location.hash;
+          await this.cache.add_analytics({
+            feature,
+            player_id,
+            status,
+            url,
+            params,
+            hash
+          });
+        } catch (err) {
+          log$i.error("Failed to add analytics entry", err);
+        }
+      };
+      this.get_analytics_entries = async () => {
+        try {
+          return await this.cache.get_analytics();
+        } catch (err) {
+          log$i.error("Failed to get analytics entries", err);
+          return [];
+        }
+      };
+      this.get_aggregated_analytics = async () => {
+        const entries = await this.get_analytics_entries();
+        const aggregationMap = new Map();
+        for (const entry of entries) {
+          let param = "";
+          if (entry.params) {
+            param = getParamFast(entry.params, "sid") || getParamFast(entry.params, "step") || "";
+          }
+          if (!param && entry.hash) {
+            let hashClean = entry.hash;
+            if (hashClean.startsWith("#/")) {
+              hashClean = hashClean.substring(2);
+            } else if (hashClean.startsWith("#") || hashClean.startsWith("/")) {
+              hashClean = hashClean.substring(1);
+            }
+            if (!hashClean.startsWith("!") && !hashClean.startsWith("?")) {
+              hashClean = `?${hashClean}`;
+            }
+            param = getParamFast(hashClean, "sid") || getParamFast(hashClean, "step") || "";
+          }
+          const key = `${entry.url}|${param}|${entry.feature}|${entry.status}`;
+          const existing = aggregationMap.get(key);
+          if (existing) {
+            existing.count++;
+          } else {
+            aggregationMap.set(key, {
+              url: entry.url,
+              param: param || "-",
+              feature: entry.feature,
+              status: entry.status,
+              count: 1
+            });
+          }
+        }
+        return Array.from(aggregationMap.values());
+      };
+      this.clear_analytics = async () => {
+        try {
+          await this.cache.clear_analytics();
+        } catch (err) {
+          log$i.error("Failed to clear analytics entries", err);
+        }
+      };
+      this.config = config;
+      if (cache) {
+        this.cache = cache;
+      }
+    }
+    get analytics_enabled() {
+      return this.config.analytics_enabled;
+    }
+  }
+  const ffscouter = new FFScouter(ffconfig);
+  const log$h = logger.child("bounty-board");
+  const BOUNTY_BOARD_FRESHNESS_FLOOR_MS = 60 * 1e3;
+  const BOUNTY_BOARD_EXPIRY_MS = 10 * 60 * 1e3;
+  const BOARD_CACHE_KEY = "board";
+  const BOARD_FAILURE_KEY = "failure";
+  const TRANSIENT_RETRY_BASE_MS = 30 * 1e3;
+  const TRANSIENT_RETRY_CAP_MS = 8 * 60 * 1e3;
+  const FAILURE_RECORD_LINGER_MS = 60 * 60 * 1e3;
+  const rebuild_failure_error = (failure) => {
+    return failure.ff_api_error ? new FFApiError(failure.message, { ff_api_error: failure.ff_api_error }) : new Error(failure.message);
+  };
+  class BountyBoardCache {
+    constructor(config, cache = new FFCache(DB_NAME), query = query_bounty_seller_board, submit = submit_bounty_seller_claim) {
+      this.inflight = null;
+      this.read = async (key) => {
+        try {
+          return await this.cache.get_bounty_board(key);
+        } catch (err) {
+          log$h.error(`Failed to read bounty board cache '${key}'`, err);
+          return null;
+        }
+      };
+      this.write = async (key, value, expiry) => {
+        try {
+          await this.cache.put_bounty_board(key, value, expiry);
+        } catch (err) {
+          log$h.error(`Failed to write bounty board cache '${key}'`, err);
+        }
+      };
+      this.remove = async (key) => {
+        try {
+          await this.cache.delete_bounty_board(key);
+        } catch (err) {
+          log$h.error(`Failed to delete bounty board cache '${key}'`, err);
+        }
+      };
+      this.get_board = async () => {
+        if (this.inflight) {
+          return this.inflight;
+        }
+        this.inflight = this.load_board();
+        try {
+          return await this.inflight;
+        } finally {
+          this.inflight = null;
+        }
+      };
+      this.load_board = async () => {
+        const cached = (await this.read(BOARD_CACHE_KEY))?.value;
+        if (cached && Date.now() - cached.fetched_at < BOUNTY_BOARD_FRESHNESS_FLOOR_MS) {
+          return cached.response;
+        }
+        const failure = (await this.read(BOARD_FAILURE_KEY))?.value;
+        if (failure && Date.now() < failure.next_retry_at) {
+          throw rebuild_failure_error(failure);
+        }
+        return this.fetch_board();
+      };
+      this.submit_claim = async (target, referrer_player_id) => {
+        if (!this.config.key) {
+          throw new Error("No API key configured");
+        }
+        const resp = await this.submit(this.config.key, target, referrer_player_id);
+        if (resp.blank) {
+          throw new Error("Empty bounty claim response");
+        }
+        const cached = await this.read(BOARD_CACHE_KEY);
+        if (cached) {
+          await this.write(
+            BOARD_CACHE_KEY,
+            {
+              response: {
+                board: cached.value.response.board,
+                claims: resp.result.claims
+              },
+              fetched_at: cached.value.fetched_at
+            },
+            cached.expiry
+          );
+        }
+        await this.remove(BOARD_FAILURE_KEY);
+        return resp.result;
+      };
+      this.clear_failure = () => {
+        return this.remove(BOARD_FAILURE_KEY);
+      };
+      this.refresh = async () => {
+        try {
+          await this.get_board();
+        } catch (err) {
+          log$h.error("Bounty board refresh failed", err);
+        }
+      };
+      this.fetch_board = async () => {
+        if (!this.config.key) {
+          throw new Error("No API key configured");
+        }
+        try {
+          const resp = await this.query(this.config.key);
+          if (resp.blank) {
+            throw new Error("Empty bounty board response");
+          }
+          const now = Date.now();
+          await this.write(
+            BOARD_CACHE_KEY,
+            { response: resp.result, fetched_at: now },
+            now + BOUNTY_BOARD_EXPIRY_MS
+          );
+          await this.remove(BOARD_FAILURE_KEY);
+          return resp.result;
+        } catch (err) {
+          await this.record_failure(err);
+          throw err;
+        }
+      };
+      this.record_failure = async (err) => {
+        const api_error = err instanceof FFApiError ? err : null;
+        const coded = api_error?.ff_api_error;
+        const status = api_error?.ff_http_status;
+        const rate_limited = coded?.code === 21;
+        const persistent = !rate_limited && coded !== void 0 && (status === void 0 || status < 500);
+        let fail_count = 0;
+        let retry_delay;
+        if (rate_limited) {
+          retry_delay = Math.max(
+            BOUNTY_BOARD_FRESHNESS_FLOOR_MS,
+            (coded?.retry_after_seconds ?? 0) * 1e3
+          );
+        } else if (persistent) {
+          retry_delay = BOUNTY_BOARD_FRESHNESS_FLOOR_MS;
+        } else {
+          const prev = (await this.read(BOARD_FAILURE_KEY))?.value;
+          fail_count = (prev?.transient ? prev.fail_count : 0) + 1;
+          retry_delay = Math.min(
+            TRANSIENT_RETRY_BASE_MS * 2 ** (fail_count - 1),
+            TRANSIENT_RETRY_CAP_MS
+          );
+        }
+        const next_retry_at = Date.now() + retry_delay;
+        await this.write(
+          BOARD_FAILURE_KEY,
+          {
+            message: err instanceof Error ? err.message : String(err),
+            ff_api_error: coded,
+            transient: !rate_limited && !persistent,
+            fail_count,
+            next_retry_at
+          },
+          next_retry_at + FAILURE_RECORD_LINGER_MS
+        );
+      };
+      this.config = config;
+      this.cache = cache;
+      this.query = query;
+      this.submit = submit;
+    }
+  }
+  const bounty_board_cache = new BountyBoardCache(ffconfig);
+  const log$g = logger.child("ui");
+  var TOAST_LEVEL = ((TOAST_LEVEL2) => {
+    TOAST_LEVEL2[TOAST_LEVEL2["DEBUG"] = 0] = "DEBUG";
+    TOAST_LEVEL2[TOAST_LEVEL2["INFO"] = 1] = "INFO";
+    TOAST_LEVEL2[TOAST_LEVEL2["WARNING"] = 2] = "WARNING";
+    TOAST_LEVEL2[TOAST_LEVEL2["ERROR"] = 3] = "ERROR";
+    return TOAST_LEVEL2;
+  })(TOAST_LEVEL || {});
+  const TOAST_COLOURS = {
+    [
+      0
+]: "blue",
+    [
+      1
+]: "green",
+    [
+      2
+]: "orange",
+    [
+      3
+]: "#c62828"
+  };
+  function get_toast_colour(level) {
+    return TOAST_COLOURS[level];
+  }
+  function toast(message, level = 1) {
+    const existing = document.getElementById("ffscouter-toast");
+    if (existing) existing.remove();
+    const toast2 = document.createElement("div");
+    toast2.id = "ffscouter-toast";
+    toast2.style.position = "fixed";
+    toast2.style.bottom = "30px";
+    toast2.style.left = "50%";
+    toast2.style.transform = "translateX(-50%)";
+    toast2.style.color = "#fff";
+    toast2.style.padding = "8px 16px";
+    toast2.style.borderRadius = "8px";
+    toast2.style.fontSize = "14px";
+    toast2.style.boxShadow = "0 2px 12px rgba(0,0,0,0.2)";
+    toast2.style.zIndex = "2147483647";
+    toast2.style.opacity = "1";
+    toast2.style.transition = "opacity 0.5s";
+    toast2.style.display = "flex";
+    toast2.style.alignItems = "center";
+    toast2.style.gap = "10px";
+    const closeBtn = document.createElement("button");
+    closeBtn.textContent = "×";
+    closeBtn.style.cursor = "pointer";
+    closeBtn.style.marginLeft = "8px";
+    closeBtn.style.fontWeight = "bold";
+    closeBtn.style.fontSize = "18px";
+    closeBtn.style.background = "none";
+    closeBtn.style.border = "none";
+    closeBtn.style.color = "inherit";
+    closeBtn.style.padding = "0";
+    closeBtn.style.lineHeight = "1";
+    closeBtn.setAttribute("aria-label", "Close");
+    closeBtn.onclick = () => toast2.remove();
+    toast2.style.background = get_toast_colour(level);
+    const msg = document.createElement("span");
+    if (message === "Invalid API key. Please sign up at ffscouter.com to use this service") {
+      msg.innerHTML = 'FairFight Scouter V2: Invalid API key. Please sign up at <a href="https://ffscouter.com" target="_blank" style="color: #fff; text-decoration: underline; font-weight: bold;">ffscouter.com</a> to use this service. Register the API key with the script.';
+    } else {
+      msg.textContent = `FairFight Scouter V2: ${message}`;
+    }
+    log$g.info("[FF Scouter V2] Toast: ", message);
+    toast2.appendChild(msg);
+    toast2.appendChild(closeBtn);
+    document.body.appendChild(toast2);
+    setTimeout(() => {
+      if (toast2.parentNode) {
+        toast2.style.opacity = "0";
+        setTimeout(() => toast2.remove(), 500);
+      }
+    }, 4e3);
+  }
+  function submit_claim_with_toast(target, success_message) {
+    return bounty_board_cache.submit_claim(target).then(
+      () => {
+        toast(success_message);
+        return true;
+      },
+      (err) => {
+        toast(api_error_message(err), TOAST_LEVEL.ERROR);
+        return false;
+      }
+    );
   }
   new Proxy({}, {
     get(_, prop) {
@@ -2967,6 +3652,12 @@ queryString.charCodeAt(pos - 1) === 63) {
     ...args
   ));
   const useRef = ((...args) => getReact().useRef(
+    ...args
+  ));
+  const useMemo = ((...args) => getReact().useMemo(
+    ...args
+  ));
+  const useReducer = ((...args) => getReact().useReducer(
     ...args
   ));
   const useImperativeHandle = ((...args) => getReact().useImperativeHandle(
@@ -2999,7 +3690,7 @@ queryString.charCodeAt(pos - 1) === 63) {
       get: (_, prop) => getReact().Children[prop]
     }
   );
-  const styles$2 = {
+  const styles$3 = {
     "ffscouter-info-line__label": "_ffscouter-info-line__label_aofgj_1",
     "ffscouter-info-line__badge": "_ffscouter-info-line__badge_aofgj_8",
     "ffscouter-info-line__premium-upgrade": "_ffscouter-info-line__premium-upgrade_aofgj_15",
@@ -3016,7 +3707,7 @@ queryString.charCodeAt(pos - 1) === 63) {
       "button",
       {
         type: "button",
-        className: styles$2["ffscouter-explainer-glyph"],
+        className: styles$3["ffscouter-explainer-glyph"],
         "aria-expanded": open,
         "aria-label": "Explain this estimate",
         onClick: onToggle,
@@ -3062,12 +3753,12 @@ jsx(
     return label ? `This player's estimate comes from ${label} and is ${agePhrase}.` : `This player's estimate is ${agePhrase}.`;
   }
   function EstimateExplainerCard({ data, onClose }) {
-    return jsxs("div", { className: styles$2["ffscouter-explainer-card"], children: [
+    return jsxs("div", { className: styles$3["ffscouter-explainer-card"], children: [
 jsx(
         "button",
         {
           type: "button",
-          className: styles$2["ffscouter-explainer-card__close"],
+          className: styles$3["ffscouter-explainer-card__close"],
           "aria-label": "Close",
           onClick: onClose,
           children: "×"
@@ -3148,7 +3839,7 @@ jsx(
       }
     );
   }
-  const log$e = logger.child("ui");
+  const log$f = logger.child("ui");
   const PREMIUM_UPGRADE_URL$1 = "https://ffscouter.com/premium";
   function FFHeaderLine({ playerId, showExplainer = false }) {
     const [data, setData] = useState(null);
@@ -3161,7 +3852,7 @@ jsx(
       ffscouter.get(playerId).then((result) => {
         if (!cancelled) setData(result);
       }).catch((err) => {
-        log$e.error(err);
+        log$f.error(err);
       });
       return () => {
         cancelled = true;
@@ -3174,7 +3865,7 @@ jsx(
       check_key_status.is_premium().then((premium) => {
         if (!cancelled) setIsPremium(premium);
       }).catch((err) => {
-        log$e.error(err);
+        log$f.error(err);
       }).finally(() => {
         if (!cancelled) setPremiumLoading(false);
       });
@@ -3184,17 +3875,17 @@ jsx(
     }, [data]);
     if (data === null) {
       return jsxs(Fragment, { children: [
-jsx("span", { className: styles$2["ffscouter-info-line__label"], children: "FairFight:" }),
+jsx("span", { className: styles$3["ffscouter-info-line__label"], children: "FairFight:" }),
 jsx("span", { style: { fontStyle: "italic" }, children: "Loading..." })
       ] });
     }
     if (data.no_data) {
       return jsxs(Fragment, { children: [
-jsx("span", { className: styles$2["ffscouter-info-line__label"], children: "FairFight:" }),
+jsx("span", { className: styles$3["ffscouter-info-line__label"], children: "FairFight:" }),
 jsx(
           "span",
           {
-            className: styles$2["ffscouter-info-line__badge"],
+            className: styles$3["ffscouter-info-line__badge"],
             style: { background: "#444", color: "#fff" },
             children: "No data"
           }
@@ -3236,7 +3927,7 @@ jsx(
             fontStyle: "normal"
           },
           children: [
-jsx("span", { className: styles$2["ffscouter-info-line__label"], children: "Top Stats:" }),
+jsx("span", { className: styles$3["ffscouter-info-line__label"], children: "Top Stats:" }),
 jsxs("span", { style: { fontWeight: "normal" }, children: [
               data.distribution.distribution_human,
               " ",
@@ -3248,7 +3939,7 @@ jsxs("span", { style: { fontWeight: "normal" }, children: [
     } else if (premiumLoading) {
       extraDetailsLine = null;
     } else if (isPremium === false && data.premium_insights_available) {
-      extraDetailsLine = jsx("span", { className: styles$2["ffscouter-info-line__premium-upgrade"], children: jsx(
+      extraDetailsLine = jsx("span", { className: styles$3["ffscouter-info-line__premium-upgrade"], children: jsx(
         "a",
         {
           href: PREMIUM_UPGRADE_URL$1,
@@ -3263,18 +3954,18 @@ jsxs("span", { style: { fontWeight: "normal" }, children: [
       "button",
       {
         type: "button",
-        className: styles$2["ffscouter-info-line__freshness-trigger"],
+        className: styles$3["ffscouter-info-line__freshness-trigger"],
         "aria-expanded": explainerOpen,
         onClick: toggleExplainer,
         children: fresh
       }
     ) : fresh;
     return jsxs(Fragment, { children: [
-jsx("span", { className: styles$2["ffscouter-info-line__label"], children: "FairFight:" }),
+jsx("span", { className: styles$3["ffscouter-info-line__label"], children: "FairFight:" }),
 jsxs(
         "span",
         {
-          className: styles$2["ffscouter-info-line__badge"],
+          className: styles$3["ffscouter-info-line__badge"],
           style: { background: backgroundColor, color: textColor },
           children: [
             ffString,
@@ -3313,7 +4004,19 @@ jsx("span", { children: extract_bs_estimate_human(data) })
       )
     ] });
   }
-  const log$d = logger.child("dom");
+  const SILENCE_KEY = "bounty_attack_silenced";
+  const SILENCE_DURATION = { amount: 1, unit: Time.Hours };
+  SILENCE_DURATION.amount * SILENCE_DURATION.unit;
+  function is_attack_bounty_silenced() {
+    return default_storage.has(SILENCE_KEY);
+  }
+  function silence_attack_bounty() {
+    default_storage.set(SILENCE_KEY, true, SILENCE_DURATION);
+  }
+  function clear_attack_bounty_silence() {
+    default_storage.remove(SILENCE_KEY);
+  }
+  const log$e = logger.child("dom");
   const ID_PARAMS = ["XID", "user2ID"];
   var GaugeAttachMode = ((GaugeAttachMode2) => {
     GaugeAttachMode2["HONOR_BAR"] = "honor-bar";
@@ -3549,7 +4252,7 @@ jsx("span", { children: extract_bs_estimate_human(data) })
       }
       ffscouter.add_analytics_entry(featureName, player_id, "applied");
     }).catch((err) => {
-      log$d.error(err);
+      log$e.error(err);
     });
   }
   function has_href(el) {
@@ -3623,7 +4326,7 @@ jsx("span", { children: extract_bs_estimate_human(data) })
     if (!status) {
       if (!seenUnknownActivityLabels.has(label)) {
         seenUnknownActivityLabels.add(label);
-        log$d.warn(`Unrecognized activity aria-label: "${label}"`);
+        log$e.warn(`Unrecognized activity aria-label: "${label}"`);
       }
       return "unknown";
     }
@@ -3640,9 +4343,11 @@ jsx("span", { children: extract_bs_estimate_human(data) })
     }
     add_ff_arrow(element, featureName, attachMode);
   }
-  async function wait_for_element(querySelector, timeout, root) {
+  async function wait_for_element(querySelector, timeout, root, options = {}) {
     const existingElement = document.querySelector(querySelector);
     if (existingElement) return existingElement;
+    const { signal } = options;
+    if (signal?.aborted) return null;
     return new Promise((resolve) => {
       let timer;
       const observer = new MutationObserver(() => {
@@ -3665,9 +4370,15 @@ jsx("span", { children: extract_bs_estimate_human(data) })
           resolve(null);
         }, timeout);
       }
+      const onAbort = () => {
+        cleanup();
+        resolve(null);
+      };
+      signal?.addEventListener("abort", onAbort);
       function cleanup() {
         observer.disconnect();
         if (timer) clearTimeout(timer);
+        signal?.removeEventListener("abort", onAbort);
       }
     });
   }
@@ -3690,9 +4401,9 @@ jsx("span", { children: extract_bs_estimate_human(data) })
       if (!ctor || element instanceof ctor) {
         return element;
       }
-      log$d.warn(`<${tagName}> construction produced a fallback element; retrying`);
+      log$e.warn(`<${tagName}> construction produced a fallback element; retrying`);
     }
-    log$d.error(
+    log$e.error(
       `Failed to construct a working <${tagName}> after multiple attempts`
     );
     return null;
@@ -3770,14 +4481,14 @@ jsx("span", { children: extract_bs_estimate_human(data) })
       15e3
     );
     if (!name || !name.href) {
-      log$d.debug("Failed to find the XID element.");
+      log$e.debug("Failed to find the XID element.");
       return null;
     }
     try {
       const params = new URL(name.href).searchParams;
       return params.get("XID");
     } catch {
-      log$d.debug("User XID is malformed");
+      log$e.debug("User XID is malformed");
       return null;
     }
   }
@@ -3788,6 +4499,15 @@ jsx("span", { children: extract_bs_estimate_human(data) })
     info_line.style.clear = "both";
     info_line.style.margin = "5px 0";
     return info_line;
+  }
+  const DESKTOP_LAYOUT_MIN_WIDTH = 784;
+  const NARROW_LAYOUT_QUERY = `not all and (min-width: ${DESKTOP_LAYOUT_MIN_WIDTH}px)`;
+  function is_narrow_layout() {
+    if (typeof window === "undefined") return false;
+    if (typeof window.matchMedia === "function") {
+      return window.matchMedia(NARROW_LAYOUT_QUERY).matches;
+    }
+    return window.innerWidth < DESKTOP_LAYOUT_MIN_WIDTH;
   }
   function on_navigation(callback) {
     const nav = window.navigation;
@@ -3866,7 +4586,114 @@ jsx("span", { children: extract_bs_estimate_human(data) })
     root.render(element);
     return root;
   }
-  const log$c = logger.child("feature:attack");
+  const log$d = logger.child("feature:attack");
+  const FIGHT_BUTTON = '[class*="dialogButtons"] button';
+  let attack_target = null;
+  let bounty_row = null;
+  let sync_generation = 0;
+  let listening = false;
+  function unmount_bounty_row() {
+    if (!bounty_row) return;
+    bounty_row.root.unmount();
+    bounty_row.container.remove();
+    bounty_row = null;
+  }
+  async function sync_bounty_row() {
+    const gen = ++sync_generation;
+    if (!attack_target || !ffconfig.bounty_board_enabled || !ffconfig.key || is_attack_bounty_silenced()) {
+      unmount_bounty_row();
+      return;
+    }
+    const { player_id, info_line } = attack_target;
+    const [registered, result] = await Promise.all([
+      check_key_status.is_registered().catch(() => null),
+      bounty_board_cache.get_board().then(
+        (response) => ({ ok: true, response }),
+        (err) => ({ ok: false, err })
+      )
+    ]);
+    if (gen !== sync_generation) return;
+    let gate_failed = registered === false;
+    if (!result.ok) {
+      const phase = classify_board_error(result.err).phase;
+      gate_failed ||= phase === "consent" || phase === "key_unregistered";
+      if (!gate_failed) {
+        log$d.error("Bounty board read failed on the attack page", result.err);
+      }
+    }
+    if (gate_failed) {
+      silence_attack_bounty();
+    }
+    const match = !gate_failed && result.ok ? find_bounty_match(result.response.board.targets, player_id) : null;
+    if (!match) {
+      unmount_bounty_row();
+      return;
+    }
+    if (!bounty_row) {
+      const container = document.createElement("div");
+      bounty_row = {
+        root: createRoot(container),
+        container,
+        match,
+        in_flight: 0,
+        claimed: false
+      };
+    }
+    bounty_row.match = match;
+    if (bounty_row.container.parentElement !== info_line) {
+      info_line.appendChild(bounty_row.container);
+    }
+    render_bounty_row();
+  }
+  function render_bounty_row() {
+    if (!bounty_row) return;
+    bounty_row.root.render(
+      createElement(AttackBountyRow, {
+        match: bounty_row.match,
+        claimPending: bounty_row.in_flight > 0,
+        claimed: bounty_row.claimed,
+        onClaim: () => void claim(`${CLAIM_SUBMITTED}.`)
+      })
+    );
+  }
+  async function claim(success_message) {
+    const row = bounty_row;
+    if (!row) return;
+    row.in_flight++;
+    render_bounty_row();
+    const ok = await submit_claim_with_toast(
+      row.match.claim_target,
+      success_message
+    );
+    row.in_flight--;
+    row.claimed ||= ok;
+    if (row === bounty_row) render_bounty_row();
+  }
+  const FINISHING_MOVES = ["leave", "mug", "hospitalize"];
+  function finishing_move(button) {
+    const text = button.textContent?.trim().toLowerCase() ?? "";
+    return FINISHING_MOVES.find((move) => move === text) ?? null;
+  }
+  function listen() {
+    if (listening) return;
+    listening = true;
+    window.addEventListener("ff-config-updated", () => void sync_bounty_row());
+    document.addEventListener(
+      "click",
+      (event) => {
+        if (!(event.target instanceof Element)) return;
+        const button = event.target.closest(FIGHT_BUTTON);
+        if (!button) return;
+        const move = finishing_move(button);
+        if (move === "hospitalize") {
+          void claim(`${CLAIM_SUBMITTED} automatically.`);
+        } else if (!move) {
+          void sync_bounty_row();
+        }
+      },
+      true
+    );
+  }
   async function inject_info_line$1(info_line) {
     const h4 = await wait_for_element("h4", 1e4);
     if (!h4) {
@@ -3877,7 +4704,7 @@ jsx("span", { children: extract_bs_estimate_human(data) })
       h4.parentNode?.parentNode?.nextSibling
     );
   }
-  const index$d = {
+  const index$e = {
     name: "Attack FF display",
     description: "Shows FF on top left of any attack page",
     executionTime: StartTime.DocumentBody,
@@ -3889,13 +4716,19 @@ jsx("span", { children: extract_bs_estimate_human(data) })
       if (!player_id) {
         return;
       }
-      log$c.debug("On the attack page, found player_id", player_id);
+      log$d.debug("On the attack page, found player_id", player_id);
       const info_line = create_info_line();
       mountComponent(
         createElement(FFHeaderLine, { playerId: player_id }),
         info_line
       );
-      inject_info_line$1(info_line);
+      await inject_info_line$1(info_line);
+      if (!info_line.isConnected) {
+        return;
+      }
+      attack_target = { player_id, info_line };
+      listen();
+      await sync_bounty_row();
     },
     httpIntercept: {
       before(_url, _init) {
@@ -3908,10 +4741,639 @@ jsx("span", { children: extract_bs_estimate_human(data) })
   };
   const __vite_glob_0_0 = Object.freeze( Object.defineProperty({
     __proto__: null,
-    default: index$d
+    default: index$e,
+    unmount_bounty_row
+  }, Symbol.toStringTag, { value: "Module" }));
+  const styles$2 = {
+    "ff-bounty-modal": "_ff-bounty-modal_jfgjb_5",
+    "ff-bounty-modal__header": "_ff-bounty-modal__header_jfgjb_32",
+    "ff-bounty-modal--minimized": "_ff-bounty-modal--minimized_jfgjb_43",
+    "ff-bounty-modal--in-flow": "_ff-bounty-modal--in-flow_jfgjb_51",
+    "ff-bounty-modal__title": "_ff-bounty-modal__title_jfgjb_61",
+    "ff-bounty-modal__header-btn": "_ff-bounty-modal__header-btn_jfgjb_67",
+    "ff-bounty-modal__body": "_ff-bounty-modal__body_jfgjb_78",
+    "ff-bounty-modal__notice": "_ff-bounty-modal__notice_jfgjb_83",
+    "ff-bounty-modal__primary-btn": "_ff-bounty-modal__primary-btn_jfgjb_94",
+    "ff-bounty-modal__filters": "_ff-bounty-modal__filters_jfgjb_111",
+    "ff-bounty-modal__filter": "_ff-bounty-modal__filter_jfgjb_111",
+    "ff-bounty-modal__list": "_ff-bounty-modal__list_jfgjb_134",
+    "ff-bounty-modal__member-list": "_ff-bounty-modal__member-list_jfgjb_135",
+    "ff-bounty-modal__tier-ladder": "_ff-bounty-modal__tier-ladder_jfgjb_136",
+    "ff-bounty-modal__row": "_ff-bounty-modal__row_jfgjb_142",
+    "ff-bounty-modal__faction-card": "_ff-bounty-modal__faction-card_jfgjb_143",
+    "ff-bounty-modal__row-main": "_ff-bounty-modal__row-main_jfgjb_148",
+    "ff-bounty-modal__faction-header": "_ff-bounty-modal__faction-header_jfgjb_149",
+    "ff-bounty-modal__name": "_ff-bounty-modal__name_jfgjb_170",
+    "ff-bounty-modal__estimate": "_ff-bounty-modal__estimate_jfgjb_180",
+    "ff-bounty-modal__tier-label": "_ff-bounty-modal__tier-label_jfgjb_190",
+    "ff-bounty-modal__tier-toggle": "_ff-bounty-modal__tier-toggle_jfgjb_191",
+    "ff-bounty-modal__pool": "_ff-bounty-modal__pool_jfgjb_192",
+    "ff-bounty-modal__action": "_ff-bounty-modal__action_jfgjb_211",
+    "ff-bounty-modal--own": "_ff-bounty-modal--own_jfgjb_222",
+    "ff-bounty-modal__own-label": "_ff-bounty-modal__own-label_jfgjb_232"
+  };
+  const cls$2 = {
+    modal: styles$2["ff-bounty-modal"],
+    modalMinimized: styles$2["ff-bounty-modal--minimized"],
+    inFlow: styles$2["ff-bounty-modal--in-flow"],
+    header: styles$2["ff-bounty-modal__header"],
+    title: styles$2["ff-bounty-modal__title"],
+    headerBtn: styles$2["ff-bounty-modal__header-btn"],
+    body: styles$2["ff-bounty-modal__body"],
+    notice: styles$2["ff-bounty-modal__notice"],
+    primaryBtn: styles$2["ff-bounty-modal__primary-btn"],
+    filters: styles$2["ff-bounty-modal__filters"],
+    filter: styles$2["ff-bounty-modal__filter"],
+    list: styles$2["ff-bounty-modal__list"],
+    row: styles$2["ff-bounty-modal__row"],
+    rowMain: styles$2["ff-bounty-modal__row-main"],
+    name: styles$2["ff-bounty-modal__name"],
+    estimate: styles$2["ff-bounty-modal__estimate"],
+    tierLabel: styles$2["ff-bounty-modal__tier-label"],
+    tierToggle: styles$2["ff-bounty-modal__tier-toggle"],
+    tierLadder: styles$2["ff-bounty-modal__tier-ladder"],
+    action: styles$2["ff-bounty-modal__action"],
+    factionCard: styles$2["ff-bounty-modal__faction-card"],
+    factionHeader: styles$2["ff-bounty-modal__faction-header"],
+    pool: styles$2["ff-bounty-modal__pool"],
+    memberList: styles$2["ff-bounty-modal__member-list"],
+    own: styles$2["ff-bounty-modal--own"],
+    ownLabel: styles$2["ff-bounty-modal__own-label"]
+  };
+  const OWN_LABEL = "Your bounty – not claimable by you";
+  const OWN_TITLE = "You posted this bounty, so you can't attack or claim it.";
+  function EstimatePill({
+    row,
+    ff
+  }) {
+    const known = row.estimate_available && row.estimate !== null;
+    const text = known ? format_suffix_number(row.estimate ?? 0) : "?";
+    if (ff && !ff.no_data) {
+      const background = get_ff_colour(ff);
+      return jsx(
+        "span",
+        {
+          className: cls$2.estimate,
+          style: { background, color: get_contrast_color(background) },
+          title: `FF ${format_ff_score(ff)}`,
+          children: text
+        }
+      );
+    }
+    return jsx(
+      "span",
+      {
+        className: cls$2.estimate,
+        title: known ? "FF unknown" : "No estimate available",
+        children: text
+      }
+    );
+  }
+  function BountyRow({
+    row,
+    ff,
+    expanded,
+    onToggleExpanded,
+    onAttack,
+    onClaim,
+    claimPending
+  }) {
+    const [top, ...rest] = row.tiers;
+    return jsxs("li", { className: row.own_bounty ? `${cls$2.row} ${cls$2.own}` : cls$2.row, children: [
+jsxs("div", { className: cls$2.rowMain, children: [
+jsx(
+          "a",
+          {
+            className: cls$2.name,
+            href: `https://www.torn.com/profiles.php?XID=${row.player_id}`,
+            children: row.name
+          }
+        ),
+jsx(EstimatePill, { row, ff }),
+        rest.length > 0 ? jsxs(
+          "button",
+          {
+            type: "button",
+            className: cls$2.tierToggle,
+            "aria-expanded": expanded,
+            "aria-label": `${expanded ? "Hide" : "Show"} all bounty tiers for ${row.name}`,
+            onClick: () => onToggleExpanded(row.row_key),
+            children: [
+              top ? format_tier_label(top) : "",
+              " ",
+              expanded ? "▴" : "▾"
+            ]
+          }
+        ) : jsx("span", { className: cls$2.tierLabel, children: top ? format_tier_label(top) : "" }),
+        row.own_bounty ? null : jsxs(Fragment, { children: [
+jsx(
+            "button",
+            {
+              type: "button",
+              className: cls$2.action,
+              "aria-label": `Attack ${row.name}`,
+              onClick: () => onAttack(row),
+              children: "Attack"
+            }
+          ),
+jsx(
+            "button",
+            {
+              type: "button",
+              className: cls$2.action,
+              "aria-label": `Claim bounty on ${row.name}`,
+              disabled: claimPending,
+              onClick: () => onClaim(row),
+              children: "Claim"
+            }
+          )
+        ] })
+      ] }),
+      row.own_bounty ? jsx("div", { className: cls$2.ownLabel, title: OWN_TITLE, children: OWN_LABEL }) : null,
+      expanded && rest.length > 0 ? jsx("ul", { className: cls$2.tierLadder, children: rest.map((tier) => jsxs("li", { children: [
+        "then ",
+        format_tier_label(tier)
+      ] }, tier.price_per_hit)) }) : null
+    ] });
+  }
+  function FactionBountyCard({
+    card,
+    expanded,
+    onToggleExpanded,
+    renderMember
+  }) {
+    const top = card.tiers[0];
+    const label = card.faction_tag ? `[${card.faction_tag}] ${card.faction_name}` : card.faction_name;
+    return jsxs(
+      "li",
+      {
+        className: card.own_bounty ? `${cls$2.factionCard} ${cls$2.own}` : cls$2.factionCard,
+        children: [
+jsxs(
+            "button",
+            {
+              type: "button",
+              className: cls$2.factionHeader,
+              "aria-expanded": expanded,
+              "aria-label": `${expanded ? "Collapse" : "Expand"} faction bounty on ${card.faction_name}`,
+              onClick: () => onToggleExpanded(card.faction_id),
+              children: [
+jsx("span", { className: cls$2.name, children: label }),
+jsx("span", { className: cls$2.tierLabel, children: top ? format_tier_label(top) : "" }),
+jsxs("span", { className: cls$2.pool, children: [
+                  card.total_remaining,
+                  " hits shared ",
+                  expanded ? "▴" : "▾"
+                ] })
+              ]
+            }
+          ),
+          card.own_bounty ? jsx("div", { className: cls$2.ownLabel, title: OWN_TITLE, children: OWN_LABEL }) : null,
+          expanded ? jsx("ul", { className: cls$2.memberList, children: card.members.map(renderMember) }) : null
+        ]
+      }
+    );
+  }
+  const log$c = logger.child("ui");
+  const VIEW_STATE_KEY = "bounty_board_view";
+  const DEFAULT_VIEW_STATE = {
+    stats_less_than: "",
+    ff_less_than: "",
+    expanded_tiers: [],
+    expanded_factions: [],
+    minimized: false
+  };
+  function load_view_state() {
+    return {
+      ...DEFAULT_VIEW_STATE,
+      ...default_storage.get(VIEW_STATE_KEY) ?? {}
+    };
+  }
+  function useViewState() {
+    const [view, setView] = useState(load_view_state);
+    const update = (patch) => {
+      setView((prev) => {
+        const next = { ...prev, ...patch };
+        default_storage.set(VIEW_STATE_KEY, next);
+        return next;
+      });
+    };
+    return [view, update];
+  }
+  function toggle_in(list, item) {
+    return list.includes(item) ? list.filter((x) => x !== item) : [...list, item];
+  }
+  function parse_ff_limit(raw) {
+    if (!raw.trim()) return null;
+    const n = Number.parseFloat(raw);
+    return Number.isNaN(n) ? null : n;
+  }
+  function handleAttack(row) {
+    open_attack_link(row.player_id, {
+      openInNewTab: ffconfig.bounty_attack_action === WarQuickAttackAction.NEW_TAB
+    });
+  }
+  function board_reducer(_state, action) {
+    switch (action.type) {
+      case "reload":
+        return { phase: "loading" };
+      case "loaded":
+        return { phase: "ready", response: action.response };
+      case "failed":
+        return action.state;
+    }
+  }
+  function initial_board_state() {
+    return ffconfig.key ? { phase: "loading" } : { phase: "key_missing" };
+  }
+  function KeyNudge({ unregistered }) {
+    const [href, setHref] = useState(null);
+    useEffect(() => {
+      let cancelled = false;
+      getLocalUserId().then((id) => {
+        if (id && !cancelled) {
+          setHref(
+            `https://www.torn.com/profiles.php?XID=${id}#ff-scouter-api-key`
+          );
+        }
+      }).catch((err) => {
+        log$c.error(err);
+      });
+      return () => {
+        cancelled = true;
+      };
+    }, []);
+    return jsxs("p", { className: cls$2.notice, children: [
+      unregistered ? "Your FF Scouter API key isn't registered. Check it in " : "FF Scouter Bounties need your FF Scouter API key. Enter it in ",
+      href ? jsx("a", { href, target: "_blank", rel: "noopener noreferrer", children: "FF Scouter Settings" }) : jsx("strong", { children: "FF Scouter Settings" }),
+      " ",
+      "on your profile page."
+    ] });
+  }
+  function ConsentGate({ onAccepted }) {
+    const [submitting, setSubmitting] = useState(false);
+    const accept = async () => {
+      setSubmitting(true);
+      try {
+        const resp = await accept_bounty_seller_policy(ffconfig.key, true);
+        if (resp.blank || !resp.result.ok) {
+          throw new Error("Bounty policy acceptance was not recorded");
+        }
+        await bounty_board_cache.clear_failure();
+        clear_attack_bounty_silence();
+        onAccepted();
+      } catch (err) {
+        toast(api_error_message(err), TOAST_LEVEL.ERROR);
+        setSubmitting(false);
+      }
+    };
+    return jsxs("div", { children: [
+jsxs("p", { className: cls$2.notice, children: [
+        "FF Scouter Bounties are a separate system from Torn's own bounties. To view and claim them, read the",
+        " ",
+jsx("a", { href: BOUNTY_POLICY_URL, target: "_blank", rel: "noopener noreferrer", children: "Bounty Board Data Policy and Rules" }),
+        "."
+      ] }),
+jsx(
+        "button",
+        {
+          type: "button",
+          className: cls$2.primaryBtn,
+          disabled: submitting,
+          onClick: () => {
+            void accept();
+          },
+          children: "I have read the rules and data policy"
+        }
+      )
+    ] });
+  }
+  function BountyBoardBody({
+    view,
+    updateView
+  }) {
+    const [state, dispatch] = useReducer(
+      board_reducer,
+      void 0,
+      initial_board_state
+    );
+    const [ffMap, setFfMap] = useState(
+      () => new Map()
+    );
+    const [claimPending, setClaimPending] = useState(
+      () => new Set()
+    );
+    const [ffRequested] = useState(() => new Set());
+    useEffect(() => {
+      if (state.phase !== "loading") return;
+      let cancelled = false;
+      void Promise.all([
+        check_key_status.is_registered().catch(() => null),
+        bounty_board_cache.get_board().then(
+          (response) => ({ ok: true, response }),
+          (err) => ({ ok: false, err })
+        )
+      ]).then(([registered, result]) => {
+        if (cancelled) return;
+        if (registered === false) {
+          dispatch({ type: "failed", state: { phase: "key_unregistered" } });
+        } else if (result.ok) {
+          dispatch({ type: "loaded", response: result.response });
+        } else {
+          dispatch({ type: "failed", state: classify_board_error(result.err) });
+        }
+      });
+      return () => {
+        cancelled = true;
+      };
+    }, [state.phase]);
+    const targets = state.phase === "ready" ? state.response.board.targets : null;
+    useEffect(() => {
+      if (!targets) return;
+      const ids = ff_ids_to_load(targets, view.expanded_factions).filter(
+        (id) => !ffRequested.has(id)
+      );
+      if (ids.length === 0) return;
+      for (const id of ids) ffRequested.add(id);
+      const lookups = ids.map((id) => ffscouter.get(id));
+      ffscouter.complete();
+      Promise.all(lookups).then((results) => {
+        setFfMap((prev) => {
+          const next = new Map(prev);
+          for (const data of results) next.set(data.player_id, data);
+          return next;
+        });
+      }).catch((err) => {
+        log$c.error(err);
+      });
+    }, [targets, view.expanded_factions, ffRequested]);
+    const filters = useMemo(
+      () => ({
+        stats_less_than: parse_suffix_number(view.stats_less_than),
+        ff_less_than: parse_ff_limit(view.ff_less_than)
+      }),
+      [view.stats_less_than, view.ff_less_than]
+    );
+    const rows = useMemo(
+      () => targets ? build_board_view(targets, ffMap, filters) : [],
+      [targets, ffMap, filters]
+    );
+    const handleClaim = (row) => {
+      setClaimPending((prev) => new Set(prev).add(row.row_key));
+      void submit_claim_with_toast(
+        row.claim_target,
+        `Bounty claim submitted for ${row.name}.`
+      ).finally(() => {
+        setClaimPending((prev) => {
+          const next = new Set(prev);
+          next.delete(row.row_key);
+          return next;
+        });
+      });
+    };
+    const renderRow = (row) => jsx(
+      BountyRow,
+      {
+        row,
+        ff: ffMap.get(row.player_id),
+        expanded: view.expanded_tiers.includes(row.row_key),
+        onToggleExpanded: (key) => updateView({ expanded_tiers: toggle_in(view.expanded_tiers, key) }),
+        onAttack: handleAttack,
+        onClaim: handleClaim,
+        claimPending: claimPending.has(row.row_key)
+      },
+      row.row_key
+    );
+    switch (state.phase) {
+      case "loading":
+        return jsx("p", { className: cls$2.notice, children: "Loading FF Scouter Bounties…" });
+      case "key_missing":
+        return jsx(KeyNudge, { unregistered: false });
+      case "key_unregistered":
+        return jsx(KeyNudge, { unregistered: true });
+      case "consent":
+        return jsx(ConsentGate, { onAccepted: () => dispatch({ type: "reload" }) });
+      case "error":
+        return jsxs("p", { className: cls$2.notice, children: [
+          "Couldn't load FF Scouter Bounties: ",
+          state.message
+        ] });
+    }
+    const anyShown = state.response.board.targets.some(is_shown_target);
+    return jsxs("div", { children: [
+jsxs("div", { className: cls$2.filters, children: [
+jsxs("label", { className: cls$2.filter, children: [
+          "Stats less than",
+jsx(
+            "input",
+            {
+              type: "text",
+              inputMode: "decimal",
+              placeholder: "e.g. 2.5b",
+              "aria-label": "Only show targets with stats less than",
+              value: view.stats_less_than,
+              onChange: (e) => updateView({ stats_less_than: e.target.value })
+            }
+          )
+        ] }),
+jsxs("label", { className: cls$2.filter, children: [
+          "FF less than",
+jsx(
+            "input",
+            {
+              type: "text",
+              inputMode: "decimal",
+              placeholder: "e.g. 3",
+              "aria-label": "Only show targets with FF less than",
+              value: view.ff_less_than,
+              onChange: (e) => updateView({ ff_less_than: e.target.value })
+            }
+          )
+        ] })
+      ] }),
+      rows.length === 0 ? jsx("p", { className: cls$2.notice, children: anyShown ? "No FF Scouter Bounties match your filters." : "No open FF Scouter Bounties right now." }) : jsx("ul", { className: cls$2.list, children: rows.map(
+        (row) => row.kind === "faction" ? jsx(
+          FactionBountyCard,
+          {
+            card: row,
+            expanded: view.expanded_factions.includes(row.faction_id),
+            onToggleExpanded: (id) => updateView({
+              expanded_factions: toggle_in(view.expanded_factions, id)
+            }),
+            renderMember: renderRow
+          },
+          row.row_key
+        ) : renderRow(row)
+      ) })
+    ] });
+  }
+  const SHELL = {
+    modal: {
+      className: cls$2.modal,
+      collapse: "Minimize",
+      collapsed: "+",
+      expanded: "−"
+    },
+    section: {
+      className: `${cls$2.modal} ${cls$2.inFlow}`,
+      collapse: "Collapse",
+      collapsed: "▾",
+      expanded: "▴"
+    }
+  };
+  function BountyBoard({ variant }) {
+    const [view, updateView] = useViewState();
+    const shell = SHELL[variant];
+    return jsxs(
+      "section",
+      {
+        className: `${shell.className}${view.minimized ? ` ${cls$2.modalMinimized}` : ""}`,
+        "aria-label": "FF Scouter Bounties",
+        children: [
+jsxs("div", { className: cls$2.header, children: [
+jsx("h2", { className: cls$2.title, children: "FF Scouter Bounties" }),
+jsx(
+              "button",
+              {
+                type: "button",
+                className: cls$2.headerBtn,
+                "aria-expanded": !view.minimized,
+                "aria-label": view.minimized ? "Expand FF Scouter Bounties" : `${shell.collapse} FF Scouter Bounties`,
+                onClick: () => updateView({ minimized: !view.minimized }),
+                children: view.minimized ? shell.collapsed : shell.expanded
+              }
+            )
+          ] }),
+          view.minimized ? null : jsx("div", { className: cls$2.body, children: jsx(BountyBoardBody, { view, updateView }) })
+        ]
+      }
+    );
+  }
+  function is_bounty_main_route() {
+    const params = new URLSearchParams(location.hash.replace(/^#\/?!?/, ""));
+    const route = params.get("p");
+    return route === null || route === "main";
+  }
+  const CONTENT_WRAPPER = ".content-wrapper";
+  const TEMPLATE = ".page-template-cont";
+  const BOUNTY_ROWS = `${TEMPLATE} .bounties-list > li`;
+  const BOUNTY_LIST_TIMEOUT_MS = 30 * 1e3;
+  const log$b = logger.child("feature:bounties");
+  function should_show_bounty_board() {
+    return ffconfig.bounty_board_enabled && torn_page("bounties") && is_bounty_main_route();
+  }
+  let mounted = null;
+  let page_observer = null;
+  let rows_wait = null;
+  function create_container() {
+    const container = document.createElement("div");
+    container.id = "ffscouter-bounty-board";
+    return container;
+  }
+  function render(variant) {
+    if (!mounted || mounted.rendered === variant) return;
+    mounted.rendered = variant;
+    mounted.root.render(createElement(BountyBoard, { variant }));
+  }
+  function watch_page() {
+    page_observer ??= new MutationObserver(() => sync());
+    page_observer.disconnect();
+    for (const selector of [CONTENT_WRAPPER, TEMPLATE]) {
+      const el = document.querySelector(selector);
+      if (el) page_observer.observe(el, { childList: true });
+    }
+  }
+  function stop_watching() {
+    rows_wait?.abort();
+    rows_wait = null;
+    page_observer?.disconnect();
+  }
+  function float_modal() {
+    if (!mounted) return;
+    if (mounted.container.parentElement !== document.body) {
+      document.body.appendChild(mounted.container);
+    }
+    render("modal");
+  }
+  function place_section() {
+    if (!mounted) return;
+    const template = document.querySelector(TEMPLATE);
+    if (template && document.querySelector(BOUNTY_ROWS)) {
+      rows_wait?.abort();
+      rows_wait = null;
+      if (template.firstElementChild !== mounted.container) {
+        template.prepend(mounted.container);
+      }
+      render("section");
+      watch_page();
+      return;
+    }
+    if (rows_wait) return;
+    const wait = new AbortController();
+    rows_wait = wait;
+    const scope = document.querySelector(CONTENT_WRAPPER) ?? void 0;
+    void wait_for_element(BOUNTY_ROWS, BOUNTY_LIST_TIMEOUT_MS, scope, {
+      signal: wait.signal
+    }).then((rows) => {
+      if (wait.signal.aborted) return;
+      rows_wait = null;
+      if (rows) {
+        sync();
+        return;
+      }
+      log$b.warn("Torn's bounty list didn't render; floating FF Scouter Bounties");
+      float_modal();
+      watch_page();
+    });
+  }
+  function unmount_bounty_board() {
+    stop_watching();
+    if (!mounted) return;
+    mounted.root.unmount();
+    mounted.container.remove();
+    mounted = null;
+  }
+  function sync() {
+    if (!should_show_bounty_board()) {
+      unmount_bounty_board();
+      return;
+    }
+    if (!mounted) {
+      const container = create_container();
+      mounted = { root: createRoot(container), container, rendered: null };
+    }
+    if (is_narrow_layout()) {
+      place_section();
+    } else {
+      stop_watching();
+      float_modal();
+    }
+  }
+  const index$d = {
+    name: "FF Scouter Bounties",
+    description: "FF Scouter Bounties board on Torn's bounties page, floating on desktop and in-flow on narrow layouts (separate from Torn's own bounties)",
+    executionTime: StartTime.DocumentBody,
+
+
+async shouldRun() {
+      return torn_page("bounties");
+    },
+    async run() {
+      on_navigation(sync);
+      window.addEventListener("ff-config-updated", sync);
+      window.matchMedia?.(NARROW_LAYOUT_QUERY).addEventListener("change", sync);
+      sync();
+    }
+  };
+  const __vite_glob_0_1 = Object.freeze( Object.defineProperty({
+    __proto__: null,
+    BOUNTY_LIST_TIMEOUT_MS,
+    default: index$d,
+    should_show_bounty_board,
+    unmount_bounty_board
   }, Symbol.toStringTag, { value: "Module" }));
   const _deprecatedStub = null;
-  const __vite_glob_0_1 = Object.freeze( Object.defineProperty({
+  const __vite_glob_0_2 = Object.freeze( Object.defineProperty({
     __proto__: null,
     default: _deprecatedStub
   }, Symbol.toStringTag, { value: "Module" }));
@@ -3999,9 +5461,6 @@ jsx("span", { children: extract_bs_estimate_human(data) })
     if (!el) return null;
     return el.__ffHandle ?? null;
   }
-  function isMobileView() {
-    return typeof window !== "undefined" && window.innerWidth < 784;
-  }
   function FFFactionFilterBox({
     mode,
     onFilterChange,
@@ -4039,7 +5498,7 @@ jsx("span", { children: extract_bs_estimate_human(data) })
     const onFilterChangeRef = useRef(onFilterChange);
     onFilterChangeRef.current = onFilterChange;
     const debounceTimerRef = useRef(null);
-    const wasMobileRef = useRef(isMobileView());
+    const wasMobileRef = useRef(is_narrow_layout());
     const rootRef = useRef(null);
     const applyStatePatch = (patch) => {
       const next = { ...filterStateRef.current, ...patch };
@@ -4077,7 +5536,7 @@ outSoon: modeRef.current === "war" && hasUntilDataRef.current ? s2.outSoon : fal
     };
     const saveState = (state) => {
       const isWar = modeRef.current === "war";
-      const isMobile = isMobileView();
+      const isMobile = is_narrow_layout();
       const existing = isWar ? ffconfig.war_filter_state : ffconfig.faction_filter_state;
       const savedHiddenColumns = existing?.hiddenColumns;
       const savedHiddenColumnsMobile = existing?.hiddenColumnsMobile;
@@ -4116,7 +5575,7 @@ outSoon: modeRef.current === "war" && hasUntilDataRef.current ? s2.outSoon : fal
     };
     const loadState = () => {
       const isWar = modeRef.current === "war";
-      const isMobile = isMobileView();
+      const isMobile = is_narrow_layout();
       const newCollapsed = isWar ? ffconfig.war_filter_collapsed : ffconfig.faction_filter_collapsed;
       setCollapsed(newCollapsed);
       setColDisplay(
@@ -4173,7 +5632,7 @@ outSoon: modeRef.current === "war" && hasUntilDataRef.current ? s2.outSoon : fal
         );
       };
       const onResize = () => {
-        const isMobile = isMobileView();
+        const isMobile = is_narrow_layout();
         if (isMobile !== wasMobileRef.current) {
           wasMobileRef.current = isMobile;
           loadState();
@@ -4882,7 +6341,7 @@ Number.parseInt(row.dataset["estValue"], 10)
     if (filters.sortBy !== "none") return true;
     return false;
   }
-  const log$b = logger.child("feature:faction");
+  const log$a = logger.child("feature:faction");
   async function poll_traveling_flights(membersList) {
     const rows = Array.from(
       membersList.querySelectorAll(".enemy, .your")
@@ -4927,7 +6386,7 @@ Number.parseInt(row.dataset["estValue"], 10)
             p.row.removeAttribute("data-latest-arrival");
           }
         } catch (err) {
-          log$b.error(`Failed to fetch flights for player ${p.player_id}`, err);
+          log$a.error(`Failed to fetch flights for player ${p.player_id}`, err);
         }
       })
     );
@@ -5040,7 +6499,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
           e.preventDefault();
           e.stopPropagation();
           const freshPlayerId = get_player_id_in_element(rp.row);
-          log$b.info("FF/Est cell click: id-binding cross-check:", {
+          log$a.info("FF/Est cell click: id-binding cross-check:", {
             staleClosurePlayerId: rp.player_id,
             freshPlayerId,
             stale: freshPlayerId !== rp.player_id
@@ -5107,7 +6566,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     update_header_sort_indicator(membersList, handle?.sortBy ?? "none");
     poll_traveling_flights(membersList);
   }
-  const log$a = logger.child("feature:faction");
+  const log$9 = logger.child("feature:faction");
   const FEATURE_NAME$4 = "faction";
   function cleanup_when_detached(el, dispose) {
     const cleanupInterval = setInterval(() => {
@@ -5327,7 +6786,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     inject_filter_box(membersList);
     setup_header_click(membersList, ".table-header", "[role='button']");
     apply_ff_columns(membersList).catch((err) => {
-      log$a.error(err);
+      log$9.error(err);
     });
     const target = membersList.querySelector(".table-body") || membersList;
     setup_reapply_watcher(
@@ -5465,38 +6924,38 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
   function initialize_war_list(list) {
     setup_header_click(list, ".white-grad", "[class*='tab___']");
     apply_ff_columns(list).catch((err) => {
-      log$a.error(err);
+      log$9.error(err);
     });
     setup_reapply_watcher(list, list, () => ffconfig.war_col_display);
   }
   const process_page = () => {
     wait_for_element(".members-list", 1e4).then((node) => {
       if (node instanceof HTMLElement) {
-        log$a.debug("Found members-list!");
+        log$9.debug("Found members-list!");
         monitor_member_list(node);
       }
     }).catch((err) => {
-      log$a.error(err);
+      log$9.error(err);
     });
     wait_for_element(".chain-attacks-list", 1e4).then((node) => {
       if (node instanceof HTMLElement) {
-        log$a.debug("Found chain-attacks-list!");
+        log$9.debug("Found chain-attacks-list!");
         monitor_member_list(node, true);
       }
     }).catch((err) => {
-      log$a.error(err);
+      log$9.error(err);
     });
     wait_for_element("#faction_war_list_id", 1e4).then(async (node) => {
       if (!node) {
         return;
       }
-      log$a.debug("Found faction_war_list_id");
+      log$9.debug("Found faction_war_list_id");
       const descriptions_observer = new MutationObserver(async (mutations) => {
         try {
           for (const mutation of mutations) {
             for (const node2 of mutation.addedNodes) {
               if (node2 instanceof HTMLElement && node2.classList.contains("descriptions")) {
-                log$a.debug(
+                log$9.debug(
                   "Observed mutation that included adding descriptions",
                   node2
                 );
@@ -5511,11 +6970,11 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
             }
           }
         } catch (err) {
-          log$a.error(err);
+          log$9.error(err);
         }
       });
       descriptions_observer.observe(node, { childList: true });
-      log$a.debug(
+      log$9.debug(
         `Set up descriptions observer on <${node.tagName.toLowerCase()}> .${[...node.classList].join(".")}`
       );
       const existing_descriptions = node.querySelector(".descriptions");
@@ -5530,7 +6989,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
         }
       }
     }).catch((err) => {
-      log$a.error(err);
+      log$9.error(err);
     });
   };
   function should_run_faction() {
@@ -5578,7 +7037,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
         link.rel = "noopener noreferrer";
       }
     }).catch((err) => {
-      log$a.error(err);
+      log$9.error(err);
     });
     const closeBtn = document.createElement("button");
     closeBtn.textContent = "×";
@@ -5642,7 +7101,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
   }
   function update_api_key_notice() {
     apiKeyNoticeQueue = apiKeyNoticeQueue.then(update_api_key_notice_impl).catch((err) => {
-      log$a.error(err);
+      log$9.error(err);
     });
   }
   const index$c = {
@@ -5667,7 +7126,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
           for (const list of lists) {
             if (list instanceof HTMLElement) {
               apply_ff_columns(list).catch((err) => {
-                log$a.error(err);
+                log$9.error(err);
               });
             }
           }
@@ -5680,7 +7139,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       update_api_key_notice();
     }
   };
-  const __vite_glob_0_2 = Object.freeze( Object.defineProperty({
+  const __vite_glob_0_3 = Object.freeze( Object.defineProperty({
     __proto__: null,
     default: index$c,
     getFilterBoxHandle,
@@ -5688,7 +7147,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     setup_war_features,
     should_run_faction
   }, Symbol.toStringTag, { value: "Module" }));
-  const log$9 = logger.child("feature:fallback");
+  const log$8 = logger.child("feature:fallback");
   const FEATURE_NAME_HONOR_BAR = "fallback-honor-bar";
   const FEATURE_NAME_USER_NAME = "fallback-user-name";
   const FEATURE_NAME$3 = "fallback";
@@ -5904,7 +7363,7 @@ torn_page("page", { sid: "list" }) || torn_page("factions", { step: "profile" })
           if (is_observing) {
             ff_gauge_observer.disconnect();
             is_observing = false;
-            log$9.debug("Disconnected fallback MutationObserver (excluded page)");
+            log$8.debug("Disconnected fallback MutationObserver (excluded page)");
           }
         } else {
           current_config = get_page_selectors();
@@ -5917,7 +7376,7 @@ torn_page("page", { sid: "list" }) || torn_page("factions", { step: "profile" })
               subtree: true
             });
             is_observing = true;
-            log$9.debug("Connected fallback MutationObserver (included page)");
+            log$8.debug("Connected fallback MutationObserver (included page)");
             if (target) {
               check_mutation(target);
             }
@@ -5925,7 +7384,7 @@ torn_page("page", { sid: "list" }) || torn_page("factions", { step: "profile" })
         }
       };
       on_navigation(() => {
-        log$9.debug("Navigation detected, re-evaluating fallback observer state");
+        log$8.debug("Navigation detected, re-evaluating fallback observer state");
         update_observer_state();
       });
       update_observer_state();
@@ -5939,86 +7398,10 @@ torn_page("page", { sid: "list" }) || torn_page("factions", { step: "profile" })
       }
     }
   };
-  const __vite_glob_0_3 = Object.freeze( Object.defineProperty({
+  const __vite_glob_0_4 = Object.freeze( Object.defineProperty({
     __proto__: null,
     default: index$b
   }, Symbol.toStringTag, { value: "Module" }));
-  const log$8 = logger.child("ui");
-  var TOAST_LEVEL = ((TOAST_LEVEL2) => {
-    TOAST_LEVEL2[TOAST_LEVEL2["DEBUG"] = 0] = "DEBUG";
-    TOAST_LEVEL2[TOAST_LEVEL2["INFO"] = 1] = "INFO";
-    TOAST_LEVEL2[TOAST_LEVEL2["WARNING"] = 2] = "WARNING";
-    TOAST_LEVEL2[TOAST_LEVEL2["ERROR"] = 3] = "ERROR";
-    return TOAST_LEVEL2;
-  })(TOAST_LEVEL || {});
-  const TOAST_COLOURS = {
-    [
-      0
-]: "blue",
-    [
-      1
-]: "green",
-    [
-      2
-]: "orange",
-    [
-      3
-]: "#c62828"
-  };
-  function get_toast_colour(level) {
-    return TOAST_COLOURS[level];
-  }
-  function toast(message, level = 1) {
-    const existing = document.getElementById("ffscouter-toast");
-    if (existing) existing.remove();
-    const toast2 = document.createElement("div");
-    toast2.id = "ffscouter-toast";
-    toast2.style.position = "fixed";
-    toast2.style.bottom = "30px";
-    toast2.style.left = "50%";
-    toast2.style.transform = "translateX(-50%)";
-    toast2.style.color = "#fff";
-    toast2.style.padding = "8px 16px";
-    toast2.style.borderRadius = "8px";
-    toast2.style.fontSize = "14px";
-    toast2.style.boxShadow = "0 2px 12px rgba(0,0,0,0.2)";
-    toast2.style.zIndex = "2147483647";
-    toast2.style.opacity = "1";
-    toast2.style.transition = "opacity 0.5s";
-    toast2.style.display = "flex";
-    toast2.style.alignItems = "center";
-    toast2.style.gap = "10px";
-    const closeBtn = document.createElement("button");
-    closeBtn.textContent = "×";
-    closeBtn.style.cursor = "pointer";
-    closeBtn.style.marginLeft = "8px";
-    closeBtn.style.fontWeight = "bold";
-    closeBtn.style.fontSize = "18px";
-    closeBtn.style.background = "none";
-    closeBtn.style.border = "none";
-    closeBtn.style.color = "inherit";
-    closeBtn.style.padding = "0";
-    closeBtn.style.lineHeight = "1";
-    closeBtn.setAttribute("aria-label", "Close");
-    closeBtn.onclick = () => toast2.remove();
-    toast2.style.background = get_toast_colour(level);
-    const msg = document.createElement("span");
-    if (message === "Invalid API key. Please sign up at ffscouter.com to use this service") {
-      msg.innerHTML = 'FairFight Scouter V2: Invalid API key. Please sign up at <a href="https://ffscouter.com" target="_blank" style="color: #fff; text-decoration: underline; font-weight: bold;">ffscouter.com</a> to use this service. Register the API key with the script.';
-    } else {
-      msg.textContent = `FairFight Scouter V2: ${message}`;
-    }
-    log$8.info("[FF Scouter V2] Toast: ", message);
-    toast2.appendChild(msg);
-    toast2.appendChild(closeBtn);
-    document.body.appendChild(toast2);
-    setTimeout(() => {
-      if (toast2.parentNode) {
-        toast2.style.opacity = "0";
-        setTimeout(() => toast2.remove(), 500);
-      }
-    }, 4e3);
-  }
   const log$7 = logger.child("feature:ff-button");
   const CACHE_LIFETIME_MS = 7 * 24 * 60 * 60 * 1e3;
   const POLL_INTERVAL_MS = 24 * 60 * 60 * 1e3;
@@ -6221,7 +7604,7 @@ torn_page("page", { sid: "list" }) || torn_page("factions", { step: "profile" })
       });
     }
   };
-  const __vite_glob_0_4 = Object.freeze( Object.defineProperty({
+  const __vite_glob_0_5 = Object.freeze( Object.defineProperty({
     __proto__: null,
     CACHE_LIFETIME_MS,
     POLL_INTERVAL_MS,
@@ -6295,7 +7678,7 @@ torn_page("page", { sid: "list" }) || torn_page("factions", { step: "profile" })
       }
     }
   };
-  const __vite_glob_0_5 = Object.freeze( Object.defineProperty({
+  const __vite_glob_0_6 = Object.freeze( Object.defineProperty({
     __proto__: null,
     default: index$9
   }, Symbol.toStringTag, { value: "Module" }));
@@ -6629,7 +8012,7 @@ jsx("br", {}),
       }
     }
   };
-  const __vite_glob_0_6 = Object.freeze( Object.defineProperty({
+  const __vite_glob_0_7 = Object.freeze( Object.defineProperty({
     __proto__: null,
     default: index$8
   }, Symbol.toStringTag, { value: "Module" }));
@@ -6735,7 +8118,7 @@ jsx("br", {}),
       }
     }
   };
-  const __vite_glob_0_7 = Object.freeze( Object.defineProperty({
+  const __vite_glob_0_8 = Object.freeze( Object.defineProperty({
     __proto__: null,
     default: index$7
   }, Symbol.toStringTag, { value: "Module" }));
@@ -6793,7 +8176,7 @@ jsx("br", {}),
       }
     }
   };
-  const __vite_glob_0_8 = Object.freeze( Object.defineProperty({
+  const __vite_glob_0_9 = Object.freeze( Object.defineProperty({
     __proto__: null,
     default: index$6
   }, Symbol.toStringTag, { value: "Module" }));
@@ -6851,7 +8234,7 @@ jsx("br", {}),
       }
     }
   };
-  const __vite_glob_0_9 = Object.freeze( Object.defineProperty({
+  const __vite_glob_0_10 = Object.freeze( Object.defineProperty({
     __proto__: null,
     default: index$5
   }, Symbol.toStringTag, { value: "Module" }));
@@ -6903,7 +8286,7 @@ jsx("br", {}),
       }
     }
   };
-  const __vite_glob_0_10 = Object.freeze( Object.defineProperty({
+  const __vite_glob_0_11 = Object.freeze( Object.defineProperty({
     __proto__: null,
     default: index$4
   }, Symbol.toStringTag, { value: "Module" }));
@@ -6961,7 +8344,7 @@ jsx("br", {}),
       rows_monitor.start();
     }
   };
-  const __vite_glob_0_11 = Object.freeze( Object.defineProperty({
+  const __vite_glob_0_12 = Object.freeze( Object.defineProperty({
     __proto__: null,
     default: index$3
   }, Symbol.toStringTag, { value: "Module" }));
@@ -7061,6 +8444,8 @@ jsx("br", {}),
     factionFilterEnabled: CONFIG_DEFAULTS.faction_filter_enabled,
     warFilterEnabled: CONFIG_DEFAULTS.war_filter_enabled,
     statDistributionBadgeEnabled: CONFIG_DEFAULTS.stat_distribution_badge_enabled,
+    bountyBoardEnabled: CONFIG_DEFAULTS.bounty_board_enabled,
+    bountyAttackAction: CONFIG_DEFAULTS.bounty_attack_action,
     isPremium: null,
     isKeyRegistered: null
   };
@@ -7657,6 +9042,33 @@ jsxs("div", { className: `${cls.cell} ${cls.cellCheckbox}`, children: [
 jsx(
                     "input",
                     {
+                      id: "bounty-board-toggle",
+                      type: "checkbox",
+                      checked: drafts.bountyBoardEnabled,
+                      onChange
+                    }
+                  ),
+jsx("label", { htmlFor: "bounty-board-toggle", children: "Enable FF Scouter Bounties" })
+                ] }),
+jsxs("div", { className: cls.cell, children: [
+jsx("label", { htmlFor: "bounty-attack-action", children: "Bounty Attack Opens:" }),
+jsxs(
+                    "select",
+                    {
+                      id: "bounty-attack-action",
+                      value: drafts.bountyAttackAction,
+                      onChange,
+                      children: [
+jsx("option", { value: "new_tab", children: "New Tab" }),
+jsx("option", { value: "current", children: "Same Tab" })
+                      ]
+                    }
+                  )
+                ] }),
+jsxs("div", { className: `${cls.cell} ${cls.cellCheckbox}`, children: [
+jsx(
+                    "input",
+                    {
                       id: "settings-panel-own-profile-only-toggle",
                       type: "checkbox",
                       checked: drafts.settingsPanelOwnProfileOnly,
@@ -7829,6 +9241,8 @@ jsx(
           this._drafts.chainTabType = target.value;
         } else if (id === "war-quick-attack-action") {
           this._drafts.warQuickAttackAction = target.value;
+        } else if (id === "bounty-attack-action") {
+          this._drafts.bountyAttackAction = target.value;
         } else if (id === "factions-col-display") {
           this._drafts.factionsColDisplay = target.value;
         } else if (id === "war-col-display") {
@@ -7861,6 +9275,8 @@ jsx(
           this._drafts.warFilterEnabled = target.checked;
         } else if (id === "stat-distribution-badge-toggle") {
           this._drafts.statDistributionBadgeEnabled = target.checked;
+        } else if (id === "bounty-board-toggle") {
+          this._drafts.bountyBoardEnabled = target.checked;
         }
         this.render();
       };
@@ -7924,7 +9340,9 @@ jsx(
         settingsPanelOwnProfileOnly: this._props.settingsPanelOwnProfileOnly,
         factionFilterEnabled: this._props.factionFilterEnabled,
         warFilterEnabled: this._props.warFilterEnabled,
-        statDistributionBadgeEnabled: this._props.statDistributionBadgeEnabled
+        statDistributionBadgeEnabled: this._props.statDistributionBadgeEnabled,
+        bountyBoardEnabled: this._props.bountyBoardEnabled,
+        bountyAttackAction: this._props.bountyAttackAction
       };
     }
     render() {
@@ -8046,7 +9464,9 @@ jsx(
             settingsPanelOwnProfileOnly: this._drafts.settingsPanelOwnProfileOnly,
             factionFilterEnabled: this._drafts.factionFilterEnabled,
             warFilterEnabled: this._drafts.warFilterEnabled,
-            statDistributionBadgeEnabled: this._drafts.statDistributionBadgeEnabled
+            statDistributionBadgeEnabled: this._drafts.statDistributionBadgeEnabled,
+            bountyBoardEnabled: this._drafts.bountyBoardEnabled,
+            bountyAttackAction: this._drafts.bountyAttackAction
           },
           bubbles: true,
           composed: true
@@ -8299,6 +9719,22 @@ get apiKey() {
     set statDistributionBadgeEnabled(val) {
       this._props.statDistributionBadgeEnabled = val;
       this._drafts.statDistributionBadgeEnabled = val;
+      this.render();
+    }
+    get bountyBoardEnabled() {
+      return this._props.bountyBoardEnabled;
+    }
+    set bountyBoardEnabled(val) {
+      this._props.bountyBoardEnabled = val;
+      this._drafts.bountyBoardEnabled = val;
+      this.render();
+    }
+    get bountyAttackAction() {
+      return this._props.bountyAttackAction;
+    }
+    set bountyAttackAction(val) {
+      this._props.bountyAttackAction = val;
+      this._drafts.bountyAttackAction = val;
       this.render();
     }
     get debugDisablePdaHttp() {
@@ -8562,6 +9998,20 @@ get draftApiKey() {
       this._drafts.statDistributionBadgeEnabled = val;
       this.render();
     }
+    get draftBountyBoardEnabled() {
+      return this._drafts.bountyBoardEnabled;
+    }
+    set draftBountyBoardEnabled(val) {
+      this._drafts.bountyBoardEnabled = val;
+      this.render();
+    }
+    get draftBountyAttackAction() {
+      return this._drafts.bountyAttackAction;
+    }
+    set draftBountyAttackAction(val) {
+      this._drafts.bountyAttackAction = val;
+      this.render();
+    }
   }
   if (!customElements.get("ff-settings-panel")) {
     customElements.define("ff-settings-panel", FFSettingsPanel);
@@ -8711,6 +10161,8 @@ get draftApiKey() {
       panel.factionFilterEnabled = ffconfig.faction_filter_enabled;
       panel.warFilterEnabled = ffconfig.war_filter_enabled;
       panel.statDistributionBadgeEnabled = ffconfig.stat_distribution_badge_enabled;
+      panel.bountyBoardEnabled = ffconfig.bounty_board_enabled;
+      panel.bountyAttackAction = ffconfig.bounty_attack_action;
       panel.addEventListener("ff-save", async (e) => {
         const detail = e.detail;
         ffconfig.key = detail.apiKey;
@@ -8755,6 +10207,8 @@ get draftApiKey() {
         ffconfig.faction_filter_enabled = detail.factionFilterEnabled;
         ffconfig.war_filter_enabled = detail.warFilterEnabled;
         ffconfig.stat_distribution_badge_enabled = detail.statDistributionBadgeEnabled;
+        ffconfig.bounty_board_enabled = detail.bountyBoardEnabled;
+        ffconfig.bounty_attack_action = detail.bountyAttackAction;
         panel.isPremium = await check_key_status.is_premium(true);
         panel.isKeyRegistered = await check_key_status.is_registered(false);
         toast("Settings saved successfully!");
@@ -8799,6 +10253,8 @@ get draftApiKey() {
         panel.factionFilterEnabled = ffconfig.faction_filter_enabled;
         panel.warFilterEnabled = ffconfig.war_filter_enabled;
         panel.statDistributionBadgeEnabled = ffconfig.stat_distribution_badge_enabled;
+        panel.bountyBoardEnabled = ffconfig.bounty_board_enabled;
+        panel.bountyAttackAction = ffconfig.bounty_attack_action;
         toast("Settings reset to defaults!");
         window.dispatchEvent(new CustomEvent("ff-config-updated"));
       });
@@ -8890,7 +10346,7 @@ get draftApiKey() {
       }
     }
   };
-  const __vite_glob_0_12 = Object.freeze( Object.defineProperty({
+  const __vite_glob_0_13 = Object.freeze( Object.defineProperty({
     __proto__: null,
     default: index$2
   }, Symbol.toStringTag, { value: "Module" }));
@@ -9109,7 +10565,7 @@ get draftApiKey() {
       log$2.debug("Online Status Attack Links feature installed successfully.");
     }
   };
-  const __vite_glob_0_13 = Object.freeze( Object.defineProperty({
+  const __vite_glob_0_14 = Object.freeze( Object.defineProperty({
     __proto__: null,
     default: index$1
   }, Symbol.toStringTag, { value: "Module" }));
@@ -9133,26 +10589,27 @@ get draftApiKey() {
       }
     }
   };
-  const __vite_glob_0_14 = Object.freeze( Object.defineProperty({
+  const __vite_glob_0_15 = Object.freeze( Object.defineProperty({
     __proto__: null,
     default: index
   }, Symbol.toStringTag, { value: "Module" }));
   const modules = Object.assign({
     "./attack/index.ts": __vite_glob_0_0,
-    "./deprecation-notice/index.ts": __vite_glob_0_1,
-    "./faction/index.ts": __vite_glob_0_2,
-    "./fallback/index.ts": __vite_glob_0_3,
-    "./ff-button/index.ts": __vite_glob_0_4,
-    "./item_market/index.ts": __vite_glob_0_5,
-    "./mini-profile-flights/index.ts": __vite_glob_0_6,
-    "./mini-profile/index.ts": __vite_glob_0_7,
-    "./profile-flights/index.ts": __vite_glob_0_8,
-    "./profile-history/index.ts": __vite_glob_0_9,
-    "./profile/index.ts": __vite_glob_0_10,
-    "./rr/index.ts": __vite_glob_0_11,
-    "./settings/index.ts": __vite_glob_0_12,
-    "./status-attack/index.ts": __vite_glob_0_13,
-    "./test-feature/index.ts": __vite_glob_0_14
+    "./bounties/index.ts": __vite_glob_0_1,
+    "./deprecation-notice/index.ts": __vite_glob_0_2,
+    "./faction/index.ts": __vite_glob_0_3,
+    "./fallback/index.ts": __vite_glob_0_4,
+    "./ff-button/index.ts": __vite_glob_0_5,
+    "./item_market/index.ts": __vite_glob_0_6,
+    "./mini-profile-flights/index.ts": __vite_glob_0_7,
+    "./mini-profile/index.ts": __vite_glob_0_8,
+    "./profile-flights/index.ts": __vite_glob_0_9,
+    "./profile-history/index.ts": __vite_glob_0_10,
+    "./profile/index.ts": __vite_glob_0_11,
+    "./rr/index.ts": __vite_glob_0_12,
+    "./settings/index.ts": __vite_glob_0_13,
+    "./status-attack/index.ts": __vite_glob_0_14,
+    "./test-feature/index.ts": __vite_glob_0_15
   });
   const Features = Object.values(modules).map((mod) => mod.default).filter(
     (feat) => !!feat && "name" in feat && feat.name !== "Test Feature!"
@@ -9185,7 +10642,7 @@ get draftApiKey() {
       return;
     }
     document.documentElement.setAttribute(INJECTION_KEY, "1");
-    log.info("Initializing", "3.4-beta1");
+    log.info("Initializing", "3.4-beta2");
     run_migration();
     if (ffscouter.analytics_enabled) {
       if (typeof unsafeWindow !== "undefined") {
