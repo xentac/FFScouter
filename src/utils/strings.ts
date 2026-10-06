@@ -1,5 +1,9 @@
 import parseDuration from "parse-duration";
-import { extract_ff, extract_last_updated } from "./estimate";
+import {
+  extract_bs_estimate_human,
+  extract_ff,
+  extract_last_updated,
+} from "./estimate";
 import { ColorScheme, ffconfig } from "./ffconfig";
 import type {
   EstimateSource,
@@ -153,9 +157,7 @@ export function get_stat_distribution_badges(
   return [{ stat: top[0], percent: top[1], position: "right" }];
 }
 
-export function format_ff_score(d: FFDataComplete) {
-  const ff = extract_ff(d).toFixed(2);
-
+function staleness_suffix(d: FFDataComplete) {
   const now: TimestampSec = Date.now() / 1000;
   const age = now - extract_last_updated(d);
 
@@ -164,7 +166,17 @@ export function format_ff_score(d: FFDataComplete) {
     suffix = "?";
   }
 
-  return `${ff}${suffix}`;
+  return suffix;
+}
+
+export function format_ff_score(d: FFDataComplete) {
+  const ff = extract_ff(d).toFixed(2);
+
+  return `${ff}${staleness_suffix(d)}`;
+}
+
+export function format_bs_estimate(d: FFDataComplete) {
+  return `${extract_bs_estimate_human(d)}${staleness_suffix(d)}`;
 }
 
 export function format_difficulty_text(d: FFDataComplete) {

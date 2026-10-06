@@ -78,6 +78,7 @@ export default {
     panel.ffHistoryEnabled = ffconfig.ff_history_enabled;
     panel.factionsColDisplay = ffconfig.factions_col_display;
     panel.warColDisplay = ffconfig.war_col_display;
+    panel.miniProfileDisplay = ffconfig.mini_profile_display;
     panel.debugLogs = ffconfig.debug_logs;
     panel.analyticsEnabled = ffconfig.analytics_enabled;
     panel.networkInterceptionEnabled = ffconfig.network_interception_enabled;
@@ -120,6 +121,7 @@ export default {
       ffconfig.ff_history_enabled = detail.ffHistoryEnabled;
       ffconfig.factions_col_display = detail.factionsColDisplay;
       ffconfig.war_col_display = detail.warColDisplay;
+      ffconfig.mini_profile_display = detail.miniProfileDisplay;
       ffconfig.debug_logs = detail.debugLogs;
       if (detail.debugLogs) {
         logger.setLevel(LogLevel.DEBUG);
@@ -177,6 +179,7 @@ export default {
       panel.ffHistoryEnabled = ffconfig.ff_history_enabled;
       panel.factionsColDisplay = ffconfig.factions_col_display;
       panel.warColDisplay = ffconfig.war_col_display;
+      panel.miniProfileDisplay = ffconfig.mini_profile_display;
       panel.debugLogs = ffconfig.debug_logs;
       panel.analyticsEnabled = ffconfig.analytics_enabled;
       panel.networkInterceptionEnabled = ffconfig.network_interception_enabled;

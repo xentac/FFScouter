@@ -7,6 +7,7 @@ import {
   FactionsColDisplay,
   FFConfig,
   GaugeMarkerJustify,
+  MiniProfileDisplay,
   WarQuickAttackAction,
 } from "./ffconfig";
 
@@ -33,6 +34,9 @@ test("FFConfig gets default values when storage is empty", () => {
     CONFIG_DEFAULTS.factions_col_display,
   );
   expect(config.war_col_display).toEqual(CONFIG_DEFAULTS.war_col_display);
+  expect(config.mini_profile_display).toEqual(
+    CONFIG_DEFAULTS.mini_profile_display,
+  );
   expect(config.debug_logs).toEqual(CONFIG_DEFAULTS.debug_logs);
   expect(config.analytics_enabled).toEqual(CONFIG_DEFAULTS.analytics_enabled);
   expect(config.network_interception_enabled).toEqual(
@@ -79,6 +83,7 @@ test("FFConfig sets and gets custom configuration values", () => {
   config.ff_history_enabled = false;
   config.factions_col_display = FactionsColDisplay.FAIR_FIGHT;
   config.war_col_display = FactionsColDisplay.FAIR_FIGHT;
+  config.mini_profile_display = MiniProfileDisplay.BATTLE_STATS;
   config.debug_logs = true;
   config.analytics_enabled = true;
   config.network_interception_enabled = false;
@@ -107,6 +112,7 @@ test("FFConfig sets and gets custom configuration values", () => {
   expect(config.ff_history_enabled).toBe(false);
   expect(config.factions_col_display).toEqual(FactionsColDisplay.FAIR_FIGHT);
   expect(config.war_col_display).toEqual(FactionsColDisplay.FAIR_FIGHT);
+  expect(config.mini_profile_display).toEqual(MiniProfileDisplay.BATTLE_STATS);
   expect(config.debug_logs).toBe(true);
   expect(config.analytics_enabled).toBe(true);
   expect(config.network_interception_enabled).toBe(false);
@@ -144,6 +150,7 @@ test("FFConfig sets and gets custom configuration values", () => {
 test("FFConfig.reset resets values to their default states except the api key", () => {
   config.key = "my-sticky-api-key";
   config.low_ff_range = 5.0;
+  config.mini_profile_display = MiniProfileDisplay.BATTLE_STATS;
   config.debug_logs = true;
   config.analytics_enabled = true;
   config.network_interception_enabled = false;
@@ -178,6 +185,9 @@ test("FFConfig.reset resets values to their default states except the api key", 
     CONFIG_DEFAULTS.factions_col_display,
   );
   expect(config.war_col_display).toEqual(CONFIG_DEFAULTS.war_col_display);
+  expect(config.mini_profile_display).toEqual(
+    CONFIG_DEFAULTS.mini_profile_display,
+  );
   expect(config.debug_logs).toEqual(CONFIG_DEFAULTS.debug_logs);
   expect(config.analytics_enabled).toEqual(CONFIG_DEFAULTS.analytics_enabled);
   expect(config.network_interception_enabled).toEqual(

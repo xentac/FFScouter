@@ -318,6 +318,32 @@ test("ff-settings-panel dispatches ff-save event with the bounty settings when s
   expect(saveEvents[0]?.detail?.bountyAttackAction).toBe("current");
 });
 
+test("ff-settings-panel dispatches ff-save event with correct miniProfileDisplay when saved", async () => {
+  const el = document.createElement("ff-settings-panel") as FFSettingsPanel;
+  document.body.appendChild(el);
+  await el.updateComplete;
+
+  const saveEvents: CustomEvent[] = [];
+  el.addEventListener("ff-save", (e: Event) => {
+    saveEvents.push(e as CustomEvent);
+  });
+
+  const select = el.querySelector("#mini-profile-display") as HTMLSelectElement;
+  expect(select).not.toBeNull();
+  expect(select.value).toBe("fair_fight");
+  select.value = "battle_stats";
+  select.dispatchEvent(new Event("change", { bubbles: true }));
+  await el.updateComplete;
+
+  const saveBtn = Array.from(el.querySelectorAll("button")).find(
+    (btn) => btn.textContent?.trim() === "Save Settings",
+  ) as HTMLButtonElement;
+  saveBtn.click();
+
+  expect(saveEvents.length).toBe(1);
+  expect(saveEvents[0]?.detail?.miniProfileDisplay).toBe("battle_stats");
+});
+
 test("ff-settings-panel syncs the marker-size slider and number input, clamps out-of-range values, and dispatches gaugeMarkerScale on save", async () => {
   const el = document.createElement("ff-settings-panel") as FFSettingsPanel;
   document.body.appendChild(el);

@@ -6,6 +6,7 @@ import {
   type FactionsColDisplay,
   type GaugeMarkerJustify,
   type GaugeMarkerType,
+  type MiniProfileDisplay,
   type WarQuickAttackAction,
 } from "@utils/ffconfig";
 import {
@@ -72,6 +73,7 @@ const DEFAULT_VALUES = {
   ffHistoryEnabled: CONFIG_DEFAULTS.ff_history_enabled,
   factionsColDisplay: CONFIG_DEFAULTS.factions_col_display,
   warColDisplay: CONFIG_DEFAULTS.war_col_display,
+  miniProfileDisplay: CONFIG_DEFAULTS.mini_profile_display,
   debugLogs: CONFIG_DEFAULTS.debug_logs,
   analyticsEnabled: CONFIG_DEFAULTS.analytics_enabled,
   networkInterceptionEnabled: CONFIG_DEFAULTS.network_interception_enabled,
@@ -601,6 +603,18 @@ export function SettingsPanelComponent({
               <label htmlFor="war-filter-toggle">Show war filter box</label>
             </div>
 
+            <div className={cls.cell}>
+              <label htmlFor="mini-profile-display">Mini Profile Shows:</label>
+              <select
+                id="mini-profile-display"
+                value={drafts.miniProfileDisplay}
+                onChange={onChange}
+              >
+                <option value="fair_fight">FF Score</option>
+                <option value="battle_stats">BS Estimate</option>
+              </select>
+            </div>
+
             <div className={`${cls.cell} ${cls.cellCheckbox}`}>
               <input
                 id="status-attack-links-toggle"
@@ -841,6 +855,7 @@ export class FFSettingsPanel extends HTMLElement {
       ffHistoryEnabled: this._props.ffHistoryEnabled,
       factionsColDisplay: this._props.factionsColDisplay,
       warColDisplay: this._props.warColDisplay,
+      miniProfileDisplay: this._props.miniProfileDisplay,
       debugLogs: this._props.debugLogs,
       analyticsEnabled: this._props.analyticsEnabled,
       networkInterceptionEnabled: this._props.networkInterceptionEnabled,
@@ -975,6 +990,7 @@ export class FFSettingsPanel extends HTMLElement {
           ffHistoryEnabled: this._drafts.ffHistoryEnabled,
           factionsColDisplay: this._drafts.factionsColDisplay,
           warColDisplay: this._drafts.warColDisplay,
+          miniProfileDisplay: this._drafts.miniProfileDisplay,
           debugLogs: this._drafts.debugLogs,
           analyticsEnabled: this._drafts.analyticsEnabled,
           networkInterceptionEnabled: this._drafts.networkInterceptionEnabled,
@@ -1071,6 +1087,8 @@ export class FFSettingsPanel extends HTMLElement {
       this._drafts.factionsColDisplay = target.value as FactionsColDisplay;
     } else if (id === "war-col-display") {
       this._drafts.warColDisplay = target.value as FactionsColDisplay;
+    } else if (id === "mini-profile-display") {
+      this._drafts.miniProfileDisplay = target.value as MiniProfileDisplay;
     } else if (id === "chain-button-toggle") {
       this._drafts.chainButtonEnabled = (target as HTMLInputElement).checked;
     } else if (id === "chain-inactive") {
@@ -1284,6 +1302,15 @@ export class FFSettingsPanel extends HTMLElement {
   set warColDisplay(val) {
     this._props.warColDisplay = val;
     this._drafts.warColDisplay = val;
+    this.render();
+  }
+
+  get miniProfileDisplay() {
+    return this._props.miniProfileDisplay;
+  }
+  set miniProfileDisplay(val) {
+    this._props.miniProfileDisplay = val;
+    this._drafts.miniProfileDisplay = val;
     this.render();
   }
 
@@ -1599,6 +1626,14 @@ export class FFSettingsPanel extends HTMLElement {
   }
   set draftWarColDisplay(val) {
     this._drafts.warColDisplay = val;
+    this.render();
+  }
+
+  get draftMiniProfileDisplay() {
+    return this._drafts.miniProfileDisplay;
+  }
+  set draftMiniProfileDisplay(val) {
+    this._drafts.miniProfileDisplay = val;
     this.render();
   }
 

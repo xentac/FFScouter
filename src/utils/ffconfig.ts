@@ -38,6 +38,11 @@ export enum FactionsColDisplay {
   NONE = "none",
 }
 
+export enum MiniProfileDisplay {
+  FAIR_FIGHT = "fair_fight",
+  BATTLE_STATS = "battle_stats",
+}
+
 export enum GaugeMarkerType {
   ARROW = "arrow",
   BUBBLE_FF = "bubble_ff",
@@ -75,6 +80,7 @@ export const CONFIG_DEFAULTS = {
   ff_history_enabled: true,
   factions_col_display: FactionsColDisplay.BATTLE_STATS,
   war_col_display: FactionsColDisplay.BATTLE_STATS,
+  mini_profile_display: MiniProfileDisplay.FAIR_FIGHT,
   debug_logs: false,
   analytics_enabled: false,
   chain_min_level: null as number | null,
@@ -114,6 +120,7 @@ enum CONFIG {
   FF_HISTORY_ENABLED = "ff_history_enabled",
   FACTIONS_COL_DISPLAY = "factions_col_display",
   WAR_COL_DISPLAY = "war_col_display",
+  MINI_PROFILE_DISPLAY = "mini_profile_display",
   DEBUG_LOGS = "debug_logs",
   ANALYTICS_ENABLED = "analytics_enabled",
   FACTION_FILTER_STATE = "faction_filter_state",
@@ -359,6 +366,17 @@ export class FFConfig {
 
   set war_col_display(val: FactionsColDisplay) {
     this.storage.set(CONFIG.WAR_COL_DISPLAY, val);
+  }
+
+  get mini_profile_display(): MiniProfileDisplay {
+    return (
+      this.storage.get(CONFIG.MINI_PROFILE_DISPLAY) ??
+      CONFIG_DEFAULTS.mini_profile_display
+    );
+  }
+
+  set mini_profile_display(val: MiniProfileDisplay) {
+    this.storage.set(CONFIG.MINI_PROFILE_DISPLAY, val);
   }
 
   get debug_logs(): boolean {
@@ -622,6 +640,7 @@ export class FFConfig {
     this.storage.remove(CONFIG.FF_HISTORY_ENABLED);
     this.storage.remove(CONFIG.FACTIONS_COL_DISPLAY);
     this.storage.remove(CONFIG.WAR_COL_DISPLAY);
+    this.storage.remove(CONFIG.MINI_PROFILE_DISPLAY);
     this.storage.remove(CONFIG.DEBUG_LOGS);
     this.storage.remove(CONFIG.ANALYTICS_ENABLED);
     this.storage.remove(CONFIG.NETWORK_INTERCEPTION_ENABLED);

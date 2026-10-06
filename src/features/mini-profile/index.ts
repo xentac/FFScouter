@@ -5,9 +5,11 @@ import {
   make_source_marker_svg,
 } from "@utils/dom";
 import { extract_last_updated, extract_source } from "@utils/estimate";
+import { ffconfig, MiniProfileDisplay } from "@utils/ffconfig";
 import { ffscouter } from "@utils/ffscouter";
 import logger from "@utils/logger";
 import {
+  format_bs_estimate,
   format_ff_score,
   format_relative_time,
   get_source_marker,
@@ -103,16 +105,20 @@ const setup_mini_observer = () => {
         }
         miniroot.querySelector(".ffscouter-mini-desc")?.remove();
 
-        // Minimal, text-only Fair Fight line for mini-profiles. Built from
-        // child nodes rather than one innerText string so the source-marker
-        // glyph (if any) can carry its own title for a desktop tooltip.
-        const ff_string = format_ff_score(d);
+        // Minimal, text-only FF or BS estimate line for mini-profiles. Built
+        // from child nodes rather than one innerText string so the
+        // source-marker glyph (if any) can carry its own title for a desktop
+        // tooltip.
+        const value_string =
+          ffconfig.mini_profile_display === MiniProfileDisplay.BATTLE_STATS
+            ? `Est ${format_bs_estimate(d)}`
+            : `FF ${format_ff_score(d)}`;
         const fresh = format_relative_time(extract_last_updated(d));
         const marker = get_source_marker(extract_source(d));
 
         const desc = document.createElement("span");
         desc.classList.add("ffscouter-mini-desc");
-        desc.append(`FF ${ff_string}`);
+        desc.append(value_string);
         if (marker) {
           desc.appendChild(
             make_source_marker_svg(marker, "ffscouter-inline-source-marker"),

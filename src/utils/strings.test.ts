@@ -4,6 +4,7 @@ import { ColorScheme, ffconfig } from "./ffconfig";
 import {
   ff_to_percent,
   format_age_phrase,
+  format_bs_estimate,
   format_difficulty_text,
   format_ff_score,
   format_relative_time,
@@ -115,6 +116,60 @@ test("format_ff_score formats scores with age check", () => {
     spies: [],
   };
   expect(format_ff_score(oldData)).toEqual("4.12?");
+});
+
+test("format_bs_estimate formats estimates with age check", () => {
+  const nowSec = Date.now() / 1000;
+
+  const freshData: FFDataComplete = {
+    player_id: 1,
+    no_data: false,
+    fair_fight: 2.3456,
+    last_updated: nowSec - 5 * DAY,
+    bs_estimate: 1230000000,
+    bs_estimate_human: "1.23b",
+    bss_public: 10,
+    source: "bss",
+    premium_insights_available: false,
+    available_estimates: {
+      bss: {
+        bss_public: 10,
+        bs_estimate: 1230000000,
+        bs_estimate_human: "1.23b",
+        last_updated: nowSec - 5 * DAY,
+        fair_fight: 2.3456,
+      },
+      premium: null,
+      spies: null,
+    },
+    spies: [],
+  };
+  expect(format_bs_estimate(freshData)).toEqual("1.23b");
+
+  const oldData: FFDataComplete = {
+    player_id: 2,
+    no_data: false,
+    fair_fight: 4.1234,
+    last_updated: nowSec - 15 * DAY,
+    bs_estimate: 14700000000,
+    bs_estimate_human: "14.7b",
+    bss_public: 20,
+    source: "bss",
+    premium_insights_available: false,
+    available_estimates: {
+      bss: {
+        bss_public: 20,
+        bs_estimate: 14700000000,
+        bs_estimate_human: "14.7b",
+        last_updated: nowSec - 15 * DAY,
+        fair_fight: 4.1234,
+      },
+      premium: null,
+      spies: null,
+    },
+    spies: [],
+  };
+  expect(format_bs_estimate(oldData)).toEqual("14.7b?");
 });
 
 test("format_difficulty_text returns correct strings based on fair_fight score", () => {
