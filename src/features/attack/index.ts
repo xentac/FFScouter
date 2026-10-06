@@ -1,12 +1,13 @@
-import { AttackBountyRow } from "@ui/attack-bounty-row";
+import { AttackBountyRow, CLAIM_SUBMITTED } from "@ui/attack-bounty-row";
 import { classify_board_error } from "@ui/bounty-board-rows";
+import { submit_claim_with_toast } from "@ui/bounty-claim";
 import { FFHeaderLine } from "@ui/info-line";
 import {
   is_attack_bounty_silenced,
   silence_attack_bounty,
 } from "@utils/bounty_attack_silence";
 import { bounty_board_cache } from "@utils/bounty_board";
-import { find_bounty_match } from "@utils/bounty_match";
+import { type BountyMatch, find_bounty_match } from "@utils/bounty_match";
 import { check_key_status } from "@utils/check_key";
 import {
   create_info_line,
@@ -32,7 +33,16 @@ const FIGHT_BUTTON = '[class*="dialogButtons"] button';
 // the single tracked row root (ADR 0010), rendered inside the info line so it
 // sits directly below it wherever the info line is placed.
 let attack_target: { player_id: PlayerId; info_line: Element } | null = null;
-let bounty_row: { root: Root; container: HTMLElement } | null = null;
+let bounty_row: {
+  root: Root;
+  container: HTMLElement;
+  // Last-known eligibility: auto-claim posts on this, never waiting on a
+  // board read, because the POST itself is authoritative.
+  match: BountyMatch;
+  // Claims in flight (auto-claim never waits on one) and whether any went in.
+  in_flight: number;
+  claimed: boolean;
+} | null = null;
 // Bumped on every sync, so a slow board read never overwrites a newer one.
 let sync_generation = 0;
 let listening = false;
@@ -95,12 +105,57 @@ async function sync_bounty_row() {
 
   if (!bounty_row) {
     const container = document.createElement("div");
-    bounty_row = { root: createRoot(container), container };
+    bounty_row = {
+      root: createRoot(container),
+      container,
+      match,
+      in_flight: 0,
+      claimed: false,
+    };
   }
+  bounty_row.match = match;
   if (bounty_row.container.parentElement !== info_line) {
     info_line.appendChild(bounty_row.container);
   }
-  bounty_row.root.render(createElement(AttackBountyRow, { match }));
+  render_bounty_row();
+}
+
+function render_bounty_row() {
+  if (!bounty_row) return;
+  bounty_row.root.render(
+    createElement(AttackBountyRow, {
+      match: bounty_row.match,
+      claimPending: bounty_row.in_flight > 0,
+      claimed: bounty_row.claimed,
+      onClaim: () => void claim(`${CLAIM_SUBMITTED}.`),
+    }),
+  );
+}
+
+// Fire-and-acknowledge, as on the board. A failure leaves the button in its
+// manually-clickable state, with the API's message toasted.
+async function claim(success_message: string) {
+  const row = bounty_row;
+  if (!row) return;
+  row.in_flight++;
+  render_bounty_row();
+  const ok = await submit_claim_with_toast(
+    row.match.claim_target,
+    success_message,
+  );
+  row.in_flight--;
+  row.claimed ||= ok;
+  if (row === bounty_row) render_bounty_row();
+}
+
+// The end-of-fight dialog's finishing moves share the dialogButtons container
+// with Start/Join fight; Torn renders their text lowercase.
+const FINISHING_MOVES = ["leave", "mug", "hospitalize"] as const;
+type FinishingMove = (typeof FINISHING_MOVES)[number];
+
+function finishing_move(button: Element): FinishingMove | null {
+  const text = button.textContent?.trim().toLowerCase() ?? "";
+  return FINISHING_MOVES.find((move) => move === text) ?? null;
 }
 
 function listen() {
@@ -111,10 +166,17 @@ function listen() {
   document.addEventListener(
     "click",
     (event) => {
-      if (
-        event.target instanceof Element &&
-        event.target.closest(FIGHT_BUTTON)
-      ) {
+      if (!(event.target instanceof Element)) return;
+      const button = event.target.closest(FIGHT_BUTTON);
+      if (!button) return;
+      const move = finishing_move(button);
+      if (move === "hospitalize") {
+        // Only hospitalizations pay, so only the hospitalize finishing move
+        // claims — every time it's clicked, since a target who meds out can be
+        // hospitalized again. No row means no eligible bounty (or bounties are
+        // off): no claim.
+        void claim(`${CLAIM_SUBMITTED} automatically.`);
+      } else if (!move) {
         void sync_bounty_row();
       }
     },

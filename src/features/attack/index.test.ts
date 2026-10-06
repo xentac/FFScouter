@@ -1,10 +1,14 @@
 // @vitest-environment jsdom
 
-import { toast } from "@ui/toast";
+import { TOAST_LEVEL, toast } from "@ui/toast";
 import {
   api_error,
+  CLAIM_CREATE_RESPONSE,
   ERROR_CONSENT_REQUIRED,
   ERROR_INVALID_KEY,
+  ERROR_NO_OPEN_BOUNTIES,
+  ERROR_RATE_LIMITED,
+  ERROR_TORN_REJECTED_KEY,
   FACTION_TARGET,
   PLAYER_TARGET,
   SELLER_BOARD_RESPONSE,
@@ -60,6 +64,21 @@ const open_attack = async (player_id: PlayerId) => {
   await flush();
 };
 
+// The end-of-fight dialog replaces Start fight with the finishing moves, in
+// the same dialogButtons container, per the capture on issue #12.
+const finish_fight = (move: "leave" | "mug" | "hospitalize") => {
+  const buttons = document.querySelector('[class*="dialogButtons"]');
+  if (!buttons) throw new Error("No dialog buttons");
+  buttons.innerHTML = `
+    <button type="submit" class="torn-btn btn____CYQW silver">leave</button>
+    <button type="submit" class="torn-btn btn____CYQW silver">mug</button>
+    <button type="submit" class="torn-btn btn____CYQW silver">hospitalize</button>`;
+  const button = [...buttons.querySelectorAll("button")].find(
+    (b) => b.textContent === move,
+  );
+  button?.click();
+};
+
 const flush = async () => {
   for (let i = 0; i < 5; i++) {
     await new Promise((resolve) => setTimeout(resolve, 0));
@@ -68,6 +87,9 @@ const flush = async () => {
 
 const row = () =>
   document.querySelector(".ffscouter-info-line #ffscouter-attack-bounty-row");
+
+const claim_button = () =>
+  row()?.querySelector<HTMLButtonElement>("button") ?? null;
 
 const board_with = (
   targets: BountySellerBoardResponse["board"]["targets"],
@@ -83,6 +105,9 @@ beforeEach(() => {
   vi.mocked(check_key_status.is_registered).mockResolvedValue(true);
   vi.mocked(bounty_board_cache.get_board).mockResolvedValue(
     board_with([PLAYER_TARGET, FACTION_TARGET]),
+  );
+  vi.mocked(bounty_board_cache.submit_claim).mockResolvedValue(
+    CLAIM_CREATE_RESPONSE,
   );
 });
 
@@ -205,6 +230,144 @@ describe("attack page bounty row", () => {
     await flush();
     expect(bounty_board_cache.get_board).toHaveBeenCalledTimes(2);
     expect(row()).toBeNull();
+  });
+
+  describe("auto-claim", () => {
+    test("hospitalize on a player bounty target POSTs the claim without reading the board", async () => {
+      await open_attack(PLAYER_TARGET.target_player_id);
+      finish_fight("hospitalize");
+      await flush();
+      // The cache supplies referrer_player_id and never monitoring_started_at;
+      // eligibility is last-known.
+      expect(bounty_board_cache.submit_claim).toHaveBeenCalledWith({
+        target_player_id: PLAYER_TARGET.target_player_id,
+      });
+      expect(bounty_board_cache.get_board).toHaveBeenCalledTimes(1);
+    });
+
+    test("success toasts and gives the claim button a checkmark", async () => {
+      await open_attack(PLAYER_TARGET.target_player_id);
+      expect(claim_button()?.textContent).toBe("Claim");
+      finish_fight("hospitalize");
+      await flush();
+      expect(toast).toHaveBeenCalledWith(
+        "Bounty claim submitted automatically.",
+      );
+      expect(claim_button()?.textContent).toBe("Claim ✓");
+      expect(claim_button()?.disabled).toBe(false);
+    });
+
+    test("hospitalizing a bountied faction's member POSTs the faction target", async () => {
+      await open_attack(400003);
+      finish_fight("hospitalize");
+      await flush();
+      expect(bounty_board_cache.submit_claim).toHaveBeenCalledWith({
+        target_faction_id: FACTION_TARGET.target_faction_id,
+      });
+    });
+
+    test.each([
+      ["409 code 91 (exhausted or raced)", ERROR_NO_OPEN_BOUNTIES, 409],
+      ["a rate limit", ERROR_RATE_LIMITED, 429],
+    ])("failure on %s toasts the API's message and leaves the manual button", async (_label, body, status) => {
+      vi.mocked(bounty_board_cache.submit_claim).mockRejectedValue(
+        api_error(body, status),
+      );
+      await open_attack(PLAYER_TARGET.target_player_id);
+      finish_fight("hospitalize");
+      await flush();
+      expect(toast).toHaveBeenCalledWith(body.error, TOAST_LEVEL.ERROR);
+      expect(claim_button()?.textContent).toBe("Claim");
+      expect(claim_button()?.disabled).toBe(false);
+    });
+
+    test.each([
+      "leave",
+      "mug",
+    ] as const)("%s claims nothing and doesn't re-read the board", async (move) => {
+      await open_attack(PLAYER_TARGET.target_player_id);
+      finish_fight(move);
+      await flush();
+      expect(bounty_board_cache.submit_claim).not.toHaveBeenCalled();
+      expect(bounty_board_cache.get_board).toHaveBeenCalledTimes(1);
+    });
+
+    test("hospitalizing a target on no bounty claims nothing", async () => {
+      await open_attack(1);
+      finish_fight("hospitalize");
+      await flush();
+      expect(bounty_board_cache.submit_claim).not.toHaveBeenCalled();
+    });
+
+    test("bounties turned off: hospitalize claims nothing", async () => {
+      await open_attack(PLAYER_TARGET.target_player_id);
+      ffconfig.bounty_board_enabled = false;
+      window.dispatchEvent(new Event("ff-config-updated"));
+      await flush();
+      finish_fight("hospitalize");
+      await flush();
+      expect(bounty_board_cache.submit_claim).not.toHaveBeenCalled();
+    });
+
+    test("every hospitalize claims again, since a target who meds out can be hospitalized again", async () => {
+      await open_attack(PLAYER_TARGET.target_player_id);
+      finish_fight("hospitalize");
+      await flush();
+      finish_fight("hospitalize");
+      await flush();
+      expect(bounty_board_cache.submit_claim).toHaveBeenCalledTimes(2);
+    });
+
+    test("a manual claim after auto-claim surfaces no error", async () => {
+      await open_attack(PLAYER_TARGET.target_player_id);
+      finish_fight("hospitalize");
+      await flush();
+      claim_button()?.click();
+      await flush();
+      expect(bounty_board_cache.submit_claim).toHaveBeenCalledTimes(2);
+      expect(toast).not.toHaveBeenCalledWith(
+        expect.anything(),
+        TOAST_LEVEL.ERROR,
+      );
+      expect(claim_button()?.textContent).toBe("Claim ✓");
+    });
+  });
+
+  describe("manual claim", () => {
+    test("Claim POSTs the target, toasts success and shows the checkmark", async () => {
+      let resolve_claim = () => {};
+      vi.mocked(bounty_board_cache.submit_claim).mockReturnValue(
+        new Promise((resolve) => {
+          resolve_claim = () => resolve(CLAIM_CREATE_RESPONSE);
+        }),
+      );
+      await open_attack(PLAYER_TARGET.target_player_id);
+      claim_button()?.click();
+      await flush();
+      expect(claim_button()?.disabled).toBe(true);
+      resolve_claim();
+      await flush();
+      expect(bounty_board_cache.submit_claim).toHaveBeenCalledWith({
+        target_player_id: PLAYER_TARGET.target_player_id,
+      });
+      expect(toast).toHaveBeenCalledWith("Bounty claim submitted.");
+      expect(claim_button()?.textContent).toBe("Claim ✓");
+      expect(claim_button()?.disabled).toBe(false);
+    });
+
+    test("400 code 87 (key lacks attacks access) toasts the API's message", async () => {
+      vi.mocked(bounty_board_cache.submit_claim).mockRejectedValue(
+        api_error(ERROR_TORN_REJECTED_KEY, 400),
+      );
+      await open_attack(PLAYER_TARGET.target_player_id);
+      claim_button()?.click();
+      await flush();
+      expect(toast).toHaveBeenCalledWith(
+        ERROR_TORN_REJECTED_KEY.error,
+        TOAST_LEVEL.ERROR,
+      );
+      expect(claim_button()?.textContent).toBe("Claim");
+    });
   });
 
   test("other clicks don't re-read the board", async () => {

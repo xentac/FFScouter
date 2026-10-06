@@ -4,10 +4,8 @@
 // FF Scouter so it never reads as a Torn Bounty.
 import type { BountyMatch } from "@utils/bounty_match";
 import { format_suffix_number } from "@utils/strings";
-import { useState } from "react";
 import styles from "./attack-bounty-row.module.css";
 import { format_tier_label } from "./bounty-board-rows";
-import { submit_claim_with_toast } from "./bounty-claim";
 
 const cls = {
   row: styles["ffscouter-attack-bounty-row"],
@@ -15,21 +13,25 @@ const cls = {
   claim: styles["ffscouter-attack-bounty-row__claim"],
 };
 
-export function AttackBountyRow({ match }: { match: BountyMatch }) {
-  const [claimPending, setClaimPending] = useState(false);
+export const CLAIM_SUBMITTED = "Bounty claim submitted";
+
+// Claim state lives with the attack feature, which shares it between the
+// manual button and auto-claim on hospitalize.
+export function AttackBountyRow({
+  match,
+  claimPending,
+  claimed,
+  onClaim,
+}: {
+  match: BountyMatch;
+  claimPending: boolean;
+  // A claim went in: the checkmark makes a manual click unnecessary, but the
+  // button stays clickable as the fallback (re-claiming is harmless).
+  claimed: boolean;
+  onClaim: () => void;
+}) {
   const top = match.tiers[0];
   const remaining = match.total_remaining;
-
-  // Fire-and-acknowledge, as on the board.
-  const handleClaim = () => {
-    setClaimPending(true);
-    void submit_claim_with_toast(
-      match.claim_target,
-      "Bounty claim submitted.",
-    ).finally(() => {
-      setClaimPending(false);
-    });
-  };
 
   return (
     <div id="ffscouter-attack-bounty-row" className={cls.row}>
@@ -48,9 +50,10 @@ export function AttackBountyRow({ match }: { match: BountyMatch }) {
         type="button"
         className={cls.claim}
         disabled={claimPending}
-        onClick={handleClaim}
+        title={claimed ? CLAIM_SUBMITTED : undefined}
+        onClick={onClaim}
       >
-        Claim
+        {claimed ? "Claim ✓" : "Claim"}
       </button>
     </div>
   );
