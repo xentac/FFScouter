@@ -7,6 +7,7 @@ import {
   type BountyTier,
   FFApiError,
 } from "@utils/api";
+import { sort_tiers } from "@utils/bounty_match";
 import { extract_ff } from "@utils/estimate";
 import { format_suffix_number } from "@utils/strings";
 import type { FFData, PlayerId } from "@utils/types";
@@ -70,11 +71,6 @@ export function is_shown_target(target: BountyBoardTarget): boolean {
 
 export function format_tier_label(tier: BountyTier): string {
   return `$${format_suffix_number(tier.price_per_hit)} × ${tier.quantity_remaining}`;
-}
-
-// Highest price first, so tiers[0] is the top tier the row headlines.
-function sort_tiers(tiers: BountyTier[]): BountyTier[] {
-  return [...tiers].sort((a, b) => b.price_per_hit - a.price_per_hit);
 }
 
 function row_passes_filters(

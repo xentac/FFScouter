@@ -7,6 +7,7 @@ import {
   BOUNTY_POLICY_URL,
   type BountySellerBoardResponse,
 } from "@utils/api";
+import { clear_attack_bounty_silence } from "@utils/bounty_attack_silence";
 import { bounty_board_cache } from "@utils/bounty_board";
 import { check_key_status } from "@utils/check_key";
 import { getLocalUserId, open_attack_link } from "@utils/dom";
@@ -27,6 +28,7 @@ import {
   is_shown_target,
   type PlayerRowModel,
 } from "./bounty-board-rows";
+import { submit_claim_with_toast } from "./bounty-claim";
 import { BountyRow, FactionBountyCard } from "./bounty-row";
 import { TOAST_LEVEL, toast } from "./toast";
 
@@ -181,6 +183,7 @@ function ConsentGate({ onAccepted }: { onAccepted: () => void }) {
         throw new Error("Bounty policy acceptance was not recorded");
       }
       await bounty_board_cache.clear_failure();
+      clear_attack_bounty_silence();
       onAccepted();
     } catch (err) {
       toast(api_error_message(err), TOAST_LEVEL.ERROR);
@@ -305,21 +308,16 @@ function BountyBoardBody({
   // tracking payment is the website's job.
   const handleClaim = (row: PlayerRowModel) => {
     setClaimPending((prev) => new Set(prev).add(row.row_key));
-    bounty_board_cache
-      .submit_claim(row.claim_target)
-      .then(() => {
-        toast(`Bounty claim submitted for ${row.name}.`);
-      })
-      .catch((err: unknown) => {
-        toast(api_error_message(err), TOAST_LEVEL.ERROR);
-      })
-      .finally(() => {
-        setClaimPending((prev) => {
-          const next = new Set(prev);
-          next.delete(row.row_key);
-          return next;
-        });
+    void submit_claim_with_toast(
+      row.claim_target,
+      `Bounty claim submitted for ${row.name}.`,
+    ).finally(() => {
+      setClaimPending((prev) => {
+        const next = new Set(prev);
+        next.delete(row.row_key);
+        return next;
       });
+    });
   };
 
   const renderRow = (row: PlayerRowModel) => (

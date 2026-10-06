@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import {
+  api_error,
   CLAIM_CREATE_RESPONSE,
   ERROR_CONSENT_REQUIRED,
   ERROR_INVALID_KEY,
@@ -12,9 +13,11 @@ import {
 import {
   accept_bounty_seller_policy,
   type BountySellerBoardResponse,
-  FFApiError,
-  type FFError,
 } from "@utils/api";
+import {
+  is_attack_bounty_silenced,
+  silence_attack_bounty,
+} from "@utils/bounty_attack_silence";
 import { bounty_board_cache } from "@utils/bounty_board";
 import { check_key_status } from "@utils/check_key";
 import { getLocalUserId, open_attack_link } from "@utils/dom";
@@ -72,15 +75,6 @@ function ff_complete(player_id: PlayerId, fair_fight: number): FFDataComplete {
     spies: [],
   };
 }
-
-const api_error = (body: FFError, status: number) =>
-  new FFApiError(
-    `API request failed. Error: ${body.error}; Code: ${body.code}`,
-    {
-      ff_api_error: body,
-      ff_http_status: status,
-    },
-  );
 
 // SELLER_BOARD_RESPONSE (a player target and the faction target) plus a
 // player target disabled because the user is the target.
@@ -330,6 +324,7 @@ describe.each(["modal", "section"] as const)("%s", (variant) => {
       blank: false,
     });
 
+    silence_attack_bounty();
     render(<Shell />);
     const confirm = await screen.findByRole("button", {
       name: "I have read the rules and data policy",
@@ -346,6 +341,8 @@ describe.each(["modal", "section"] as const)("%s", (variant) => {
     await screen.findByText("Arcanine");
     expect(accept_bounty_seller_policy).toHaveBeenCalledWith("test-key", true);
     expect(bounty_board_cache.clear_failure).toHaveBeenCalled();
+    // Consent granted here reaches the attack page without the hourly wait.
+    expect(is_attack_bounty_silenced()).toBe(false);
     expect(bounty_board_cache.get_board).toHaveBeenCalledTimes(2);
   });
 

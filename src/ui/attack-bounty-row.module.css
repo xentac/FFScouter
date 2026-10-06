@@ -1,0 +1,28 @@
+/* Attack Page Bounty Row: sits directly below the attack-page Info Line. */
+.ffscouter-attack-bounty-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  font-size: 12px;
+}
+
+.ffscouter-attack-bounty-row__label {
+  font-weight: bold;
+}
+
+.ffscouter-attack-bounty-row__claim {
+  padding: 2px 8px;
+  font-size: 12px;
+  background-color: var(--ffscouter-alt-bg-color);
+  color: var(--ffscouter-text-color);
+  border: 1px solid var(--ffscouter-border-color);
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.ffscouter-attack-bounty-row__claim:disabled {
+  opacity: 0.6;
+  cursor: default;
+}

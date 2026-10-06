@@ -3,12 +3,13 @@
 // The player target, seller, and claims blocks are the spec's own example
 // values; the faction target is derived from the BountyBoardTarget schema
 // (the spec example has no faction target) with a full member list.
-import type {
-  BountyClaimCreateResponse,
-  BountyClaims,
-  BountyPolicyAcceptResponse,
-  BountySellerBoardResponse,
-  FFError,
+import {
+  type BountyClaimCreateResponse,
+  type BountyClaims,
+  type BountyPolicyAcceptResponse,
+  type BountySellerBoardResponse,
+  FFApiError,
+  type FFError,
 } from "../api";
 
 export const PLAYER_TARGET = {
@@ -226,3 +227,13 @@ export const ERROR_RATE_LIMITED: FFError = {
   error: "Rate limit exceeded. Please retry shortly.",
   retry_after_seconds: 12,
 };
+
+// An FFApiError as the API wrapper throws it for a coded error response.
+export const api_error = (body: FFError, status: number) =>
+  new FFApiError(
+    `API request failed. Error: ${body.error}; Code: ${body.code}`,
+    {
+      ff_api_error: body,
+      ff_http_status: status,
+    },
+  );
