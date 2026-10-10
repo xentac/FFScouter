@@ -1,9 +1,6 @@
 {
   "permissions": {
-    "deny": [
-      "Read(./.env)",
-      "Read(./.env.*)"
-    ],
+    "deny": ["Read(./.env)", "Read(./.env.*)"],
     "defaultMode": "auto"
   },
   "enabledPlugins": {
