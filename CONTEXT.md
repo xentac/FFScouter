@@ -99,6 +99,9 @@ Since [[Filter Box]] is mounted via a plain `createRoot(container).render(...)` 
 ### Sort State
 `"ff-asc" | "ff-desc" | "none"` — the current sort direction for the FF/Est column. Owned by the [[Filter Box]] and persisted to config. `"none"` means no FF sort is active (Torn's native sort is uninterrupted).
 
+### Native Reorder
+Torn moving the existing rows of a [[War List]] into its own sort order (typically by war score, which changes often early in a war). Torn only moves rows here — it doesn't add or recreate them — so FF data on each row travels with it. While a [[Sort State]] other than `"none"` is active, a Native Reorder must be undone before the browser paints, or the list visibly jumps. Rows tied on the sort value are ordered by player ID so a Native Reorder can't reshuffle them.
+
 ### Filter Collapse State
 Whether the [[Filter Box]]'s `<details>` is collapsed, persisted per mode to config (`faction_filter_collapsed` / `war_filter_collapsed`). Owned by the [[Filter Box]] and seeded synchronously from config in the `useState` initializer so the first render already matches — correcting it in a mount effect instead forces an `open → closed` flip whose real-browser `toggle` event races `onToggle`'s write-back (see `docs/adr/0004-filter-collapse-sync-init.md`).
 

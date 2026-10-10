@@ -1,5 +1,9 @@
 import { OUT_SOON_THRESHOLD_SECONDS } from "@ui/faction-filter-box";
-import { detect_sort_icon_classes, get_activity_status } from "@utils/dom";
+import {
+  detect_sort_icon_classes,
+  get_activity_status,
+  get_player_id_in_element,
+} from "@utils/dom";
 import { FactionsColDisplay } from "@utils/ffconfig";
 import { get_current_time_seconds } from "@utils/time";
 
@@ -10,10 +14,20 @@ export function is_applying(list: HTMLElement): boolean {
   return isApplying.get(list) ?? false;
 }
 
+// Resolves the container element for list items (supports standard lists and Ranked War lists)
+export function resolve_row_container(membersList: HTMLElement): Element {
+  return (
+    membersList.querySelector(".table-body") ||
+    membersList.querySelector(".members-list") ||
+    membersList
+  );
+}
+
 // ============================================================================
 // FILTER & SORT ENGINE
 // Core logic for evaluating filters (activity, status, level, FF, stats) and sorting
 // rows (both standard member rows and Ranked War lists). Also manages the active-filter attribute.
+// Returns whether any rows were moved.
 // ============================================================================
 export function apply_filters_and_sort(
   membersList: HTMLElement,
@@ -41,16 +55,14 @@ export function apply_filters_and_sort(
     lastActionMaxSec?: number | null;
     outSoon?: boolean;
   },
-) {
-  if (isApplying.get(membersList)) return;
+): boolean {
+  if (isApplying.get(membersList)) return false;
   isApplying.set(membersList, true);
 
+  let moved = false;
   try {
     // 1. Resolve the container element for list items (supports standard lists and Ranked War lists)
-    const tbody =
-      membersList.querySelector(".table-body") ||
-      membersList.querySelector(".members-list") ||
-      membersList;
+    const tbody = resolve_row_container(membersList);
 
     // 2. Select all row elements inside the resolved container
     const rows = Array.from(
@@ -267,6 +279,15 @@ export function apply_filters_and_sort(
     if (filters.sortBy !== "none") {
       const isEst = filters.colDisplay === FactionsColDisplay.BATTLE_STATS;
       const valKey = isEst ? "estValue" : "ffValue";
+      // Ties are broken by player ID so Torn reordering the list (e.g. by war
+      // score) can't reshuffle rows with equal (or missing) values.
+      const playerIds = new Map(
+        rows.map((row) => [
+          row,
+          get_player_id_in_element(row) ?? Number.MAX_SAFE_INTEGER,
+        ]),
+      );
+      const domOrder = [...rows];
       rows.sort((a, b) => {
         const getVal = (row: HTMLElement) => {
           const dataVal = row.dataset[valKey];
@@ -276,32 +297,40 @@ export function apply_filters_and_sort(
         const valA = getVal(a);
         const valB = getVal(b);
 
-        if (filters.sortBy.endsWith("asc")) {
-          return valA - valB;
-        }
-        return valB - valA;
+        const byValue = filters.sortBy.endsWith("asc")
+          ? valA - valB
+          : valB - valA;
+        return (
+          byValue || (playerIds.get(a) as number) - (playerIds.get(b) as number)
+        );
       });
 
-      for (const row of rows) {
-        const extra_tt_rows = [];
-        let next_sibling = row.nextElementSibling;
-        while (
-          next_sibling &&
-          !next_sibling?.classList.contains("table-row") &&
-          !next_sibling?.classList.contains("enemy") &&
-          !next_sibling?.classList.contains("your")
-        ) {
-          if (
-            next_sibling.classList.contains("tt-last-action") ||
-            next_sibling.classList.contains("tt-stats-estimate")
+      // Skip the DOM writes when the rows are already in order, so a re-sort
+      // triggered by our own reorder (or by a reorder that didn't change our
+      // order) makes no further mutations and can't loop.
+      moved = rows.some((row, i) => row !== domOrder[i]);
+      if (moved) {
+        for (const row of rows) {
+          const extra_tt_rows = [];
+          let next_sibling = row.nextElementSibling;
+          while (
+            next_sibling &&
+            !next_sibling?.classList.contains("table-row") &&
+            !next_sibling?.classList.contains("enemy") &&
+            !next_sibling?.classList.contains("your")
           ) {
-            extra_tt_rows.push(next_sibling);
+            if (
+              next_sibling.classList.contains("tt-last-action") ||
+              next_sibling.classList.contains("tt-stats-estimate")
+            ) {
+              extra_tt_rows.push(next_sibling);
+            }
+            next_sibling = next_sibling.nextElementSibling;
           }
-          next_sibling = next_sibling.nextElementSibling;
-        }
-        tbody.appendChild(row);
-        for (const r of extra_tt_rows) {
-          tbody.appendChild(r);
+          tbody.appendChild(row);
+          for (const r of extra_tt_rows) {
+            tbody.appendChild(r);
+          }
         }
       }
     }
@@ -313,6 +342,7 @@ export function apply_filters_and_sort(
   } finally {
     isApplying.set(membersList, false);
   }
+  return moved;
 }
 
 export function update_header_sort_indicator(

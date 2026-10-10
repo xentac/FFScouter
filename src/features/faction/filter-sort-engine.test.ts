@@ -892,3 +892,84 @@ test("apply_filters_and_sort Out Soon parses the 2026-09-28 TWSE hospital-row ca
 
   document.body.removeChild(container);
 });
+
+const SORT_FILTERS = {
+  sortBy: "ff-desc" as const,
+  colDisplay: FactionsColDisplay.FAIR_FIGHT,
+  activity: { online: true, idle: true, offline: true },
+  status: {
+    okay: true,
+    hospital: true,
+    jail: true,
+    abroad: true,
+    traveling: true,
+    federal: true,
+    fallen: true,
+  },
+  levelMin: null,
+  levelMax: null,
+  ffMin: null,
+  ffMax: null,
+};
+
+// Builds a Ranked War list (.enemy-faction > .members-list > li.enemy) whose
+// rows are in the given order. A null ff leaves data-ff-value unset.
+function make_war_list(rows: { id: number; ff: number | null }[]) {
+  const list = document.createElement("div");
+  list.className = "enemy-faction";
+  list.innerHTML = `<ul class="members-list">${rows
+    .map(
+      ({ id, ff }) =>
+        `<li class="enemy" id="p${id}" data-player_id="${id}"${
+          ff === null ? "" : ` data-ff-value="${ff}"`
+        }><a href="/profiles.php?XID=${id}">Player ${id}</a></li>`,
+    )
+    .join("")}</ul>`;
+  document.body.appendChild(list);
+  return list;
+}
+
+const row_order = (list: HTMLElement) =>
+  Array.from(list.querySelectorAll(".enemy")).map((r) => r.id);
+
+test("apply_filters_and_sort breaks sort-value ties by player ID, whatever the current DOM order", () => {
+  const rows = [
+    { id: 30, ff: 2 },
+    { id: 10, ff: 2 },
+    { id: 50, ff: null },
+    { id: 20, ff: 5 },
+    { id: 40, ff: null },
+  ];
+  const expected = ["p20", "p10", "p30", "p40", "p50"];
+
+  const list = make_war_list(rows);
+  apply_filters_and_sort(list, SORT_FILTERS);
+  expect(row_order(list)).toEqual(expected);
+
+  // Same rows, tied rows in the opposite relative order — as a Native Reorder
+  // by score would leave them.
+  document.body.innerHTML = "";
+  const reversed = make_war_list([...rows].reverse());
+  apply_filters_and_sort(reversed, SORT_FILTERS);
+  expect(row_order(reversed)).toEqual(expected);
+});
+
+test("apply_filters_and_sort makes no childList mutations when rows are already sorted", async () => {
+  const list = make_war_list([
+    { id: 1, ff: 1 },
+    { id: 2, ff: 3 },
+    { id: 3, ff: 2 },
+  ]);
+  expect(apply_filters_and_sort(list, SORT_FILTERS)).toBe(true);
+
+  const records: MutationRecord[] = [];
+  const observer = new MutationObserver((m) => records.push(...m));
+  observer.observe(list, { childList: true, subtree: true });
+
+  expect(apply_filters_and_sort(list, SORT_FILTERS)).toBe(false);
+  await Promise.resolve();
+  records.push(...observer.takeRecords());
+  observer.disconnect();
+
+  expect(records).toEqual([]);
+});

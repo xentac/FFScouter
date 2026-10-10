@@ -24,6 +24,7 @@ import {
   is_applying,
   update_header_sort_indicator,
 } from "./filter-sort-engine";
+import { watch_native_reorder } from "./native-reorder-watcher";
 
 const log = logger.child("feature:faction");
 
@@ -249,9 +250,11 @@ function update_twse_presence_flags(list: HTMLElement) {
 // can't retrigger this attributes-only observer. The 30s flight-poll tick
 // below is a fallback for the rarer case where TWSE adds an attribute via a
 // brand new row element (a childList mutation this observer doesn't watch)
-// rather than annotating an existing one. Used by both the standard members
-// flow (observeTarget is the .table-body, since standard lists have one) and
-// the Ranked War flow (observeTarget is the list itself).
+// rather than annotating an existing one. Torn moving rows (a childList
+// mutation) is handled by the separate watch_native_reorder observer. Used by
+// both the standard members flow (observeTarget is the .table-body, since
+// standard lists have one) and the Ranked War flow (observeTarget is the list
+// itself).
 function setup_reapply_watcher(
   list: HTMLElement,
   observeTarget: Element,
@@ -322,6 +325,16 @@ function setup_reapply_watcher(
     subtree: true,
   });
 
+  const stopNativeReorderWatch = watch_native_reorder(list, () => {
+    const handle = getFilterBoxHandle(
+      (list.closest(".faction-war") || list.parentNode)?.querySelector(
+        "[data-ff-filter-box]",
+      ),
+    );
+    if (!handle?.ready) return null;
+    return { ...handle.getFilterSnapshot(), colDisplay: getColDisplay() };
+  });
+
   const flightInterval = setInterval(() => {
     poll_traveling_flights(list);
     update_twse_presence_flags(list);
@@ -349,6 +362,7 @@ function setup_reapply_watcher(
   cleanup_when_detached(list, () => {
     clearInterval(flightInterval);
     attributeObserver.disconnect();
+    stopNativeReorderWatch();
   });
 }
 
