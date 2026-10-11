@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FF Scouter V2 beta
 // @namespace    xentac-beta
-// @version      3.4-beta2
+// @version      3.4-beta3
 // @author       xentac [3354782], MAVRI [2402357], rDacted [2670953], Weav3r [1853324], Glasnost [1844049]
 // @description  Shows the expected Fair Fight score against targets and faction war status
 // @license      GPLv3
@@ -193,7 +193,7 @@ formatArgs(args) {
     "FFSV2",
     0
 );
-  const log$l = logger.child("storage");
+  const log$m = logger.child("storage");
   var Time = ((Time2) => {
     Time2[Time2["Seconds"] = 1e3] = "Seconds";
     Time2[Time2["Minutes"] = 6e4] = "Minutes";
@@ -215,7 +215,7 @@ set(key, value, expireConfig) {
         };
         localStorage.setItem(this.prefix + key, JSON.stringify(item));
       } catch (error) {
-        log$l.error(`Error storing item '${key}':`, error);
+        log$m.error(`Error storing item '${key}':`, error);
       }
     }
 get(key) {
@@ -231,18 +231,18 @@ get(key) {
           item = null;
         }
         if (!item) {
-          log$l.warn(`Key '${key}' has invalid JSON in it.`);
+          log$m.warn(`Key '${key}' has invalid JSON in it.`);
           this.remove(key);
           return null;
         }
         if (item.expiration && Date.now() > item.expiration) {
           this.remove(key);
-          log$l.debug(`Key ${key} has expired.`);
+          log$m.debug(`Key ${key} has expired.`);
           return null;
         }
         return item.value;
       } catch (error) {
-        log$l.error(`Error retrieving item '${key}':`, error);
+        log$m.error(`Error retrieving item '${key}':`, error);
         return null;
       }
     }
@@ -250,7 +250,7 @@ remove(key) {
       try {
         localStorage.removeItem(this.prefix + key);
       } catch (error) {
-        log$l.error(`Error removing item [${key}]:`, error);
+        log$m.error(`Error removing item [${key}]:`, error);
       }
     }
 has(key) {
@@ -262,7 +262,7 @@ clearAll() {
           localStorage.removeItem(key);
         });
       } catch (error) {
-        log$l.error("Error clearing storage:", error);
+        log$m.error("Error clearing storage:", error);
       }
     }
   }
@@ -278,6 +278,11 @@ clearAll() {
     FactionsColDisplay2["NONE"] = "none";
     return FactionsColDisplay2;
   })(FactionsColDisplay || {});
+  var MiniProfileDisplay = ((MiniProfileDisplay2) => {
+    MiniProfileDisplay2["FAIR_FIGHT"] = "fair_fight";
+    MiniProfileDisplay2["BATTLE_STATS"] = "battle_stats";
+    return MiniProfileDisplay2;
+  })(MiniProfileDisplay || {});
   var GaugeMarkerType = ((GaugeMarkerType2) => {
     GaugeMarkerType2["ARROW"] = "arrow";
     GaugeMarkerType2["BUBBLE_FF"] = "bubble_ff";
@@ -313,6 +318,7 @@ clearAll() {
     ff_history_enabled: true,
     factions_col_display: "battle_stats",
     war_col_display: "battle_stats",
+    mini_profile_display: "fair_fight",
     debug_logs: false,
     analytics_enabled: false,
     chain_min_level: null,
@@ -509,6 +515,14 @@ clearAll() {
     }
     set war_col_display(val) {
       this.storage.set("war_col_display", val);
+    }
+    get mini_profile_display() {
+      return this.storage.get(
+        "mini_profile_display"
+) ?? CONFIG_DEFAULTS.mini_profile_display;
+    }
+    set mini_profile_display(val) {
+      this.storage.set("mini_profile_display", val);
     }
     get debug_logs() {
       return this.storage.get(
@@ -745,6 +759,9 @@ clearAll() {
 );
       this.storage.remove(
         "war_col_display"
+);
+      this.storage.remove(
+        "mini_profile_display"
 );
       this.storage.remove(
         "debug_logs"
@@ -1002,15 +1019,21 @@ clearAll() {
     }
     return [{ stat: top[0], percent: top[1], position: "right" }];
   }
-  function format_ff_score(d2) {
-    const ff = extract_ff(d2).toFixed(2);
+  function staleness_suffix(d2) {
     const now = Date.now() / 1e3;
     const age = now - extract_last_updated(d2);
     var suffix = "";
     if (age > OLD_ESTIMATE_INTERVAL) {
       suffix = "?";
     }
-    return `${ff}${suffix}`;
+    return suffix;
+  }
+  function format_ff_score(d2) {
+    const ff = extract_ff(d2).toFixed(2);
+    return `${ff}${staleness_suffix(d2)}`;
+  }
+  function format_bs_estimate(d2) {
+    return `${extract_bs_estimate_human(d2)}${staleness_suffix(d2)}`;
   }
   function format_difficulty_text(d2) {
     const ff = extract_ff(d2);
@@ -1435,7 +1458,7 @@ clearAll() {
   }
   const FF_SCOUTER_BASE_URL = "https://ffscouter.com/api/v1";
   new TornApiClient({
-    defaultComment: `FFScouterV2-${"3.4-beta2"}`,
+    defaultComment: `FFScouterV2-${"3.4-beta3"}`,
     defaultTimeout: 30
 });
   async function gmRequest(options) {
@@ -2337,7 +2360,7 @@ event.oldVersion,
       return isIteratorProp(target, prop) || oldTraps.has(target, prop);
     }
   }));
-  const log$k = logger.child("storage");
+  const log$l = logger.child("storage");
   const STORES = {
     CACHE: "cache",
     FLIGHTS: "flights",
@@ -2425,20 +2448,20 @@ event.oldVersion,
           try {
             const db = await openDB(this.db_name, this.db_version, {
               upgrade(db2, oldVersion, newVersion, transaction, _event) {
-                log$k.info("Need to upgrade from", oldVersion, "to", newVersion);
+                log$l.info("Need to upgrade from", oldVersion, "to", newVersion);
                 for (let i = (oldVersion ?? 0) + 1; i <= cache.db_version; i++) {
-                  log$k.debug(`Migration: ${i}`);
+                  log$l.debug(`Migration: ${i}`);
                   const m2 = cache.migrations.get(i);
                   if (m2) {
                     m2(db2, transaction);
                   } else {
-                    log$k.debug(`Migration not found: ${i}`);
+                    log$l.debug(`Migration not found: ${i}`);
                   }
-                  log$k.debug(`Migration complete: ${i}`);
+                  log$l.debug(`Migration complete: ${i}`);
                 }
               },
               blocking(currentVersion, blockedVersion, event) {
-                log$k.debug(
+                log$l.debug(
                   `Can't open ${blockedVersion} because ${currentVersion} is open. Closing.`
                 );
                 cache.close();
@@ -2498,10 +2521,10 @@ event.oldVersion,
         try {
           await deleteDB(this.db_name, {
             blocked: () => {
-              log$k.debug("deleteDB blocked callback called!");
+              log$l.debug("deleteDB blocked callback called!");
             }
           });
-          log$k.info(`Successfully deleted ${this.db_name} IndexedDB.`);
+          log$l.info(`Successfully deleted ${this.db_name} IndexedDB.`);
         } finally {
           this.channel?.postMessage({ type: "deleted" });
           this.state = "CLOSED";
@@ -2606,7 +2629,7 @@ event.oldVersion,
               const index2 = tx.store.index("expiry");
               const range = IDBKeyRange.upperBound(Date.now());
               const r = await index2.getAllKeys(range);
-              log$k.info(`Found ${r.length} expired values to delete from cache.`);
+              log$l.info(`Found ${r.length} expired values to delete from cache.`);
               await Promise.all(r.map((id) => tx.store.delete(id)));
               await tx.done;
             }
@@ -2615,7 +2638,7 @@ event.oldVersion,
               const index2 = tx.store.index("expiry");
               const range = IDBKeyRange.upperBound(Date.now());
               const r = await index2.getAllKeys(range);
-              log$k.info(`Found ${r.length} expired values to delete from flights.`);
+              log$l.info(`Found ${r.length} expired values to delete from flights.`);
               await Promise.all(r.map((id) => tx.store.delete(id)));
               await tx.done;
             }
@@ -2625,7 +2648,7 @@ event.oldVersion,
               const thirty_days_ago = Date.now() - 30 * 24 * 60 * 60 * 1e3;
               const range = IDBKeyRange.upperBound(thirty_days_ago);
               const r = await index2.getAllKeys(range);
-              log$k.info(
+              log$l.info(
                 `Found ${r.length} expired values to delete from analytics.`
               );
               await Promise.all(r.map((id) => tx.store.delete(id)));
@@ -2636,7 +2659,7 @@ event.oldVersion,
               const index2 = tx.store.index("expiry");
               const range = IDBKeyRange.upperBound(Date.now());
               const r = await index2.getAllKeys(range);
-              log$k.info(
+              log$l.info(
                 `Found ${r.length} expired values to delete from bounty_board.`
               );
               await Promise.all(r.map((key) => tx.store.delete(key)));
@@ -2796,7 +2819,7 @@ event.oldVersion,
       }
     }
   }
-  const log$j = logger.child("api");
+  const log$k = logger.child("api");
   const CHECK_KEY = "check-key-status";
   class CheckKeyStatus {
     constructor(config, storage) {
@@ -2811,7 +2834,7 @@ event.oldVersion,
         try {
           result = await check_key(this.config.key);
         } catch (err) {
-          log$j.error(
+          log$k.error(
             "Received error response querying ffscouter check-key api:",
             err
           );
@@ -2832,7 +2855,7 @@ event.oldVersion,
           if (!status) return null;
           return status.is_premium;
         } catch (err) {
-          log$j.warn("Failed to check premium status:", err);
+          log$k.warn("Failed to check premium status:", err);
           return null;
         }
       };
@@ -2842,7 +2865,7 @@ event.oldVersion,
           if (!status) return null;
           return status.is_registered;
         } catch (err) {
-          log$j.warn("Failed to check key registration status:", err);
+          log$k.warn("Failed to check key registration status:", err);
           return null;
         }
       };
@@ -2857,7 +2880,7 @@ event.oldVersion,
     ffconfig,
     new Storage("ffsv3-check")
   );
-  const log$i = logger.child("api");
+  const log$j = logger.child("api");
   const DB_NAME = "FFSV3-cache";
   const RECHECK_RETRY_DELAY = 60 * 1e3;
   const RECHECK_WINDOW_DURATION = 3 * 60 * 1e3;
@@ -2943,7 +2966,7 @@ queryString.charCodeAt(pos - 1) === 63) {
         try {
           await this.cache.delete_flight(player_id);
         } catch (err) {
-          log$i.error("Failed to delete flight from cache", err);
+          log$j.error("Failed to delete flight from cache", err);
         }
       };
       this.calculate_flight_cache_ttl = (result) => {
@@ -2991,7 +3014,7 @@ queryString.charCodeAt(pos - 1) === 63) {
           return;
         }
         if (this.last_limits && this.last_limits.reset_time > new Date() && this.last_limits.remaining <= GLOBAL_BUDGET_RESERVE) {
-          log$i.warn(
+          log$j.warn(
             `Total API quota <= ${GLOBAL_BUDGET_RESERVE}. Deferring flight status checks to prioritize stats.`
           );
           this.schedule_flight_processor(5e3);
@@ -3006,7 +3029,7 @@ queryString.charCodeAt(pos - 1) === 63) {
           this.schedule_flight_processor(0);
           return;
         }
-        log$i.debug(`Querying paced flight API for player ${player_id}`);
+        log$j.debug(`Querying paced flight API for player ${player_id}`);
         try {
           const response = await query_flights(this.config.key, player_id);
           if (response.blank) {
@@ -3023,10 +3046,10 @@ queryString.charCodeAt(pos - 1) === 63) {
               const ttl = this.calculate_flight_cache_ttl(response.result);
               await this.cache.update_flight(response.result, ttl);
             } catch (err) {
-              log$i.error("Failed to update flight cache", err);
+              log$j.error("Failed to update flight cache", err);
             }
           } else {
-            log$i.debug(`Start rechecking cycle for player ${player_id}`);
+            log$j.debug(`Start rechecking cycle for player ${player_id}`);
             const now = Date.now();
             const next_retry_at = now + RECHECK_RETRY_DELAY;
             const existing_recheck_until = this.flight_recheck_until.get(player_id);
@@ -3043,7 +3066,7 @@ queryString.charCodeAt(pos - 1) === 63) {
               const remaining_ttl = Math.max(0, recheck_until - now);
               await this.cache.update_flight(rechecking_response, remaining_ttl);
             } catch (err) {
-              log$i.error("Failed to update flight cache during recheck", err);
+              log$j.error("Failed to update flight cache during recheck", err);
             }
             finalResult = rechecking_response;
           }
@@ -3051,7 +3074,7 @@ queryString.charCodeAt(pos - 1) === 63) {
             job.resolve(finalResult);
           }
         } catch (err) {
-          log$i.error(`Paced flight API query failed for ${player_id}:`, err);
+          log$j.error(`Paced flight API query failed for ${player_id}:`, err);
           const apiErr = err;
           if (apiErr?.ff_api_limits) {
             this.last_limits = apiErr.ff_api_limits;
@@ -3065,7 +3088,7 @@ queryString.charCodeAt(pos - 1) === 63) {
           try {
             await this.cache.clean_expired();
           } catch (err) {
-            log$i.error("Failed to clean expired cache entries", err);
+            log$j.error("Failed to clean expired cache entries", err);
           }
           if (this.flight_queue.length > 0) {
             this.schedule_flight_processor(FLIGHT_PACING_DELAY);
@@ -3073,7 +3096,7 @@ queryString.charCodeAt(pos - 1) === 63) {
         }
       };
       this.get_flights = async (player_id) => {
-        log$i.debug(`get_flights called for ${player_id}`);
+        log$j.debug(`get_flights called for ${player_id}`);
         if (!this.config.key) {
           return {
             player_id,
@@ -3085,14 +3108,14 @@ queryString.charCodeAt(pos - 1) === 63) {
         try {
           cached = await this.cache.get_flight(player_id);
         } catch (err) {
-          log$i.error("Failed to query flight cache", err);
+          log$j.error("Failed to query flight cache", err);
         }
         if (cached) {
-          log$i.debug(`Flight cache hit for player ${player_id}`);
+          log$j.debug(`Flight cache hit for player ${player_id}`);
           if (cached.rechecking) {
             const now = Date.now();
             if (cached.recheck_until && now >= cached.recheck_until) {
-              log$i.debug(
+              log$j.debug(
                 `Rechecking window expired for player ${player_id}. Finalizing no data.`
               );
               const final_response = {
@@ -3107,12 +3130,12 @@ queryString.charCodeAt(pos - 1) === 63) {
                   FINALIZED_NO_FLIGHT_TTL
                 );
               } catch (err) {
-                log$i.error("Failed to finalize flight cache", err);
+                log$j.error("Failed to finalize flight cache", err);
               }
               return final_response;
             }
             if (cached.next_retry_at && now >= cached.next_retry_at) {
-              log$i.debug(
+              log$j.debug(
                 `Retrying API call for player ${player_id} during recheck window`
               );
               const result2 = await this.enqueue_flight_api(
@@ -3136,7 +3159,7 @@ queryString.charCodeAt(pos - 1) === 63) {
             recent_flights: cached.recent_flights
           };
         }
-        log$i.debug(`Flight cache miss for player ${player_id}. Querying API paced.`);
+        log$j.debug(`Flight cache miss for player ${player_id}. Querying API paced.`);
         const result = await this.enqueue_flight_api(player_id);
         return result;
       };
@@ -3144,16 +3167,16 @@ queryString.charCodeAt(pos - 1) === 63) {
         this.process_cache();
       };
       this.enqueue_cache = (player_id) => {
-        log$i.debug(`Enqueuing cache ${player_id}`);
+        log$j.debug(`Enqueuing cache ${player_id}`);
         this.cache_queue.add(player_id);
         this.schedule_cache();
       };
       this.schedule_cache = () => {
         if (this.cache_timer) {
-          log$i.debug(`schedule_cache called but job already scheduled`);
+          log$j.debug(`schedule_cache called but job already scheduled`);
           return;
         }
-        log$i.debug(
+        log$j.debug(
           `schedule_cache called and job scheduled for ${this.cache_delay} ms`
         );
         this.cache_timer = this.schedule(this.process_cache, this.cache_delay);
@@ -3174,39 +3197,39 @@ queryString.charCodeAt(pos - 1) === 63) {
         } catch (_) {
           results = new Map();
         }
-        log$i.debug(`Received ${results.size} cache results`);
+        log$j.debug(`Received ${results.size} cache results`);
         for (const id of ids) {
           const v = results.get(id);
           if (v) {
-            log$i.debug("Id", id, "found in cache. Resolving value.");
+            log$j.debug("Id", id, "found in cache. Resolving value.");
             this.resolve(id, v);
           } else {
-            log$i.debug("Id", id, "not found in cache. Scheduling api call.");
+            log$j.debug("Id", id, "not found in cache. Scheduling api call.");
             this.enqueue_api(id);
           }
         }
       };
       this.clear_cache = () => {
         this.cache.delete_db().catch((err) => {
-          log$i.error("Failed to delete IndexedDB cache", err);
+          log$j.error("Failed to delete IndexedDB cache", err);
         });
         check_key_status.clear();
       };
       this.enqueue_api = (player_id) => {
-        log$i.debug(`Enqueuing api ${player_id}`);
+        log$j.debug(`Enqueuing api ${player_id}`);
         this.api_queue.add(player_id);
         this.schedule_api();
       };
       this.schedule_api = (delay = this.api_initial_delay) => {
         if (this.api_timer) {
-          log$i.debug(`schedule_api called but job already scheduled`);
+          log$j.debug(`schedule_api called but job already scheduled`);
           return;
         }
-        log$i.debug(`schedule_api called and job scheduled for ${delay} ms`);
+        log$j.debug(`schedule_api called and job scheduled for ${delay} ms`);
         this.api_timer = this.schedule(this.process_api, delay);
       };
       this.process_api = async () => {
-        log$i.debug("process_api called");
+        log$j.debug("process_api called");
         if (this.api_timer) {
           this.clear(this.api_timer);
           this.api_timer = null;
@@ -3218,18 +3241,18 @@ queryString.charCodeAt(pos - 1) === 63) {
         for (const id of ids) {
           this.api_queue.delete(id);
         }
-        log$i.debug(`Processing ${ids} api requests`);
+        log$j.debug(`Processing ${ids} api requests`);
         if (ids.length <= 0) {
-          log$i.debug("No ids found to query");
+          log$j.debug("No ids found to query");
           return;
         }
         let next_run = this.api_default_delay;
         let results;
         try {
-          log$i.debug(`Calling query_stats with key=*** ids=[${ids}]`);
+          log$j.debug(`Calling query_stats with key=*** ids=[${ids}]`);
           results = await query_stats(this.config.key, ids);
         } catch (err) {
-          log$i.error("Received error response querying ffscouter api:", err);
+          log$j.error("Received error response querying ffscouter api:", err);
           for (const id of ids) {
             this.reject(id, err);
           }
@@ -3240,7 +3263,7 @@ queryString.charCodeAt(pos - 1) === 63) {
             limits: ff_error.ff_api_limits
           };
         }
-        log$i.debug(
+        log$j.debug(
           `Received api results: blank=${results.blank}, count=${results.result.size}`
         );
         if (results.blank) {
@@ -3251,15 +3274,15 @@ queryString.charCodeAt(pos - 1) === 63) {
           try {
             await this.cache.update(Array.from(results.result.values()));
           } catch (err) {
-            log$i.error("Failed to update cache", err);
+            log$j.error("Failed to update cache", err);
           }
           for (const id of ids) {
             const v = results.result.get(id);
             if (v) {
-              log$i.debug("Id", id, "found in results. Resolving value.");
+              log$j.debug("Id", id, "found in results. Resolving value.");
               this.resolve(id, v);
             } else {
-              log$i.debug("Id", id, "not found in results. Resolving no_data.");
+              log$j.debug("Id", id, "not found in results. Resolving no_data.");
               this.resolve(id, { player_id: id, no_data: true });
             }
           }
@@ -3272,7 +3295,7 @@ queryString.charCodeAt(pos - 1) === 63) {
         try {
           await this.cache.clean_expired();
         } catch (err) {
-          log$i.error("Failed to clean expired cache entries", err);
+          log$j.error("Failed to clean expired cache entries", err);
         }
       };
       this.calculate_next_api_run = (limits) => {
@@ -3330,14 +3353,14 @@ queryString.charCodeAt(pos - 1) === 63) {
             hash
           });
         } catch (err) {
-          log$i.error("Failed to add analytics entry", err);
+          log$j.error("Failed to add analytics entry", err);
         }
       };
       this.get_analytics_entries = async () => {
         try {
           return await this.cache.get_analytics();
         } catch (err) {
-          log$i.error("Failed to get analytics entries", err);
+          log$j.error("Failed to get analytics entries", err);
           return [];
         }
       };
@@ -3381,7 +3404,7 @@ queryString.charCodeAt(pos - 1) === 63) {
         try {
           await this.cache.clear_analytics();
         } catch (err) {
-          log$i.error("Failed to clear analytics entries", err);
+          log$j.error("Failed to clear analytics entries", err);
         }
       };
       this.config = config;
@@ -3394,7 +3417,7 @@ queryString.charCodeAt(pos - 1) === 63) {
     }
   }
   const ffscouter = new FFScouter(ffconfig);
-  const log$h = logger.child("bounty-board");
+  const log$i = logger.child("bounty-board");
   const BOUNTY_BOARD_FRESHNESS_FLOOR_MS = 60 * 1e3;
   const BOUNTY_BOARD_EXPIRY_MS = 10 * 60 * 1e3;
   const BOARD_CACHE_KEY = "board";
@@ -3412,7 +3435,7 @@ queryString.charCodeAt(pos - 1) === 63) {
         try {
           return await this.cache.get_bounty_board(key);
         } catch (err) {
-          log$h.error(`Failed to read bounty board cache '${key}'`, err);
+          log$i.error(`Failed to read bounty board cache '${key}'`, err);
           return null;
         }
       };
@@ -3420,14 +3443,14 @@ queryString.charCodeAt(pos - 1) === 63) {
         try {
           await this.cache.put_bounty_board(key, value, expiry);
         } catch (err) {
-          log$h.error(`Failed to write bounty board cache '${key}'`, err);
+          log$i.error(`Failed to write bounty board cache '${key}'`, err);
         }
       };
       this.remove = async (key) => {
         try {
           await this.cache.delete_bounty_board(key);
         } catch (err) {
-          log$h.error(`Failed to delete bounty board cache '${key}'`, err);
+          log$i.error(`Failed to delete bounty board cache '${key}'`, err);
         }
       };
       this.get_board = async () => {
@@ -3484,7 +3507,7 @@ queryString.charCodeAt(pos - 1) === 63) {
         try {
           await this.get_board();
         } catch (err) {
-          log$h.error("Bounty board refresh failed", err);
+          log$i.error("Bounty board refresh failed", err);
         }
       };
       this.fetch_board = async () => {
@@ -3552,7 +3575,7 @@ queryString.charCodeAt(pos - 1) === 63) {
     }
   }
   const bounty_board_cache = new BountyBoardCache(ffconfig);
-  const log$g = logger.child("ui");
+  const log$h = logger.child("ui");
   var TOAST_LEVEL = ((TOAST_LEVEL2) => {
     TOAST_LEVEL2[TOAST_LEVEL2["DEBUG"] = 0] = "DEBUG";
     TOAST_LEVEL2[TOAST_LEVEL2["INFO"] = 1] = "INFO";
@@ -3617,7 +3640,7 @@ queryString.charCodeAt(pos - 1) === 63) {
     } else {
       msg.textContent = `FairFight Scouter V2: ${message}`;
     }
-    log$g.info("[FF Scouter V2] Toast: ", message);
+    log$h.info("[FF Scouter V2] Toast: ", message);
     toast2.appendChild(msg);
     toast2.appendChild(closeBtn);
     document.body.appendChild(toast2);
@@ -3839,7 +3862,7 @@ jsx(
       }
     );
   }
-  const log$f = logger.child("ui");
+  const log$g = logger.child("ui");
   const PREMIUM_UPGRADE_URL$1 = "https://ffscouter.com/premium";
   function FFHeaderLine({ playerId, showExplainer = false }) {
     const [data, setData] = useState(null);
@@ -3852,7 +3875,7 @@ jsx(
       ffscouter.get(playerId).then((result) => {
         if (!cancelled) setData(result);
       }).catch((err) => {
-        log$f.error(err);
+        log$g.error(err);
       });
       return () => {
         cancelled = true;
@@ -3865,7 +3888,7 @@ jsx(
       check_key_status.is_premium().then((premium) => {
         if (!cancelled) setIsPremium(premium);
       }).catch((err) => {
-        log$f.error(err);
+        log$g.error(err);
       }).finally(() => {
         if (!cancelled) setPremiumLoading(false);
       });
@@ -4016,7 +4039,7 @@ jsx("span", { children: extract_bs_estimate_human(data) })
   function clear_attack_bounty_silence() {
     default_storage.remove(SILENCE_KEY);
   }
-  const log$e = logger.child("dom");
+  const log$f = logger.child("dom");
   const ID_PARAMS = ["XID", "user2ID"];
   var GaugeAttachMode = ((GaugeAttachMode2) => {
     GaugeAttachMode2["HONOR_BAR"] = "honor-bar";
@@ -4252,7 +4275,7 @@ jsx("span", { children: extract_bs_estimate_human(data) })
       }
       ffscouter.add_analytics_entry(featureName, player_id, "applied");
     }).catch((err) => {
-      log$e.error(err);
+      log$f.error(err);
     });
   }
   function has_href(el) {
@@ -4326,7 +4349,7 @@ jsx("span", { children: extract_bs_estimate_human(data) })
     if (!status) {
       if (!seenUnknownActivityLabels.has(label)) {
         seenUnknownActivityLabels.add(label);
-        log$e.warn(`Unrecognized activity aria-label: "${label}"`);
+        log$f.warn(`Unrecognized activity aria-label: "${label}"`);
       }
       return "unknown";
     }
@@ -4401,9 +4424,9 @@ jsx("span", { children: extract_bs_estimate_human(data) })
       if (!ctor || element instanceof ctor) {
         return element;
       }
-      log$e.warn(`<${tagName}> construction produced a fallback element; retrying`);
+      log$f.warn(`<${tagName}> construction produced a fallback element; retrying`);
     }
-    log$e.error(
+    log$f.error(
       `Failed to construct a working <${tagName}> after multiple attempts`
     );
     return null;
@@ -4481,14 +4504,14 @@ jsx("span", { children: extract_bs_estimate_human(data) })
       15e3
     );
     if (!name || !name.href) {
-      log$e.debug("Failed to find the XID element.");
+      log$f.debug("Failed to find the XID element.");
       return null;
     }
     try {
       const params = new URL(name.href).searchParams;
       return params.get("XID");
     } catch {
-      log$e.debug("User XID is malformed");
+      log$f.debug("User XID is malformed");
       return null;
     }
   }
@@ -4586,7 +4609,7 @@ jsx("span", { children: extract_bs_estimate_human(data) })
     root.render(element);
     return root;
   }
-  const log$d = logger.child("feature:attack");
+  const log$e = logger.child("feature:attack");
   const FIGHT_BUTTON = '[class*="dialogButtons"] button';
   let attack_target = null;
   let bounty_row = null;
@@ -4618,7 +4641,7 @@ jsx("span", { children: extract_bs_estimate_human(data) })
       const phase = classify_board_error(result.err).phase;
       gate_failed ||= phase === "consent" || phase === "key_unregistered";
       if (!gate_failed) {
-        log$d.error("Bounty board read failed on the attack page", result.err);
+        log$e.error("Bounty board read failed on the attack page", result.err);
       }
     }
     if (gate_failed) {
@@ -4716,7 +4739,7 @@ jsx("span", { children: extract_bs_estimate_human(data) })
       if (!player_id) {
         return;
       }
-      log$d.debug("On the attack page, found player_id", player_id);
+      log$e.debug("On the attack page, found player_id", player_id);
       const info_line = create_info_line();
       mountComponent(
         createElement(FFHeaderLine, { playerId: player_id }),
@@ -4934,7 +4957,7 @@ jsxs("span", { className: cls$2.pool, children: [
       }
     );
   }
-  const log$c = logger.child("ui");
+  const log$d = logger.child("ui");
   const VIEW_STATE_KEY = "bounty_board_view";
   const DEFAULT_VIEW_STATE = {
     stats_less_than: "",
@@ -4997,7 +5020,7 @@ jsxs("span", { className: cls$2.pool, children: [
           );
         }
       }).catch((err) => {
-        log$c.error(err);
+        log$d.error(err);
       });
       return () => {
         cancelled = true;
@@ -5104,7 +5127,7 @@ jsx(
           return next;
         });
       }).catch((err) => {
-        log$c.error(err);
+        log$d.error(err);
       });
     }, [targets, view.expanded_factions, ffRequested]);
     const filters = useMemo(
@@ -5258,7 +5281,7 @@ jsx(
   const TEMPLATE = ".page-template-cont";
   const BOUNTY_ROWS = `${TEMPLATE} .bounties-list > li`;
   const BOUNTY_LIST_TIMEOUT_MS = 30 * 1e3;
-  const log$b = logger.child("feature:bounties");
+  const log$c = logger.child("feature:bounties");
   function should_show_bounty_board() {
     return ffconfig.bounty_board_enabled && torn_page("bounties") && is_bounty_main_route();
   }
@@ -5321,7 +5344,7 @@ jsx(
         sync();
         return;
       }
-      log$b.warn("Torn's bounty list didn't render; floating FF Scouter Bounties");
+      log$c.warn("Torn's bounty list didn't render; floating FF Scouter Bounties");
       float_modal();
       watch_page();
     });
@@ -6158,11 +6181,15 @@ jsx(
   function is_applying(list) {
     return isApplying.get(list) ?? false;
   }
+  function resolve_row_container(membersList) {
+    return membersList.querySelector(".table-body") || membersList.querySelector(".members-list") || membersList;
+  }
   function apply_filters_and_sort(membersList, filters) {
-    if (isApplying.get(membersList)) return;
+    if (isApplying.get(membersList)) return false;
     isApplying.set(membersList, true);
+    let moved = false;
     try {
-      const tbody = membersList.querySelector(".table-body") || membersList.querySelector(".members-list") || membersList;
+      const tbody = resolve_row_container(membersList);
       const rows = Array.from(
         tbody.querySelectorAll(":scope > .table-row, .enemy, .your")
       );
@@ -6252,6 +6279,13 @@ Number.parseInt(row.dataset["estValue"], 10)
       if (filters.sortBy !== "none") {
         const isEst = filters.colDisplay === FactionsColDisplay.BATTLE_STATS;
         const valKey = isEst ? "estValue" : "ffValue";
+        const playerIds = new Map(
+          rows.map((row) => [
+            row,
+            get_player_id_in_element(row) ?? Number.MAX_SAFE_INTEGER
+          ])
+        );
+        const domOrder = [...rows];
         rows.sort((a, b) => {
           const getVal = (row) => {
             const dataVal = row.dataset[valKey];
@@ -6259,23 +6293,24 @@ Number.parseInt(row.dataset["estValue"], 10)
           };
           const valA = getVal(a);
           const valB = getVal(b);
-          if (filters.sortBy.endsWith("asc")) {
-            return valA - valB;
-          }
-          return valB - valA;
+          const byValue = filters.sortBy.endsWith("asc") ? valA - valB : valB - valA;
+          return byValue || playerIds.get(a) - playerIds.get(b);
         });
-        for (const row of rows) {
-          const extra_tt_rows = [];
-          let next_sibling = row.nextElementSibling;
-          while (next_sibling && !next_sibling?.classList.contains("table-row") && !next_sibling?.classList.contains("enemy") && !next_sibling?.classList.contains("your")) {
-            if (next_sibling.classList.contains("tt-last-action") || next_sibling.classList.contains("tt-stats-estimate")) {
-              extra_tt_rows.push(next_sibling);
+        moved = rows.some((row, i) => row !== domOrder[i]);
+        if (moved) {
+          for (const row of rows) {
+            const extra_tt_rows = [];
+            let next_sibling = row.nextElementSibling;
+            while (next_sibling && !next_sibling?.classList.contains("table-row") && !next_sibling?.classList.contains("enemy") && !next_sibling?.classList.contains("your")) {
+              if (next_sibling.classList.contains("tt-last-action") || next_sibling.classList.contains("tt-stats-estimate")) {
+                extra_tt_rows.push(next_sibling);
+              }
+              next_sibling = next_sibling.nextElementSibling;
             }
-            next_sibling = next_sibling.nextElementSibling;
-          }
-          tbody.appendChild(row);
-          for (const r of extra_tt_rows) {
-            tbody.appendChild(r);
+            tbody.appendChild(row);
+            for (const r of extra_tt_rows) {
+              tbody.appendChild(r);
+            }
           }
         }
       }
@@ -6287,6 +6322,7 @@ Number.parseInt(row.dataset["estValue"], 10)
     } finally {
       isApplying.set(membersList, false);
     }
+    return moved;
   }
   function update_header_sort_indicator(list, sortBy) {
     const header = list.querySelector(".ffscouter-header");
@@ -6341,7 +6377,7 @@ Number.parseInt(row.dataset["estValue"], 10)
     if (filters.sortBy !== "none") return true;
     return false;
   }
-  const log$a = logger.child("feature:faction");
+  const log$b = logger.child("feature:faction");
   async function poll_traveling_flights(membersList) {
     const rows = Array.from(
       membersList.querySelectorAll(".enemy, .your")
@@ -6386,7 +6422,7 @@ Number.parseInt(row.dataset["estValue"], 10)
             p.row.removeAttribute("data-latest-arrival");
           }
         } catch (err) {
-          log$a.error(`Failed to fetch flights for player ${p.player_id}`, err);
+          log$b.error(`Failed to fetch flights for player ${p.player_id}`, err);
         }
       })
     );
@@ -6499,7 +6535,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
           e.preventDefault();
           e.stopPropagation();
           const freshPlayerId = get_player_id_in_element(rp.row);
-          log$a.info("FF/Est cell click: id-binding cross-check:", {
+          log$b.info("FF/Est cell click: id-binding cross-check:", {
             staleClosurePlayerId: rp.player_id,
             freshPlayerId,
             stale: freshPlayerId !== rp.player_id
@@ -6565,6 +6601,49 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     }
     update_header_sort_indicator(membersList, handle?.sortBy ?? "none");
     poll_traveling_flights(membersList);
+  }
+  const log$a = logger.child("feature:faction");
+  const MAX_REORDERS_PER_FRAME = 3;
+  function watch_native_reorder(list, getFilters) {
+    let reordersThisFrame = 0;
+    let frameScheduled = false;
+    let deferred = false;
+    let warned = false;
+    const resort = () => {
+      const filters = getFilters();
+      if (!filters || filters.sortBy === "none") return;
+      if (!apply_filters_and_sort(list, filters)) return;
+      reordersThisFrame++;
+      if (!frameScheduled) {
+        frameScheduled = true;
+        requestAnimationFrame(on_frame);
+      }
+    };
+    const on_frame = () => {
+      frameScheduled = false;
+      reordersThisFrame = 0;
+      if (deferred) {
+        deferred = false;
+        resort();
+      }
+    };
+    const observer = new MutationObserver(() => {
+      if (deferred) return;
+      if (reordersThisFrame >= MAX_REORDERS_PER_FRAME) {
+        deferred = true;
+        if (!warned) {
+          warned = true;
+          log$a.warn(
+            "Native reorder re-sorts exceeded the per-frame limit; deferring to animation frames",
+            list
+          );
+        }
+        return;
+      }
+      resort();
+    });
+    observer.observe(resolve_row_container(list), { childList: true });
+    return () => observer.disconnect();
   }
   const log$9 = logger.child("feature:faction");
   const FEATURE_NAME$4 = "faction";
@@ -6744,6 +6823,15 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
       ],
       subtree: true
     });
+    const stopNativeReorderWatch = watch_native_reorder(list, () => {
+      const handle = getFilterBoxHandle(
+        (list.closest(".faction-war") || list.parentNode)?.querySelector(
+          "[data-ff-filter-box]"
+        )
+      );
+      if (!handle?.ready) return null;
+      return { ...handle.getFilterSnapshot(), colDisplay: getColDisplay() };
+    });
     const flightInterval = setInterval(() => {
       poll_traveling_flights(list);
       update_twse_presence_flags(list);
@@ -6765,6 +6853,7 @@ player_id: Number.parseInt(match.groups["player_id"], 10),
     cleanup_when_detached(list, () => {
       clearInterval(flightInterval);
       attributeObserver.disconnect();
+      stopNativeReorderWatch();
     });
   }
   function inject_filter_box(membersList) {
@@ -8076,12 +8165,12 @@ jsx("br", {}),
           apply_ff_gauge(bar, FEATURE_NAME$1, GaugeAttachMode.HONOR_BAR);
         }
         miniroot.querySelector(".ffscouter-mini-desc")?.remove();
-        const ff_string = format_ff_score(d2);
+        const value_string = ffconfig.mini_profile_display === MiniProfileDisplay.BATTLE_STATS ? `Est ${format_bs_estimate(d2)}` : `FF ${format_ff_score(d2)}`;
         const fresh = format_relative_time(extract_last_updated(d2));
         const marker = get_source_marker(extract_source(d2));
         const desc = document.createElement("span");
         desc.classList.add("ffscouter-mini-desc");
-        desc.append(`FF ${ff_string}`);
+        desc.append(value_string);
         if (marker) {
           desc.appendChild(
             make_source_marker_svg(marker, "ffscouter-inline-source-marker")
@@ -8428,6 +8517,7 @@ jsx("br", {}),
     ffHistoryEnabled: CONFIG_DEFAULTS.ff_history_enabled,
     factionsColDisplay: CONFIG_DEFAULTS.factions_col_display,
     warColDisplay: CONFIG_DEFAULTS.war_col_display,
+    miniProfileDisplay: CONFIG_DEFAULTS.mini_profile_display,
     debugLogs: CONFIG_DEFAULTS.debug_logs,
     analyticsEnabled: CONFIG_DEFAULTS.analytics_enabled,
     networkInterceptionEnabled: CONFIG_DEFAULTS.network_interception_enabled,
@@ -8987,6 +9077,21 @@ jsx(
                   ),
 jsx("label", { htmlFor: "war-filter-toggle", children: "Show war filter box" })
                 ] }),
+jsxs("div", { className: cls.cell, children: [
+jsx("label", { htmlFor: "mini-profile-display", children: "Mini Profile Shows:" }),
+jsxs(
+                    "select",
+                    {
+                      id: "mini-profile-display",
+                      value: drafts.miniProfileDisplay,
+                      onChange,
+                      children: [
+jsx("option", { value: "fair_fight", children: "FF Score" }),
+jsx("option", { value: "battle_stats", children: "BS Estimate" })
+                      ]
+                    }
+                  )
+                ] }),
 jsxs("div", { className: `${cls.cell} ${cls.cellCheckbox}`, children: [
 jsx(
                     "input",
@@ -9247,6 +9352,8 @@ jsx(
           this._drafts.factionsColDisplay = target.value;
         } else if (id === "war-col-display") {
           this._drafts.warColDisplay = target.value;
+        } else if (id === "mini-profile-display") {
+          this._drafts.miniProfileDisplay = target.value;
         } else if (id === "chain-button-toggle") {
           this._drafts.chainButtonEnabled = target.checked;
         } else if (id === "chain-inactive") {
@@ -9325,6 +9432,7 @@ jsx(
         ffHistoryEnabled: this._props.ffHistoryEnabled,
         factionsColDisplay: this._props.factionsColDisplay,
         warColDisplay: this._props.warColDisplay,
+        miniProfileDisplay: this._props.miniProfileDisplay,
         debugLogs: this._props.debugLogs,
         analyticsEnabled: this._props.analyticsEnabled,
         networkInterceptionEnabled: this._props.networkInterceptionEnabled,
@@ -9449,6 +9557,7 @@ jsx(
             ffHistoryEnabled: this._drafts.ffHistoryEnabled,
             factionsColDisplay: this._drafts.factionsColDisplay,
             warColDisplay: this._drafts.warColDisplay,
+            miniProfileDisplay: this._drafts.miniProfileDisplay,
             debugLogs: this._drafts.debugLogs,
             analyticsEnabled: this._drafts.analyticsEnabled,
             networkInterceptionEnabled: this._drafts.networkInterceptionEnabled,
@@ -9607,6 +9716,14 @@ get apiKey() {
     set warColDisplay(val) {
       this._props.warColDisplay = val;
       this._drafts.warColDisplay = val;
+      this.render();
+    }
+    get miniProfileDisplay() {
+      return this._props.miniProfileDisplay;
+    }
+    set miniProfileDisplay(val) {
+      this._props.miniProfileDisplay = val;
+      this._drafts.miniProfileDisplay = val;
       this.render();
     }
     get debugLogs() {
@@ -9886,6 +10003,13 @@ get draftApiKey() {
       this._drafts.warColDisplay = val;
       this.render();
     }
+    get draftMiniProfileDisplay() {
+      return this._drafts.miniProfileDisplay;
+    }
+    set draftMiniProfileDisplay(val) {
+      this._drafts.miniProfileDisplay = val;
+      this.render();
+    }
     get draftDebugLogs() {
       return this._drafts.debugLogs;
     }
@@ -10145,6 +10269,7 @@ get draftApiKey() {
       panel.ffHistoryEnabled = ffconfig.ff_history_enabled;
       panel.factionsColDisplay = ffconfig.factions_col_display;
       panel.warColDisplay = ffconfig.war_col_display;
+      panel.miniProfileDisplay = ffconfig.mini_profile_display;
       panel.debugLogs = ffconfig.debug_logs;
       panel.analyticsEnabled = ffconfig.analytics_enabled;
       panel.networkInterceptionEnabled = ffconfig.network_interception_enabled;
@@ -10182,6 +10307,7 @@ get draftApiKey() {
         ffconfig.ff_history_enabled = detail.ffHistoryEnabled;
         ffconfig.factions_col_display = detail.factionsColDisplay;
         ffconfig.war_col_display = detail.warColDisplay;
+        ffconfig.mini_profile_display = detail.miniProfileDisplay;
         ffconfig.debug_logs = detail.debugLogs;
         if (detail.debugLogs) {
           logger.setLevel(LogLevel.DEBUG);
@@ -10233,6 +10359,7 @@ get draftApiKey() {
         panel.ffHistoryEnabled = ffconfig.ff_history_enabled;
         panel.factionsColDisplay = ffconfig.factions_col_display;
         panel.warColDisplay = ffconfig.war_col_display;
+        panel.miniProfileDisplay = ffconfig.mini_profile_display;
         panel.debugLogs = ffconfig.debug_logs;
         panel.analyticsEnabled = ffconfig.analytics_enabled;
         panel.networkInterceptionEnabled = ffconfig.network_interception_enabled;
@@ -10642,7 +10769,7 @@ get draftApiKey() {
       return;
     }
     document.documentElement.setAttribute(INJECTION_KEY, "1");
-    log.info("Initializing", "3.4-beta2");
+    log.info("Initializing", "3.4-beta3");
     run_migration();
     if (ffscouter.analytics_enabled) {
       if (typeof unsafeWindow !== "undefined") {
