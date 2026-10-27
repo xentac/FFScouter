@@ -22,6 +22,7 @@ import travelPeopleList from "./__fixtures__/torn-markup/2026-08-16/travel-peopl
 import advancedSearchUserList from "./__fixtures__/torn-markup/2026-09-07/advanced-search-user-list.html?raw";
 import eliminationsTeamListDesktop from "./__fixtures__/torn-markup/2026-09-07/eliminations-team-list-desktop.html?raw";
 import eliminationsTeamListMobile from "./__fixtures__/torn-markup/2026-09-07/eliminations-team-list-mobile.html?raw";
+import hospitalList from "./__fixtures__/torn-markup/2026-10-26/hospital-list.html?raw";
 import statusAttack from "./index";
 
 vi.mock("@utils/dom", async (importOriginal) => {
@@ -82,6 +83,39 @@ describe("Online Status Attack Links Feature", () => {
     expect(
       document.body.getAttribute("data-ff-status-attack-enabled"),
     ).toBeNull();
+  });
+
+  test("Hospital list presence dot attacks the row's player, not the attacker in the reason", async () => {
+    document.body.innerHTML = hospitalList;
+    vi.mocked(torn_page).mockImplementation((page) => page === "hospitalview");
+
+    const actualDom =
+      await vi.importActual<typeof import("@utils/dom")>("@utils/dom");
+    vi.mocked(get_player_id_in_element).mockImplementation(
+      actualDom.get_player_id_in_element,
+    );
+
+    const rows: { name: string; playerId: number }[] = [
+      { name: "PlayerOne", playerId: 1000001 }, // Offline
+      { name: "PlayerTwo", playerId: 1000002 }, // Online, "Hospitalized by" PlayerThree
+    ];
+
+    await statusAttack.run();
+
+    for (const { name, playerId } of rows) {
+      const statusDot = document
+        .querySelector(`a.user.name[title^="${name} "]`)
+        ?.closest("li")
+        ?.querySelector('ul.singleicon li[id^="icon"].iconShow') as HTMLElement;
+      expect(statusDot).not.toBeNull();
+
+      statusDot.click();
+
+      expect(openSpy).toHaveBeenLastCalledWith(
+        `https://www.torn.com/page.php?sid=attack&user2ID=${playerId}`,
+        "_blank",
+      );
+    }
   });
 
   test("Faction page click triggers attack in a new tab", async () => {
