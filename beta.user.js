@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FF Scouter V2 beta
 // @namespace    xentac-beta
-// @version      3.4-beta3
+// @version      3.5-beta1
 // @author       xentac [3354782], MAVRI [2402357], rDacted [2670953], Weav3r [1853324], Glasnost [1844049]
 // @description  Shows the expected Fair Fight score against targets and faction war status
 // @license      GPLv3
@@ -1458,7 +1458,7 @@ clearAll() {
   }
   const FF_SCOUTER_BASE_URL = "https://ffscouter.com/api/v1";
   new TornApiClient({
-    defaultComment: `FFScouterV2-${"3.4-beta3"}`,
+    defaultComment: `FFScouterV2-${"3.5-beta1"}`,
     defaultTimeout: 30
 });
   async function gmRequest(options) {
@@ -10640,6 +10640,13 @@ get draftApiKey() {
       }
     }
     if (!playerId) {
+      const row = statusEl.closest(".user-info-list-wrap > li");
+      const nameCell = row?.querySelector(".user-wrap.user-name");
+      if (nameCell) {
+        playerId = get_player_id_in_element(nameCell);
+      }
+    }
+    if (!playerId) {
       log$2.debug("Failed to extract playerId from status icon click");
       return;
     }
@@ -10769,7 +10776,7 @@ get draftApiKey() {
       return;
     }
     document.documentElement.setAttribute(INJECTION_KEY, "1");
-    log.info("Initializing", "3.4-beta3");
+    log.info("Initializing", "3.5-beta1");
     run_migration();
     if (ffscouter.analytics_enabled) {
       if (typeof unsafeWindow !== "undefined") {
