@@ -263,6 +263,20 @@ function handleStatusClick(e: MouseEvent) {
     }
   }
 
+  // 11. Hospital list rows (hospitalview.php): same .user-info-list-wrap
+  // wrapper as Advanced Search, but with no .expander, so step 8 misses them.
+  // The row's reason can say "Hospitalized by <attacker>" with the attacker's
+  // own XID= link, so extract from the name cell only; scanning the whole row
+  // would only pick the right player because the name link happens to come
+  // first.
+  if (!playerId) {
+    const row = statusEl.closest(".user-info-list-wrap > li");
+    const nameCell = row?.querySelector(".user-wrap.user-name");
+    if (nameCell) {
+      playerId = get_player_id_in_element(nameCell);
+    }
+  }
+
   if (!playerId) {
     log.debug("Failed to extract playerId from status icon click");
     return;
