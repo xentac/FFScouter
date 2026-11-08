@@ -15,7 +15,7 @@
   /* Clears Torn's bottom-right chat icons. */
   bottom: 64px;
   z-index: 9999;
-  width: 380px;
+  width: 420px;
   max-width: calc(100vw - 32px);
   max-height: 70vh;
   display: flex;
@@ -131,6 +131,11 @@
   border-radius: 3px;
 }
 
+.ff-bounty-modal__filter input[type="checkbox"] {
+  width: auto;
+  padding: 0;
+}
+
 .ff-bounty-modal__list,
 .ff-bounty-modal__member-list,
 .ff-bounty-modal__tier-ladder {
@@ -175,6 +180,25 @@
   white-space: nowrap;
   font-weight: bold;
   color: inherit;
+}
+
+/* Board Target Status label. Never shrinks: the name truncates first. */
+.ff-bounty-modal__status {
+  flex: 0 0 auto;
+  white-space: nowrap;
+  font-size: 12px;
+}
+
+.ff-bounty-modal__status--okay {
+  color: var(--ffscouter-status-okay-color);
+}
+
+.ff-bounty-modal__status--out {
+  color: var(--ffscouter-status-out-color);
+}
+
+.ff-bounty-modal__status--away {
+  color: var(--ffscouter-status-away-color);
 }
 
 .ff-bounty-modal__estimate {

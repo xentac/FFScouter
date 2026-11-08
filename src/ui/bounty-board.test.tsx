@@ -1,5 +1,11 @@
 // @vitest-environment jsdom
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import {
   api_error,
   CLAIM_CREATE_RESPONSE,
@@ -13,6 +19,7 @@ import {
 import {
   accept_bounty_seller_policy,
   type BountySellerBoardResponse,
+  type BountyTargetStatus,
 } from "@utils/api";
 import {
   is_attack_bounty_silenced,
@@ -23,6 +30,7 @@ import { check_key_status } from "@utils/check_key";
 import { getLocalUserId, open_attack_link } from "@utils/dom";
 import { ffconfig, WarQuickAttackAction } from "@utils/ffconfig";
 import { ffscouter } from "@utils/ffscouter";
+import default_storage from "@utils/storage";
 import type { FFDataComplete, PlayerId } from "@utils/types";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { BountyBoard } from "./bounty-board";
@@ -401,6 +409,160 @@ describe.each(["modal", "section"] as const)("%s", (variant) => {
     render(<Shell variant={variant} />);
     await screen.findByText(/isn't registered/);
   });
+});
+
+// Arcanine in hospital for `seconds` more, by the Torn Clock (Date.now() in
+// tests, since Torn's getCurrentTimestamp is absent).
+function board_with_hospital(seconds: number): BountySellerBoardResponse {
+  return board_with_status({
+    state: "Hospital",
+    description: "In hospital",
+    until: Math.floor(Date.now() / 1000) + seconds,
+  });
+}
+
+function board_with_status(
+  status: BountyTargetStatus,
+): BountySellerBoardResponse {
+  return {
+    ...SELLER_BOARD_RESPONSE,
+    board: {
+      ...SELLER_BOARD_RESPONSE.board,
+      targets: [
+        {
+          ...PLAYER_TARGET,
+          status,
+          status_last_checked: Math.floor(Date.now() / 1000) - 45,
+        },
+      ],
+    },
+  };
+}
+
+const hide_unavailable_box = () =>
+  screen.getByRole("checkbox", {
+    name: "Hide unavailable",
+  }) as HTMLInputElement;
+
+test("Hide unavailable hides a hospitalized target and survives a remount", async () => {
+  vi.mocked(bounty_board_cache.get_board).mockResolvedValue(
+    board_with_hospital(3600),
+  );
+  const first = render(<BountyBoard variant="modal" />);
+  await screen.findByText("Arcanine");
+  expect(hide_unavailable_box().checked).toBe(false);
+  fireEvent.click(hide_unavailable_box());
+  expect(screen.queryByText("Arcanine")).toBeNull();
+  first.unmount();
+
+  render(<BountyBoard variant="modal" />);
+  await screen.findByText("No FF Scouter Bounties match your filters.");
+  expect(hide_unavailable_box().checked).toBe(true);
+});
+
+test("view state saved before Hide unavailable existed loads with it off", async () => {
+  default_storage.set("bounty_board_view", {
+    stats_less_than: "",
+    ff_less_than: "9",
+    expanded_tiers: [],
+    expanded_factions: [],
+    minimized: false,
+  });
+  vi.mocked(bounty_board_cache.get_board).mockResolvedValue(
+    board_with_hospital(3600),
+  );
+  render(<BountyBoard variant="modal" />);
+  await screen.findByText("Arcanine");
+  expect(hide_unavailable_box().checked).toBe(false);
+  expect(
+    (
+      screen.getByRole("textbox", {
+        name: "Only show targets with FF less than",
+      }) as HTMLInputElement
+    ).value,
+  ).toBe("9");
+});
+
+test("a hidden target reappears when its hospital timer runs out", async () => {
+  vi.useFakeTimers({ toFake: ["setInterval", "clearInterval", "Date"] });
+  try {
+    vi.mocked(bounty_board_cache.get_board).mockResolvedValue(
+      board_with_hospital(2),
+    );
+    render(<BountyBoard variant="modal" />);
+    await screen.findByText("Arcanine");
+    fireEvent.click(hide_unavailable_box());
+    expect(screen.queryByText("Arcanine")).toBeNull();
+    act(() => {
+      vi.advanceTimersByTime(3000);
+    });
+    expect(screen.getByText("Arcanine")).toBeTruthy();
+  } finally {
+    vi.useRealTimers();
+  }
+});
+
+test("rows show the status label with a countdown, then Okay?", async () => {
+  vi.useFakeTimers({ toFake: ["setInterval", "clearInterval", "Date"] });
+  // A whole second, so the fixture's rounded-down clock matches "now".
+  vi.setSystemTime(1770001400 * 1000);
+  try {
+    vi.mocked(bounty_board_cache.get_board).mockResolvedValue(
+      board_with_hospital(3723),
+    );
+    render(<BountyBoard variant="modal" />);
+    const label = await screen.findByText("Hosp 1h+");
+    expect(label.getAttribute("title")).toBe("In hospital · checked 45s ago");
+    act(() => {
+      vi.advanceTimersByTime(124 * 1000);
+    });
+    expect(screen.getByText("Hosp 59m59s")).toBeTruthy();
+    act(() => {
+      vi.advanceTimersByTime(3599 * 1000);
+    });
+    const guess = screen.getByText("Okay?");
+    expect(guess.getAttribute("title")).toBe(
+      "Timer ended, not re-checked yet · checked 1h ago",
+    );
+  } finally {
+    vi.useRealTimers();
+  }
+});
+
+test("a Traveling row shows a short static label", async () => {
+  vi.mocked(bounty_board_cache.get_board).mockResolvedValue(
+    board_with_status({
+      state: "Traveling",
+      description: "Traveling to Mexico",
+      until: 0,
+    }),
+  );
+  render(<BountyBoard variant="modal" />);
+  const label = await screen.findByText("Trav");
+  expect(label.getAttribute("title")).toBe(
+    "Traveling to Mexico · checked 45s ago",
+  );
+});
+
+test("Attack and Claim stay enabled on an unavailable row", async () => {
+  vi.mocked(bounty_board_cache.get_board).mockResolvedValue(
+    board_with_hospital(7200),
+  );
+  render(<BountyBoard variant="modal" />);
+  await screen.findByText("Hosp 1h+");
+  for (const name of ["Attack Arcanine", "Claim bounty on Arcanine"]) {
+    expect(
+      (screen.getByRole("button", { name }) as HTMLButtonElement).disabled,
+    ).toBe(false);
+  }
+});
+
+test("rows without a status show no label", async () => {
+  render(<BountyBoard variant="modal" />);
+  await screen.findByText("Arcanine");
+  for (const text of ["Okay", "Okay?", "Hospital"]) {
+    expect(screen.queryByText(text)).toBeNull();
+  }
 });
 
 test("minimizing hides the body and persists", async () => {

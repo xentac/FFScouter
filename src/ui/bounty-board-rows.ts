@@ -4,13 +4,14 @@
 import {
   type BountyBoardTarget,
   type BountyClaimTarget,
+  type BountyTargetStatus,
   type BountyTier,
   FFApiError,
 } from "@utils/api";
 import { sort_tiers } from "@utils/bounty_match";
 import { extract_ff } from "@utils/estimate";
 import { format_suffix_number } from "@utils/strings";
-import type { FFData, PlayerId } from "@utils/types";
+import type { FFData, PlayerId, TornTimestampSec } from "@utils/types";
 
 export type BountyFilterValues = {
   // Parsed limits; null = filter not set. "less than" semantics: a row is
@@ -18,11 +19,15 @@ export type BountyFilterValues = {
   // estimate or FF never hides a row (unknown ≠ stronger).
   stats_less_than: number | null;
   ff_less_than: number | null;
+  // Hides rows whose Board Target Status says they can't be hit right now;
+  // an unknown status never hides a row (unknown ≠ unavailable).
+  hide_unavailable: boolean;
 };
 
 export const NO_FILTERS: BountyFilterValues = {
   stats_less_than: null,
   ff_less_than: null,
+  hide_unavailable: false,
 };
 
 export type PlayerRowModel = {
@@ -32,6 +37,8 @@ export type PlayerRowModel = {
   name: string;
   estimate: number | null;
   estimate_available: boolean;
+  status: BountyTargetStatus | null;
+  status_last_checked: TornTimestampSec | null;
   tiers: BountyTier[];
   max_price_per_hit: number;
   // A faction member's claim hints the faction bounty, not the member: the
@@ -69,6 +76,68 @@ export function is_shown_target(target: BountyBoardTarget): boolean {
   return !target.disabled || is_own_bounty(target);
 }
 
+// One resolved view of a Board Target Status, read by both the row label and
+// the "Hide unavailable" filter so the two can never disagree.
+export type BoardStatusView =
+  | { kind: "unknown" }
+  | { kind: "okay" }
+  // A Hospital/Jail timer that ran out. The cache can't know about a new hit,
+  // so "Okay?" is a guess, and it counts as available.
+  | { kind: "okay_guess" }
+  | { kind: "timed"; state: string; remaining: number }
+  | { kind: "static"; state: string; unavailable: boolean };
+
+// Only these count down. Traveling is deliberately absent: Torn gives no end
+// time for travel, and a return trip ends Okay while an outbound one ends
+// Abroad, which only the free-text description tells apart.
+const TIMED_STATES = new Set(["Hospital", "Jail"]);
+
+// Abroad is hidden because the board doesn't know the seller's own location
+// (#33). States not listed here are shown raw and never hidden.
+const UNAVAILABLE_STATES = new Set([
+  "Hospital",
+  "Jail",
+  "Traveling",
+  "Abroad",
+  "Fallen",
+]);
+
+export function resolve_board_status(
+  status: BountyTargetStatus | null | undefined,
+  now: TornTimestampSec,
+): BoardStatusView {
+  const state = status?.state;
+  if (!state) {
+    return { kind: "unknown" };
+  }
+  if (state === "Okay") {
+    return { kind: "okay" };
+  }
+  // Torn sends 0 rather than null when there is no timer.
+  const until = status.until;
+  if (TIMED_STATES.has(state) && until != null && until > 0) {
+    const remaining = until - now;
+    if (remaining <= 0) {
+      return { kind: "okay_guess" };
+    }
+    return { kind: "timed", state, remaining };
+  }
+  return { kind: "static", state, unavailable: UNAVAILABLE_STATES.has(state) };
+}
+
+export function is_status_available(view: BoardStatusView): boolean {
+  switch (view.kind) {
+    case "unknown":
+    case "okay":
+    case "okay_guess":
+      return true;
+    case "timed":
+      return false;
+    case "static":
+      return !view.unavailable;
+  }
+}
+
 export function format_tier_label(tier: BountyTier): string {
   return `$${format_suffix_number(tier.price_per_hit)} × ${tier.quantity_remaining}`;
 }
@@ -77,7 +146,14 @@ function row_passes_filters(
   row: PlayerRowModel,
   ff_lookup: ReadonlyMap<PlayerId, FFData>,
   filters: BountyFilterValues,
+  now: TornTimestampSec,
 ): boolean {
+  if (
+    filters.hide_unavailable &&
+    !is_status_available(resolve_board_status(row.status, now))
+  ) {
+    return false;
+  }
   if (
     filters.stats_less_than !== null &&
     row.estimate_available &&
@@ -106,6 +182,8 @@ function player_row(target: BountyBoardTarget): PlayerRowModel | null {
     name: target.target_name,
     estimate: target.estimate ?? null,
     estimate_available: target.estimate_available ?? false,
+    status: target.status ?? null,
+    status_last_checked: target.status_last_checked ?? null,
     tiers: sort_tiers(target.tiers),
     max_price_per_hit: target.max_price_per_hit,
     claim_target: { target_player_id: target.target_player_id },
@@ -127,6 +205,8 @@ function faction_card(target: BountyBoardTarget): FactionCardModel | null {
     name: member.name,
     estimate: member.estimate,
     estimate_available: member.estimate_available,
+    status: member.status ?? null,
+    status_last_checked: member.status_last_checked ?? null,
     // Member rows share the faction bounty's tier ladder: the pool and
     // pricing belong to the bounty, not the member.
     tiers,
@@ -152,6 +232,7 @@ export function build_board_view(
   targets: BountyBoardTarget[],
   ff_lookup: ReadonlyMap<PlayerId, FFData>,
   filters: BountyFilterValues,
+  now: TornTimestampSec,
 ): BoardRowModel[] {
   const rows: BoardRowModel[] = [];
   for (const target of targets) {
@@ -165,7 +246,7 @@ export function build_board_view(
       }
       const had_members = card.members.length > 0;
       card.members = card.members.filter((m) =>
-        row_passes_filters(m, ff_lookup, filters),
+        row_passes_filters(m, ff_lookup, filters, now),
       );
       // A card whose every member is filtered out is itself filtered out;
       // a memberless card (e.g. truncated payload) stays visible.
@@ -175,7 +256,7 @@ export function build_board_view(
       rows.push(card);
     } else {
       const row = player_row(target);
-      if (row && row_passes_filters(row, ff_lookup, filters)) {
+      if (row && row_passes_filters(row, ff_lookup, filters, now)) {
         rows.push(row);
       }
     }

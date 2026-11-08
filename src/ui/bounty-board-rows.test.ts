@@ -11,7 +11,9 @@ import {
   classify_board_error,
   ff_ids_to_load,
   format_tier_label,
+  is_status_available,
   NO_FILTERS,
+  resolve_board_status,
 } from "./bounty-board-rows";
 
 // Minimal FFDataComplete for filter tests — only fair_fight matters here.
@@ -41,6 +43,8 @@ const faction = (
 
 const EMPTY_FF = new Map<PlayerId, FFData>();
 
+const NOW = 1770001400;
+
 test("format_tier_label renders price × quantity", () => {
   expect(
     format_tier_label({ price_per_hit: 700000, quantity_remaining: 3 }),
@@ -59,6 +63,7 @@ test("targets are sorted by max price per hit descending", () => {
     ],
     EMPTY_FF,
     NO_FILTERS,
+    NOW,
   );
   expect(rows.map((r) => r.max_price_per_hit)).toEqual([
     700000, 300000, 100000,
@@ -73,6 +78,7 @@ test("targets disabled because the user is the target or a member never appear",
     ],
     EMPTY_FF,
     NO_FILTERS,
+    NOW,
   );
   expect(rows).toHaveLength(0);
 });
@@ -91,6 +97,7 @@ test("the user's own (buyer-disabled) bounties appear marked, sorted by price", 
     ],
     EMPTY_FF,
     NO_FILTERS,
+    NOW,
   );
   expect(rows.map((r) => [r.max_price_per_hit, r.own_bounty])).toEqual([
     [700000, true],
@@ -103,7 +110,7 @@ test("the user's own (buyer-disabled) bounties appear marked, sorted by price", 
 });
 
 test("player targets become player rows with keys, tiers, and names", () => {
-  const rows = build_board_view([player()], EMPTY_FF, NO_FILTERS);
+  const rows = build_board_view([player()], EMPTY_FF, NO_FILTERS, NOW);
   expect(rows).toEqual([
     expect.objectContaining({
       kind: "player",
@@ -119,7 +126,7 @@ test("player targets become player rows with keys, tiers, and names", () => {
 });
 
 test("faction targets become cards with per-member player rows", () => {
-  const rows = build_board_view([faction()], EMPTY_FF, NO_FILTERS);
+  const rows = build_board_view([faction()], EMPTY_FF, NO_FILTERS, NOW);
   const card = rows[0];
   if (card?.kind !== "faction") throw new Error("expected faction card");
   expect(card.row_key).toEqual("f6731");
@@ -150,7 +157,8 @@ test("stats filter hides rows at/above the limit but never unknown estimates", (
       player({ target_player_id: 3, estimate: 999999 }),
     ],
     EMPTY_FF,
-    { stats_less_than: 1000000, ff_less_than: null },
+    { stats_less_than: 1000000, ff_less_than: null, hide_unavailable: false },
+    NOW,
   );
   expect(rows.map((r) => (r.kind === "player" ? r.player_id : null))).toEqual([
     2, 3,
@@ -169,7 +177,8 @@ test("ff filter hides rows with known FF at/above the limit, unknown stays", () 
       player({ target_player_id: 3 }),
     ],
     ff,
-    { stats_less_than: null, ff_less_than: 3 },
+    { stats_less_than: null, ff_less_than: 3, hide_unavailable: false },
+    NOW,
   );
   // 1 has FF 4.5 (hidden); 2 is no_data (kept); 3 has no lookup yet (kept).
   expect(rows.map((r) => (r.kind === "player" ? r.player_id : null))).toEqual([
@@ -178,10 +187,16 @@ test("ff filter hides rows with known FF at/above the limit, unknown stays", () 
 });
 
 test("faction members filter individually; card survives while any member passes", () => {
-  const rows = build_board_view([faction()], EMPTY_FF, {
-    stats_less_than: 500000000,
-    ff_less_than: null,
-  });
+  const rows = build_board_view(
+    [faction()],
+    EMPTY_FF,
+    {
+      stats_less_than: 500000000,
+      ff_less_than: null,
+      hide_unavailable: false,
+    },
+    NOW,
+  );
   const card = rows[0];
   if (card?.kind !== "faction") throw new Error("expected faction card");
   // Blastoise (950m) filtered out; Wartortle (unknown) and Squirtle (120m) stay.
@@ -203,13 +218,19 @@ test("a faction card disappears only when every member is filtered out", () => {
       }),
     ],
     EMPTY_FF,
-    { stats_less_than: 500000000, ff_less_than: null },
+    { stats_less_than: 500000000, ff_less_than: null, hide_unavailable: false },
+    NOW,
   );
   expect(rows).toHaveLength(0);
 });
 
 test("rows carry the claim target hint: player id for players, faction id for members", () => {
-  const rows = build_board_view([player(), faction()], EMPTY_FF, NO_FILTERS);
+  const rows = build_board_view(
+    [player(), faction()],
+    EMPTY_FF,
+    NO_FILTERS,
+    NOW,
+  );
   const [p, f] = rows;
   if (p?.kind !== "player" || f?.kind !== "faction") {
     throw new Error("unexpected row kinds");
@@ -230,6 +251,7 @@ test("tiers are ordered by price descending so the first tier is the top tier", 
     ],
     EMPTY_FF,
     NO_FILTERS,
+    NOW,
   );
   expect(rows[0]?.tiers.map((t) => t.price_per_hit)).toEqual([700000, 500000]);
 });
@@ -282,4 +304,185 @@ test("ff_ids_to_load covers player targets and only expanded factions' members",
   expect(ff_ids_to_load(targets, [6731])).toEqual([
     267456763, 400001, 400002, 400003,
   ]);
+});
+
+const status = (
+  state: string | null,
+  until: number | null = null,
+  description: string | null = null,
+) => ({ state, description, until });
+
+test("resolve_board_status: missing or null state is unknown and available", () => {
+  for (const s of [undefined, null, status(null), status("")]) {
+    const view = resolve_board_status(s, NOW);
+    expect(view).toEqual({ kind: "unknown" });
+    expect(is_status_available(view)).toBe(true);
+  }
+});
+
+test("resolve_board_status: Okay is available", () => {
+  const view = resolve_board_status(status("Okay", 0), NOW);
+  expect(view).toEqual({ kind: "okay" });
+  expect(is_status_available(view)).toBe(true);
+});
+
+test("resolve_board_status: Hospital and Jail with a future until count down", () => {
+  for (const state of ["Hospital", "Jail"]) {
+    const view = resolve_board_status(status(state, NOW + 600), NOW);
+    expect(view).toEqual({ kind: "timed", state, remaining: 600 });
+    expect(is_status_available(view)).toBe(false);
+  }
+});
+
+test("resolve_board_status: Hospital and Jail past until become Okay? and available", () => {
+  for (const state of ["Hospital", "Jail"]) {
+    for (const until of [NOW, NOW - 30]) {
+      const view = resolve_board_status(status(state, until), NOW);
+      expect(view).toEqual({ kind: "okay_guess" });
+      expect(is_status_available(view)).toBe(true);
+    }
+  }
+});
+
+test("resolve_board_status: Hospital and Jail without an until stay static and unavailable", () => {
+  // Torn sends 0 rather than null when there is no timer.
+  for (const state of ["Hospital", "Jail"]) {
+    for (const until of [null, 0]) {
+      const view = resolve_board_status(status(state, until), NOW);
+      expect(view).toEqual({ kind: "static", state, unavailable: true });
+      expect(is_status_available(view)).toBe(false);
+    }
+  }
+});
+
+test("resolve_board_status: Traveling ignores until, even an expired one", () => {
+  for (const until of [null, 0, NOW - 30, NOW + 600]) {
+    const view = resolve_board_status(
+      status("Traveling", until, "Returning to Torn from Japan"),
+      NOW,
+    );
+    expect(view).toEqual({
+      kind: "static",
+      state: "Traveling",
+      unavailable: true,
+    });
+    expect(is_status_available(view)).toBe(false);
+  }
+});
+
+test("resolve_board_status: Abroad and Fallen are unavailable", () => {
+  for (const state of ["Abroad", "Fallen"]) {
+    const view = resolve_board_status(status(state, 0), NOW);
+    expect(view).toEqual({ kind: "static", state, unavailable: true });
+    expect(is_status_available(view)).toBe(false);
+  }
+});
+
+test("resolve_board_status: unrecognized states show raw and stay available", () => {
+  for (const state of ["Dormant", "Awoken", "Hibernating"]) {
+    const view = resolve_board_status(status(state, NOW + 600), NOW);
+    expect(view).toEqual({ kind: "static", state, unavailable: false });
+    expect(is_status_available(view)).toBe(true);
+  }
+});
+
+const HIDE_UNAVAILABLE = { ...NO_FILTERS, hide_unavailable: true };
+
+const row_ids = (rows: ReturnType<typeof build_board_view>) =>
+  rows.flatMap((r) =>
+    r.kind === "player" ? [r.player_id] : r.members.map((m) => m.player_id),
+  );
+
+test("hide_unavailable hides unavailable player targets and keeps the rest", () => {
+  const targets = [
+    player({ target_player_id: 1, status: status("Okay", 0) }),
+    player({ target_player_id: 2, status: status("Hospital", NOW + 600) }),
+    player({ target_player_id: 3, status: status("Jail", NOW + 600) }),
+    player({ target_player_id: 4, status: status("Traveling", 0) }),
+    player({ target_player_id: 5, status: status("Abroad", 0) }),
+    player({ target_player_id: 6, status: status("Fallen", 0) }),
+    player({ target_player_id: 7, status: status("Hospital", NOW - 1) }),
+    player({ target_player_id: 8, status: status("Dormant", 0) }),
+    player({ target_player_id: 9, status: null }),
+    // No status fields at all, as in responses before spec v1.15.0.
+    player({ target_player_id: 10 }),
+  ];
+  expect(
+    row_ids(build_board_view(targets, EMPTY_FF, HIDE_UNAVAILABLE, NOW)),
+  ).toEqual([1, 7, 8, 9, 10]);
+  expect(
+    row_ids(build_board_view(targets, EMPTY_FF, NO_FILTERS, NOW)),
+  ).toHaveLength(10);
+});
+
+test("hide_unavailable shows a Hospital target again once its timer runs out", () => {
+  const targets = [player({ status: status("Hospital", NOW + 60) })];
+  expect(
+    build_board_view(targets, EMPTY_FF, HIDE_UNAVAILABLE, NOW),
+  ).toHaveLength(0);
+  expect(
+    build_board_view(targets, EMPTY_FF, HIDE_UNAVAILABLE, NOW + 60),
+  ).toHaveLength(1);
+});
+
+test("hide_unavailable also applies to the viewer's own bounties", () => {
+  const own = { disabled: true, disabled_reason: "buyer" as const };
+  const rows = build_board_view(
+    [
+      player({ ...own, target_player_id: 1, status: status("Hospital", 0) }),
+      player({ ...own, target_player_id: 2, status: status("Okay", 0) }),
+    ],
+    EMPTY_FF,
+    HIDE_UNAVAILABLE,
+    NOW,
+  );
+  expect(row_ids(rows)).toEqual([2]);
+});
+
+test("hide_unavailable filters faction members and hides an all-unavailable card", () => {
+  const statuses = [
+    status("Hospital", NOW + 600),
+    status("Okay", 0),
+    undefined,
+  ];
+  const mixed = faction({
+    members: FACTION_TARGET.members.map((m, i) => ({
+      ...m,
+      status: statuses[i],
+    })),
+  });
+  expect(
+    row_ids(build_board_view([mixed], EMPTY_FF, HIDE_UNAVAILABLE, NOW)),
+  ).toEqual([400002, 400003]);
+
+  const all_out = faction({
+    members: FACTION_TARGET.members.map((m) => ({
+      ...m,
+      status: status("Traveling", 0),
+    })),
+  });
+  expect(
+    build_board_view([all_out], EMPTY_FF, HIDE_UNAVAILABLE, NOW),
+  ).toHaveLength(0);
+});
+
+test("row models carry the status fields, null when absent", () => {
+  const [p] = build_board_view(
+    [player({ status: status("Okay", 0), status_last_checked: NOW - 45 })],
+    EMPTY_FF,
+    NO_FILTERS,
+    NOW,
+  );
+  if (p?.kind !== "player") {
+    throw new Error("expected a player row");
+  }
+  expect(p.status).toEqual(status("Okay", 0));
+  expect(p.status_last_checked).toEqual(NOW - 45);
+
+  const [card] = build_board_view([faction()], EMPTY_FF, NO_FILTERS, NOW);
+  if (card?.kind !== "faction") {
+    throw new Error("expected a faction card");
+  }
+  expect(card.members[0]?.status).toBeNull();
+  expect(card.members[0]?.status_last_checked).toBeNull();
 });
