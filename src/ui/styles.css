@@ -256,6 +256,9 @@ body {
   --ffscouter-hover-color: #ddd;
   --ffscouter-glow-color: #4caf50;
   --ffscouter-success-color: #4caf50;
+  --ffscouter-status-okay-color: #2e7d32;
+  --ffscouter-status-out-color: #c62828;
+  --ffscouter-status-away-color: #1565c0;
   --ffscouter-marker-scale: 1;
   --ffscouter-arrow-width: calc(20px * var(--ffscouter-marker-scale));
   --ffscouter-bubble-font-size: calc(8.5px * var(--ffscouter-marker-scale));
@@ -275,6 +278,9 @@ body.dark-mode {
   --ffscouter-hover-color: #555;
   --ffscouter-glow-color: #4caf50;
   --ffscouter-success-color: #4caf50;
+  --ffscouter-status-okay-color: #81c784;
+  --ffscouter-status-out-color: #ef7070;
+  --ffscouter-status-away-color: #64b5f6;
   --ffscouter-stat-badge-outline-color: #000;
 }
 

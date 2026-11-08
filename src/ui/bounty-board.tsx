@@ -16,7 +16,8 @@ import { ffscouter } from "@utils/ffscouter";
 import logger from "@utils/logger";
 import default_storage from "@utils/storage";
 import { parse_suffix_number } from "@utils/strings";
-import type { FFData, PlayerId } from "@utils/types";
+import { get_current_time_seconds } from "@utils/time";
+import type { FFData, PlayerId, TornTimestampSec } from "@utils/types";
 import { useEffect, useMemo, useReducer, useState } from "react";
 import { cls } from "./bounty-board-classes";
 import {
@@ -46,6 +47,7 @@ type BountyBoardViewState = {
   // Raw input text, parsed at filter time ("2.5b" for stats).
   stats_less_than: string;
   ff_less_than: string;
+  hide_unavailable: boolean;
   expanded_tiers: string[];
   expanded_factions: number[];
   minimized: boolean;
@@ -54,6 +56,7 @@ type BountyBoardViewState = {
 const DEFAULT_VIEW_STATE: BountyBoardViewState = {
   stats_less_than: "",
   ff_less_than: "",
+  hide_unavailable: false,
   expanded_tiers: [],
   expanded_factions: [],
   minimized: false,
@@ -81,6 +84,18 @@ function useViewState() {
 
 function toggle_in<T>(list: T[], item: T): T[] {
   return list.includes(item) ? list.filter((x) => x !== item) : [...list, item];
+}
+
+// Torn Clock "now", ticking once a second for status countdowns and the
+// time-driven "Hide unavailable" re-check. The body unmounts while the board
+// is minimized, so the timer only runs while the board is visible.
+function useTornNow(): TornTimestampSec {
+  const [now, setNow] = useState(get_current_time_seconds);
+  useEffect(() => {
+    const id = setInterval(() => setNow(get_current_time_seconds()), 1000);
+    return () => clearInterval(id);
+  }, []);
+  return now;
 }
 
 function parse_ff_limit(raw: string): number | null {
@@ -296,12 +311,14 @@ function BountyBoardBody({
     () => ({
       stats_less_than: parse_suffix_number(view.stats_less_than),
       ff_less_than: parse_ff_limit(view.ff_less_than),
+      hide_unavailable: view.hide_unavailable,
     }),
-    [view.stats_less_than, view.ff_less_than],
+    [view.stats_less_than, view.ff_less_than, view.hide_unavailable],
   );
+  const now = useTornNow();
   const rows = useMemo(
-    () => (targets ? build_board_view(targets, ffMap, filters) : []),
-    [targets, ffMap, filters],
+    () => (targets ? build_board_view(targets, ffMap, filters, now) : []),
+    [targets, ffMap, filters, now],
   );
 
   // Fire-and-acknowledge: no claim progress or payout state is ever shown —
@@ -325,6 +342,7 @@ function BountyBoardBody({
       key={row.row_key}
       row={row}
       ff={ffMap.get(row.player_id)}
+      now={now}
       expanded={view.expanded_tiers.includes(row.row_key)}
       onToggleExpanded={(key) =>
         updateView({ expanded_tiers: toggle_in(view.expanded_tiers, key) })
@@ -379,6 +397,14 @@ function BountyBoardBody({
             value={view.ff_less_than}
             onChange={(e) => updateView({ ff_less_than: e.target.value })}
           />
+        </label>
+        <label className={cls.filter}>
+          <input
+            type="checkbox"
+            checked={view.hide_unavailable}
+            onChange={(e) => updateView({ hide_unavailable: e.target.checked })}
+          />
+          Hide unavailable
         </label>
       </div>
       {rows.length === 0 ? (
