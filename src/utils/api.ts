@@ -11,6 +11,7 @@ import type {
   PlayerId,
   SpySnapshot,
   TornApiKey,
+  TornTimestampSec,
 } from "./types";
 
 /// <reference types="tampermonkey" />
@@ -578,11 +579,22 @@ export type BountyTier = {
   quantity_remaining: number;
 };
 
+// Cached Torn status the backend attaches to board targets and members
+// (spec v1.15.0), refreshed about once a minute. Null fields mean not checked
+// yet; the fields are also absent from older responses, which means the same.
+export type BountyTargetStatus = {
+  state: string | null;
+  description: string | null;
+  until: TornTimestampSec | null;
+};
+
 export type BountyBoardMember = {
   player_id: PlayerId;
   name: string;
   estimate: number | null;
   estimate_available: boolean;
+  status?: BountyTargetStatus | null;
+  status_last_checked?: TornTimestampSec | null;
 };
 
 export type BountyBoardTarget = {
@@ -601,6 +613,8 @@ export type BountyBoardTarget = {
   // Player targets only
   estimate?: number | null;
   estimate_available?: boolean | null;
+  status?: BountyTargetStatus | null;
+  status_last_checked?: TornTimestampSec | null;
   tiers: BountyTier[];
   max_price_per_hit: number;
   // For faction targets this is the single shared pool across all members
