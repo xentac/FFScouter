@@ -815,7 +815,7 @@ export async function getLocalUserId(): Promise<string | null> {
     15_000,
   );
 
-  if (!name || !name.href) {
+  if (!name?.href) {
     log.debug("Failed to find the XID element.");
     return null;
   }

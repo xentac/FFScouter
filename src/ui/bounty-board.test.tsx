@@ -113,12 +113,15 @@ afterEach(() => {
   ffconfig.key = "";
 });
 
+function Shell({ variant }: { variant: "modal" | "section" }) {
+  return <BountyBoard variant={variant} />;
+}
+
 // Two containers, one shared row component: every board behavior must work
 // identically in the desktop modal and the narrow/mobile in-flow section.
 describe.each(["modal", "section"] as const)("%s", (variant) => {
-  const Shell = () => <BountyBoard variant={variant} />;
   test("renders the branded board with enabled targets sorted by top price", async () => {
-    render(<Shell />);
+    render(<Shell variant={variant} />);
     expect(screen.getByRole("heading").textContent).toBe("FF Scouter Bounties");
 
     await screen.findByText("Arcanine");
@@ -135,7 +138,7 @@ describe.each(["modal", "section"] as const)("%s", (variant) => {
   });
 
   test("colors the estimate by the joined FF from the stats cache", async () => {
-    render(<Shell />);
+    render(<Shell variant={variant} />);
     await screen.findByText("Arcanine");
     await waitFor(() => {
       const pill = screen.getByText("2.99b");
@@ -149,7 +152,7 @@ describe.each(["modal", "section"] as const)("%s", (variant) => {
   });
 
   test("expanding a row discloses the rest of the tier ladder", async () => {
-    render(<Shell />);
+    render(<Shell variant={variant} />);
     await screen.findByText("Arcanine");
     expect(document.body.textContent).not.toContain("then $500k × 6");
     fireEvent.click(
@@ -161,7 +164,7 @@ describe.each(["modal", "section"] as const)("%s", (variant) => {
   });
 
   test("a faction card expands into member rows and looks up their FF", async () => {
-    render(<Shell />);
+    render(<Shell variant={variant} />);
     await screen.findByText("Arcanine");
     expect(screen.queryByText("Blastoise")).toBeNull();
     fireEvent.click(
@@ -175,7 +178,7 @@ describe.each(["modal", "section"] as const)("%s", (variant) => {
   });
 
   test("filters narrow rows but never hide unknown-estimate targets", async () => {
-    render(<Shell />);
+    render(<Shell variant={variant} />);
     await screen.findByText("Arcanine");
     fireEvent.click(
       screen.getByRole("button", {
@@ -197,7 +200,7 @@ describe.each(["modal", "section"] as const)("%s", (variant) => {
   });
 
   test("view state (filters, expansion) survives a remount", async () => {
-    const first = render(<Shell />);
+    const first = render(<Shell variant={variant} />);
     await screen.findByText("Arcanine");
     fireEvent.change(
       screen.getByRole("textbox", {
@@ -212,7 +215,7 @@ describe.each(["modal", "section"] as const)("%s", (variant) => {
     );
     first.unmount();
 
-    render(<Shell />);
+    render(<Shell variant={variant} />);
     await screen.findByText("Blastoise");
     expect(
       (
@@ -241,7 +244,7 @@ describe.each(["modal", "section"] as const)("%s", (variant) => {
         ],
       },
     });
-    render(<Shell />);
+    render(<Shell variant={variant} />);
     await screen.findByText("OwnTarget");
     expect(screen.getByText("Your bounty – not claimable by you")).toBeTruthy();
     expect(
@@ -257,7 +260,7 @@ describe.each(["modal", "section"] as const)("%s", (variant) => {
   });
 
   test("Attack honors the bounty attack-open setting", async () => {
-    render(<Shell />);
+    render(<Shell variant={variant} />);
     await screen.findByText("Arcanine");
     fireEvent.click(screen.getByRole("button", { name: "Attack Arcanine" }));
     expect(open_attack_link).toHaveBeenLastCalledWith(267456763, {
@@ -275,7 +278,7 @@ describe.each(["modal", "section"] as const)("%s", (variant) => {
     vi.mocked(bounty_board_cache.submit_claim).mockResolvedValue(
       CLAIM_CREATE_RESPONSE,
     );
-    render(<Shell />);
+    render(<Shell variant={variant} />);
     await screen.findByText("Arcanine");
     fireEvent.click(
       screen.getByRole("button", { name: "Claim bounty on Arcanine" }),
@@ -294,7 +297,7 @@ describe.each(["modal", "section"] as const)("%s", (variant) => {
     vi.mocked(bounty_board_cache.submit_claim).mockRejectedValue(
       api_error(ERROR_NO_OPEN_BOUNTIES, 409),
     );
-    render(<Shell />);
+    render(<Shell variant={variant} />);
     await screen.findByText("Arcanine");
     fireEvent.click(
       screen.getByRole("button", {
@@ -325,7 +328,7 @@ describe.each(["modal", "section"] as const)("%s", (variant) => {
     });
 
     silence_attack_bounty();
-    render(<Shell />);
+    render(<Shell variant={variant} />);
     const confirm = await screen.findByRole("button", {
       name: "I have read the rules and data policy",
     });
@@ -352,7 +355,7 @@ describe.each(["modal", "section"] as const)("%s", (variant) => {
     );
     vi.mocked(accept_bounty_seller_policy).mockRejectedValue(new Error("nope"));
 
-    render(<Shell />);
+    render(<Shell variant={variant} />);
     fireEvent.click(
       await screen.findByRole("button", {
         name: "I have read the rules and data policy",
@@ -371,7 +374,7 @@ describe.each(["modal", "section"] as const)("%s", (variant) => {
 
   test("a missing key shows the key nudge and never fetches the board", async () => {
     ffconfig.key = "";
-    render(<Shell />);
+    render(<Shell variant={variant} />);
     expect(document.body.textContent).toContain(
       "FF Scouter Bounties need your FF Scouter API key",
     );
@@ -386,7 +389,7 @@ describe.each(["modal", "section"] as const)("%s", (variant) => {
 
   test("an unregistered key shows the nudge (check-key false or board code 6)", async () => {
     vi.mocked(check_key_status.is_registered).mockResolvedValue(false);
-    const first = render(<Shell />);
+    const first = render(<Shell variant={variant} />);
     await screen.findByText(/isn't registered/);
     expect(screen.queryByText("Arcanine")).toBeNull();
     first.unmount();
@@ -395,7 +398,7 @@ describe.each(["modal", "section"] as const)("%s", (variant) => {
     vi.mocked(bounty_board_cache.get_board).mockRejectedValue(
       api_error(ERROR_INVALID_KEY, 403),
     );
-    render(<Shell />);
+    render(<Shell variant={variant} />);
     await screen.findByText(/isn't registered/);
   });
 });

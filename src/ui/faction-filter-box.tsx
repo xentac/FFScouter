@@ -216,20 +216,22 @@ export function FFFactionFilterBox({
   const [hasUntilData, setHasUntilData] = useState(initialHasUntilData);
 
   // Refs for async-safe access from debounce callbacks and the imperative handle.
+  // State-backed refs are written at their update sites (applyStatePatch,
+  // loadState and the imperative setters) so they never lag a render; props are
+  // mirrored in an effect to keep render pure.
   const filterStateRef = useRef(filterState);
-  filterStateRef.current = filterState;
   const collapsedRef = useRef(collapsed);
-  collapsedRef.current = collapsed;
   const hasLastActionDataRef = useRef(hasLastActionData);
-  hasLastActionDataRef.current = hasLastActionData;
   const hasUntilDataRef = useRef(hasUntilData);
-  hasUntilDataRef.current = hasUntilData;
   const modeRef = useRef(mode);
-  modeRef.current = mode;
   const filteringDisabledRef = useRef(filteringDisabled);
-  filteringDisabledRef.current = filteringDisabled;
   const onFilterChangeRef = useRef(onFilterChange);
-  onFilterChangeRef.current = onFilterChange;
+
+  useEffect(() => {
+    modeRef.current = mode;
+    filteringDisabledRef.current = filteringDisabled;
+    onFilterChangeRef.current = onFilterChange;
+  }, [mode, filteringDisabled, onFilterChange]);
 
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const wasMobileRef = useRef(is_narrow_layout());
@@ -338,6 +340,7 @@ export function FFFactionFilterBox({
     const newCollapsed = isWar
       ? ffconfig.war_filter_collapsed
       : ffconfig.faction_filter_collapsed;
+    collapsedRef.current = newCollapsed;
     setCollapsed(newCollapsed);
     setColDisplay(
       isWar ? ffconfig.war_col_display : ffconfig.factions_col_display,
@@ -500,6 +503,7 @@ export function FFFactionFilterBox({
     // current intent, while a genuine user gesture flips away from it. Guards
     // against persisting a spurious mount/reload toggle. See ADR 0004.
     if (newCollapsed === collapsedRef.current) return;
+    collapsedRef.current = newCollapsed;
     setCollapsed(newCollapsed);
     if (mode === "war") {
       ffconfig.war_filter_collapsed = newCollapsed;

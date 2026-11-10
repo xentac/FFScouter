@@ -100,7 +100,7 @@ export function get_next_target_index(maxLen: number): number {
 
 export function get_random_chain_target(): FFTarget | null {
   const cached = ffconfig.chain_targets;
-  if (!cached || !cached.targets || cached.targets.length === 0) {
+  if (!cached?.targets || cached.targets.length === 0) {
     return null;
   }
   const index = get_next_target_index(cached.targets.length);
@@ -116,7 +116,7 @@ export function remove_chain_button() {
 
 export function update_anchor_attributes(anchor: HTMLAnchorElement) {
   const cached = ffconfig.chain_targets;
-  if (!cached || !cached.targets || cached.targets.length === 0) {
+  if (!cached?.targets || cached.targets.length === 0) {
     anchor.href = "#";
     anchor.removeAttribute("target");
     return;
@@ -183,7 +183,7 @@ export function create_chain_button() {
     }
 
     const cached = ffconfig.chain_targets;
-    if (!cached || !cached.targets || cached.targets.length === 0) {
+    if (!cached?.targets || cached.targets.length === 0) {
       e.preventDefault();
       const isPrimary =
         (e instanceof MouseEvent && e.button === 0) ||
@@ -192,11 +192,7 @@ export function create_chain_button() {
         toast("No cached targets found. Fetching...", TOAST_LEVEL.WARNING);
         update_ff_targets(true).then(() => {
           const newCached = ffconfig.chain_targets;
-          if (
-            !newCached ||
-            !newCached.targets ||
-            newCached.targets.length === 0
-          ) {
+          if (!newCached?.targets || newCached.targets.length === 0) {
             toast(
               "No targets available matching your criteria.",
               TOAST_LEVEL.ERROR,

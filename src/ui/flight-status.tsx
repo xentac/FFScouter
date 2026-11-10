@@ -64,8 +64,11 @@ export function FFFlightProfileStatus({ playerId, compact = false }: Props) {
   }
 
   // Ref so interval callbacks can read the latest data without stale closures.
+  // Synced in an effect (not during render) so render stays pure.
   const dataRef = useRef<PlayerFlightsResponse | null>(null);
-  dataRef.current = data;
+  useEffect(() => {
+    dataRef.current = data;
+  }, [data]);
 
   useEffect(() => {
     if (!playerId) return;
