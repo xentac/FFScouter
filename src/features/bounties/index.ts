@@ -17,8 +17,12 @@ import { type Feature, StartTime } from "../feature";
 // hash before its router runs, "#!p=main", and "#/!p=main&start=20" from its
 // in-page links (pagination, the newspaper "bounties" link). Any route whose
 // p is absent or "main" is the main list; "#/p=add", "#!p=mine" are not.
+const HASH_ROUTE_PREFIX = /^#\/?!?/;
+
 function is_bounty_main_route(): boolean {
-  const params = new URLSearchParams(location.hash.replace(/^#\/?!?/, ""));
+  const params = new URLSearchParams(
+    location.hash.replace(HASH_ROUTE_PREFIX, ""),
+  );
   const route = params.get("p");
   return route === null || route === "main";
 }

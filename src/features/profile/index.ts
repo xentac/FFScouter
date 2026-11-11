@@ -44,7 +44,7 @@ export default {
     if (!ffconfig.key) {
       info_line.innerHTML =
         "[FF Scouter V2]: Limited API key needed - enter in FF Scouter Settings below";
-      inject_info_line(info_line);
+      void inject_info_line(info_line);
       return;
     }
     // Extract the player id from the URL
@@ -57,7 +57,7 @@ export default {
       createElement(FFHeaderLine, { playerId: player_id, showExplainer: true }),
       info_line,
     );
-    inject_info_line(info_line);
+    void inject_info_line(info_line);
   },
 
   httpIntercept: {

@@ -21,7 +21,7 @@ const monitor_mini_profile_root = () => {
   const miniprofile = document.querySelector("#profile-mini-root");
   if (miniprofile) {
     log.debug("profile-mini-root already exists.");
-    setup_mini_flight_observer();
+    void setup_mini_flight_observer();
     return;
   }
 
@@ -29,7 +29,7 @@ const monitor_mini_profile_root = () => {
     for (const mutation of mutations) {
       for (const node of mutation.addedNodes) {
         if (node instanceof HTMLElement && node.id === "profile-mini-root") {
-          setup_mini_flight_observer();
+          void setup_mini_flight_observer();
           mini_body_observer.disconnect();
         }
       }
@@ -105,7 +105,7 @@ const setup_mini_flight_observer = async () => {
       }
     } else {
       container.remove();
-      ffscouter.clear_flight_cache(player_id);
+      void ffscouter.clear_flight_cache(player_id);
     }
   });
 

@@ -72,12 +72,16 @@ export async function update_ff_targets(force = false): Promise<void> {
     });
 
     if (response?.targets) {
+      // The cache is a module-level snapshot replaced wholesale under a guard
+      // that already checked expiry/filters; the post-await write is intended.
+      // biome-ignore lint/nursery/useAtomicUpdates: module-level cache replaced intentionally after fetch
       ffconfig.chain_targets = {
         targets: response.targets,
         expiry: Date.now() + CACHE_LIFETIME_MS,
         last_updated: Date.now(),
         filters: currentFilters,
       };
+      // biome-ignore lint/nursery/useAtomicUpdates: resetting the index is intentional after a successful fetch
       ffconfig.chain_target_index = 0; // Reset index on successful new fetch
       log.info(
         `Chain targets updated successfully: ${response.targets.length} targets found`,
@@ -176,10 +180,13 @@ export function create_chain_button() {
       if (e.key !== "Enter") {
         return;
       }
-    } else if (e instanceof MouseEvent) {
-      if (e.button !== 0 && e.button !== 1 && e.button !== 2) {
-        return;
-      }
+    } else if (
+      e instanceof MouseEvent &&
+      e.button !== 0 &&
+      e.button !== 1 &&
+      e.button !== 2
+    ) {
+      return;
     }
 
     const cached = ffconfig.chain_targets;
@@ -190,7 +197,7 @@ export function create_chain_button() {
         e instanceof KeyboardEvent;
       if (isPrimary) {
         toast("No cached targets found. Fetching...", TOAST_LEVEL.WARNING);
-        update_ff_targets(true).then(() => {
+        void update_ff_targets(true).then(() => {
           const newCached = ffconfig.chain_targets;
           if (!newCached?.targets || newCached.targets.length === 0) {
             toast(
@@ -234,7 +241,7 @@ export default {
     }
 
     // Try fetching/updating targets (async background)
-    update_ff_targets().then(() => {
+    void update_ff_targets().then(() => {
       const button = document.getElementById(
         "ff-scouter-chain-btn",
       ) as HTMLAnchorElement | null;
