@@ -17,7 +17,7 @@ import logger from "@utils/logger";
 import default_storage from "@utils/storage";
 import { parse_suffix_number } from "@utils/strings";
 import type { FFData, PlayerId } from "@utils/types";
-import { useEffect, useMemo, useReducer, useState } from "react";
+import { useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { cls } from "./bounty-board-classes";
 import {
   api_error_message,
@@ -70,12 +70,13 @@ function load_view_state(): BountyBoardViewState {
 function useViewState() {
   const [view, setView] = useState<BountyBoardViewState>(load_view_state);
   const update = (patch: Partial<BountyBoardViewState>) => {
-    setView((prev) => {
-      const next = { ...prev, ...patch };
-      default_storage.set(VIEW_STATE_KEY, next);
-      return next;
-    });
+    setView((prev) => ({ ...prev, ...patch }));
   };
+  // Persist committed view state. The initial mount write stores the merged
+  // defaults, which is the same shape load_view_state already produces.
+  useEffect(() => {
+    default_storage.set(VIEW_STATE_KEY, view);
+  }, [view]);
   return [view, update] as const;
 }
 
@@ -187,6 +188,7 @@ function ConsentGate({ onAccepted }: { onAccepted: () => void }) {
       onAccepted();
     } catch (err) {
       toast(api_error_message(err), TOAST_LEVEL.ERROR);
+    } finally {
       setSubmitting(false);
     }
   };
@@ -270,7 +272,12 @@ function BountyBoardBody({
   // FF is joined from the batched stats cache, not the board payload, so a
   // row's FF may be slightly staler than its estimate.
   const targets = state.phase === "ready" ? state.response.board.targets : null;
+  const mounted = useRef(false);
   useEffect(() => {
+    // Re-armed synchronously at the start of each run, so only unmount leaves
+    // it false when a result settles. ffRequested keeps the ids, so results
+    // must not be dropped when the expansion changes.
+    mounted.current = true;
     if (!targets) return;
     const ids = ff_ids_to_load(targets, view.expanded_factions).filter(
       (id) => !ffRequested.has(id),
@@ -281,6 +288,7 @@ function BountyBoardBody({
     ffscouter.complete();
     Promise.all(lookups)
       .then((results) => {
+        if (!mounted.current) return;
         setFfMap((prev) => {
           const next = new Map(prev);
           for (const data of results) next.set(data.player_id, data);
@@ -290,6 +298,9 @@ function BountyBoardBody({
       .catch((err: unknown) => {
         log.error(err);
       });
+    return () => {
+      mounted.current = false;
+    };
   }, [targets, view.expanded_factions, ffRequested]);
 
   const filters = useMemo(
@@ -302,6 +313,15 @@ function BountyBoardBody({
   const rows = useMemo(
     () => (targets ? build_board_view(targets, ffMap, filters) : []),
     [targets, ffMap, filters],
+  );
+  // Set lookups keep row rendering from scanning the expanded lists per row.
+  const expandedFactions = useMemo(
+    () => new Set(view.expanded_factions),
+    [view.expanded_factions],
+  );
+  const expandedTiers = useMemo(
+    () => new Set(view.expanded_tiers),
+    [view.expanded_tiers],
   );
 
   // Fire-and-acknowledge: no claim progress or payout state is ever shown —
@@ -325,7 +345,7 @@ function BountyBoardBody({
       key={row.row_key}
       row={row}
       ff={ffMap.get(row.player_id)}
-      expanded={view.expanded_tiers.includes(row.row_key)}
+      expanded={expandedTiers.has(row.row_key)}
       onToggleExpanded={(key) =>
         updateView({ expanded_tiers: toggle_in(view.expanded_tiers, key) })
       }
@@ -394,7 +414,7 @@ function BountyBoardBody({
               <FactionBountyCard
                 key={row.row_key}
                 card={row}
-                expanded={view.expanded_factions.includes(row.faction_id)}
+                expanded={expandedFactions.has(row.faction_id)}
                 onToggleExpanded={(id) =>
                   updateView({
                     expanded_factions: toggle_in(view.expanded_factions, id),
