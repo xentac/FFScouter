@@ -22,6 +22,8 @@ import travelPeopleList from "./__fixtures__/torn-markup/2026-08-16/travel-peopl
 import advancedSearchUserList from "./__fixtures__/torn-markup/2026-09-07/advanced-search-user-list.html?raw";
 import eliminationsTeamListDesktop from "./__fixtures__/torn-markup/2026-09-07/eliminations-team-list-desktop.html?raw";
 import eliminationsTeamListMobile from "./__fixtures__/torn-markup/2026-09-07/eliminations-team-list-mobile.html?raw";
+import hospitalList from "./__fixtures__/torn-markup/2026-10-26/hospital-list.html?raw";
+import advancedSearchMobileAccordion from "./__fixtures__/torn-markup/2026-10-27/advanced-search-mobile-accordion.html?raw";
 import statusAttack from "./index";
 
 vi.mock("@utils/dom", async (importOriginal) => {
@@ -82,6 +84,39 @@ describe("Online Status Attack Links Feature", () => {
     expect(
       document.body.getAttribute("data-ff-status-attack-enabled"),
     ).toBeNull();
+  });
+
+  test("Hospital list presence dot attacks the row's player, not the attacker in the reason", async () => {
+    document.body.innerHTML = hospitalList;
+    vi.mocked(torn_page).mockImplementation((page) => page === "hospitalview");
+
+    const actualDom =
+      await vi.importActual<typeof import("@utils/dom")>("@utils/dom");
+    vi.mocked(get_player_id_in_element).mockImplementation(
+      actualDom.get_player_id_in_element,
+    );
+
+    const rows: { name: string; playerId: number }[] = [
+      { name: "PlayerOne", playerId: 1000001 }, // Offline
+      { name: "PlayerTwo", playerId: 1000002 }, // Online, "Hospitalized by" PlayerThree
+    ];
+
+    await statusAttack.run();
+
+    for (const { name, playerId } of rows) {
+      const statusDot = document
+        .querySelector(`a.user.name[title^="${name} "]`)
+        ?.closest("li")
+        ?.querySelector('ul.singleicon li[id^="icon"].iconShow') as HTMLElement;
+      expect(statusDot).not.toBeNull();
+
+      statusDot.click();
+
+      expect(openSpy).toHaveBeenLastCalledWith(
+        `https://www.torn.com/page.php?sid=attack&user2ID=${playerId}`,
+        "_blank",
+      );
+    }
   });
 
   test("Faction page click triggers attack in a new tab", async () => {
@@ -611,6 +646,81 @@ describe("Online Status Attack Links Feature", () => {
         "_blank",
       );
     }
+  });
+
+  describe("Advanced Search mobile accordion rows", () => {
+    // On mobile the .expander is a jQuery UI accordion header
+    // (tabindex="-1") wrapping the honor bar image. A tap that focuses it
+    // makes Android WebView report the honor image as the hit test URL, which
+    // Torn PDA opens instead of the window.open URL.
+    beforeEach(async () => {
+      document.body.innerHTML = advancedSearchMobileAccordion;
+      vi.mocked(torn_page).mockImplementation(() => false);
+
+      const actualDom =
+        await vi.importActual<typeof import("@utils/dom")>("@utils/dom");
+      vi.mocked(get_player_id_in_element).mockImplementation(
+        actualDom.get_player_id_in_element,
+      );
+    });
+
+    function mouseDown(el: Element) {
+      const event = new MouseEvent("mousedown", {
+        bubbles: true,
+        cancelable: true,
+      });
+      el.dispatchEvent(event);
+      return event;
+    }
+
+    test("mousedown on the presence dot is prevented so the header doesn't take focus, and the click still opens the attack", async () => {
+      await statusAttack.run();
+
+      const presenceDot = document
+        .querySelector("ul.singleicon")
+        ?.querySelector("li.iconShow a") as HTMLElement;
+      expect(presenceDot).not.toBeNull();
+
+      expect(mouseDown(presenceDot).defaultPrevented).toBe(true);
+
+      presenceDot.click();
+
+      expect(openSpy).toHaveBeenLastCalledWith(
+        "https://www.torn.com/page.php?sid=attack&user2ID=1000001",
+        "_blank",
+      );
+    });
+
+    test("mousedown on the name link is not prevented", async () => {
+      await statusAttack.run();
+
+      const nameLink = document.querySelector("a.user.name") as HTMLElement;
+      expect(mouseDown(nameLink).defaultPrevented).toBe(false);
+    });
+
+    test("mousedown on your own presence dot is not prevented", async () => {
+      vi.mocked(getLocalUserId).mockResolvedValue("1000001");
+
+      await statusAttack.run();
+      // Let fetchLocalUserId() resolve
+      await Promise.resolve();
+
+      const presenceDot = document
+        .querySelector("ul.singleicon")
+        ?.querySelector("li.iconShow a") as HTMLElement;
+      expect(mouseDown(presenceDot).defaultPrevented).toBe(false);
+    });
+
+    test("mousedown on the presence dot is not prevented when the feature is off", async () => {
+      ffconfig.status_attack_links_enabled = false;
+
+      await statusAttack.run();
+
+      const presenceDot = document
+        .querySelector("ul.singleicon")
+        ?.querySelector("li.iconShow a") as HTMLElement;
+      expect(mouseDown(presenceDot).defaultPrevented).toBe(false);
+    });
   });
 
   test("Advanced Search user-list real markup: clicking a lower-tray badge is not intercepted", async () => {
