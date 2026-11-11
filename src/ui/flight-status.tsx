@@ -2,6 +2,7 @@ import { FFApiError } from "@utils/api";
 import { check_key_status } from "@utils/check_key";
 import { ffscouter } from "@utils/ffscouter";
 import logger from "@utils/logger";
+import { format_duration_human } from "@utils/strings";
 import { get_current_time_seconds } from "@utils/time";
 import type { PlayerFlightsResponse } from "@utils/types";
 import { useEffect, useRef, useState } from "react";
@@ -9,25 +10,6 @@ import { useEffect, useRef, useState } from "react";
 const log = logger.child("ui");
 
 const PREMIUM_UPGRADE_URL = "https://ffscouter.com/premium";
-
-function format_duration_human(totalSeconds: number, compact: boolean): string {
-  const clampedSeconds = Math.max(0, Math.floor(totalSeconds));
-  const hours = Math.floor(clampedSeconds / 3600);
-  const minutes = Math.floor((clampedSeconds % 3600) / 60);
-  const seconds = clampedSeconds % 60;
-  const parts: string[] = [];
-  if (hours > 0) {
-    parts.push(`${hours}h`);
-  }
-  if (hours > 0 || minutes > 0) {
-    parts.push(`${minutes}m`);
-  }
-  parts.push(`${seconds}s`);
-  if (compact) {
-    return parts.join("");
-  }
-  return parts.join(" ");
-}
 
 function format_tct_time(unixSeconds: number): string | null {
   if (!Number.isFinite(unixSeconds)) return null;

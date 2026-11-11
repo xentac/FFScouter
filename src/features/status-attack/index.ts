@@ -122,11 +122,12 @@ async function fetchLocalUserId() {
   }
 }
 
-function handleStatusClick(e: MouseEvent) {
-  if (!ffconfig.status_attack_links_enabled) return;
-
-  const target = e.target as HTMLElement;
-
+// Finds the status element under `target` and the player it belongs to.
+// Returns null when `target` is not a status element; playerId is null when
+// no extraction step matched.
+function findStatusTarget(
+  target: HTMLElement,
+): { statusEl: Element; playerId: number | null } | null {
   // Intercept click on the status wrapper or icons
   const statusEl = target.closest(`
     [class*="userStatusWrap__"],
@@ -146,7 +147,7 @@ function handleStatusClick(e: MouseEvent) {
     [class*="dataGridRow__"] [class*="status__"] > span
   `);
 
-  if (!statusEl) return;
+  if (!statusEl) return null;
 
   // Extract Player ID based on page contexts
   let playerId: number | null = null;
@@ -263,6 +264,30 @@ function handleStatusClick(e: MouseEvent) {
     }
   }
 
+  // 11. Hospital list rows (hospitalview.php): same .user-info-list-wrap
+  // wrapper as Advanced Search, but with no .expander, so step 8 misses them.
+  // The row's reason can say "Hospitalized by <attacker>" with the attacker's
+  // own XID= link, so extract from the name cell only; scanning the whole row
+  // would only pick the right player because the name link happens to come
+  // first.
+  if (!playerId) {
+    const row = statusEl.closest(".user-info-list-wrap > li");
+    const nameCell = row?.querySelector(".user-wrap.user-name");
+    if (nameCell) {
+      playerId = get_player_id_in_element(nameCell);
+    }
+  }
+
+  return { statusEl, playerId };
+}
+
+function handleStatusClick(e: MouseEvent) {
+  if (!ffconfig.status_attack_links_enabled) return;
+
+  const found = findStatusTarget(e.target as HTMLElement);
+  if (!found) return;
+  const { statusEl, playerId } = found;
+
   if (!playerId) {
     log.debug("Failed to extract playerId from status icon click");
     return;
@@ -287,6 +312,23 @@ function handleStatusClick(e: MouseEvent) {
   });
 }
 
+// Keep a status tap that the click handler will intercept from moving focus.
+// On mobile, Torn's Advanced Search rows are jQuery UI accordion headers
+// (tabindex="-1"), so a tap on the presence dot focuses the whole header.
+// Android WebView then builds its hit test from the focused element's first
+// <img> (the honor bar), and Torn PDA on Android opens the hit test's URL
+// instead of the one passed to window.open. Without the focus change the hit
+// test has no URL and PDA opens the window.open URL.
+function handleStatusMouseDown(e: MouseEvent) {
+  if (!ffconfig.status_attack_links_enabled) return;
+
+  const found = findStatusTarget(e.target as HTMLElement);
+  if (!found?.playerId) return;
+  if (localUserId && found.playerId === localUserId) return;
+
+  e.preventDefault();
+}
+
 export default {
   name: "Online Status Attack Links",
   description:
@@ -308,6 +350,7 @@ export default {
 
     // Use capturing event listener to intercept click before standard navigation links
     document.body.addEventListener("click", handleStatusClick, true);
+    document.body.addEventListener("mousedown", handleStatusMouseDown, true);
 
     window.addEventListener("ff-config-updated", () => {
       updateBodyClass();

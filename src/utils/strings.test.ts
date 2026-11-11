@@ -6,8 +6,10 @@ import {
   format_age_phrase,
   format_bs_estimate,
   format_difficulty_text,
+  format_duration_human,
   format_ff_score,
   format_relative_time,
+  format_short_age,
   format_suffix_number,
   format_timestamp,
   get_contrast_color,
@@ -446,4 +448,19 @@ test("parse_duration_to_seconds parses compound and word-form durations", () => 
   expect(parse_duration_to_seconds("2 minutes")).toEqual(120);
   expect(parse_duration_to_seconds("1 hour")).toEqual(3600);
   expect(parse_duration_to_seconds("2 days")).toEqual(2 * DAY);
+});
+
+test("format_duration_human compact and spaced forms", () => {
+  expect(format_duration_human(3723, true)).toBe("1h2m3s");
+  expect(format_duration_human(3723, false)).toBe("1h 2m 3s");
+  expect(format_duration_human(59, true)).toBe("59s");
+  expect(format_duration_human(-5, true)).toBe("0s");
+});
+
+test("format_short_age buckets seconds, minutes and hours", () => {
+  expect(format_short_age(45)).toBe("45s");
+  expect(format_short_age(60)).toBe("1m");
+  expect(format_short_age(3599)).toBe("59m");
+  expect(format_short_age(7300)).toBe("2h");
+  expect(format_short_age(-3)).toBe("0s");
 });

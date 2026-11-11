@@ -11,6 +11,7 @@ import type {
   PlayerId,
   SpySnapshot,
   TornApiKey,
+  TornTimestampSec,
 } from "./types";
 
 /// <reference types="tampermonkey" />
@@ -578,11 +579,22 @@ export type BountyTier = {
   quantity_remaining: number;
 };
 
+// Cached Torn status the backend attaches to board targets and members
+// (spec v1.15.0), refreshed about once a minute. Null fields mean not checked
+// yet; the fields are also absent from older responses, which means the same.
+export type BountyTargetStatus = {
+  state: string | null;
+  description: string | null;
+  until: TornTimestampSec | null;
+};
+
 export type BountyBoardMember = {
   player_id: PlayerId;
   name: string;
   estimate: number | null;
   estimate_available: boolean;
+  status?: BountyTargetStatus | null;
+  status_last_checked?: TornTimestampSec | null;
 };
 
 export type BountyBoardTarget = {
@@ -601,6 +613,8 @@ export type BountyBoardTarget = {
   // Player targets only
   estimate?: number | null;
   estimate_available?: boolean | null;
+  status?: BountyTargetStatus | null;
+  status_last_checked?: TornTimestampSec | null;
   tiers: BountyTier[];
   max_price_per_hit: number;
   // For faction targets this is the single shared pool across all members
@@ -703,11 +717,11 @@ export type FFApiBountyBoardResponse =
       blank: true;
     };
 
-// Shared parse/validate step for the bounty endpoints: surfaces the API's
-// code + message (consent 86, unregistered key 6, no open bounties 91,
-// attacks access 87, rate limit 21 with retry_after_seconds) as FFApiError
-// so UI slices can branch on them.
-const parse_bounty_response = <T>(
+// Shared parse/validate step for the bounty and OD Insurance endpoints:
+// surfaces the API's code + message (consent 86, unregistered key 6, no open
+// bounties 91, attacks access 87, rate limit 21 with retry_after_seconds) as
+// FFApiError so UI slices can branch on them.
+const parse_ff_response = <T>(
   resp: Tampermonkey.Response<object>,
   label: string,
   ok_statuses: number[] = [200],
@@ -780,7 +794,7 @@ export const query_bounty_seller_board = async (
     return { blank: true };
   }
 
-  const { result, limits } = parse_bounty_response<BountySellerBoardResponse>(
+  const { result, limits } = parse_ff_response<BountySellerBoardResponse>(
     resp,
     "query_bounty_seller_board",
   );
@@ -837,7 +851,7 @@ export const accept_bounty_seller_policy = async (
     return { blank: true };
   }
 
-  const { result, limits } = parse_bounty_response<BountyPolicyAcceptResponse>(
+  const { result, limits } = parse_ff_response<BountyPolicyAcceptResponse>(
     resp,
     "accept_bounty_seller_policy",
   );
@@ -900,10 +914,161 @@ export const submit_bounty_seller_claim = async (
   }
 
   // 200 = existing open claim reused, 201 = claim created
-  const { result, limits } = parse_bounty_response<BountyClaimCreateResponse>(
+  const { result, limits } = parse_ff_response<BountyClaimCreateResponse>(
     resp,
     "submit_bounty_seller_claim",
     [200, 201],
   );
   return { result, blank: false, limits };
+};
+
+// OD Insurance: a paid ffscouter.com service. Players send Xanax with a plan
+// message to the service manager and get paid out in Xanax on an overdose.
+// The plans endpoint is public (no key) and rate-limited to 30/min per IP;
+// its only documented error is 429 code 21 (spec 1.22.0).
+export type OdInsurancePlanPayment = {
+  // null when the service has no manager configured: the plan is not payable
+  recipient_player_id: PlayerId | null;
+  recipient_name: string | null;
+  xanax_quantity: number;
+  // The exact item message to send with the Xanax, e.g. "insurance:ecstasy"
+  message: string;
+};
+
+// The Torn item a plan covers (spec 1.21.0). The spec allows null members:
+// 1.21.0 sent nulls until the service backfilled each plan, and 1.22.0 says
+// plans always set them. A plan with a null item_id still lists in the
+// modal, but no item row gets a button for it.
+export type OdInsuranceCoveredItem = {
+  item_id: number | null;
+  name: string | null;
+};
+
+export type OdInsurancePlan = {
+  name: string;
+  plan_key: string;
+  xanax_quantity: number;
+  // Whole-number cap; 1 means the exact quantity only
+  max_multiplier: number;
+  duration_seconds: number;
+  duration_label: string;
+  standard_payout_xanax: number;
+  overdose_payout_xanax: number;
+  covered_item: OdInsuranceCoveredItem;
+  payment: OdInsurancePlanPayment;
+};
+
+export type OdInsurancePlansResponse = {
+  manager_player_id: PlayerId | null;
+  manager_name: string | null;
+  plans: OdInsurancePlan[];
+};
+
+export type FFApiOdInsurancePlansResponse =
+  | {
+      result: OdInsurancePlansResponse;
+      blank: false;
+      limits?: FFApiRateLimits;
+    }
+  | {
+      blank: true;
+    };
+
+// The OD Insurance guide on ffscouter.com: how the service works and what it
+// pays. The modal links it, as Torn's rules ask scripts to link each
+// feature's terms.
+export const OD_INSURANCE_GUIDE_URL =
+  "https://ffscouter.com/guides/od-insurance";
+
+export const make_od_insurance_plans_url = () => {
+  return `${FF_SCOUTER_BASE_URL}/od-insurance/plans`;
+};
+
+const is_int = (v: unknown): v is number => Number.isInteger(v);
+const is_str = (v: unknown): v is string => typeof v === "string";
+const is_nullable = <T>(v: unknown, check: (v: unknown) => v is T) =>
+  v === null || check(v);
+
+// The UI prints every one of these fields, so a plan missing one would show
+// "undefined Xanax" or copy an empty message. A null recipient is allowed
+// here (the spec permits it); the feature decides what an unpayable plan
+// means.
+export const is_od_insurance_plan = (v: unknown): v is OdInsurancePlan => {
+  if (typeof v !== "object" || v === null) return false;
+  const plan = v as { [K in keyof OdInsurancePlan]?: unknown };
+  const payment = plan.payment as
+    | { [K in keyof OdInsurancePlanPayment]?: unknown }
+    | null
+    | undefined;
+  const covered = plan.covered_item as
+    | { [K in keyof OdInsuranceCoveredItem]?: unknown }
+    | null
+    | undefined;
+  return (
+    is_str(plan.name) &&
+    is_str(plan.plan_key) &&
+    is_int(plan.xanax_quantity) &&
+    is_int(plan.max_multiplier) &&
+    is_int(plan.duration_seconds) &&
+    is_str(plan.duration_label) &&
+    is_int(plan.standard_payout_xanax) &&
+    is_int(plan.overdose_payout_xanax) &&
+    typeof covered === "object" &&
+    covered !== null &&
+    is_nullable(covered.item_id, is_int) &&
+    is_nullable(covered.name, is_str) &&
+    typeof payment === "object" &&
+    payment !== null &&
+    is_nullable(payment.recipient_player_id, is_int) &&
+    is_nullable(payment.recipient_name, is_str) &&
+    is_int(payment.xanax_quantity) &&
+    is_str(payment.message) &&
+    payment.message !== ""
+  );
+};
+
+export const query_od_insurance_plans = async (
+  requester: typeof gmRequest = gmRequest,
+): Promise<FFApiOdInsurancePlansResponse> => {
+  logger.debug("Calling query_od_insurance_plans");
+  const url = make_od_insurance_plans_url();
+
+  const resp = await requester({
+    method: "GET",
+    url: url,
+  });
+
+  if (!resp) {
+    return { blank: true };
+  }
+
+  const { result, limits } = parse_ff_response<OdInsurancePlansResponse>(
+    resp,
+    "query_od_insurance_plans",
+  );
+  if (!Array.isArray(result.plans)) {
+    throw new FFApiError("API request failed. Response has no plans list.", {
+      ff_api_limits: limits,
+      ff_http_status: resp.status,
+    });
+  }
+
+  // One malformed plan drops only itself, so the rest stay buyable.
+  const plans = result.plans.filter((plan: unknown) => {
+    if (is_od_insurance_plan(plan)) return true;
+    logger.warn("query_od_insurance_plans: dropping malformed plan", plan);
+    return false;
+  });
+
+  return {
+    result: {
+      manager_player_id: is_int(result.manager_player_id)
+        ? result.manager_player_id
+        : null,
+      manager_name: is_str(result.manager_name) ? result.manager_name : null,
+      plans,
+    },
+    blank: false,
+    limits,
+  };
 };

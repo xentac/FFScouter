@@ -99,6 +99,7 @@ export default {
       ffconfig.stat_distribution_badge_enabled;
     panel.bountyBoardEnabled = ffconfig.bounty_board_enabled;
     panel.bountyAttackAction = ffconfig.bounty_attack_action;
+    panel.odInsuranceEnabled = ffconfig.od_insurance_enabled;
     // isPremium starts as null (Unknown) and is resolved asynchronously after injection
 
     // Listen for the custom save event
@@ -151,6 +152,7 @@ export default {
         detail.statDistributionBadgeEnabled;
       ffconfig.bounty_board_enabled = detail.bountyBoardEnabled;
       ffconfig.bounty_attack_action = detail.bountyAttackAction;
+      ffconfig.od_insurance_enabled = detail.odInsuranceEnabled;
       panel.isPremium = await check_key_status.is_premium(true);
       panel.isKeyRegistered = await check_key_status.is_registered(false);
       toast("Settings saved successfully!");
@@ -204,6 +206,7 @@ export default {
         ffconfig.stat_distribution_badge_enabled;
       panel.bountyBoardEnabled = ffconfig.bounty_board_enabled;
       panel.bountyAttackAction = ffconfig.bounty_attack_action;
+      panel.odInsuranceEnabled = ffconfig.od_insurance_enabled;
 
       toast("Settings reset to defaults!");
       window.dispatchEvent(new CustomEvent("ff-config-updated"));
