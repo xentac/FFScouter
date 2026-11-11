@@ -24,13 +24,142 @@
       "preset": "recommended",
       "suspicious": {
         "noExplicitAny": "off",
-        "noDocumentCookie": "off"
+        "noDocumentCookie": "off",
+        "noConsole": "error",
+        "noConstEnum": "error",
+        "noConstantBinaryExpressions": "error",
+        "noUnassignedVariables": "error",
+        "noVar": "error",
+        "noWith": "error",
+        "useArraySortCompare": "error"
       },
       "style": {
-        "noNonNullAssertion": "off"
+        "noNonNullAssertion": "error",
+        "noNestedTernary": "error",
+        "noParameterAssign": "error",
+        "noSubstr": "error",
+        "useThrowOnlyError": "error",
+        "useThrowNewError": "error",
+        "useConsistentArrayType": {
+          "level": "error",
+          "options": {
+            "syntax": "shorthand"
+          }
+        },
+        "useShorthandAssign": "error",
+        "noYodaExpression": "error",
+        "useForOf": "error",
+        "useCollapsedElseIf": "error",
+        "useCollapsedIf": "error",
+        "useDefaultParameterLast": "error",
+        "useDefaultSwitchClause": "error",
+        "useExplicitLengthCheck": "error",
+        "useNumberNamespace": "error",
+        "useTrimStartEnd": "error"
       },
       "complexity": {
-        "noImportantStyles": "off"
+        "noImportantStyles": "off",
+        "noUselessCatchBinding": "error",
+        "useArrayFind": "error",
+        "useLiteralKeys": "off",
+        "useMathMinMax": "error"
+      },
+      "correctness": {
+        "noNestedComponentDefinitions": "error",
+        "noUndeclaredVariables": "error"
+      },
+      "performance": {
+        "noAccumulatingSpread": "error",
+        "noDelete": "error",
+        "useDomNodeTextContent": "error",
+        "useTopLevelRegex": "error"
+      },
+      "nursery": {
+        "noAsyncPromiseFinally": "error",
+        "noDuplicateTypeConstituents": "error",
+        "noInvalidFetchOptions": "error",
+        "noNewArray": "error",
+        "noRedundantTypeConstituents": "error",
+        "noUselessFallbackInSpread": "error",
+        "noUselessParameterPropertyAssignment": "error",
+        "noUselessSpread": "error",
+        "useAtomicUpdates": "error",
+        "useConsistentTupleLabels": "error",
+        "useGlobalRegexInMatchAll": "error",
+        "useGlobalRegexInReplaceAll": "error",
+        "useValidCharacterComparison": "error",
+        "noUselessQualifier": "error",
+        "noArrayMethodsOnArguments": "error",
+        "noConstantComparisons": "error",
+        "noErasingOperation": "error",
+        "noNegatedArrayPredicate": "error",
+        "noNumberArgumentOutOfRange": "error",
+        "noSharedBranchCode": "error",
+        "noSubtractionComparison": "error",
+        "noUninvokedArrayCallback": "error",
+        "noAwaitInPromiseMethods": "error",
+        "noChainedComparison": "error",
+        "noDynamicDelete": "error",
+        "noLateEventControl": "error",
+        "noMapSpread": "error",
+        "noMismatchedMapKey": "error",
+        "noMissingThrow": "error",
+        "noObjectLiteralComparison": "error",
+        "noPseudoElementInFunctionalPseudoClass": "error",
+        "noSinglePromiseInPromiseMethods": "error",
+        "noUnnecessaryStringTrim": "error",
+        "noUselessAwait": "error",
+        "noUselessLengthCheck": "error",
+        "noUselessTypeAssertion": "error",
+        "useSimplifiedBooleanReturn": "error",
+        "noMagicArrayFlatDepth": "error",
+        "noNewRequire": "error",
+        "noObsoleteAttributes": "error",
+        "noPathConcat": "error",
+        "noSelfNestedLayer": "error",
+        "noShortTimeValues": "error",
+        "noUnreadableIife": "error",
+        "noUselessRecursion": "error",
+        "noUselessSplice": "error",
+        "noYamlBooleanKeys": "error",
+        "noZeroLengthUnit": "error",
+        "useBlockStatementOverIife": "error",
+        "useConsistentLightnessNotation": "error",
+        "useConsistentUnicodeBom": "error",
+        "useIteratorZip": "error",
+        "useMathAbs": "error",
+        "useMathTrunc": "error",
+        "useWhileLoopCondition": "error",
+        "noAccidentalBitwiseOperators": "error",
+        "noArgumentsCallerOrCallee": "error",
+        "noDoubleComparison": "error",
+        "noInvalidThis": "error",
+        "noJsRestrictedProperties": "error",
+        "noNestedSwitch": "error",
+        "noNestedTemplateLiterals": "error",
+        "noObjectConstructor": "error",
+        "noOctal": "error",
+        "noUnsafeUnaryMinus": "error",
+        "noUselessCall": "error",
+        "noUselessDateGetTime": "error",
+        "useBigintLiterals": "error",
+        "useCapitalizedConstructors": "error",
+        "useConsistentBlockLang": "error",
+        "useConsistentJsonFileRead": "error",
+        "useMatchingFunctionName": "error",
+        "useNamedFunction": "error",
+        "useUnaryMinus": "error",
+        "noConsoleSpaces": "error",
+        "noArraySortForMinMax": "error",
+        "noBooleanSortComparator": "error",
+        "noEagerArrayMethodsInLoops": "error",
+        "noFloatingPromises": "error",
+        "noMisusedPromises": "error",
+        "noUnmodifiedLoopCondition": "error",
+        "noUnreadableForOfExpression": "error",
+        "noUnsafeReturn": "error",
+        "noUselessAssignment": "error",
+        "useIncludes": "error"
       }
     }
   },
@@ -59,6 +188,50 @@
     }
   },
   "overrides": [
+    {
+      "includes": ["src/utils/logger.ts"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noConsole": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["scripts/**"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noConsole": "off"
+          },
+          "nursery": {
+            "noUnsafeReturn": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["**/*.test.ts", "**/*.test.tsx", "src/tests/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noNonNullAssertion": "off"
+          },
+          "performance": {
+            "useTopLevelRegex": "off",
+            "noDelete": "off"
+          },
+          "nursery": {
+            "noFloatingPromises": "off",
+            "noUnsafeReturn": "off"
+          },
+          "suspicious": {
+            "noConsole": "off"
+          }
+        }
+      }
+    },
     {
       "includes": ["**/__fixtures__/**/*.html", "stat_icons.svg"],
       "linter": {
