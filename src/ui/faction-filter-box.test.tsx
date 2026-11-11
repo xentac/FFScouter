@@ -2,7 +2,13 @@
 
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { act, fireEvent, render, waitFor } from "@testing-library/react";
+import {
+  act,
+  fireEvent,
+  render,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import { ffconfig } from "@utils/ffconfig";
 import { createRef } from "react";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
@@ -789,4 +795,31 @@ test("parses Last Action Range duration strings into seconds", async () => {
   });
   expect(events.at(-1).lastActionMinSec).toBeNull();
   expect(events.at(-1).lastActionMaxSec).toBeNull();
+});
+
+test("gives every range input a persistent accessible label", async () => {
+  const { container, ref } = setup({ mode: "war" });
+  await waitFor(() => expect(ref.current).not.toBeNull());
+  act(() => {
+    ref.current!.setHasLastActionData(true);
+  });
+
+  const groups: Array<[string, string[]]> = [
+    ["Level Range", ["Minimum level", "Maximum level"]],
+    ["FF Range", ["Minimum fair fight score", "Maximum fair fight score"]],
+    ["Stats Range", ["Minimum battle stats", "Maximum battle stats"]],
+    ["Last Action Range", ["Minimum last action", "Maximum last action"]],
+  ];
+
+  for (const [title, labels] of groups) {
+    const group = Array.from(
+      container.querySelectorAll(".ff-filter-box__group"),
+    ).find((g) => g.querySelector("strong")?.textContent === title) as
+      | HTMLElement
+      | undefined;
+    expect(group).toBeDefined();
+    for (const label of labels) {
+      expect(within(group!).getByLabelText(label).tagName).toBe("INPUT");
+    }
+  }
 });
