@@ -456,7 +456,7 @@ export class FFCache {
       if (!entry || entry.expiry <= Date.now()) {
         return null;
       }
-      return entry;
+      return entry as CachedFlightData;
     } finally {
       this.end_op();
     }
@@ -560,7 +560,7 @@ export class FFCache {
       const tx = db.transaction(STORES.ANALYTICS, "readonly");
       const res = await tx.store.getAll();
       await tx.done;
-      return res;
+      return res as AnalyticsEntry[];
     } finally {
       this.end_op();
     }
@@ -577,26 +577,26 @@ export class FFCache {
     }
   };
 
-  dump = async () => {
+  dump = async (): Promise<CachedFFData[]> => {
     const db = await this.start_op();
     try {
       const tx = db.transaction(STORES.CACHE, "readonly");
 
       const res = await tx.store.getAll();
       await tx.done;
-      return res;
+      return res as CachedFFData[];
     } finally {
       this.end_op();
     }
   };
 
-  dump_flights = async () => {
+  dump_flights = async (): Promise<CachedFlightData[]> => {
     const db = await this.start_op();
     try {
       const tx = db.transaction(STORES.FLIGHTS, "readonly");
       const res = await tx.store.getAll();
       await tx.done;
-      return res;
+      return res as CachedFlightData[];
     } finally {
       this.end_op();
     }
