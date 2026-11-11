@@ -643,8 +643,9 @@ const process_page = () => {
                   "Observed mutation that included adding descriptions",
                   node,
                 );
-                // Set up war features serially: concurrent runs would call
-                // setup_war_features twice for the same war and double-bind it.
+                // Set up war features serially: keeps each mutation's wait
+                // ordered and avoids spawning redundant waiters/setup work for
+                // one mutation batch.
                 // react-doctor-disable-next-line react-doctor/async-await-in-loop
                 const faction_war = await wait_for_element(
                   ".faction-war",

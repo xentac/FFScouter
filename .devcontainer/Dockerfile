@@ -17,11 +17,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   jq \
   && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Copy the pinned Bun binaries from the `bun` stage above into the final image.
-# bunx is a symlink to bun in the official image, so it is copied as a symlink
-# and resolves next to the copied bun in /usr/local/bin.
+# Copy the pinned Bun binary from the `bun` stage above into the final image.
+# bunx is created as a relative symlink rather than copied, because COPY
+# dereferences symlinks from another stage and would duplicate the ~107 MB
+# binary at /usr/local/bin/bunx.
 COPY --from=bun /usr/local/bin/bun /usr/local/bin/bun
-COPY --from=bun /usr/local/bin/bunx /usr/local/bin/bunx
+RUN ln -s bun /usr/local/bin/bunx
 
 # jj (Jujutsu) is this repo's preferred VCS (AGENTS.md); no official devcontainer
 # feature exists for it, so install a pinned release binary directly. No apt
