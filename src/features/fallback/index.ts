@@ -289,8 +289,9 @@ export default {
             characterData: false,
             subtree: true,
           });
-          // The flag mirrors the observe() call just made; concurrent calls
-          // only re-evaluate the same state and disconnect first.
+          // The flag mirrors the observe() call just made. Two concurrent
+          // calls can pass the !is_observing guard before either awaits, but
+          // re-observing is idempotent and the extra setup is harmless.
           // biome-ignore lint/nursery/useAtomicUpdates: flag mirrors the observe() call made immediately above
           is_observing = true;
           log.debug("Connected fallback MutationObserver (included page)");
