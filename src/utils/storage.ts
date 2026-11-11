@@ -69,7 +69,7 @@ export class Storage {
         return null;
       }
 
-      let item: { value: T; expiration: number | null } | null = null;
+      let item: { value: T; expiration: number | null } | null;
       try {
         item = JSON.parse(itemStr);
       } catch {

@@ -37,7 +37,7 @@ function migrate_float(old_key: string, new_key: string): void {
   if (v3_has(new_key)) return;
   const v = v2_get(old_key);
   if (v !== null) {
-    const n = parseFloat(v);
+    const n = Number.parseFloat(v);
     if (!Number.isNaN(n)) v3_set(new_key, n);
   }
 }

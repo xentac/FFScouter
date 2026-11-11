@@ -18,6 +18,9 @@ const DAY = HOUR * 24;
 
 const OLD_ESTIMATE_INTERVAL = 14 * DAY; // sec
 
+const AGE_PHRASE_PREFIX_REGEX = /^\((.*) old\)$/;
+const SUFFIX_NUMBER_REGEX = /^([\d.,]+)\s*([kmbt])?$/;
+
 export type EstimateSourceIcon = "spy" | "premium";
 
 export type SourceMarker = { icon: EstimateSourceIcon; label: string };
@@ -32,6 +35,8 @@ export function get_source_marker(source: EstimateSource): SourceMarker | null {
     case "premium":
       return { icon: "premium", label: "Premium data" };
     case "bss":
+      return null;
+    default:
       return null;
   }
 }
@@ -161,7 +166,7 @@ function staleness_suffix(d: FFDataComplete) {
   const now: TimestampSec = Date.now() / 1000;
   const age = now - extract_last_updated(d);
 
-  var suffix = "";
+  let suffix = "";
   if (age > OLD_ESTIMATE_INTERVAL) {
     suffix = "?";
   }
@@ -228,7 +233,10 @@ export function format_relative_time(timestamp_sec: TimestampSec) {
 // rather than re-deriving the buckets, so the two can never disagree on
 // wording. Still "" when the estimate is under a day old.
 export function format_age_phrase(timestamp_sec: TimestampSec) {
-  return format_relative_time(timestamp_sec).replace(/^\((.*) old\)$/, "$1");
+  return format_relative_time(timestamp_sec).replace(
+    AGE_PHRASE_PREFIX_REGEX,
+    "$1",
+  );
 }
 
 export function get_ff_colour(d: FFDataComplete) {
@@ -421,9 +429,9 @@ export function get_ff_arrow_colour(d: FFData) {
 
 export function get_contrast_color(hex: string) {
   // Convert hex to RGB
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
+  const r = Number.parseInt(hex.slice(1, 3), 16);
+  const g = Number.parseInt(hex.slice(3, 5), 16);
+  const b = Number.parseInt(hex.slice(5, 7), 16);
 
   // Calculate brightness
   const brightness = r * 0.299 + g * 0.587 + b * 0.114;
@@ -466,7 +474,7 @@ export function parse_suffix_number(valStr: string): number | null {
   const trimmed = valStr.trim().toLowerCase();
   if (!trimmed) return null;
 
-  const match = trimmed.match(/^([\d.,]+)\s*([kmbt])?$/);
+  const match = trimmed.match(SUFFIX_NUMBER_REGEX);
   if (!match) return null;
 
   const matchStr = match[1];

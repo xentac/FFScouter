@@ -34,15 +34,28 @@ export async function gmRequest<T = object>(
     const headers = (options.headers as Record<string, string>) ?? {};
     const method = (options.method ?? "GET").toUpperCase();
 
-    const pdaResp =
-      method === "POST"
-        ? await window.PDA_httpPost!(url, headers, options.data)
-        : await window.PDA_httpGet!(url, headers);
+    if (method === "POST") {
+      const httpPost = window.PDA_httpPost;
+      if (!httpPost) {
+        throw new Error("PDA_httpPost is not available");
+      }
+      return (await httpPost(
+        url,
+        headers,
+        options.data,
+      )) as unknown as Tampermonkey.Response<T>;
+    }
 
-    return pdaResp as unknown as Tampermonkey.Response<T>;
+    const httpGet = window.PDA_httpGet;
+    if (!httpGet) {
+      throw new Error("PDA_httpGet is not available");
+    }
+    return (await httpGet(url, headers)) as unknown as Tampermonkey.Response<T>;
   }
 
   return new Promise((resolve, reject) => {
+    // GM_xmlhttpRequest is a Tampermonkey global function, not a constructor.
+    // biome-ignore lint/nursery/useCapitalizedConstructors: Tampermonkey global API
     GM_xmlhttpRequest({
       ...options,
       onload: (response) => resolve(response),
@@ -191,12 +204,12 @@ export const query_stats = async (
   }
 
   const limits = parse_limit_headers(resp.responseHeaders);
-  let ff_response: FFSuccess[] | FFError | null = null;
+  let ff_response: FFSuccess[] | FFError | null;
   try {
     ff_response = JSON.parse(resp.responseText);
   } catch {
     logger.warn(
-      `query_stats: unparseable response. status=${resp.status}, body=${resp.responseText?.substring(0, 200)}, url=${url}`,
+      `query_stats: unparseable response. status=${resp.status}, body=${resp.responseText?.slice(0, 200)}, url=${url}`,
     );
     throw new FFApiError(
       `API request failed. Couldn't parse response. HTTP status code: ${resp.status}`,
@@ -223,7 +236,7 @@ export const query_stats = async (
 
   if (resp.status !== 200) {
     logger.warn(
-      `query_stats: unexpected HTTP status. status=${resp.status}, body=${resp.responseText?.substring(0, 200)}, url=${url}`,
+      `query_stats: unexpected HTTP status. status=${resp.status}, body=${resp.responseText?.slice(0, 200)}, url=${url}`,
     );
     throw new FFApiError(
       `API request failed. HTTP status code: ${resp.status}`,
@@ -312,11 +325,11 @@ const parse_limit_headers = (
   const remaining_str = headers.get("x-ratelimit-remaining");
   const rate_limit_str = headers.get("x-ratelimit-limit");
   if (reset_time_str && remaining_str && rate_limit_str) {
-    const remaining = parseInt(remaining_str, 10);
-    const rate_limit = parseInt(rate_limit_str, 10);
+    const remaining = Number.parseInt(remaining_str, 10);
+    const rate_limit = Number.parseInt(rate_limit_str, 10);
     const this_minute = rate_limit - remaining;
     return {
-      reset_time: new Date(parseInt(reset_time_str, 10) * 1000),
+      reset_time: new Date(Number.parseInt(reset_time_str, 10) * 1000),
       remaining,
       rate_limit,
       this_minute,
@@ -345,12 +358,12 @@ export const check_key = async (
   }
 
   const limits = parse_limit_headers(resp.responseHeaders);
-  let ff_response: FFCheckSuccess | FFError | null = null;
+  let ff_response: FFCheckSuccess | FFError | null;
   try {
     ff_response = JSON.parse(resp.responseText);
   } catch {
     logger.warn(
-      `check_key: unparseable response. status=${resp.status}, body=${resp.responseText?.substring(0, 200)}, url=${url}`,
+      `check_key: unparseable response. status=${resp.status}, body=${resp.responseText?.slice(0, 200)}, url=${url}`,
     );
     throw new FFApiError(
       `API request failed. Couldn't parse response. HTTP status code: ${resp.status}`,
@@ -377,7 +390,7 @@ export const check_key = async (
 
   if (resp.status !== 200) {
     logger.warn(
-      `check_key: unexpected HTTP status. status=${resp.status}, body=${resp.responseText?.substring(0, 200)}, url=${url}`,
+      `check_key: unexpected HTTP status. status=${resp.status}, body=${resp.responseText?.slice(0, 200)}, url=${url}`,
     );
     throw new FFApiError(
       `API request failed. HTTP status code: ${resp.status}`,
@@ -430,12 +443,12 @@ export const query_flights = async (
   }
 
   const limits = parse_limit_headers(resp.responseHeaders);
-  let ff_response: PlayerFlightsResponse | FFError | null = null;
+  let ff_response: PlayerFlightsResponse | FFError | null;
   try {
     ff_response = JSON.parse(resp.responseText);
   } catch {
     logger.warn(
-      `query_flights: unparseable response. status=${resp.status}, body=${resp.responseText?.substring(0, 200)}, url=${url}`,
+      `query_flights: unparseable response. status=${resp.status}, body=${resp.responseText?.slice(0, 200)}, url=${url}`,
     );
     throw new FFApiError(
       `API request failed. Couldn't parse response. HTTP status code: ${resp.status}`,
@@ -461,7 +474,7 @@ export const query_flights = async (
 
   if (resp.status !== 200) {
     logger.warn(
-      `query_flights: unexpected HTTP status. status=${resp.status}, body=${resp.responseText?.substring(0, 200)}, url=${url}`,
+      `query_flights: unexpected HTTP status. status=${resp.status}, body=${resp.responseText?.slice(0, 200)}, url=${url}`,
     );
     throw new FFApiError(
       `API request failed. HTTP status code: ${resp.status}`,
@@ -713,12 +726,12 @@ const parse_bounty_response = <T>(
   ok_statuses: number[] = [200],
 ): { result: T; limits?: FFApiRateLimits } => {
   const limits = parse_limit_headers(resp.responseHeaders);
-  let parsed: T | FFError | null = null;
+  let parsed: T | FFError | null;
   try {
     parsed = JSON.parse(resp.responseText);
   } catch {
     logger.warn(
-      `${label}: unparseable response. status=${resp.status}, body=${resp.responseText?.substring(0, 200)}`,
+      `${label}: unparseable response. status=${resp.status}, body=${resp.responseText?.slice(0, 200)}`,
     );
     throw new FFApiError(
       `API request failed. Couldn't parse response. HTTP status code: ${resp.status}`,
@@ -748,7 +761,7 @@ const parse_bounty_response = <T>(
 
   if (!ok_statuses.includes(resp.status)) {
     logger.warn(
-      `${label}: unexpected HTTP status. status=${resp.status}, body=${resp.responseText?.substring(0, 200)}`,
+      `${label}: unexpected HTTP status. status=${resp.status}, body=${resp.responseText?.slice(0, 200)}`,
     );
     throw new FFApiError(
       `API request failed. HTTP status code: ${resp.status}`,
