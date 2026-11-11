@@ -4,6 +4,11 @@ import { defineConfig } from "vite";
 import monkey from "vite-plugin-monkey";
 import { vitePluginVersionMark } from "vite-plugin-version-mark";
 
+const REACT_ALIAS_PATTERN = /^react$/;
+const REACT_DOM_CLIENT_ALIAS_PATTERN = /^react-dom\/client$/;
+const REACT_JSX_RUNTIME_ALIAS_PATTERN = /^react\/jsx-runtime$/;
+const REACT_JSX_DEV_RUNTIME_ALIAS_PATTERN = /^react\/jsx-dev-runtime$/;
+
 const EDITIONS = {
   standard: {
     name: "FF Scouter V2",
@@ -31,7 +36,7 @@ function getFallbackVersion(): string {
   try {
     const describe = execSync("git describe --tags --always").toString().trim();
     return describe.startsWith("v") ? describe.slice(1) : describe;
-  } catch (_e) {
+  } catch {
     return "0.0.0-dev";
   }
 }
@@ -39,7 +44,6 @@ function getFallbackVersion(): string {
 export default defineConfig(({ mode }) => {
   const isDev =
     mode === "dev" ||
-    // biome-ignore lint/complexity/useLiteralKeys: tsc requires index signature lookup
     process.env["DEV_BUILD"] === "true" ||
     (() => {
       const modeIdx = process.argv.indexOf("--mode");
@@ -48,14 +52,11 @@ export default defineConfig(({ mode }) => {
         process.argv.includes("--mode=dev")
       );
     })();
-  // biome-ignore lint/complexity/useLiteralKeys: tsc requires index signature lookup
   const editionKey = (process.env["BUILD_EDITION"] ||
     "standard") as keyof typeof EDITIONS;
   const edition = EDITIONS[editionKey] || EDITIONS.standard;
-  // biome-ignore lint/complexity/useLiteralKeys: tsc requires index signature lookup
   const version = process.env["BUILD_VERSION"] || getFallbackVersion();
   const userscriptName =
-    // biome-ignore lint/complexity/useLiteralKeys: tsc requires index signature lookup
     process.env["BUILD_NAME"] ||
     (isDev ? `${edition.name} - DEV` : edition.name);
 
@@ -141,25 +142,25 @@ export default defineConfig(({ mode }) => {
           replacement: path.resolve(import.meta.dirname, "src/features"),
         },
         {
-          find: /^react$/,
+          find: REACT_ALIAS_PATTERN,
           replacement: path.resolve(import.meta.dirname, "src/shims/react.ts"),
         },
         {
-          find: /^react-dom\/client$/,
+          find: REACT_DOM_CLIENT_ALIAS_PATTERN,
           replacement: path.resolve(
             import.meta.dirname,
             "src/shims/react-dom.ts",
           ),
         },
         {
-          find: /^react\/jsx-runtime$/,
+          find: REACT_JSX_RUNTIME_ALIAS_PATTERN,
           replacement: path.resolve(
             import.meta.dirname,
             "src/shims/jsx-runtime.ts",
           ),
         },
         {
-          find: /^react\/jsx-dev-runtime$/,
+          find: REACT_JSX_DEV_RUNTIME_ALIAS_PATTERN,
           replacement: path.resolve(
             import.meta.dirname,
             "src/shims/jsx-runtime.ts",
