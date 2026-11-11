@@ -25,11 +25,16 @@ COPY --from=bun /usr/local/bin/bunx /usr/local/bin/bunx
 
 # jj (Jujutsu) is this repo's preferred VCS (AGENTS.md); no official devcontainer
 # feature exists for it, so install a pinned release binary directly. No apt
-# package either - Debian bookworm doesn't carry jj. Bump JJ_VERSION manually
-# to update; installed at build time so it isn't subject to the runtime firewall.
+# package either - Debian bookworm doesn't carry jj. JJ_SHA256 pins the exact
+# release artifact and is verified before extraction, so bump it together with
+# JJ_VERSION. Installed at build time so it isn't subject to the runtime firewall.
 ARG JJ_VERSION=0.44.0
-RUN curl -fsSL "https://github.com/jj-vcs/jj/releases/download/v${JJ_VERSION}/jj-v${JJ_VERSION}-x86_64-unknown-linux-musl.tar.gz" \
-  | tar -xz -C /usr/local/bin ./jj
+ARG JJ_SHA256=0a07bab4641a55fd2bc2fd1563ba3a3f9a577584086ad74086a1c5b69b3ffce9
+RUN curl -fsSL -o /tmp/jj.tar.gz \
+      "https://github.com/jj-vcs/jj/releases/download/v${JJ_VERSION}/jj-v${JJ_VERSION}-x86_64-unknown-linux-musl.tar.gz" \
+  && echo "${JJ_SHA256}  /tmp/jj.tar.gz" | sha256sum -c - \
+  && tar -xz -C /usr/local/bin -f /tmp/jj.tar.gz ./jj \
+  && rm /tmp/jj.tar.gz
 
 # jj refuses to create commits without a user identity configured, and there's
 # no interactive prompt to set one inside a container. The host's
