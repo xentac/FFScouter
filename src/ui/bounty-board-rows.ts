@@ -201,7 +201,8 @@ export function ff_ids_to_load(
     }
     if (target.target_faction_id != null) {
       if (expanded.has(target.target_faction_id)) {
-        for (const member of target.members ?? []) {
+        const members = target.members ?? [];
+        for (const member of members) {
           ids.push(member.player_id);
         }
       }

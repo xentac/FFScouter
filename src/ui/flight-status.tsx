@@ -240,13 +240,13 @@ export function FFFlightProfileStatus({ playerId, compact = false }: Props) {
       }
     };
 
-    fetchData();
+    void fetchData();
 
     const tick = setInterval(() => {
       setCurrentTimeSeconds(get_current_time_seconds());
       const d = dataRef.current;
       if (d?.rechecking && d.next_retry_at && Date.now() >= d.next_retry_at) {
-        fetchData();
+        void fetchData();
       }
     }, 1000);
 
@@ -254,7 +254,7 @@ export function FFFlightProfileStatus({ playerId, compact = false }: Props) {
     // its own retry schedule driven by the tick above).
     const fetchInterval = setInterval(() => {
       if (!dataRef.current?.rechecking) {
-        fetchData();
+        void fetchData();
       }
     }, 30000);
 

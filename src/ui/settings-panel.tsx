@@ -201,6 +201,18 @@ function ApiKeySection({
   onApiKeyBlur,
   onVerify,
 }: ApiKeySectionProps) {
+  let premiumBadgeClass: string | undefined;
+  let premiumLabel: string;
+  if (isPremium === null) {
+    premiumBadgeClass = cls.premiumBadgeUnknown;
+    premiumLabel = "Unknown";
+  } else if (isPremium) {
+    premiumBadgeClass = cls.premiumBadgeEnabled;
+    premiumLabel = "Enabled";
+  } else {
+    premiumBadgeClass = cls.premiumBadgeDisabled;
+    premiumLabel = "Disabled";
+  }
   return (
     <div className={cls.group}>
       <h4>API Key &amp; Premium</h4>
@@ -241,19 +253,9 @@ function ApiKeySection({
             <label htmlFor="ff-premium-badge">FF Scouter Premium:</label>
             <span
               id="ff-premium-badge"
-              className={`${cls.premiumBadge} ${
-                isPremium === null
-                  ? cls.premiumBadgeUnknown
-                  : isPremium
-                    ? cls.premiumBadgeEnabled
-                    : cls.premiumBadgeDisabled
-              }`}
+              className={`${cls.premiumBadge} ${premiumBadgeClass}`}
             >
-              {isPremium === null
-                ? "Unknown"
-                : isPremium
-                  ? "Enabled"
-                  : "Disabled"}
+              {premiumLabel}
             </span>
             <button
               type="button"
@@ -937,9 +939,11 @@ export function SettingsPanelComponent({
     onRendered();
   });
 
+  const accordionGlow =
+    !props.apiKey || isKeyRegistered === false ? ` ${cls.accordionGlow}` : "";
   return (
     <details
-      className={`${cls.accordion}${!props.apiKey || isKeyRegistered === false ? ` ${cls.accordionGlow}` : ""} cont-gray border-round`}
+      className={`${cls.accordion}${accordionGlow} cont-gray border-round`}
     >
       <summary>FF Scouter Settings</summary>
 

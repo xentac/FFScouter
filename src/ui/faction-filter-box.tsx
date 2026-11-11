@@ -1,5 +1,6 @@
 import { is_narrow_layout } from "@utils/dom";
 import { FactionsColDisplay, ffconfig } from "@utils/ffconfig";
+import logger from "@utils/logger";
 import { parse_duration_to_seconds, parse_suffix_number } from "@utils/strings";
 import {
   type Ref,
@@ -41,6 +42,9 @@ const cls = {
   rangeInputs: styles["ff-filter-box__range-inputs"],
   srOnly: styles["ff-filter-box__sr-only"],
 };
+
+const log = logger.child("ui");
+const PROFILE_ID_RE = /[?&]ID=(\d+)/i;
 
 // The Out Soon filter's fixed horizon (see CONTEXT.md's "Out Soon Filter").
 // Deliberately not user-configurable: 5 minutes mirrors TWSE's own
@@ -178,6 +182,25 @@ const DEFAULT_FILTER_RESET: Partial<FactionFilterState> = {
   lastActionMax: null,
 };
 
+// The sort button cycles default → FF descending → FF ascending → default.
+const SORT_CYCLE: Record<
+  FactionFilterState["sortBy"],
+  FactionFilterState["sortBy"]
+> = {
+  none: "ff-desc",
+  "ff-desc": "ff-asc",
+  "ff-asc": "none",
+};
+
+function sortButtonLabel(
+  sortBy: FactionFilterState["sortBy"],
+  sortText: string,
+): string {
+  if (sortBy === "none") return "Sort: Default";
+  const arrow = sortBy === "ff-asc" ? "▲" : "▼";
+  return `Sort: ${sortText} ${arrow}`;
+}
+
 export function getFilterBoxHandle(
   el: Element | null | undefined,
 ): FactionFilterBoxHandle | null {
@@ -284,8 +307,13 @@ function getSavedColDisplay(isWar: boolean): FactionsColDisplay {
   return isWar ? ffconfig.war_col_display : ffconfig.factions_col_display;
 }
 
-function getSavedFilterState(isWar: boolean) {
-  return isWar ? ffconfig.war_filter_state : ffconfig.faction_filter_state;
+function getSavedFilterState(
+  isWar: boolean,
+): Partial<FactionFilterState> | null {
+  const state: Partial<FactionFilterState> | null = isWar
+    ? ffconfig.war_filter_state
+    : ffconfig.faction_filter_state;
+  return state;
 }
 
 function persistCollapsed(mode: "faction" | "war", collapsed: boolean) {
@@ -408,7 +436,7 @@ function openActivityComparison(root: HTMLDetailsElement | null) {
         ids.push(id);
       }
     } catch {
-      const match = (link.getAttribute("href") || "").match(/[?&]ID=(\d+)/i);
+      const match = (link.getAttribute("href") || "").match(PROFILE_ID_RE);
       if (match?.[1]) {
         const id = match[1];
         if (!seen.has(id)) {
@@ -429,7 +457,7 @@ function openActivityComparison(root: HTMLDetailsElement | null) {
   }
 
   if (ids.length < 2) {
-    console.warn("Could not find faction IDs to compare activity.");
+    log.warn("Could not find faction IDs to compare activity.");
     return;
   }
 
@@ -600,11 +628,7 @@ function SortDisplayGroup({
           className={cls.sortBtn}
           onClick={onSortToggle}
         >
-          {sortBy === "none"
-            ? "Sort: Default"
-            : sortBy === "ff-asc"
-              ? `Sort: ${sortText} ▲`
-              : `Sort: ${sortText} ▼`}
+          {sortButtonLabel(sortBy, sortText)}
         </button>
         <select
           id={
@@ -888,10 +912,11 @@ function FilterBoxLayout({
   onColumnVisibilityChange: (key: keyof HiddenColumns, val: boolean) => void;
 }) {
   const s = filterState;
+  const warClass = mode === "war" ? ` ${cls.boxNoBorders}` : "";
   return (
     <details
       ref={rootRef}
-      className={`${cls.box}${mode === "war" ? ` ${cls.boxNoBorders}` : ""}`}
+      className={`${cls.box}${warClass}`}
       open={!collapsed}
       onToggle={onToggle}
     >
@@ -1177,12 +1202,7 @@ export function FFFactionFilterBox({
   };
 
   const onSortToggle = () => {
-    const next =
-      filterStateRef.current.sortBy === "none"
-        ? "ff-desc"
-        : filterStateRef.current.sortBy === "ff-desc"
-          ? "ff-asc"
-          : "none";
+    const next = SORT_CYCLE[filterStateRef.current.sortBy];
     applyStatePatch({ sortBy: next });
     executeChangeImmediately();
   };

@@ -62,8 +62,7 @@ const DEFAULT_VIEW_STATE: BountyBoardViewState = {
 function load_view_state(): BountyBoardViewState {
   return {
     ...DEFAULT_VIEW_STATE,
-    ...(default_storage.get<Partial<BountyBoardViewState>>(VIEW_STATE_KEY) ??
-      {}),
+    ...default_storage.get<Partial<BountyBoardViewState>>(VIEW_STATE_KEY),
   };
 }
 
@@ -112,6 +111,10 @@ type BoardAction =
   | { type: "loaded"; response: BountySellerBoardResponse }
   | { type: "failed"; state: BoardErrorPhase };
 
+function assertNever(value: never): never {
+  throw new Error(`Unhandled case: ${JSON.stringify(value)}`);
+}
+
 function board_reducer(_state: BoardState, action: BoardAction): BoardState {
   switch (action.type) {
     case "reload":
@@ -120,6 +123,8 @@ function board_reducer(_state: BoardState, action: BoardAction): BoardState {
       return { phase: "ready", response: action.response };
     case "failed":
       return action.state;
+    default:
+      return assertNever(action);
   }
 }
 
@@ -376,6 +381,8 @@ function BountyBoardBody({
       );
     case "ready":
       break;
+    default:
+      return assertNever(state);
   }
 
   const anyShown = state.response.board.targets.some(is_shown_target);
@@ -473,9 +480,10 @@ const SHELL: Record<
 export function BountyBoard({ variant }: { variant: BountyBoardVariant }) {
   const [view, updateView] = useViewState();
   const shell = SHELL[variant];
+  const minimizedClass = view.minimized ? ` ${cls.modalMinimized}` : "";
   return (
     <section
-      className={`${shell.className}${view.minimized ? ` ${cls.modalMinimized}` : ""}`}
+      className={`${shell.className}${minimizedClass}`}
       aria-label="FF Scouter Bounties"
     >
       <div className={cls.header}>
