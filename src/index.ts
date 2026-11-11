@@ -65,6 +65,9 @@ async function main() {
     // + check if feature is toggled
     if (
       feat.executionTime === StartTime.DocumentStart &&
+      // Features must start in declaration order: registration and run side
+      // effects depend on earlier features having started. Keep it sequential.
+      // react-doctor-disable-next-line react-doctor/async-await-in-loop
       (await safeShouldRun(feat))
     ) {
       if (feat.httpIntercept) {
@@ -81,6 +84,9 @@ async function main() {
     // + check if feature is toggled
     if (
       feat.executionTime === StartTime.DocumentBody &&
+      // Body features also start in declaration order, after the body exists;
+      // sequential startup is required rather than a concurrency tradeoff.
+      // react-doctor-disable-next-line react-doctor/async-await-in-loop
       (await safeShouldRun(feat))
     ) {
       if (feat.httpIntercept) {

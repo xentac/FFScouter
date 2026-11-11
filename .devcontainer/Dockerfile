@@ -1,3 +1,10 @@
+# Bun is this repo's actual runtime (bun run test/lint/build, per AGENTS.md).
+# Pull the pinned binary from the official image instead of piping a remote
+# install script into bash: the version is explicit, and the artifact is
+# fetched and verified by the image build, not by a mutable URL at build time.
+# Built as a separate stage; only the binaries are copied into the final image.
+FROM oven/bun:1.4.4-debian AS bun
+
 FROM mcr.microsoft.com/devcontainers/typescript-node:1-22-bookworm
 
 # Install firewall tooling used by init-firewall.sh to build the network allowlist
@@ -10,13 +17,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   jq \
   && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Bun is this repo's actual runtime (bun run test/lint/build, per AGENTS.md) -
-# install it system-wide since this Dockerfile runs as root, not the non-root
-# `node` user who'll actually use it.
-ENV BUN_INSTALL="/usr/local/share/bun"
-RUN curl -fsSL https://bun.sh/install | bash && \
-  chmod -R a+rX "$BUN_INSTALL"
-ENV PATH="$BUN_INSTALL/bin:${PATH}"
+# Copy the pinned Bun binaries from the `bun` stage above into the final image.
+# bunx is a symlink to bun in the official image, so it is copied as a symlink
+# and resolves next to the copied bun in /usr/local/bin.
+COPY --from=bun /usr/local/bin/bun /usr/local/bin/bun
+COPY --from=bun /usr/local/bin/bunx /usr/local/bin/bunx
 
 # jj (Jujutsu) is this repo's preferred VCS (AGENTS.md); no official devcontainer
 # feature exists for it, so install a pinned release binary directly. No apt
