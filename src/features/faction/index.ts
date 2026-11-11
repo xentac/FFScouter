@@ -336,7 +336,9 @@ function setup_reapply_watcher(
   });
 
   const flightInterval = setInterval(() => {
-    poll_traveling_flights(list);
+    void poll_traveling_flights(list).catch((err) => {
+      log.error("Failed to poll traveling flights", err);
+    });
     update_twse_presence_flags(list);
     // Out Soon membership changes purely by time passing (a hidden row's
     // timer crossing the threshold produces no DOM event we observe), so
@@ -521,10 +523,11 @@ function setup_header_click(
         e.stopPropagation();
         const newSort = handle.sortBy === "ff-desc" ? "ff-asc" : "ff-desc";
         handle.setSortBy(newSort);
-      } else if (target.closest(nativeTabSelector)) {
-        if (handle.sortBy !== "none") {
-          handle.setSortBy("none");
-        }
+      } else if (
+        target.closest(nativeTabSelector) &&
+        handle.sortBy !== "none"
+      ) {
+        handle.setSortBy("none");
       }
     },
     { capture: true },
@@ -687,16 +690,15 @@ export function should_run_faction(): boolean {
   if (torn_page("factions", { step: "profile" })) {
     return true;
   }
-  if (torn_page("factions", { step: "your" })) {
-    if (
-      window.location.hash === "" ||
+  if (
+    torn_page("factions", { step: "your" }) &&
+    (window.location.hash === "" ||
       window.location.hash === "#" ||
       window.location.hash === "#/" ||
       window.location.hash.startsWith("#/war/") ||
-      window.location.hash === "#/tab=info"
-    ) {
-      return true;
-    }
+      window.location.hash === "#/tab=info")
+  ) {
+    return true;
   }
   return false;
 }

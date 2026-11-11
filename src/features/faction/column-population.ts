@@ -20,13 +20,14 @@ import {
   get_ff_colour,
   get_stat_distribution_badges,
 } from "@utils/strings";
-import type { PlayerId } from "@utils/types";
 import {
   apply_filters_and_sort,
   update_header_sort_indicator,
 } from "./filter-sort-engine";
 
 const log = logger.child("feature:faction");
+
+const PROFILE_XID_PATTERN = /.*XID=(?<player_id>\d+)/;
 
 // ============================================================================
 // COLUMN DATA POPULATION
@@ -56,7 +57,7 @@ export async function poll_traveling_flights(membersList: HTMLElement) {
     if (!p.isTraveling) {
       p.row.removeAttribute("data-earliest-arrival");
       p.row.removeAttribute("data-latest-arrival");
-      ffscouter.clear_flight_cache(p.player_id);
+      void ffscouter.clear_flight_cache(p.player_id);
     }
   }
 
@@ -181,13 +182,11 @@ export async function apply_ff_columns(membersList: HTMLElement) {
       if (!profileLink || !(profileLink instanceof HTMLAnchorElement))
         return null;
       const url = profileLink.href;
-      const match = url.match(/.*XID=(?<player_id>\d+)/);
-      // biome-ignore lint/complexity/useLiteralKeys: tsc requires index signature lookup
+      const match = url.match(PROFILE_XID_PATTERN);
       if (!match?.groups?.["player_id"]) return null;
       return {
         row,
-        // biome-ignore lint/complexity/useLiteralKeys: tsc requires index signature lookup
-        player_id: Number.parseInt(match.groups["player_id"], 10) as PlayerId,
+        player_id: Number.parseInt(match.groups["player_id"], 10),
         memberDiv,
       };
     })
@@ -264,9 +263,7 @@ export async function apply_ff_columns(membersList: HTMLElement) {
     const data = dataMap.get(rp.player_id);
     if (data && !data.no_data) {
       // Store values on data-attributes for fast, local filtering and sorting operations
-      // biome-ignore lint/complexity/useLiteralKeys: tsc requires index signature lookup
       rp.row.dataset["ffValue"] = String(extract_ff(data));
-      // biome-ignore lint/complexity/useLiteralKeys: tsc requires index signature lookup
       rp.row.dataset["estValue"] = String(extract_bs_estimate(data));
 
       if (cell) {
@@ -308,9 +305,7 @@ export async function apply_ff_columns(membersList: HTMLElement) {
         }
       }
     } else {
-      // biome-ignore lint/complexity/useLiteralKeys: tsc requires index signature lookup
       rp.row.dataset["ffValue"] = "";
-      // biome-ignore lint/complexity/useLiteralKeys: tsc requires index signature lookup
       rp.row.dataset["estValue"] = "";
       if (cell) {
         cell.textContent = "-";
@@ -337,5 +332,5 @@ export async function apply_ff_columns(membersList: HTMLElement) {
   update_header_sort_indicator(membersList, handle?.sortBy ?? "none");
 
   // Concurrently scan flights for traveling players
-  poll_traveling_flights(membersList);
+  void poll_traveling_flights(membersList);
 }

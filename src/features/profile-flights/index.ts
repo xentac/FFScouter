@@ -48,7 +48,7 @@ export default {
         }
       } else {
         container.remove();
-        ffscouter.clear_flight_cache(player_id);
+        void ffscouter.clear_flight_cache(player_id);
       }
     };
 

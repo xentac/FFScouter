@@ -265,7 +265,7 @@ export default {
       for (const mutation of mutations) {
         for (const node of mutation.addedNodes) {
           if (node instanceof Element) {
-            check_mutation(node);
+            void check_mutation(node);
           }
         }
       }
@@ -289,11 +289,14 @@ export default {
             characterData: false,
             subtree: true,
           });
+          // The flag mirrors the observe() call just made; concurrent calls
+          // only re-evaluate the same state and disconnect first.
+          // biome-ignore lint/nursery/useAtomicUpdates: flag mirrors the observe() call made immediately above
           is_observing = true;
           log.debug("Connected fallback MutationObserver (included page)");
 
           if (target) {
-            check_mutation(target);
+            void check_mutation(target);
           }
         }
       }
@@ -302,11 +305,11 @@ export default {
     // Register navigation listener
     on_navigation(() => {
       log.debug("Navigation detected, re-evaluating fallback observer state");
-      update_observer_state();
+      void update_observer_state();
     });
 
     // Run initial state setup
-    update_observer_state();
+    void update_observer_state();
   },
 
   httpIntercept: {

@@ -419,9 +419,7 @@ test("apply_ff_columns removes elements when configured to NONE but populates da
   expect(cell).toBeNull();
 
   const row = container.querySelector(".table-row") as HTMLElement;
-  // biome-ignore lint/complexity/useLiteralKeys: tsc requires index signature lookup
   expect(row.dataset["ffValue"]).toBe("3.5");
-  // biome-ignore lint/complexity/useLiteralKeys: tsc requires index signature lookup
   expect(row.dataset["estValue"]).toBe("5000000");
 
   // Now change config to FAIR_FIGHT to inject elements
@@ -438,9 +436,7 @@ test("apply_ff_columns removes elements when configured to NONE but populates da
   expect(container.querySelector(".ffscouter-header")).toBeNull();
   expect(container.querySelector(".ffscouter-cell")).toBeNull();
   // Dataset values should still remain populated for sorting/filtering
-  // biome-ignore lint/complexity/useLiteralKeys: tsc requires index signature lookup
   expect(row.dataset["ffValue"]).toBe("3.5");
-  // biome-ignore lint/complexity/useLiteralKeys: tsc requires index signature lookup
   expect(row.dataset["estValue"]).toBe("5000000");
 });
 
@@ -499,7 +495,6 @@ test("apply_ff_columns supports configurable display via real DOM elements when 
   ffconfig.war_quick_attack_action = WarQuickAttackAction.NEW_TAB;
 
   const row = list.querySelector(".table-row") as HTMLElement;
-  // biome-ignore lint/complexity/useLiteralKeys: tsc requires index signature lookup
   expect(row.dataset["ffValue"]).toBe("3.5");
 
   // 2. If configured to NONE, physical elements should be removed from the DOM

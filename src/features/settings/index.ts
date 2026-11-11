@@ -42,7 +42,8 @@ export default {
       }
 
       const localIdStr = await getLocalUserId();
-      const localId = localIdStr !== null ? parseInt(localIdStr, 10) : null;
+      const localId =
+        localIdStr !== null ? Number.parseInt(localIdStr, 10) : null;
       // Fail open when the logged-in user's own id can't be determined
       // (localId null/NaN): an opt-in restriction silently hiding the whole
       // panel is worse than it occasionally not applying.
@@ -241,7 +242,7 @@ export default {
       }
       panel.isPremium = null;
       panel.isKeyRegistered = null;
-      let result: FFApiCheckResponse | null = null;
+      let result: FFApiCheckResponse | null;
       try {
         result = await check_key(detail.apiKey);
       } catch (err) {
@@ -305,7 +306,7 @@ export default {
     // Check key status in the background so it never blocks panel injection.
     // is_registered reads the same cached check-key response is_premium just
     // populated, so this is one API call, not two.
-    check_key_status.is_premium(true).then(async (result) => {
+    void check_key_status.is_premium(true).then(async (result) => {
       panel.isPremium = result;
       panel.isKeyRegistered = await check_key_status.is_registered(false);
     });

@@ -10,6 +10,11 @@ import { type Feature, StartTime } from "../feature";
 
 const log = logger.child("feature:status-attack");
 
+const USER2ID_PATTERN = /user2ID=(\d+)/;
+const PROFILE_ID_PATTERN = /profile-(\d+)$/;
+const MINI_PROFILE_ID_PATTERN = /mini-profile-(\d+)$/;
+const XID_PATTERN = /XID=(\d+)/;
+
 function updateBodyClass() {
   const isEnabled = ffconfig.status_attack_links_enabled;
   if (isEnabled) {
@@ -97,7 +102,7 @@ function logExtractionCrossCheck(statusEl: Element, resolvedId: number) {
   const attackHref = row
     ?.querySelector('a[href*="user2ID="]')
     ?.getAttribute("href");
-  const attackMatch = attackHref?.match(/user2ID=(\d+)/);
+  const attackMatch = attackHref?.match(USER2ID_PATTERN);
   const attackLinkUserId = attackMatch?.[1] ?? null;
 
   log.info("Status click extraction cross-check:", {
@@ -114,7 +119,7 @@ async function fetchLocalUserId() {
   try {
     const idStr = await getLocalUserId();
     if (idStr) {
-      localUserId = parseInt(idStr, 10);
+      localUserId = Number.parseInt(idStr, 10);
       log.debug("Logged-in user ID cached:", localUserId);
     }
   } catch (err) {
@@ -154,17 +159,17 @@ function handleStatusClick(e: MouseEvent) {
 
   // 1. Profile ID extraction (O(1) regex match)
   if (idAttr?.includes("-profile-")) {
-    const match = idAttr.match(/profile-(\d+)$/);
+    const match = idAttr.match(PROFILE_ID_PATTERN);
     if (match?.[1]) {
-      playerId = parseInt(match[1], 10);
+      playerId = Number.parseInt(match[1], 10);
     }
   }
 
   // 2. Mini-profile ID extraction (O(1) regex match)
   if (!playerId && idAttr && idAttr.includes("-mini-profile-")) {
-    const match = idAttr.match(/mini-profile-(\d+)$/);
+    const match = idAttr.match(MINI_PROFILE_ID_PATTERN);
     if (match?.[1]) {
-      playerId = parseInt(match[1], 10);
+      playerId = Number.parseInt(match[1], 10);
     }
   }
 
@@ -192,9 +197,9 @@ function handleStatusClick(e: MouseEvent) {
 
   // 5. Profile page fallback
   if (!playerId && torn_page("profiles")) {
-    const match = window.location.href.match(/XID=(\d+)/);
+    const match = window.location.href.match(XID_PATTERN);
     if (match?.[1]) {
-      playerId = parseInt(match[1], 10);
+      playerId = Number.parseInt(match[1], 10);
     }
   }
 
@@ -299,7 +304,7 @@ export default {
 
   async run() {
     updateBodyClass();
-    fetchLocalUserId();
+    void fetchLocalUserId();
 
     // Hook into SPA navigation
     const initPage = () => {
@@ -319,12 +324,12 @@ export default {
       const originalPushState = window.history.pushState;
       const originalReplaceState = window.history.replaceState;
 
-      window.history.pushState = function (...args) {
+      window.history.pushState = function pushState(...args) {
         originalPushState.apply(this, args);
         setTimeout(initPage, 100);
       };
 
-      window.history.replaceState = function (...args) {
+      window.history.replaceState = function replaceState(...args) {
         originalReplaceState.apply(this, args);
         setTimeout(initPage, 100);
       };
