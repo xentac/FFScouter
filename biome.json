@@ -1,5 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.3.11/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.6.6/schema.json",
   "vcs": {
     "enabled": true,
     "clientKind": "git",
@@ -7,7 +7,12 @@
   },
   "files": {
     "ignoreUnknown": true,
-    "includes": ["**", "!src/ffscouter.js"]
+    "includes": [
+      "**",
+      "!src/ffscouter.js",
+      "!**/__fixtures__/**/*.html",
+      "!stat_icons.svg"
+    ]
   },
   "formatter": {
     "enabled": true,
@@ -17,7 +22,7 @@
   "linter": {
     "enabled": true,
     "rules": {
-      "recommended": true,
+      "preset": "recommended",
       "suspicious": {
         "noExplicitAny": "off",
         "noDocumentCookie": "off"
@@ -47,5 +52,11 @@
         "organizeImports": "on"
       }
     }
-  }
+  },
+  "overrides": [
+    {
+      "includes": ["**/*.md"],
+      "formatter": { "enabled": false }
+    }
+  ]
 }

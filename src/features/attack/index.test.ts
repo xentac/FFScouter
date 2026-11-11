@@ -174,14 +174,17 @@ describe("attack page bounty row", () => {
   test.each([
     ["unconsented (403 code 86)", api_error(ERROR_CONSENT_REQUIRED, 403)],
     ["invalid key (code 6)", api_error(ERROR_INVALID_KEY, 401)],
-  ])("%s: no row, no prompt, silenced for the hourly re-check", async (_label, err) => {
-    vi.mocked(bounty_board_cache.get_board).mockRejectedValue(err);
-    await open_attack(PLAYER_TARGET.target_player_id);
-    expect(row()).toBeNull();
-    expect(toast).not.toHaveBeenCalled();
-    expect(document.querySelector("button")?.textContent).toBe("Start fight");
-    expect(is_attack_bounty_silenced()).toBe(true);
-  });
+  ])(
+    "%s: no row, no prompt, silenced for the hourly re-check",
+    async (_label, err) => {
+      vi.mocked(bounty_board_cache.get_board).mockRejectedValue(err);
+      await open_attack(PLAYER_TARGET.target_player_id);
+      expect(row()).toBeNull();
+      expect(toast).not.toHaveBeenCalled();
+      expect(document.querySelector("button")?.textContent).toBe("Start fight");
+      expect(is_attack_bounty_silenced()).toBe(true);
+    },
+  );
 
   test("unregistered key: no row, no prompt, silenced", async () => {
     vi.mocked(check_key_status.is_registered).mockResolvedValue(false);
@@ -269,28 +272,31 @@ describe("attack page bounty row", () => {
     test.each([
       ["409 code 91 (exhausted or raced)", ERROR_NO_OPEN_BOUNTIES, 409],
       ["a rate limit", ERROR_RATE_LIMITED, 429],
-    ])("failure on %s toasts the API's message and leaves the manual button", async (_label, body, status) => {
-      vi.mocked(bounty_board_cache.submit_claim).mockRejectedValue(
-        api_error(body, status),
-      );
-      await open_attack(PLAYER_TARGET.target_player_id);
-      finish_fight("hospitalize");
-      await flush();
-      expect(toast).toHaveBeenCalledWith(body.error, TOAST_LEVEL.ERROR);
-      expect(claim_button()?.textContent).toBe("Claim");
-      expect(claim_button()?.disabled).toBe(false);
-    });
+    ])(
+      "failure on %s toasts the API's message and leaves the manual button",
+      async (_label, body, status) => {
+        vi.mocked(bounty_board_cache.submit_claim).mockRejectedValue(
+          api_error(body, status),
+        );
+        await open_attack(PLAYER_TARGET.target_player_id);
+        finish_fight("hospitalize");
+        await flush();
+        expect(toast).toHaveBeenCalledWith(body.error, TOAST_LEVEL.ERROR);
+        expect(claim_button()?.textContent).toBe("Claim");
+        expect(claim_button()?.disabled).toBe(false);
+      },
+    );
 
-    test.each([
-      "leave",
-      "mug",
-    ] as const)("%s claims nothing and doesn't re-read the board", async (move) => {
-      await open_attack(PLAYER_TARGET.target_player_id);
-      finish_fight(move);
-      await flush();
-      expect(bounty_board_cache.submit_claim).not.toHaveBeenCalled();
-      expect(bounty_board_cache.get_board).toHaveBeenCalledTimes(1);
-    });
+    test.each(["leave", "mug"] as const)(
+      "%s claims nothing and doesn't re-read the board",
+      async (move) => {
+        await open_attack(PLAYER_TARGET.target_player_id);
+        finish_fight(move);
+        await flush();
+        expect(bounty_board_cache.submit_claim).not.toHaveBeenCalled();
+        expect(bounty_board_cache.get_board).toHaveBeenCalledTimes(1);
+      },
+    );
 
     test("hospitalizing a target on no bounty claims nothing", async () => {
       await open_attack(1);

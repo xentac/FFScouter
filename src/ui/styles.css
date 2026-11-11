@@ -125,7 +125,7 @@
    graphic (unlike the fallback case below) has a stable, predictable
    height to tune against. */
 .ffscouter-gauge[data-ffscouter-attach-mode="honor-bar"]
-> .ffscouter-marker-wrapper {
+  > .ffscouter-marker-wrapper {
   top: 0;
   --ffscouter-marker-ty: -30%;
 }
@@ -137,7 +137,7 @@
    host actually renders at, with no measurement needed and no cosmetic
    hover bias — there's no bar to hover above. */
 .ffscouter-gauge[data-ffscouter-attach-mode="fallback"]
-> .ffscouter-marker-wrapper {
+  > .ffscouter-marker-wrapper {
   top: 0;
   bottom: 0;
   margin: auto 0;
@@ -307,6 +307,12 @@ ff-settings-panel {
   text-decoration: underline;
 }
 
+.ffscouter-cell {
+  cursor: pointer !important;
+  position: relative !important;
+  overflow: visible !important;
+}
+
 /* Real DOM FF/Est columns inside faction war lists */
 .faction-war .ffscouter-cell {
   float: left !important;
@@ -321,12 +327,6 @@ ff-settings-panel {
   text-align: center !important;
   line-height: 20px !important;
   z-index: 10 !important;
-}
-
-.ffscouter-cell {
-  cursor: pointer !important;
-  position: relative !important;
-  overflow: visible !important;
 }
 
 /* Stat Distribution Badge: small icon(s) in a faction/war .ffscouter-cell's
@@ -413,7 +413,7 @@ ff-settings-panel {
 
 /* Hide native column sort icons while FF/Est sort is active, but not our own */
 .faction-war:has(.ffscouter-header[data-ffscouter-sort])
-[class*="sortIcon___"]:not(.ffscouter-sort-icon),
+  [class*="sortIcon___"]:not(.ffscouter-sort-icon),
 .members-list:has(.ffscouter-header[data-ffscouter-sort])
   [class*="sortIcon___"]:not(.ffscouter-sort-icon) {
   visibility: hidden !important;
@@ -433,7 +433,7 @@ ff-settings-panel {
 
 /* 1. Level Column & Header (Excluding our injected columns) */
 .faction-war[data-ffscouter-hide-level="true"]
-.level:not(.ffscouter-cell):not(.ffscouter-header) {
+  .level:not(.ffscouter-cell):not(.ffscouter-header) {
   display: none !important;
 }
 
@@ -449,9 +449,9 @@ ff-settings-panel {
 
 /* 4. Column Width Reductions to accommodate custom columns without overflow */
 .faction-war[data-ffscouter-col-display="fair_fight"]:not(
-  [data-ffscouter-hide-level="true"]
-)
-.level:not(.ffscouter-cell):not(.ffscouter-header),
+    [data-ffscouter-hide-level="true"]
+  )
+  .level:not(.ffscouter-cell):not(.ffscouter-header),
 .faction-war[data-ffscouter-col-display="battle_stats"]:not(
     [data-ffscouter-hide-level="true"]
   )
@@ -580,7 +580,8 @@ body[data-ff-status-attack-enabled="true"]
    the status text. Kept as its own rule because one unsupported selector
    (:has()) would invalidate an entire comma list and drop the crosshair on
    every page above. */
-body[data-ff-status-attack-enabled="true"] [class*="dataGridRow__"]
+body[data-ff-status-attack-enabled="true"]
+  [class*="dataGridRow__"]
   ul#iconTray
   li[id^="icon"][id*="___"].iconShow:has(> a[aria-label="Online"]),
 body[data-ff-status-attack-enabled="true"]

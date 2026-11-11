@@ -807,8 +807,8 @@ test("column widths are correctly reduced when custom columns are active and lev
   await apply_ff_columns(list);
 
   expect(factionWar.getAttribute("data-ffscouter-col-display")).toBe("none");
-  expect(window.getComputedStyle(originalHeaderMember).width).toBe("");
-  expect(window.getComputedStyle(originalHeaderLvl).width).toBe("");
+  expect(window.getComputedStyle(originalHeaderMember).width).toBe("auto");
+  expect(window.getComputedStyle(originalHeaderLvl).width).toBe("auto");
 
   // B. With display = FAIR_FIGHT, they should have reduced widths
   ffconfig.war_col_display = FactionsColDisplay.FAIR_FIGHT;
@@ -817,8 +817,8 @@ test("column widths are correctly reduced when custom columns are active and lev
   expect(factionWar.getAttribute("data-ffscouter-col-display")).toBe(
     "fair_fight",
   );
-  expect(window.getComputedStyle(originalHeaderMember).width).toBe("");
-  expect(window.getComputedStyle(originalCellMember).width).toBe("");
+  expect(window.getComputedStyle(originalHeaderMember).width).toBe("auto");
+  expect(window.getComputedStyle(originalCellMember).width).toBe("auto");
   expect(window.getComputedStyle(originalHeaderLvl).width).toBe("29px");
   expect(window.getComputedStyle(originalCellLvl).width).toBe("29px");
   expect(window.getComputedStyle(originalHeaderStatus).width).toBe("50px");
@@ -840,8 +840,8 @@ test("column widths are correctly reduced when custom columns are active and lev
   expect(factionWar.getAttribute("data-ffscouter-col-display")).toBe(
     "battle_stats",
   );
-  expect(window.getComputedStyle(originalHeaderMember).width).toBe("");
-  expect(window.getComputedStyle(originalCellMember).width).toBe("");
+  expect(window.getComputedStyle(originalHeaderMember).width).toBe("auto");
+  expect(window.getComputedStyle(originalCellMember).width).toBe("auto");
   expect(window.getComputedStyle(originalHeaderLvl).width).toBe("29px");
   expect(window.getComputedStyle(originalCellLvl).width).toBe("29px");
   expect(window.getComputedStyle(originalHeaderStatus).width).toBe("50px");
@@ -905,27 +905,27 @@ test("regular member list position column shrinks to fit the injected column", a
   await apply_ff_columns(list);
 
   expect(list.getAttribute("data-ffscouter-col-display")).toBe("none");
-  expect(window.getComputedStyle(headerPosition).width).toBe("");
-  expect(window.getComputedStyle(cellPosition).width).toBe("");
+  expect(window.getComputedStyle(headerPosition).width).toBe("auto");
+  expect(window.getComputedStyle(cellPosition).width).toBe("auto");
 
-  // B. With display = FAIR_FIGHT, position shrinks to make room. jsdom does
-  // not evaluate @media rules, so this sees only the 15% reduced-width base;
-  // the full-page-mode 10% override (>= 784px, see Width Budget in
-  // CONTEXT.md) is verified by live measurement only.
+  // B. With display = FAIR_FIGHT, position shrinks to make room. jsdom 31
+  // evaluates @media rules against a fixed 1024px viewport, so this sees the
+  // full-page-mode 10% override (>= 784px, see Width Budget in CONTEXT.md)
+  // rather than the 15% reduced-width base.
   ffconfig.factions_col_display = FactionsColDisplay.FAIR_FIGHT;
   await apply_ff_columns(list);
 
   expect(list.getAttribute("data-ffscouter-col-display")).toBe("fair_fight");
-  expect(window.getComputedStyle(headerPosition).width).toBe("15%");
-  expect(window.getComputedStyle(cellPosition).width).toBe("15%");
+  expect(window.getComputedStyle(headerPosition).width).toBe("10%");
+  expect(window.getComputedStyle(cellPosition).width).toBe("10%");
 
   // C. Same for BATTLE_STATS
   ffconfig.factions_col_display = FactionsColDisplay.BATTLE_STATS;
   await apply_ff_columns(list);
 
   expect(list.getAttribute("data-ffscouter-col-display")).toBe("battle_stats");
-  expect(window.getComputedStyle(headerPosition).width).toBe("15%");
-  expect(window.getComputedStyle(cellPosition).width).toBe("15%");
+  expect(window.getComputedStyle(headerPosition).width).toBe("10%");
+  expect(window.getComputedStyle(cellPosition).width).toBe("10%");
 
   document.body.removeChild(list);
 

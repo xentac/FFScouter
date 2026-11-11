@@ -115,15 +115,13 @@ describe("should_show_bounty_board", () => {
     expect(should_show_bounty_board()).toBe(true);
   });
 
-  test.each([
-    "#!p=add",
-    "#!p=mine",
-    "#/p=add",
-    "#/!p=add",
-  ])("does not match %j", (hash) => {
-    set_location(hash);
-    expect(should_show_bounty_board()).toBe(false);
-  });
+  test.each(["#!p=add", "#!p=mine", "#/p=add", "#/!p=add"])(
+    "does not match %j",
+    (hash) => {
+      set_location(hash);
+      expect(should_show_bounty_board()).toBe(false);
+    },
+  );
 
   test("does not match other pages", () => {
     set_location("#!p=main", "profiles");

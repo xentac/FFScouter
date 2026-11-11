@@ -8,6 +8,8 @@
     "jsx": "react-jsx",
     "allowJs": false,
 
+    "types": ["tampermonkey"],
+
     // Bundler mode
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
@@ -29,14 +31,13 @@
     "noPropertyAccessFromIndexSignature": true,
 
     // Aliases
-    "baseUrl": ".",
     "paths": {
-      "@ui/*": ["src/ui/*"],
-      "@utils/*": ["src/utils/*"],
-      "@features/*": ["src/features/*"],
-      "@real-react": ["node_modules/@types/react/index.d.ts"],
-      "@real-react-dom": ["node_modules/@types/react-dom/index.d.ts"],
-      "@real-react-dom-client": ["node_modules/@types/react-dom/client.d.ts"]
+      "@ui/*": ["./src/ui/*"],
+      "@utils/*": ["./src/utils/*"],
+      "@features/*": ["./src/features/*"],
+      "@real-react": ["./node_modules/@types/react/index.d.ts"],
+      "@real-react-dom": ["./node_modules/@types/react-dom/index.d.ts"],
+      "@real-react-dom-client": ["./node_modules/@types/react-dom/client.d.ts"]
     }
   }
 }

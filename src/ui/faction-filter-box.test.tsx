@@ -491,10 +491,23 @@ test("has correct mobile order for filter groups", async () => {
       ).not.toBeNull(),
     );
 
+    // jsdom 31 evaluates @media rules against a fixed 1024px viewport, where
+    // the desktop override (order: 0) wins. Read the top-level rules for the
+    // mobile base order instead of the computed style.
+    const sheet = styleEl.sheet;
+    if (!sheet) throw new Error("stylesheet did not parse");
+
     const getOrder = (selector: string) => {
-      const target = container.querySelector(selector);
-      if (!target) return "";
-      return window.getComputedStyle(target).order;
+      expect(container.querySelector(selector)).not.toBeNull();
+      for (const rule of Array.from(sheet.cssRules)) {
+        if (
+          rule instanceof window.CSSStyleRule &&
+          rule.selectorText === selector
+        ) {
+          return rule.style.order;
+        }
+      }
+      return "";
     };
 
     expect(getOrder(".ff-filter-box__group--sort")).toBe("1");

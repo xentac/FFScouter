@@ -38,16 +38,21 @@ Remount Leak]] in CONTEXT.md) has been confirmed and fixed. The rest are not yet
   certainly KB-, not GB-, scale: `bubble_width_cache` (`src/utils/dom.ts:205`) and
   `seenUnknownActivityLabels` (`src/utils/dom.ts:452`). Hygiene-level fix, not urgent.
 
-# React Doctor follow-ups (re-run: v0.5.8, after CSS-modules migration + Fedded/Fallen)
+# React Doctor follow-ups (re-run: v0.9.22, after the 2026-11 dependency update)
 
-60 warnings total (Bugs 9, Performance 17, Accessibility 14, Maintainability 20).
-Run `bun run react-doctor` to re-check. The prop-sync bug
-(no-adjust-state-on-prop-change in flight-status) is already fixed. Line numbers
-below are post-CSS-modules; confirm each against the code before acting.
+28 warnings total, 0 errors (Bugs 4, Performance 5, Accessibility 13, Maintainability 5,
+Security 1). Run `bun run react-doctor` to re-check. The entries below were triaged
+against v0.5.8; their rule names and line numbers have not been re-checked against
+v0.9.22's rule set. The prop-sync bug (no-adjust-state-on-prop-change in flight-status)
+is already fixed.
 
 Resolved since last baseline (by the CSS-modules migration): `no-inline-exhaustive-style`
 on the faction-filter-box `<select>` and that select's `no-tiny-text` (11px) — both moved
 into `faction-filter-box.module.css`.
+
+Resolved in v0.9.22: `no-ref-current-in-render` — `faction-filter-box.tsx` now writes
+its state-backed refs at the update sites and mirrors props in an effect; `flight-status.tsx`
+syncs its data ref in an effect.
 
 ## Maintainability
 - Decompose `FFFactionFilterBox` (`src/ui/faction-filter-box.tsx:169`, ~735 lines) and
