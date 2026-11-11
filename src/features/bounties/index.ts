@@ -17,8 +17,12 @@ import { type Feature, StartTime } from "../feature";
 // hash before its router runs, "#!p=main", and "#/!p=main&start=20" from its
 // in-page links (pagination, the newspaper "bounties" link). Any route whose
 // p is absent or "main" is the main list; "#/p=add", "#!p=mine" are not.
+const HASH_ROUTE_PREFIX = /^#\/?!?/;
+
 function is_bounty_main_route(): boolean {
-  const params = new URLSearchParams(location.hash.replace(/^#\/?!?/, ""));
+  const params = new URLSearchParams(
+    location.hash.replace(HASH_ROUTE_PREFIX, ""),
+  );
   const route = params.get("p");
   return route === null || route === "main";
 }
@@ -139,7 +143,7 @@ function place_section() {
       sync();
       return;
     }
-    log.warn("Torn's bounty list didn't render; floating FF Scouter Bounties");
+    log.warn("Torn's bounty list didn't render; floating FFScouter Bounties");
     float_modal();
     // Keep watching, so a list Torn renders later still moves it in-flow.
     watch_page();
@@ -177,9 +181,9 @@ function sync() {
 }
 
 export default {
-  name: "FF Scouter Bounties",
+  name: "FFScouter Bounties",
   description:
-    "FF Scouter Bounties board on Torn's bounties page, floating on desktop and in-flow on narrow layouts (separate from Torn's own bounties)",
+    "FFScouter Bounties board on Torn's bounties page, floating on desktop and in-flow on narrow layouts (separate from Torn's own bounties)",
   executionTime: StartTime.DocumentBody,
 
   // Only the page is checked here: shouldRun() runs once at boot, so the

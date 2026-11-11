@@ -155,7 +155,6 @@ export function apply_filters_and_sort(
       // unknown timer can't support. Do not "fix" this to match the ranges.
       let matchesOutSoon = false;
       if (filters.outSoon && (status === "hospital" || status === "jail")) {
-        // biome-ignore lint/complexity/useLiteralKeys: tsc requires index signature lookup
         const untilRaw = row.dataset["until"];
         const untilTs = untilRaw ? Number.parseInt(untilRaw, 10) : null;
         if (untilTs !== null && !Number.isNaN(untilTs) && untilTs !== 0) {
@@ -197,10 +196,8 @@ export function apply_filters_and_sort(
       }
 
       // FF Range
-      // biome-ignore lint/complexity/useLiteralKeys: tsc requires index signature lookup
       const ffVal = row.dataset["ffValue"]
-        ? // biome-ignore lint/complexity/useLiteralKeys: tsc requires index signature lookup
-          Number.parseFloat(row.dataset["ffValue"])
+        ? Number.parseFloat(row.dataset["ffValue"])
         : null;
       const matchesFF =
         ffVal === null ||
@@ -213,10 +210,8 @@ export function apply_filters_and_sort(
       }
 
       // Stats Range
-      // biome-ignore lint/complexity/useLiteralKeys: tsc requires index signature lookup
       const estVal = row.dataset["estValue"]
-        ? // biome-ignore lint/complexity/useLiteralKeys: tsc requires index signature lookup
-          Number.parseInt(row.dataset["estValue"], 10)
+        ? Number.parseInt(row.dataset["estValue"], 10)
         : null;
       const matchesStats =
         estVal === null ||
@@ -235,7 +230,6 @@ export function apply_filters_and_sort(
       // Last Action Range (war-only; TWSE-sourced, see CONTEXT.md's "Last
       // Action Range Filter"). A missing attribute or the 0 sentinel TWSE
       // uses for "unknown" always passes, same graceful fallback as FF/Stats.
-      // biome-ignore lint/complexity/useLiteralKeys: tsc requires index signature lookup
       const lastActionRaw = row.dataset["twseLastActionTimestamp"];
       const lastActionTs = lastActionRaw
         ? Number.parseInt(lastActionRaw, 10)
@@ -436,6 +430,5 @@ function is_filter_active(filters: {
   statsMin?: number | null;
   statsMax?: number | null;
 }): boolean {
-  if (filters.sortBy !== "none") return true;
-  return false;
+  return filters.sortBy !== "none";
 }

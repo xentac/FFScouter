@@ -133,7 +133,7 @@ export class BountyBoardCache {
   // reads are async, so concurrent callers would otherwise all miss and
   // fetch.
   get_board = async (): Promise<BountySellerBoardResponse> => {
-    if (this.inflight) {
+    if (this.inflight !== null) {
       return this.inflight;
     }
     this.inflight = this.load_board();

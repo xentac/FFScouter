@@ -1,4 +1,4 @@
-// Pure view-model for the FF Scouter Bounties board: turns board targets plus
+// Pure view-model for the FFScouter Bounties board: turns board targets plus
 // the FF lookup into sorted, filtered row models. No DOM — shared by the
 // desktop floating modal and the later mobile in-flow container.
 import {
@@ -125,6 +125,10 @@ export function resolve_board_status(
   return { kind: "static", state, unavailable: UNAVAILABLE_STATES.has(state) };
 }
 
+export function assertNever(value: never): never {
+  throw new Error(`Unhandled case: ${JSON.stringify(value)}`);
+}
+
 export function is_status_available(view: BoardStatusView): boolean {
   switch (view.kind) {
     case "unknown":
@@ -135,6 +139,8 @@ export function is_status_available(view: BoardStatusView): boolean {
       return false;
     case "static":
       return !view.unavailable;
+    default:
+      return assertNever(view);
   }
 }
 
@@ -282,7 +288,8 @@ export function ff_ids_to_load(
     }
     if (target.target_faction_id != null) {
       if (expanded.has(target.target_faction_id)) {
-        for (const member of target.members ?? []) {
+        const members = target.members ?? [];
+        for (const member of members) {
           ids.push(member.player_id);
         }
       }

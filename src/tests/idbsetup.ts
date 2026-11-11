@@ -104,8 +104,8 @@ if (
       },
       removeItem: {
         value: (key: string) => {
-          delete store[key];
-          delete mock[key];
+          Reflect.deleteProperty(store, key);
+          Reflect.deleteProperty(mock, key);
         },
         writable: true,
         configurable: true,
@@ -113,7 +113,7 @@ if (
       clear: {
         value: () => {
           for (const key of Object.keys(store)) {
-            delete mock[key];
+            Reflect.deleteProperty(mock, key);
           }
           store = {};
         },

@@ -17,9 +17,9 @@ import { clear_v2_data } from "@utils/migrate";
 import { format_timestamp } from "@utils/strings";
 
 export default {
-  name: "FF Scouter settings panel",
+  name: "FFScouter settings panel",
   description:
-    "Give users a FF Scouter settings box injected on the profile page",
+    "Give users a FFScouter settings box injected on the profile page",
   executionTime: StartTime.DocumentBody,
 
   async shouldRun() {
@@ -42,7 +42,8 @@ export default {
       }
 
       const localIdStr = await getLocalUserId();
-      const localId = localIdStr !== null ? parseInt(localIdStr, 10) : null;
+      const localId =
+        localIdStr !== null ? Number.parseInt(localIdStr, 10) : null;
       // Fail open when the logged-in user's own id can't be determined
       // (localId null/NaN): an opt-in restriction silently hiding the whole
       // panel is worse than it occasionally not applying.
@@ -54,7 +55,7 @@ export default {
     const panel = await create_ff_element("ff-settings-panel");
     if (!panel) {
       toast(
-        "FF Scouter settings failed to load. This may be caused by a conflicting browser extension (e.g. AdBlocker Ultimate).",
+        "FFScouter settings failed to load. This may be caused by a conflicting browser extension (e.g. AdBlocker Ultimate).",
         TOAST_LEVEL.ERROR,
       );
       return;
@@ -217,7 +218,7 @@ export default {
       try {
         ffscouter.clear_cache();
         clear_v2_data();
-        toast("FF Scouter cache cleared successfully!");
+        toast("FFScouter cache cleared successfully!");
       } catch (err) {
         logger.error("Failed to delete IndexedDB cache", err);
         toast("Failed to clear cache database", TOAST_LEVEL.ERROR);
@@ -244,7 +245,7 @@ export default {
       }
       panel.isPremium = null;
       panel.isKeyRegistered = null;
-      let result: FFApiCheckResponse | null = null;
+      let result: FFApiCheckResponse | null;
       try {
         result = await check_key(detail.apiKey);
       } catch (err) {
@@ -263,10 +264,10 @@ export default {
         return;
       }
 
-      let message = `FF Scouter not configured. API key (${result.result.key}) not registered.`;
+      let message = `FFScouter not configured. API key (${result.result.key}) not registered.`;
       let level = TOAST_LEVEL.ERROR;
       if (result.result.is_registered) {
-        message = `FF Scouter successfully configured. API key (${result.result.key}) was registered on ${format_timestamp(result.result.registered_at)} and last used ${format_timestamp(result.result.last_used)}.`;
+        message = `FFScouter successfully configured. API key (${result.result.key}) was registered on ${format_timestamp(result.result.registered_at)} and last used ${format_timestamp(result.result.last_used)}.`;
         level = TOAST_LEVEL.INFO;
 
         ffconfig.key = detail.apiKey;
@@ -308,7 +309,7 @@ export default {
     // Check key status in the background so it never blocks panel injection.
     // is_registered reads the same cached check-key response is_premium just
     // populated, so this is one API call, not two.
-    check_key_status.is_premium(true).then(async (result) => {
+    void check_key_status.is_premium(true).then(async (result) => {
       panel.isPremium = result;
       panel.isKeyRegistered = await check_key_status.is_registered(false);
     });

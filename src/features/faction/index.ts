@@ -336,7 +336,9 @@ function setup_reapply_watcher(
   });
 
   const flightInterval = setInterval(() => {
-    poll_traveling_flights(list);
+    void poll_traveling_flights(list).catch((err) => {
+      log.error("Failed to poll traveling flights", err);
+    });
     update_twse_presence_flags(list);
     // Out Soon membership changes purely by time passing (a hidden row's
     // timer crossing the threshold produces no DOM event we observe), so
@@ -521,10 +523,11 @@ function setup_header_click(
         e.stopPropagation();
         const newSort = handle.sortBy === "ff-desc" ? "ff-asc" : "ff-desc";
         handle.setSortBy(newSort);
-      } else if (target.closest(nativeTabSelector)) {
-        if (handle.sortBy !== "none") {
-          handle.setSortBy("none");
-        }
+      } else if (
+        target.closest(nativeTabSelector) &&
+        handle.sortBy !== "none"
+      ) {
+        handle.setSortBy("none");
       }
     },
     { capture: true },
@@ -687,16 +690,15 @@ export function should_run_faction(): boolean {
   if (torn_page("factions", { step: "profile" })) {
     return true;
   }
-  if (torn_page("factions", { step: "your" })) {
-    if (
-      window.location.hash === "" ||
+  if (
+    torn_page("factions", { step: "your" }) &&
+    (window.location.hash === "" ||
       window.location.hash === "#" ||
       window.location.hash === "#/" ||
       window.location.hash.startsWith("#/war/") ||
-      window.location.hash === "#/tab=info"
-    ) {
-      return true;
-    }
+      window.location.hash === "#/tab=info")
+  ) {
+    return true;
   }
   return false;
 }
@@ -743,7 +745,7 @@ function build_api_key_notice(message: string): HTMLElement {
 
   const msg = document.createElement("span");
   const link = document.createElement("a");
-  link.textContent = "FF Scouter Settings";
+  link.textContent = "FFScouter Settings";
   link.style.cssText =
     "color: #fff; font-weight: bold; text-decoration: underline;";
   // No href until getLocalUserId() resolves below: an <a> without href isn't
@@ -799,7 +801,7 @@ async function update_api_key_notice_impl() {
   let message: string;
   if (!ffconfig.key) {
     message =
-      "FF Scouter needs your API key to show Fair Fight data here. Enter it in ";
+      "FFScouter needs your API key to show Fair Fight data here. Enter it in ";
   } else {
     // Fails open on a null (unknown/error) result: a transient API hiccup
     // should never accuse the user of having a bad key.
@@ -807,7 +809,7 @@ async function update_api_key_notice_impl() {
     if (registered !== false) {
       return;
     }
-    message = "Your FF Scouter API key isn't registered. Check it in ";
+    message = "Your FFScouter API key isn't registered. Check it in ";
   }
 
   // Re-check after the await above: navigation, dismissal, or another queued

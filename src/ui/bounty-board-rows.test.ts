@@ -456,6 +456,7 @@ test("hide_unavailable filters faction members and hides an all-unavailable card
   ).toEqual([400002, 400003]);
 
   const all_out = faction({
+    // biome-ignore lint/nursery/noMapSpread: FACTION_TARGET is shared by other tests and must stay unchanged
     members: FACTION_TARGET.members.map((m) => ({
       ...m,
       status: status("Traveling", 0),

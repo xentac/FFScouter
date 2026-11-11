@@ -95,7 +95,7 @@ function cancel_helper(): void {
 // buttons and the modal.
 function hide_feature(): void {
   ffconfig.od_insurance_enabled = false;
-  toast("OD Insurance hidden. Turn it back on in FF Scouter Settings.");
+  toast("OD Insurance hidden. Turn it back on in FFScouter Settings.");
   window.dispatchEvent(new CustomEvent("ff-config-updated"));
 }
 

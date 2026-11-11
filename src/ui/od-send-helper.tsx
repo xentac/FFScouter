@@ -45,7 +45,10 @@ function load_position(): Position {
 
 export type HelperStep = { label: string; done: boolean; current: boolean };
 
-const mark = (step: HelperStep) => (step.done ? "✓" : step.current ? "▸" : "·");
+const mark = (step: HelperStep) => {
+  if (step.done) return "✓";
+  return step.current ? "▸" : "·";
+};
 
 /**
  * The floating Send Helper. The step button does one step per press; the

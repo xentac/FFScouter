@@ -30,6 +30,11 @@ const log = logger.child("dom");
 
 const ID_PARAMS = ["XID", "user2ID"];
 
+const XID_TARGET_REGEX = /.*XID=(?<target_id>\d+)/;
+const USER_ID_TARGET_REGEX = /.*userId=(?<target_id>\d+)/;
+const ACTIVITY_STATUS_REGEX = / is (online|offline|idle)$/i;
+const RFC_TOKEN_REGEX = /(?:^|;\s*)rfc_v=([^;]*)/;
+
 // Which shape of host element a Gauge Marker is being attached to — see
 // [[Gauge Attach Mode]] in CONTEXT.md / ADR 0006. Governs vertical
 // positioning only; the horizontal gauge-track math is shared by both.
@@ -45,7 +50,7 @@ export function extract_id_from_url(url: string): PlayerId | null {
   for (const param of ID_PARAMS) {
     const v = search.get(param);
     if (v) {
-      return parseInt(v, 10);
+      return Number.parseInt(v, 10);
     }
   }
 
@@ -98,7 +103,7 @@ export function torn_page(
     const hash = window.location.hash;
     for (const h of match_hash) {
       if (h.endsWith("*")) {
-        const stripped = h.substring(0, h.length - 1);
+        const stripped = h.slice(0, -1);
         if (hash.startsWith(stripped)) {
           hash_match = true;
           break;
@@ -330,7 +335,7 @@ export function add_ff_arrow(
     element.querySelector(".ffscouter-gauge") ||
     element.classList.contains("ffscouter-gauge")
   ) {
-    ffscouter.add_analytics_entry(featureName, player_id, "ignored");
+    void ffscouter.add_analytics_entry(featureName, player_id, "ignored");
     return;
   }
 
@@ -345,7 +350,7 @@ export function add_ff_arrow(
         element.querySelector(".ffscouter-gauge") ||
         element.classList.contains("ffscouter-gauge")
       ) {
-        ffscouter.add_analytics_entry(featureName, player_id, "ignored");
+        void ffscouter.add_analytics_entry(featureName, player_id, "ignored");
         return;
       }
 
@@ -405,7 +410,7 @@ export function add_ff_arrow(
           `${width}px`,
         );
       }
-      ffscouter.add_analytics_entry(featureName, player_id, "applied");
+      void ffscouter.add_analytics_entry(featureName, player_id, "applied");
     })
     .catch((err: unknown) => {
       log.error(err);
@@ -426,7 +431,7 @@ function extract_target_id(href: string, r: RegExp) {
   const match = href.match(r);
   const groups = match?.groups as TargetIdMatch;
   if (groups?.target_id) {
-    return parseInt(groups.target_id, 10) as PlayerId;
+    return Number.parseInt(groups.target_id, 10);
   }
 
   return null;
@@ -436,7 +441,7 @@ export function get_player_id_in_element(element: Element): PlayerId | null {
   const parent = element.parentElement;
 
   if (has_href(parent)) {
-    const xid = extract_target_id(parent.href, /.*XID=(?<target_id>\d+)/);
+    const xid = extract_target_id(parent.href, XID_TARGET_REGEX);
     if (xid) {
       return xid;
     }
@@ -445,25 +450,22 @@ export function get_player_id_in_element(element: Element): PlayerId | null {
   const anchors = element.getElementsByTagName("a");
 
   for (const anchor of anchors) {
-    const xid = extract_target_id(anchor.href, /.*XID=(?<target_id>\d+)/);
+    const xid = extract_target_id(anchor.href, XID_TARGET_REGEX);
     if (xid) {
       return xid;
     }
-    const userid = extract_target_id(anchor.href, /.*userId=(?<target_id>\d+)/);
+    const userid = extract_target_id(anchor.href, USER_ID_TARGET_REGEX);
     if (userid) {
       return userid;
     }
   }
 
   if (has_href(element)) {
-    const xid = extract_target_id(element.href, /.*XID=(?<target_id>\d+)/);
+    const xid = extract_target_id(element.href, XID_TARGET_REGEX);
     if (xid) {
       return xid;
     }
-    const userid = extract_target_id(
-      element.href,
-      /.*userId=(?<target_id>\d+)/,
-    );
+    const userid = extract_target_id(element.href, USER_ID_TARGET_REGEX);
     if (userid) {
       return userid;
     }
@@ -473,17 +475,11 @@ export function get_player_id_in_element(element: Element): PlayerId | null {
   const parent_anchor = element.closest("a");
 
   if (parent_anchor) {
-    const xid = extract_target_id(
-      parent_anchor.href,
-      /.*XID=(?<target_id>\d+)/,
-    );
+    const xid = extract_target_id(parent_anchor.href, XID_TARGET_REGEX);
     if (xid) {
       return xid;
     }
-    const userid = extract_target_id(
-      parent_anchor.href,
-      /.*userId=(?<target_id>\d+)/,
-    );
+    const userid = extract_target_id(parent_anchor.href, USER_ID_TARGET_REGEX);
     if (userid) {
       return userid;
     }
@@ -505,7 +501,7 @@ export function get_activity_status(
 ): "online" | "idle" | "offline" | "unknown" {
   const wrap = row.querySelector('[class*="userStatusWrap"]');
   const label = wrap?.getAttribute("aria-label") || "";
-  const match = label.match(/ is (online|offline|idle)$/i);
+  const match = label.match(ACTIVITY_STATUS_REGEX);
   const status = match?.[1];
 
   if (!status) {
@@ -569,10 +565,8 @@ export async function wait_for_element<T extends Element>(
       }
     });
 
-    if (!root) {
-      root = document.body;
-    }
-    observer.observe(root, {
+    const target_root = root ?? document.body;
+    observer.observe(target_root, {
       childList: true,
       subtree: true,
     });
@@ -757,7 +751,7 @@ export class MonitorElements {
  */
 export function getRFC(): string {
   try {
-    const match = document.cookie.match(/(?:^|;\s*)rfc_v=([^;]*)/);
+    const match = document.cookie.match(RFC_TOKEN_REGEX);
     return match?.[1] ? decodeURIComponent(match[1]) : "";
   } catch (e) {
     log.error("Error getting RFC token:", e);
@@ -777,9 +771,9 @@ export function getHashParameters(hash?: string): URLSearchParams {
   let finalHash = hash || location.hash;
 
   if (finalHash.startsWith("#/")) {
-    finalHash = finalHash.substring(2);
+    finalHash = finalHash.slice(2);
   } else if (finalHash.startsWith("#") || finalHash.startsWith("/")) {
-    finalHash = finalHash.substring(1);
+    finalHash = finalHash.slice(1);
   }
 
   if (!finalHash.startsWith("!") && !finalHash.startsWith("?")) {

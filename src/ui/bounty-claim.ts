@@ -1,4 +1,4 @@
-// Claim submission shared by the FF Scouter Bounties board and the Attack Page
+// Claim submission shared by the FFScouter Bounties board and the Attack Page
 // Bounty Row. The POST is authoritative, so a failure — notably 409 code 91
 // (exhausted or raced) or 400 code 87 (key lacks attacks access) — is toasted
 // with the API's own message. Never rejects, so callers can always clear their

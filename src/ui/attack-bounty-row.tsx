@@ -1,7 +1,7 @@
 // The Attack Page Bounty Row: informational before the fight (price per hit
 // and hits remaining, so the bounty can factor into the finishing-move
 // choice — only hospitalizations pay) and the manual Claim fallback. Branded
-// FF Scouter so it never reads as a Torn Bounty.
+// FFScouter so it never reads as a Torn Bounty.
 import type { BountyMatch } from "@utils/bounty_match";
 import { format_suffix_number } from "@utils/strings";
 import styles from "./attack-bounty-row.module.css";
@@ -35,7 +35,7 @@ export function AttackBountyRow({
 
   return (
     <div id="ffscouter-attack-bounty-row" className={cls.row}>
-      <span className={cls.label}>FF Scouter Bounty:</span>
+      <span className={cls.label}>FFScouter Bounty:</span>
       {top ? (
         // Once the top tier is spent the payout drops, so the full ladder is
         // disclosed rather than only the headline price.

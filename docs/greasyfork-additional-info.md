@@ -1,11 +1,11 @@
-FF Scouter overlays Fair Fight ("FF") or estimated Battle Stat ("Est") values for players on every Torn City page, computed by the [FFScouter service](https://ffscouter.com) using data Torn's own API exposes about you and the players you attack.
+FFScouter overlays Fair Fight ("FF") or estimated Battle Stat ("Est") values for players on every Torn City page, computed by the [FFScouter service](https://ffscouter.com) using data Torn's own API exposes about you and the players you attack.
 
 ## Features
 
 - FF/Est display on profile pages, faction member lists, ranked war pages, attack pages, the item market, mini-profiles, and the Russian Roulette page
 - Faction and ranked war sorting and filtering
 - A floating "FF" button to cycle through chain targets matching your filters
-- Flight estimates for traveling players on profiles and mini-profiles (FF Scouter Premium)
+- Flight estimates for traveling players on profiles and mini-profiles (FFScouter Premium)
 - Configurable gauge marker style (arrow or bubble) and color scheme for FF/Est values
 - Quick-attack links from online/idle/offline status indicators
 - A link from player profiles to their full FF history on ffscouter\.com
@@ -17,7 +17,7 @@ Install both [FF Scouter](https://greasyfork.org/en/scripts/535292-ff-scouter-v2
 
 ## Setup
 
-FF Scouter needs your Torn API key to query [FFScouter](https://ffscouter.com) for Fair Fight / Battle Stat estimates. Open the FF Scouter Settings panel on your profile page and paste your key into the **API Key** field. If you're not sure which key you've already given it, check your [API preferences](https://www.torn.com/preferences.php#tab=api) for a key with "FFScouter3" in its comment history.
+FFScouter needs your Torn API key to query [FFScouter](https://ffscouter.com) for Fair Fight / Battle Stat estimates. Open the FFScouter Settings panel on your profile page and paste your key into the **API Key** field. If you're not sure which key you've already given it, check your [API preferences](https://www.torn.com/preferences.php#tab=api) for a key with "FFScouter3" in its comment history.
 
 We recommend creating a **Custom** key by following the [sign up directions](https://ffscouter.com/#get-started) to limit unnecessary permissions being shared with [FFScouter](https://ffscouter.com).
 
@@ -65,7 +65,7 @@ FFScouter (`ffscouter.com`) is a separate service this script depends on, run by
 
 Found a bug or have a feature request? [Open an issue on GitHub](https://github.com/xentac/FFScouter/issues).
 
-Support is also available in the [FF Scouter discord server](https://ffscouter.com/discord).
+Support is also available in the [FFScouter discord server](https://ffscouter.com/discord).
 
 ## Disclaimer
 

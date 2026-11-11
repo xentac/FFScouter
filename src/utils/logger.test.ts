@@ -121,7 +121,6 @@ test("Logger child creates a child logger with combined prefixes", () => {
 
 test("Logger formats DOM Element safely", () => {
   const pdaLogger = new Logger("PDA-TEST", LogLevel.DEBUG);
-  // biome-ignore lint/complexity/useLiteralKeys: access private property
   pdaLogger["isPDA"] = true;
   const debugSpy = vi.spyOn(console, "log").mockImplementation(() => {});
   const div = document.createElement("div");
@@ -136,7 +135,6 @@ test("Logger formats DOM Element safely", () => {
 
 test("Logger formats nested DOM Element safely", () => {
   const pdaLogger = new Logger("PDA-TEST", LogLevel.DEBUG);
-  // biome-ignore lint/complexity/useLiteralKeys: access private property
   pdaLogger["isPDA"] = true;
   const debugSpy = vi.spyOn(console, "log").mockImplementation(() => {});
   const div = document.createElement("span");
@@ -152,7 +150,6 @@ test("Logger formats nested DOM Element safely", () => {
 
 test("Logger serializes Error objects safely", () => {
   const pdaLogger = new Logger("PDA-TEST", LogLevel.DEBUG);
-  // biome-ignore lint/complexity/useLiteralKeys: access private property
   pdaLogger["isPDA"] = true;
   const debugSpy = vi.spyOn(console, "log").mockImplementation(() => {});
   const err = new Error("something went wrong");
@@ -167,7 +164,6 @@ test("Logger serializes Error objects safely", () => {
 
 test("Logger handles circular references safely", () => {
   const pdaLogger = new Logger("PDA-TEST", LogLevel.DEBUG);
-  // biome-ignore lint/complexity/useLiteralKeys: access private property
   pdaLogger["isPDA"] = true;
   const debugSpy = vi.spyOn(console, "log").mockImplementation(() => {});
   const obj: any = { a: 1 };

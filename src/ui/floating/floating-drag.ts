@@ -61,7 +61,7 @@ function clamp_to_viewport(rect: Rect, viewport: Size): Rect {
 // A rect in a zone moves to the nearest free spot straight above or below it,
 // so it stays on the same side edge. With no free spot, it stays put.
 function escape_zones(rect: Rect, viewport: Size, zones: Rect[]): Rect {
-  if (!zones.some((zone) => overlaps(rect, zone))) return rect;
+  if (zones.every((zone) => !overlaps(rect, zone))) return rect;
   const height = rect.bottom - rect.top;
   let best = rect;
   for (const zone of zones) {
@@ -137,11 +137,9 @@ export function drop_anchor(
   const placed = clamp_to_viewport(dropped, viewport);
   const side: Side =
     (placed.left + placed.right) / 2 < viewport.width / 2 ? "left" : "right";
-  const inset = snap
-    ? EDGE_GAP
-    : side === "left"
-      ? placed.left
-      : viewport.width - placed.right;
+  const free_inset =
+    side === "left" ? placed.left : viewport.width - placed.right;
+  const inset = snap ? EDGE_GAP : free_inset;
   const size = {
     width: placed.right - placed.left,
     height: placed.bottom - placed.top,
@@ -228,7 +226,7 @@ function load_anchor(id: string): Anchor | null {
 
 function save_anchor(id: string, anchor: Anchor) {
   default_storage.set(POSITIONS_KEY, {
-    ...(default_storage.get<Record<string, Anchor>>(POSITIONS_KEY) ?? {}),
+    ...default_storage.get<Record<string, Anchor>>(POSITIONS_KEY),
     [id]: anchor,
   });
 }

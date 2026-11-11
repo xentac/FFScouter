@@ -214,7 +214,7 @@ class Logger {
           const seen = new WeakSet();
           return JSON.stringify(
             arg,
-            (_key, val) => {
+            (_key, val: unknown) => {
               if (typeof val === "object" && val !== null) {
                 if (seen.has(val)) {
                   return "[Circular]";
@@ -255,6 +255,8 @@ function isDOMNode(val: unknown): boolean {
   );
 }
 
+const WHITESPACE_REGEX = /\s+/;
+
 function formatDOMNode(node: any): string {
   if (node.nodeType === 1) {
     const tagName = node.tagName.toLowerCase();
@@ -263,7 +265,7 @@ function formatDOMNode(node: any): string {
       node.className &&
       typeof node.className === "string" &&
       node.className.trim()
-        ? `.${node.className.trim().split(/\s+/).join(".")}`
+        ? `.${node.className.trim().split(WHITESPACE_REGEX).join(".")}`
         : "";
     return `<${tagName}${id}${classes}>`;
   }

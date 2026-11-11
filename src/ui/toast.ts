@@ -69,7 +69,7 @@ export function toast(message: string, level: TOAST_LEVEL = TOAST_LEVEL.INFO) {
     msg.textContent = `FairFight Scouter V2: ${message}`;
   }
 
-  log.info("[FF Scouter V2] Toast: ", message);
+  log.info("[FFScouter V2] Toast: ", message);
 
   toast.appendChild(msg);
   toast.appendChild(closeBtn);

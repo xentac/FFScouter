@@ -24,7 +24,8 @@ export function add_row_slots(
 ): HTMLElement[] {
   const added: HTMLElement[] = [];
   if (item_ids.length === 0) return added;
-  for (const row of root.querySelectorAll(row_selector(item_ids))) {
+  const rows = root.querySelectorAll(row_selector(item_ids));
+  for (const row of rows) {
     if (row.hasAttribute(OD_ROW_MARK)) continue;
     const name = row.querySelector(".title > .name-wrap");
     if (!name) continue;

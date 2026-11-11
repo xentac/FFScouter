@@ -180,6 +180,7 @@ test("handles display mode dropdown and dynamic config updates", async () => {
     await waitFor(() => expect(sortBtn.textContent?.trim()).toContain("FF ▼"));
 
     // External config update reloads colDisplay
+    // biome-ignore lint/nursery/useAtomicUpdates: test fixture sets a global config value; no concurrent writer exists
     ffconfig.factions_col_display = "battle_stats" as any;
     window.dispatchEvent(new CustomEvent("ff-config-updated"));
     await waitFor(() => expect(select.value).toBe("battle_stats"));
@@ -390,9 +391,13 @@ test("compare activity button warns when faction IDs are missing", async () => {
   )!;
   fireEvent.click(btn);
   expect(openSpy).not.toHaveBeenCalled();
-  expect(warnSpy).toHaveBeenCalledWith(
-    "Could not find faction IDs to compare activity.",
-  );
+  // The project logger prefixes messages and passes console formatting args,
+  // so assert the warning text rather than the exact console.warn signature.
+  expect(
+    warnSpy.mock.calls.some((call) =>
+      call.includes("Could not find faction IDs to compare activity."),
+    ),
+  ).toBe(true);
 
   openSpy.mockRestore();
   warnSpy.mockRestore();
@@ -804,7 +809,7 @@ test("gives every range input a persistent accessible label", async () => {
     ref.current!.setHasLastActionData(true);
   });
 
-  const groups: Array<[string, string[]]> = [
+  const groups: [string, string[]][] = [
     ["Level Range", ["Minimum level", "Maximum level"]],
     ["FF Range", ["Minimum fair fight score", "Maximum fair fight score"]],
     ["Stats Range", ["Minimum battle stats", "Maximum battle stats"]],
