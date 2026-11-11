@@ -1,0 +1,350 @@
+/* OD Insurance: a row button on Torn's Xanax and Ecstasy items and a modal
+   with the ffscouter.com plans. Colors come from the --ffscouter-* theme
+   variables. */
+
+/* Inline in Torn's .name-wrap, after the item name and quantity. */
+.ff-od-insurance__row-btn {
+  margin-left: 8px;
+  padding: 1px 6px;
+  vertical-align: middle;
+  line-height: 16px;
+  background: var(--ffscouter-alt-bg-color);
+  color: var(--ffscouter-text-color);
+  border: 1px solid var(--ffscouter-glow-color);
+  border-radius: 4px;
+  font-family: Arial, sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.ff-od-insurance__row-btn:hover {
+  background: var(--ffscouter-hover-color);
+}
+
+/* Torn's narrow layout (below 784px, Torn PDA included) leaves less room in
+   the row, so the button shows "OD Ins". 784px is Torn's only real layout
+   breakpoint; see Content Wrapper Width in CONTEXT.md. */
+.ff-od-insurance__row-btn-full {
+  display: none;
+}
+
+@media (min-width: 784px) {
+  .ff-od-insurance__row-btn-full {
+    display: inline;
+  }
+
+  .ff-od-insurance__row-btn-short {
+    display: none;
+  }
+}
+
+.ff-od-insurance__overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px 10px 48px;
+  box-sizing: border-box;
+  background: rgba(0, 0, 0, 0.55);
+}
+
+.ff-od-insurance,
+.ff-od-insurance *,
+.ff-od-insurance *::before,
+.ff-od-insurance *::after {
+  box-sizing: border-box;
+}
+
+/* A fixed height keeps the list and detail views the same size; the body
+   scrolls instead of growing the modal. */
+/* A <dialog open> without showModal(): the overlay does the placing, so the
+   browser's own dialog position, margin and padding are reset. */
+.ff-od-insurance {
+  position: static;
+  margin: 0;
+  padding: 0;
+  width: 420px;
+  max-width: calc(100vw - 20px);
+  height: 480px;
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--ffscouter-bg-color);
+  color: var(--ffscouter-text-color);
+  border: 1px solid var(--ffscouter-border-color);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  font-family: Arial, sans-serif;
+  font-size: 13px;
+}
+
+.ff-od-insurance a {
+  color: inherit;
+  font-weight: 700;
+}
+
+.ff-od-insurance__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--ffscouter-alt-bg-color);
+  border-bottom: 1px solid var(--ffscouter-border-color);
+  border-radius: 7px 7px 0 0;
+}
+
+.ff-od-insurance__title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.ff-od-insurance__sub {
+  margin-top: 1px;
+  font-size: 11px;
+  opacity: 0.75;
+}
+
+.ff-od-insurance__close {
+  flex: none;
+  padding: 2px 6px;
+  background: none;
+  border: none;
+  color: inherit;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.ff-od-insurance__body {
+  flex: 1;
+  padding: 8px 12px 12px;
+  overflow-y: auto;
+}
+
+.ff-od-insurance__intro {
+  margin: 4px 0 8px;
+  line-height: 1.4;
+}
+
+/* A plan card: a button that opens the plan, and the helper pick below. */
+.ff-od-insurance__plan {
+  min-width: 0;
+  margin: 0 0 8px;
+  padding: 0;
+  background: var(--ffscouter-alt-bg-color);
+  color: var(--ffscouter-text-color);
+  border: 1px solid var(--ffscouter-border-color);
+  border-radius: 6px;
+}
+
+.ff-od-insurance__plan-open {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 8px 10px;
+  text-align: left;
+  background: none;
+  color: inherit;
+  border: none;
+  border-radius: 6px 6px 0 0;
+  font: inherit;
+  cursor: pointer;
+}
+
+.ff-od-insurance__plan-open:hover {
+  background: var(--ffscouter-hover-color);
+}
+
+.ff-od-insurance__pick {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  padding: 6px 10px 4px;
+  border-top: 1px solid var(--ffscouter-border-color);
+  font-size: 12px;
+}
+
+.ff-od-insurance__multiplier {
+  width: 4em;
+  padding: 2px 4px;
+  background: var(--ffscouter-bg-color);
+  color: var(--ffscouter-text-color);
+  border: 1px solid var(--ffscouter-border-color);
+  border-radius: 3px;
+  font: inherit;
+}
+
+.ff-od-insurance__button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.ff-od-insurance__plan-name {
+  display: block;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.ff-od-insurance__plan-meta {
+  display: block;
+  margin-top: 2px;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.ff-od-insurance__button {
+  margin: 0 0 4px;
+  padding: 3px 10px;
+  background: var(--ffscouter-alt-bg-color);
+  color: var(--ffscouter-text-color);
+  border: 1px solid var(--ffscouter-border-color);
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.ff-od-insurance__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px;
+  margin: 4px 0;
+  line-height: 1.4;
+}
+
+.ff-od-insurance__row-label {
+  flex: none;
+  font-weight: 700;
+}
+
+/* One tap selects the whole message, for when copying fails. */
+.ff-od-insurance__code {
+  padding: 1px 5px;
+  font-family: monospace;
+  background: var(--ffscouter-alt-bg-color);
+  border: 1px solid var(--ffscouter-border-color);
+  border-radius: 3px;
+  overflow-wrap: anywhere;
+  -webkit-user-select: all;
+  user-select: all;
+}
+
+.ff-od-insurance__copy-status {
+  font-size: 12px;
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+.ff-od-insurance__note {
+  margin: 8px 0 0;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.ff-od-insurance__footer {
+  margin-top: 10px;
+  font-size: 11px;
+  line-height: 1.4;
+  opacity: 0.75;
+}
+
+.ff-od-insurance__hide {
+  margin-top: 6px;
+  padding: 2px 8px;
+  background: var(--ffscouter-alt-bg-color);
+  color: var(--ffscouter-text-color);
+  border: 1px solid var(--ffscouter-glow-color);
+  border-radius: 4px;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.ff-od-insurance__hide:hover {
+  background: var(--ffscouter-hover-color);
+}
+
+/* The Send Helper: a floating bar on item.php while a Selected Plan exists.
+   Below the modal overlay (10000). The inline style places it. */
+.ff-od-helper {
+  position: fixed;
+  z-index: 9999;
+  max-width: calc(100vw - 16px);
+  font-family: Arial, sans-serif;
+  font-size: 12px;
+  color: var(--ffscouter-text-color);
+}
+
+.ff-od-helper__bar {
+  display: flex;
+  align-items: stretch;
+  background: var(--ffscouter-bg-color);
+  border: 1px solid var(--ffscouter-glow-color);
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+}
+
+.ff-od-helper[data-problem="true"] .ff-od-helper__bar {
+  border-color: #c0392b;
+}
+
+.ff-od-helper__grip,
+.ff-od-helper__press,
+.ff-od-helper__icon {
+  margin: 0;
+  padding: 6px 8px;
+  background: none;
+  border: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+/* No browser scroll or zoom while a finger drags the grip (Torn PDA). */
+.ff-od-helper__grip {
+  cursor: grab;
+  touch-action: none;
+  opacity: 0.7;
+}
+
+.ff-od-helper__press {
+  flex: 1;
+  min-width: 0;
+  font-weight: 700;
+  text-align: left;
+  overflow-wrap: anywhere;
+  background: var(--ffscouter-alt-bg-color);
+}
+
+.ff-od-helper__press:hover,
+.ff-od-helper__icon:hover {
+  background: var(--ffscouter-hover-color);
+}
+
+.ff-od-helper__icon {
+  font-weight: 700;
+}
+
+.ff-od-helper__steps {
+  margin: 0 0 4px;
+  padding: 6px 10px;
+  list-style: none;
+  background: var(--ffscouter-bg-color);
+  border: 1px solid var(--ffscouter-border-color);
+  border-radius: 6px;
+  line-height: 1.6;
+}
+
+.ff-od-helper__current {
+  font-weight: 700;
+}

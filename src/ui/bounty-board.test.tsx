@@ -1,5 +1,11 @@
 // @vitest-environment jsdom
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import {
   api_error,
   CLAIM_CREATE_RESPONSE,
@@ -13,6 +19,7 @@ import {
 import {
   accept_bounty_seller_policy,
   type BountySellerBoardResponse,
+  type BountyTargetStatus,
 } from "@utils/api";
 import {
   is_attack_bounty_silenced,
@@ -23,9 +30,11 @@ import { check_key_status } from "@utils/check_key";
 import { getLocalUserId, open_attack_link } from "@utils/dom";
 import { ffconfig, WarQuickAttackAction } from "@utils/ffconfig";
 import { ffscouter } from "@utils/ffscouter";
+import default_storage from "@utils/storage";
 import type { FFDataComplete, PlayerId } from "@utils/types";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { BountyBoard } from "./bounty-board";
+import chatButtonBar from "./floating/__fixtures__/torn-markup/2026-11-09/chat-button-bar.html?raw";
 import { TOAST_LEVEL, toast } from "./toast";
 
 vi.mock("@utils/bounty_board", () => ({
@@ -403,6 +412,160 @@ describe.each(["modal", "section"] as const)("%s", (variant) => {
   });
 });
 
+// Arcanine in hospital for `seconds` more, by the Torn Clock (Date.now() in
+// tests, since Torn's getCurrentTimestamp is absent).
+function board_with_hospital(seconds: number): BountySellerBoardResponse {
+  return board_with_status({
+    state: "Hospital",
+    description: "In hospital",
+    until: Math.floor(Date.now() / 1000) + seconds,
+  });
+}
+
+function board_with_status(
+  status: BountyTargetStatus,
+): BountySellerBoardResponse {
+  return {
+    ...SELLER_BOARD_RESPONSE,
+    board: {
+      ...SELLER_BOARD_RESPONSE.board,
+      targets: [
+        {
+          ...PLAYER_TARGET,
+          status,
+          status_last_checked: Math.floor(Date.now() / 1000) - 45,
+        },
+      ],
+    },
+  };
+}
+
+const hide_unavailable_box = () =>
+  screen.getByRole("checkbox", {
+    name: "Hide unavailable",
+  }) as HTMLInputElement;
+
+test("Hide unavailable hides a hospitalized target and survives a remount", async () => {
+  vi.mocked(bounty_board_cache.get_board).mockResolvedValue(
+    board_with_hospital(3600),
+  );
+  const first = render(<BountyBoard variant="modal" />);
+  await screen.findByText("Arcanine");
+  expect(hide_unavailable_box().checked).toBe(false);
+  fireEvent.click(hide_unavailable_box());
+  expect(screen.queryByText("Arcanine")).toBeNull();
+  first.unmount();
+
+  render(<BountyBoard variant="modal" />);
+  await screen.findByText("No FF Scouter Bounties match your filters.");
+  expect(hide_unavailable_box().checked).toBe(true);
+});
+
+test("view state saved before Hide unavailable existed loads with it off", async () => {
+  default_storage.set("bounty_board_view", {
+    stats_less_than: "",
+    ff_less_than: "9",
+    expanded_tiers: [],
+    expanded_factions: [],
+    minimized: false,
+  });
+  vi.mocked(bounty_board_cache.get_board).mockResolvedValue(
+    board_with_hospital(3600),
+  );
+  render(<BountyBoard variant="modal" />);
+  await screen.findByText("Arcanine");
+  expect(hide_unavailable_box().checked).toBe(false);
+  expect(
+    (
+      screen.getByRole("textbox", {
+        name: "Only show targets with FF less than",
+      }) as HTMLInputElement
+    ).value,
+  ).toBe("9");
+});
+
+test("a hidden target reappears when its hospital timer runs out", async () => {
+  vi.useFakeTimers({ toFake: ["setInterval", "clearInterval", "Date"] });
+  try {
+    vi.mocked(bounty_board_cache.get_board).mockResolvedValue(
+      board_with_hospital(2),
+    );
+    render(<BountyBoard variant="modal" />);
+    await screen.findByText("Arcanine");
+    fireEvent.click(hide_unavailable_box());
+    expect(screen.queryByText("Arcanine")).toBeNull();
+    act(() => {
+      vi.advanceTimersByTime(3000);
+    });
+    expect(screen.getByText("Arcanine")).toBeTruthy();
+  } finally {
+    vi.useRealTimers();
+  }
+});
+
+test("rows show the status label with a countdown, then Okay?", async () => {
+  vi.useFakeTimers({ toFake: ["setInterval", "clearInterval", "Date"] });
+  // A whole second, so the fixture's rounded-down clock matches "now".
+  vi.setSystemTime(1770001400 * 1000);
+  try {
+    vi.mocked(bounty_board_cache.get_board).mockResolvedValue(
+      board_with_hospital(3723),
+    );
+    render(<BountyBoard variant="modal" />);
+    const label = await screen.findByText("Hosp 1h+");
+    expect(label.getAttribute("title")).toBe("In hospital · checked 45s ago");
+    act(() => {
+      vi.advanceTimersByTime(124 * 1000);
+    });
+    expect(screen.getByText("Hosp 59m59s")).toBeTruthy();
+    act(() => {
+      vi.advanceTimersByTime(3599 * 1000);
+    });
+    const guess = screen.getByText("Okay?");
+    expect(guess.getAttribute("title")).toBe(
+      "Timer ended, not re-checked yet · checked 1h ago",
+    );
+  } finally {
+    vi.useRealTimers();
+  }
+});
+
+test("a Traveling row shows a short static label", async () => {
+  vi.mocked(bounty_board_cache.get_board).mockResolvedValue(
+    board_with_status({
+      state: "Traveling",
+      description: "Traveling to Mexico",
+      until: 0,
+    }),
+  );
+  render(<BountyBoard variant="modal" />);
+  const label = await screen.findByText("Trav");
+  expect(label.getAttribute("title")).toBe(
+    "Traveling to Mexico · checked 45s ago",
+  );
+});
+
+test("Attack and Claim stay enabled on an unavailable row", async () => {
+  vi.mocked(bounty_board_cache.get_board).mockResolvedValue(
+    board_with_hospital(7200),
+  );
+  render(<BountyBoard variant="modal" />);
+  await screen.findByText("Hosp 1h+");
+  for (const name of ["Attack Arcanine", "Claim bounty on Arcanine"]) {
+    expect(
+      (screen.getByRole("button", { name }) as HTMLButtonElement).disabled,
+    ).toBe(false);
+  }
+});
+
+test("rows without a status show no label", async () => {
+  render(<BountyBoard variant="modal" />);
+  await screen.findByText("Arcanine");
+  for (const text of ["Okay", "Okay?", "Hospital"]) {
+    expect(screen.queryByText(text)).toBeNull();
+  }
+});
+
 test("minimizing hides the body and persists", async () => {
   const first = render(<BountyBoard variant="modal" />);
   await screen.findByText("Arcanine");
@@ -413,10 +576,270 @@ test("minimizing hides the body and persists", async () => {
   first.unmount();
 
   render(<BountyBoard variant="modal" />);
-  expect(
-    screen.getByRole("button", { name: "Expand FF Scouter Bounties" }),
-  ).toBeTruthy();
+  const launcher = screen.getByRole("button", {
+    name: "Expand FF Scouter Bounties",
+  });
+  expect(launcher.textContent).toBe("FFBB");
+  expect(screen.queryByRole("region", { name: "FF Scouter Bounties" })).toBe(
+    null,
+  );
   expect(screen.queryByText("Arcanine")).toBeNull();
+});
+
+// ============================================================================
+// Bounty Board Launcher and dragging (floating "modal" variant)
+// ============================================================================
+// jsdom's default viewport is 1024x768, and the 40x40 Launcher's default
+// anchor with no chat bar is the right edge, 64px from the bottom.
+const launcher = () =>
+  screen.getByRole("button", { name: "Expand FF Scouter Bounties" });
+const board_region = () =>
+  screen.queryByRole("region", { name: "FF Scouter Bounties" });
+
+function minimized() {
+  default_storage.set("bounty_board_view", { minimized: true });
+}
+
+function press(el: Element, from: [number, number], to: [number, number]) {
+  fireEvent.pointerDown(el, { clientX: from[0], clientY: from[1], button: 0 });
+  fireEvent.pointerMove(window, { clientX: to[0], clientY: to[1] });
+  fireEvent.pointerUp(window, { clientX: to[0], clientY: to[1] });
+  // The browser follows a press-and-release on one element with a click.
+  fireEvent.click(el);
+}
+
+// Torn's chat button bar with its top edge at `top`, kept mutable.
+function chat_bar(top: number) {
+  document.body.insertAdjacentHTML("afterbegin", chatButtonBar);
+  const bar = document.getElementById("people_panel_button")?.parentElement;
+  if (!bar) throw new Error("chat bar not found");
+  const rect = { top };
+  bar.getBoundingClientRect = () =>
+    ({ top: rect.top, bottom: 768, left: 600, right: 1000 }) as DOMRect;
+  return rect;
+}
+
+describe("Bounty Board Launcher", () => {
+  afterEach(() => {
+    document.getElementById("chatRoot")?.remove();
+    window.innerWidth = 1024;
+    window.innerHeight = 768;
+    vi.unstubAllGlobals();
+  });
+
+  test("starts on the right edge 64px from the bottom without a chat bar", () => {
+    minimized();
+    render(<BountyBoard variant="modal" />);
+    expect(launcher().style.right).toBe("8px");
+    expect(launcher().style.top).toBe("664px");
+  });
+
+  test("starts 8px above the chat bar's zone", () => {
+    chat_bar(728);
+    minimized();
+    render(<BountyBoard variant="modal" />);
+    expect(launcher().style.top).toBe("680px");
+  });
+
+  test("a press that moves under 5px expands the modal", async () => {
+    minimized();
+    render(<BountyBoard variant="modal" />);
+    press(launcher(), [1000, 680], [1003, 683]);
+    expect(board_region()).toBeTruthy();
+    await screen.findByText("Arcanine");
+  });
+
+  test("a drag moves the Launcher, snaps it to the nearer side, and does not expand", () => {
+    minimized();
+    render(<BountyBoard variant="modal" />);
+    press(launcher(), [1000, 680], [310, 190]);
+    expect(board_region()).toBeNull();
+    expect(launcher().style.left).toBe("8px");
+    expect(launcher().style.top).toBe("174px");
+  });
+
+  test("the dragged position survives a reload and a settings reset", () => {
+    minimized();
+    const first = render(<BountyBoard variant="modal" />);
+    press(launcher(), [1000, 680], [310, 190]);
+    first.unmount();
+    ffconfig.reset();
+
+    render(<BountyBoard variant="modal" />);
+    expect(launcher().style.left).toBe("8px");
+    expect(launcher().style.top).toBe("174px");
+  });
+
+  test("a drop inside the chat zone moves just above it on the same edge", () => {
+    chat_bar(728);
+    minimized();
+    render(<BountyBoard variant="modal" />);
+    press(launcher(), [1000, 700], [100, 750]);
+    expect(launcher().style.left).toBe("8px");
+    expect(launcher().style.top).toBe("680px");
+  });
+
+  test("a chat bar that grows moves a resting Launcher out of its zone", () => {
+    const observers: { callback: () => void; targets: Element[] }[] = [];
+    vi.stubGlobal(
+      "ResizeObserver",
+      class {
+        targets: Element[] = [];
+        constructor(public callback: () => void) {
+          observers.push(this);
+        }
+        observe(el: Element) {
+          this.targets.push(el);
+        }
+        disconnect() {
+          this.targets = [];
+        }
+      },
+    );
+    const bar = chat_bar(728);
+    minimized();
+    render(<BountyBoard variant="modal" />);
+    expect(launcher().style.top).toBe("680px");
+
+    bar.top = 600;
+    act(() => {
+      for (const o of observers) if (o.targets.length > 0) o.callback();
+    });
+    expect(launcher().style.top).toBe("552px");
+  });
+
+  test("a chat bar that renders after the board still pushes the Launcher out", () => {
+    vi.useFakeTimers({ toFake: ["setInterval", "clearInterval"] });
+    try {
+      minimized();
+      render(<BountyBoard variant="modal" />);
+      expect(launcher().style.top).toBe("664px");
+
+      const bar = chat_bar(728);
+      act(() => {
+        vi.advanceTimersByTime(1000);
+      });
+      expect(launcher().style.top).toBe("680px");
+
+      // Torn replacing the bar is found the same way.
+      document.getElementById("chatRoot")?.remove();
+      chat_bar(600);
+      bar.top = 728;
+      act(() => {
+        vi.advanceTimersByTime(1000);
+      });
+      expect(launcher().style.top).toBe("552px");
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  test("a second pointer does not drive or end the drag", () => {
+    minimized();
+    render(<BountyBoard variant="modal" />);
+    const el = launcher();
+    fireEvent.pointerDown(el, {
+      clientX: 1000,
+      clientY: 680,
+      button: 0,
+      pointerId: 1,
+    });
+    fireEvent.pointerMove(window, { clientX: 300, clientY: 200, pointerId: 2 });
+    fireEvent.pointerUp(window, { clientX: 300, clientY: 200, pointerId: 2 });
+    fireEvent.pointerUp(window, { clientX: 1001, clientY: 681, pointerId: 1 });
+    fireEvent.click(el);
+    expect(board_region()).toBeTruthy();
+    fireEvent.click(
+      screen.getByRole("button", { name: "Minimize FF Scouter Bounties" }),
+    );
+    expect(launcher().style.right).toBe("8px");
+    expect(launcher().style.top).toBe("664px");
+  });
+
+  test("a shrinking viewport clamps the Launcher back into it", () => {
+    default_storage.set("floating_positions", {
+      bounty_board: { side: "right", inset: 8, top: 700 },
+    });
+    minimized();
+    render(<BountyBoard variant="modal" />);
+    expect(launcher().style.top).toBe("700px");
+    window.innerHeight = 400;
+    act(() => {
+      window.dispatchEvent(new Event("resize"));
+    });
+    expect(launcher().style.top).toBe("360px");
+  });
+
+  test("from a lower-half anchor the modal lines up bottom edges", async () => {
+    render(<BountyBoard variant="modal" />);
+    await screen.findByText("Arcanine");
+    const modal = board_region() as HTMLElement;
+    expect(modal.style.right).toBe("8px");
+    expect(modal.style.bottom).toBe("64px");
+    expect(modal.style.top).toBe("");
+  });
+
+  test("the header drags the modal and moves the Launcher with it", async () => {
+    render(<BountyBoard variant="modal" />);
+    await screen.findByText("Arcanine");
+    const heading = screen.getByRole("heading", {
+      name: "FF Scouter Bounties",
+    });
+    press(heading, [800, 690], [110, 200]);
+
+    const modal = board_region() as HTMLElement;
+    expect(modal.style.left).toBe("8px");
+    expect(modal.style.top).toBe("174px");
+    expect(modal.style.bottom).toBe("");
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Minimize FF Scouter Bounties" }),
+    );
+    expect(launcher().style.left).toBe("8px");
+    expect(launcher().style.top).toBe("174px");
+  });
+
+  test("a header drag keeps the alignment it started with until the drop", async () => {
+    render(<BountyBoard variant="modal" />);
+    await screen.findByText("Arcanine");
+    const heading = screen.getByRole("heading", {
+      name: "FF Scouter Bounties",
+    });
+    fireEvent.pointerDown(heading, { clientX: 800, clientY: 690, button: 0 });
+    // The anchor box is now in the upper half, but the drag started from the
+    // lower half, so the modal stays bottom-aligned under the pointer.
+    fireEvent.pointerMove(window, { clientX: 800, clientY: 200 });
+    const modal = board_region() as HTMLElement;
+    expect(modal.style.bottom).toBe("554px");
+    expect(modal.style.top).toBe("");
+
+    fireEvent.pointerUp(window, { clientX: 800, clientY: 200 });
+    expect(modal.style.top).toBe("174px");
+    expect(modal.style.bottom).toBe("");
+  });
+
+  test("the minimize button is not a drag handle", async () => {
+    render(<BountyBoard variant="modal" />);
+    await screen.findByText("Arcanine");
+    press(
+      screen.getByRole("button", { name: "Minimize FF Scouter Bounties" }),
+      [1000, 690],
+      [110, 200],
+    );
+    expect(launcher().style.right).toBe("8px");
+    expect(launcher().style.top).toBe("664px");
+  });
+
+  test("the in-flow section is never a Launcher or positioned", async () => {
+    render(<BountyBoard variant="section" />);
+    await screen.findByText("Arcanine");
+    expect((board_region() as HTMLElement).getAttribute("style")).toBeNull();
+    fireEvent.click(
+      screen.getByRole("button", { name: "Collapse FF Scouter Bounties" }),
+    );
+    expect(screen.queryByText("FFBB")).toBeNull();
+    expect(board_region()).toBeTruthy();
+  });
 });
 
 test("the section collapses, persists it, and stays in-flow", async () => {

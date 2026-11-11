@@ -11,6 +11,11 @@ import {
   SELLER_BOARD_RESPONSE,
 } from "./__fixtures__/bounty_board";
 import {
+  ECSTASY_PLAN,
+  PLANS_RESPONSE,
+  UNPAYABLE_PLAN,
+} from "./__fixtures__/od_insurance";
+import {
   accept_bounty_seller_policy,
   BOUNTY_REFERRER_PLAYER_ID,
   type BountyClaimTarget,
@@ -18,9 +23,11 @@ import {
   FFApiError,
   type gmRequest,
   make_flights_url,
+  make_od_insurance_plans_url,
   make_stats_url,
   query_bounty_seller_board,
   query_flights,
+  query_od_insurance_plans,
   query_stats,
   query_targets,
   submit_bounty_seller_claim,
@@ -976,4 +983,117 @@ test("submit_bounty_seller_claim surfaces key-lacks-attacks-access (400 code 87)
   );
   expect(err).toBeInstanceOf(FFApiError);
   expect(err?.ff_api_error).toEqual(ERROR_TORN_REJECTED_KEY);
+});
+
+test("make_od_insurance_plans_url builds a keyless URL on the FFScouter base", () => {
+  expect(make_od_insurance_plans_url()).toBe(
+    "https://ffscouter.com/api/v1/od-insurance/plans",
+  );
+});
+
+test("query_od_insurance_plans returns the plans and rate limits", async () => {
+  const success: typeof gmRequest = vi.fn().mockImplementation((options) => {
+    expect(options.method).toBe("GET");
+    expect(options.url).toBe("https://ffscouter.com/api/v1/od-insurance/plans");
+    return Promise.resolve(
+      bounty_mock_response(200, PLANS_RESPONSE, RATE_LIMIT_HEADERS),
+    );
+  });
+
+  expect(await query_od_insurance_plans(success)).toEqual({
+    result: PLANS_RESPONSE,
+    blank: false,
+    limits: PARSED_RATE_LIMITS,
+  });
+});
+
+test("query_od_insurance_plans keeps plans with a null recipient", async () => {
+  const body = {
+    manager_player_id: null,
+    manager_name: null,
+    plans: [UNPAYABLE_PLAN],
+  };
+  const requester: typeof gmRequest = vi
+    .fn()
+    .mockResolvedValue(bounty_mock_response(200, body));
+
+  const resp = await query_od_insurance_plans(requester);
+  expect(resp).toEqual({ result: body, blank: false, limits: undefined });
+});
+
+test.each([
+  ["a missing name", { name: undefined }],
+  ["a missing plan_key", { plan_key: undefined }],
+  ["a string quantity", { xanax_quantity: "1" }],
+  ["a missing payout", { overdose_payout_xanax: undefined }],
+  ["a missing duration", { duration_seconds: undefined }],
+  ["no payment", { payment: null }],
+  ["no covered_item", { covered_item: undefined }],
+  ["a null covered_item", { covered_item: null }],
+  [
+    "a string covered item ID",
+    { covered_item: { item_id: "197", name: "Ecstasy" } },
+  ],
+  ["an empty message", { payment: { ...ECSTASY_PLAN.payment, message: "" } }],
+  [
+    "a string recipient ID",
+    { payment: { ...ECSTASY_PLAN.payment, recipient_player_id: "700001" } },
+  ],
+])("query_od_insurance_plans drops a plan with %s", async (_label, change) => {
+  const body = {
+    ...PLANS_RESPONSE,
+    plans: [{ ...ECSTASY_PLAN, ...change }, PLANS_RESPONSE.plans[1]],
+  };
+  const requester: typeof gmRequest = vi
+    .fn()
+    .mockResolvedValue(bounty_mock_response(200, body));
+
+  const resp = await query_od_insurance_plans(requester);
+  expect(resp.blank).toBe(false);
+  if (!resp.blank) {
+    expect(resp.result.plans).toEqual([PLANS_RESPONSE.plans[1]]);
+  }
+});
+
+test("query_od_insurance_plans keeps a plan whose covered item is not set yet", async () => {
+  const unset = {
+    ...ECSTASY_PLAN,
+    covered_item: { item_id: null, name: null },
+  };
+  const body = { ...PLANS_RESPONSE, plans: [unset] };
+  const requester: typeof gmRequest = vi
+    .fn()
+    .mockResolvedValue(bounty_mock_response(200, body));
+
+  const resp = await query_od_insurance_plans(requester);
+  expect(resp).toEqual({ result: body, blank: false, limits: undefined });
+});
+
+test("query_od_insurance_plans fails when the plans list is missing", async () => {
+  const requester: typeof gmRequest = vi
+    .fn()
+    .mockResolvedValue(bounty_mock_response(200, { manager_name: "x" }));
+
+  await expect(query_od_insurance_plans(requester)).rejects.toBeInstanceOf(
+    FFApiError,
+  );
+});
+
+test("query_od_insurance_plans blank response", async () => {
+  const empty: typeof gmRequest = vi.fn().mockResolvedValue(null);
+  expect(await query_od_insurance_plans(empty)).toEqual({ blank: true });
+});
+
+test("query_od_insurance_plans surfaces the rate limit (429 code 21)", async () => {
+  const throttled: typeof gmRequest = vi
+    .fn()
+    .mockResolvedValue(bounty_mock_response(429, ERROR_RATE_LIMITED));
+
+  const err = await query_od_insurance_plans(throttled).then(
+    () => null,
+    (e) => e as FFApiError,
+  );
+  expect(err).toBeInstanceOf(FFApiError);
+  expect(err?.ff_api_error?.code).toBe(21);
+  expect(err?.ff_http_status).toBe(429);
 });

@@ -10,12 +10,10 @@
 }
 
 .ff-bounty-modal {
+  /* Placed inline from the shared floating anchor (see floating-drag.ts). */
   position: fixed;
-  right: 16px;
-  /* Clears Torn's bottom-right chat icons. */
-  bottom: 64px;
   z-index: 9999;
-  width: 380px;
+  width: 420px;
   max-width: calc(100vw - 32px);
   max-height: 70vh;
   display: flex;
@@ -38,6 +36,14 @@
   background-color: var(--ffscouter-alt-bg-color);
   border-bottom: 1px solid var(--ffscouter-border-color);
   border-radius: 7px 7px 0 0;
+}
+
+/* The floating header drags the modal. touch-action lets a touch drag move
+   it instead of scrolling the page. */
+.ff-bounty-modal__header--drag {
+  cursor: move;
+  touch-action: none;
+  user-select: none;
 }
 
 .ff-bounty-modal--minimized .ff-bounty-modal__header {
@@ -131,6 +137,11 @@
   border-radius: 3px;
 }
 
+.ff-bounty-modal__filter input[type="checkbox"] {
+  width: auto;
+  padding: 0;
+}
+
 .ff-bounty-modal__list,
 .ff-bounty-modal__member-list,
 .ff-bounty-modal__tier-ladder {
@@ -175,6 +186,25 @@
   white-space: nowrap;
   font-weight: bold;
   color: inherit;
+}
+
+/* Board Target Status label. Never shrinks: the name truncates first. */
+.ff-bounty-modal__status {
+  flex: 0 0 auto;
+  white-space: nowrap;
+  font-size: 12px;
+}
+
+.ff-bounty-modal__status--okay {
+  color: var(--ffscouter-status-okay-color);
+}
+
+.ff-bounty-modal__status--out {
+  color: var(--ffscouter-status-out-color);
+}
+
+.ff-bounty-modal__status--away {
+  color: var(--ffscouter-status-away-color);
 }
 
 .ff-bounty-modal__estimate {
@@ -239,4 +269,26 @@
 .ff-bounty-modal__action:disabled {
   opacity: 0.6;
   cursor: default;
+}
+
+/* Bounty Board Launcher: what the floating modal minimizes to. Placed inline
+   from the same anchor as the modal, and dragged the same way. */
+.ff-bounty-launcher {
+  position: fixed;
+  z-index: 9999;
+  box-sizing: border-box;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  background-color: var(--ffscouter-alt-bg-color);
+  color: var(--ffscouter-text-color);
+  border: 1px solid var(--ffscouter-border-color);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  font-family: Arial, sans-serif;
+  font-size: 11px;
+  font-weight: bold;
+  cursor: pointer;
+  touch-action: none;
+  user-select: none;
 }
