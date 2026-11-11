@@ -1,9 +1,6 @@
 # Project Mandates
 
-- **Prefer functional changes:** Prefer to only change code that causes functionality changes. Don't change comments or style _unless_ it's necessary to reflect a change in functionality, and try to have as few spurious changes as possible. When a refactor does require touching code a comment describes, move or update that comment rather than deleting it — prioritize preserving comments that describe business logic or specific "gotchas."
-- **Explicit Approval Required:** Never proceed with a plan, or move to the next phase of one, until I explicitly approve it (e.g. "yes, proceed with the plan"). When reviewing feedback, address exactly what was raised — nothing more — until the next approval.
 - **The task is not complete until there are no lint warnings or test failures:** No change is complete without adequate testing or if lint warnings still exist. Always make sure everything is "green" before claiming you're done. Do not delete a broken test without user verification.
-- **Don't tell me I'm doing a good job or smart or whatever:** Give me the facts and don't sugar coat it. We are engineers talking about technical tradeoffs. I don't need to be told how observant or smart I am. We just need to address the issues.
 
 ## Agent skills
 
