@@ -274,15 +274,21 @@ function BountyBoardBody({
   const targets = state.phase === "ready" ? state.response.board.targets : null;
   const mounted = useRef(false);
   useEffect(() => {
-    // Re-armed synchronously at the start of each run, so only unmount leaves
-    // it false when a result settles. ffRequested keeps the ids, so results
-    // must not be dropped when the expansion changes.
+    // Re-armed at the start of every run: a dependency change re-arms this
+    // synchronously, so only unmount leaves it false when a pending result
+    // settles. ffRequested keeps the ids, so dropping results on a dependency
+    // change would lose them for good.
     mounted.current = true;
-    if (!targets) return;
+    // Registered before every early return, so a pending result from a
+    // previous run cannot update state after unmount.
+    const cleanup = () => {
+      mounted.current = false;
+    };
+    if (!targets) return cleanup;
     const ids = ff_ids_to_load(targets, view.expanded_factions).filter(
       (id) => !ffRequested.has(id),
     );
-    if (ids.length === 0) return;
+    if (ids.length === 0) return cleanup;
     for (const id of ids) ffRequested.add(id);
     const lookups = ids.map((id) => ffscouter.get(id));
     ffscouter.complete();
@@ -298,9 +304,7 @@ function BountyBoardBody({
       .catch((err: unknown) => {
         log.error(err);
       });
-    return () => {
-      mounted.current = false;
-    };
+    return cleanup;
   }, [targets, view.expanded_factions, ffRequested]);
 
   const filters = useMemo(
