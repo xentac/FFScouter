@@ -145,7 +145,7 @@ export class FFCache {
     if (this.db) {
       return this.db;
     }
-    if (this.open_promise) {
+    if (this.open_promise !== null) {
       return this.open_promise;
     }
     if (typeof BroadcastChannel !== "undefined" && !this.channel) {
@@ -299,7 +299,7 @@ export class FFCache {
       this.state === "DELETING_LOCAL" ||
       this.state === "DELETING_REMOTE"
     ) {
-      if (this.deletion_promise) {
+      if (this.deletion_promise !== null) {
         await this.deletion_promise;
       } else {
         await new Promise((resolve) => setTimeout(resolve, 10));
@@ -308,7 +308,7 @@ export class FFCache {
   };
 
   private wait_for_active_ops = async () => {
-    if (this.open_promise) {
+    if (this.open_promise !== null) {
       try {
         await this.open_promise;
       } catch {

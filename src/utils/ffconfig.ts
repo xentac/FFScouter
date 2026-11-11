@@ -590,11 +590,11 @@ export class FFConfig {
     }
   }
 
-  get faction_filter_state(): any | null {
+  get faction_filter_state(): any {
     return this.storage.get(CONFIG.FACTION_FILTER_STATE) ?? null;
   }
 
-  set faction_filter_state(val: any | null) {
+  set faction_filter_state(val: any) {
     this.storage.set(CONFIG.FACTION_FILTER_STATE, val);
   }
 
@@ -606,11 +606,11 @@ export class FFConfig {
     this.storage.set(CONFIG.FACTION_FILTER_COLLAPSED, val);
   }
 
-  get war_filter_state(): any | null {
+  get war_filter_state(): any {
     return this.storage.get(CONFIG.WAR_FILTER_STATE) ?? null;
   }
 
-  set war_filter_state(val: any | null) {
+  set war_filter_state(val: any) {
     this.storage.set(CONFIG.WAR_FILTER_STATE, val);
   }
 

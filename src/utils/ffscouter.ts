@@ -63,7 +63,7 @@ function getParamFast(queryString: string, paramName: string): string | null {
       if (valEnd === -1) {
         valEnd = queryString.length;
       }
-      const rawVal = queryString.substring(valStart, valEnd);
+      const rawVal = queryString.slice(valStart, valEnd);
       if (rawVal.indexOf("%") === -1 && rawVal.indexOf("+") === -1) {
         return rawVal;
       }
@@ -87,7 +87,7 @@ export class FFScouter {
 
   public last_limits: FFApiRateLimits | undefined;
 
-  private flight_queue: Array<PlayerId> = [];
+  private flight_queue: PlayerId[] = [];
   private flight_timer: ReturnType<typeof setTimeout> | null = null;
   private flight_recheck_until = new Map<PlayerId, number>();
   private pending_flights = new Map<
@@ -117,7 +117,7 @@ export class FFScouter {
     }
   }
 
-  schedule = (fn: () => void, delay: number) => {
+  schedule = (fn: () => void | Promise<void>, delay: number) => {
     return setTimeout(fn, delay);
   };
 
@@ -406,7 +406,7 @@ export class FFScouter {
   // Tell the batch engine that the list of requests is complete for now so start processing
   // NOTE: Processing may have started earlier for some elements if queuing took longer than processing intervals
   complete = () => {
-    this.process_cache();
+    void this.process_cache();
   };
 
   enqueue_cache = (player_id: PlayerId) => {
@@ -443,7 +443,7 @@ export class FFScouter {
     let results: Map<PlayerId, FFData | null>;
     try {
       results = await this.cache.get(ids);
-    } catch (_) {
+    } catch {
       // Cache failure is usually non-fatal; fall through to API
       results = new Map();
     }
@@ -667,9 +667,9 @@ export class FFScouter {
       if (!param && entry.hash) {
         let hashClean = entry.hash;
         if (hashClean.startsWith("#/")) {
-          hashClean = hashClean.substring(2);
+          hashClean = hashClean.slice(2);
         } else if (hashClean.startsWith("#") || hashClean.startsWith("/")) {
-          hashClean = hashClean.substring(1);
+          hashClean = hashClean.slice(1);
         }
         if (!hashClean.startsWith("!") && !hashClean.startsWith("?")) {
           hashClean = `?${hashClean}`;
