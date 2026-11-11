@@ -22,6 +22,7 @@ Single-context layout — `CONTEXT.md` + `docs/adr/` at the repo root. See `docs
 ## Gotchas
 
 - Prefer using jj for version control; only fall back to git commands if the environment is a true git clone and not a jj overlay. When running git, always use `--no-pager`.
+- Branches, beta megamerge, and releases: read `docs/agents/branch-workflow.md` first. It applies before you commit to a `feat/*` branch, rebase onto `main`, change `beta`, push, or prepare `bun run release`.
 - Tests are run using `bun run test --run`. The test framework in vitest. You can add additional flags to that command and they will be passed directly to vitest.
   - Running `bun test` or `bun x vitest` are not allowed.
 - Linting is managed through `bun run lint`. Linting is three parts: biome, tsc --noEmit, and react-doctor (`--blocking error`, so it gates on error-level React issues only — the existing warning baseline is tracked in `TODO`, not blocking). Ideally linting is checked with the single `bun run lint` command but additional arguments to biome or tsc are allowed using `bun x ...`. Run `bun run react-doctor` for the full verbose React health report.
