@@ -77,14 +77,14 @@ Every participant sees the same answer at every moment.
 
 1. **Cold.** Timer above `window_open_lead`. Timer changes re-derive the schedule freely — nobody
    has formed expectations yet. (In practice meds remove ~25+ minutes and people med to zero, so a
-   med landing someone *inside* the window span is rare; if it lands the timer below
+   med landing someone _inside_ the window span is rare; if it lands the timer below
    `window_open_lead`, the window simply never opens and the target is free-for-all on exit.)
 2. **Window open** (`window_open_lead` before exit). Any eligible member may request. Requests are
    never blocked or rationed; requesting several overlapping targets is fine. Withdrawal is free.
    **Once the window opens, the exit anchor is frozen: any change to it voids the cycle to
    free-for-all** (that's the early-exit rule above).
-3. **Allocation** (`allocation_lead` before exit) — *contention-triggered, not
-   deadline-triggered*. Runs only if requests are pending at that moment; exactly one requester
+3. **Allocation** (`allocation_lead` before exit) — _contention-triggered, not
+   deadline-triggered_. Runs only if requests are pending at that moment; exactly one requester
    becomes the **Dibs Holder**. If nobody requested, the target stays open and the **first late
    request wins by instant grant** — the fairness machinery exists for contention, and an
    unrequested target is by definition uncontended. The residual arrival-order race between two
@@ -115,13 +115,13 @@ kills the fast-fingers race, and it must never be "optimized" away.
 Deterministic ranked comparison over the pending requesters; first differing factor wins:
 
 1. **Under the soft dibs cap beats at/over it.** The cap (default **1** simultaneously held dibs)
-   is *soft*: at or above it you lose to any competing requester below it, but you still win
+   is _soft_: at or above it you lose to any competing requester below it, but you still win
    uncontested. A hard cap was rejected — denying the only interested player at 3 a.m. just sends
    the target free-for-all where they'd hit them anyway, minus the visibility.
 2. **Least-recently-won dibs wins**; never-won counts as oldest. This is the anti-starvation
    mechanism: sustained contention degrades into round-robin among active requesters, and one
-   round is the *maximum* penalty for having farmed uncontested targets off-peak. A
-   recent-win-*count* factor (fewest dibs in the last N minutes) was explicitly rejected: it
+   round is the _maximum_ penalty for having farmed uncontested targets off-peak. A
+   recent-win-_count_ factor (fewest dibs in the last N minutes) was explicitly rejected: it
    freezes out the 3 a.m. solo farmer for the whole recency window when the morning crowd arrives,
    punishing exactly the off-peak activity a farming faction wants — and it adds a window
    parameter with a priority cliff at its boundary.
@@ -139,7 +139,7 @@ invariant are invariants, not knobs.
 Entirely system-internal: currently held dibs, per-war last-won timestamps, public war score. The
 blind spot — free-for-all hits and hits by non-participants count against nobody — is accepted:
 the fairness that matters is fairness among people competing through the system, and for them a
-fulfilled dibs *is* a hit. In exchange, "we never need faction-level API access" is a real
+fulfilled dibs _is_ a hit. In exchange, "we never need faction-level API access" is a real
 adoption argument for a system asking factions to route war coordination through a third-party
 server. An optional faction AA key is the designated v2 path for true hit counts (as an allocator
 factor) and fulfillment/poach reporting — same key, same opt-in, two features.
@@ -153,7 +153,7 @@ An **Eligible Requester** is a current member of a faction in an active ranked w
 - **Torn's official Discord verification** (torn.com/discord) for Discord-bot users. No key
   required of them; the server resolves Discord → Torn ID via the API using keys it already
   holds, and checks membership live. A bare Discord identity is never enough — allocation ranks on
-  per-player war data, so the system must know *which Torn player* clicked.
+  per-player war data, so the system must know _which Torn player_ clicked.
 
 Participation additionally requires premium on that player ID — reads don't; see
 [Premium model](#premium-model).
@@ -172,10 +172,10 @@ two disjoint claim spaces that never interact.
   its use — is invisible to the enemy. A leaked holder/expiry feed is live operational intel.
   Every read and write is scoped server-side to the caller's verified faction.
 - **Intra-faction: sealed-bid.** During an open window, faction-mates see only the request
-  *count*. Names are sealed until allocation; then the holder and the one-line justification are
+  _count_. Names are sealed until allocation; then the holder and the one-line justification are
   public to the faction. Losers stay unnamed (a runner-up surfaces only when a release hands them
   the target). Rationale: requests are mechanically identical, and visible names would make them
-  *socially* unequal — deference to leaders and watching-who-loses re-enter through the sidebar.
+  _socially_ unequal — deference to leaders and watching-who-loses re-enter through the sidebar.
   Sealed requests mean the only way to want a target is to request it and let the algorithm speak;
   losing stays emotionally cheap.
 
@@ -186,16 +186,16 @@ model. The same authority gates the script's faction-settings UI and the bot's c
 Mid-war changes are allowed but **prospective only**: already-open windows and held dibs finish
 under the rules they started with.
 
-| Knob | Meaning | Default |
-|---|---|---|
-| `enabled` | dibs active for this faction | **on** (disable available) |
-| `window_open_lead` | window opens at exit − this | **2:00** |
-| `allocation_lead` | contested allocation at exit − this | **1:30** |
-| `grace` | dibs lifetime after natural exit | **30s** (typical range 10–60s) |
-| `soft_cap` | soft dibs cap | **1** |
-| `factor_order` | allocator factor list | cap → least-recently-won → score → coin flip |
-| `discord_channel` | lifecycle-message channel | unset (bot silent until set) |
-| `discord_cleanup_delay` | delete resolved messages this long after the target left hospital | **1h** ("never" available) |
+| Knob                    | Meaning                                                           | Default                                      |
+| ----------------------- | ----------------------------------------------------------------- | -------------------------------------------- |
+| `enabled`               | dibs active for this faction                                      | **on** (disable available)                   |
+| `window_open_lead`      | window opens at exit − this                                       | **2:00**                                     |
+| `allocation_lead`       | contested allocation at exit − this                               | **1:30**                                     |
+| `grace`                 | dibs lifetime after natural exit                                  | **30s** (typical range 10–60s)               |
+| `soft_cap`              | soft dibs cap                                                     | **1**                                        |
+| `factor_order`          | allocator factor list                                             | cap → least-recently-won → score → coin flip |
+| `discord_channel`       | lifecycle-message channel                                         | unset (bot silent until set)                 |
+| `discord_cleanup_delay` | delete resolved messages this long after the target left hospital | **1h** ("never" available)                   |
 
 Save-time constraints: `window_open_lead > allocation_lead > 0`; `allocation_lead` floor ~10s so
 allocation results are observable before exit at realistic polling latency.
@@ -208,18 +208,18 @@ Rides the hospital-countdown status cell on war-list rows — every dibs transit
 that timer, and the war box has no width budget for a new column. Hand-drawn SVG glyphs (no emoji,
 per the Source Marker rationale); no state encoded by color alone.
 
-| State | Badge |
-|---|---|
-| Cold, or free-for-all | *none* — no badge means normal Torn rules apply |
-| Window open, not requested | outline raised-hand, blue, request count |
-| Window open, you requested | same hand **filled**, blue, count (includes you) |
-| Claimed by you | filled crosshair, green, `You` — plus a row *outline* (never a background fill; row backgrounds already carry other meanings) |
-| Claimed by someone else | filled padlock, gray, **no name** (no width for it) |
+| State                      | Badge                                                                                                                         |
+| -------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| Cold, or free-for-all      | _none_ — no badge means normal Torn rules apply                                                                               |
+| Window open, not requested | outline raised-hand, blue, request count                                                                                      |
+| Window open, you requested | same hand **filled**, blue, count (includes you)                                                                              |
+| Claimed by you             | filled crosshair, green, `You` — plus a row _outline_ (never a background fill; row backgrounds already carry other meanings) |
+| Claimed by someone else    | filled padlock, gray, **no name** (no width for it)                                                                           |
 
 You-vs-other is triple-encoded: glyph, color, text. Tap acts per state: request, withdraw, release
 on your own; tapping another's padlock shows a transient "held by X" — who-holds-it is never more
 than a tap away but never costs standing width. A naturally-exited target's status cell reads Okay
-with no badge, which *is* the free-for-all display; the badge is the only thing that persists on a
+with no badge, which _is_ the free-for-all display; the badge is the only thing that persists on a
 row through the grace. The status cell re-renders constantly (countdown ticks), so the badge needs
 the same reattach-on-mutation discipline as the existing column code.
 
@@ -246,7 +246,7 @@ stale UI returns "already claimed by X," never a wrong grant.
 - **No push.** SSE/WebSockets are impossible from the userscript environment (see ADR 0001's
   transport constraints). Polling only.
 - **One faction-wide read.** A single call returns all active claim state for the caller's war —
-  every hot target's state *plus its schedule* (window-open, allocation, exit, grace-end
+  every hot target's state _plus its schedule_ (window-open, allocation, exit, grace-end
   timestamps).
 - **Adaptive cadence.** Clients poll slowly (~15–30s) when nothing is hot, fast (~2–5s) for
   targets inside their hot span (window-open through grace-end), plus an immediate read right
@@ -257,20 +257,20 @@ stale UI returns "already claimed by X," never a wrong grant.
 
 ## Edge cases, collected
 
-| Case | Outcome |
-|---|---|
-| Revive/med before window opens | Never claimable; free-for-all. |
-| Timer shrinks before window opens (still ≥ open lead) | Schedule re-derives; window opens at new exit − lead. |
-| Timer change after window opens | Cycle voided; free-for-all (early-exit rule). |
-| Zero requests at allocation lead | Target stays open; first late request wins instantly. |
-| Zero requests ever | Free-for-all at exit. |
-| Holder releases, pool non-empty | Re-run allocation over survivors. |
-| Holder releases, pool empty | Back to open (late requests welcome) until exit. |
-| All requesters at/over soft cap | Someone still wins — the cap is soft. |
-| Simultaneous exits, overlapping requests | Allocations run in sequence; each win updates the winner's last-won timestamp (and held count), naturally spreading a wave. |
-| Grace expires before poll sees the re-hospitalization | Brief "free-for-all while hospitalized" — harmless, unactionable. |
-| War ends mid-lifecycle | Claim space dies: windows void, dibs void, ledger discarded. |
-| No registered members in faction | Dibs vacuously unavailable. |
+| Case                                                  | Outcome                                                                                                                     |
+| ----------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| Revive/med before window opens                        | Never claimable; free-for-all.                                                                                              |
+| Timer shrinks before window opens (still ≥ open lead) | Schedule re-derives; window opens at new exit − lead.                                                                       |
+| Timer change after window opens                       | Cycle voided; free-for-all (early-exit rule).                                                                               |
+| Zero requests at allocation lead                      | Target stays open; first late request wins instantly.                                                                       |
+| Zero requests ever                                    | Free-for-all at exit.                                                                                                       |
+| Holder releases, pool non-empty                       | Re-run allocation over survivors.                                                                                           |
+| Holder releases, pool empty                           | Back to open (late requests welcome) until exit.                                                                            |
+| All requesters at/over soft cap                       | Someone still wins — the cap is soft.                                                                                       |
+| Simultaneous exits, overlapping requests              | Allocations run in sequence; each win updates the winner's last-won timestamp (and held count), naturally spreading a wave. |
+| Grace expires before poll sees the re-hospitalization | Brief "free-for-all while hospitalized" — harmless, unactionable.                                                           |
+| War ends mid-lifecycle                                | Claim space dies: windows void, dibs void, ledger discarded.                                                                |
+| No registered members in faction                      | Dibs vacuously unavailable.                                                                                                 |
 
 ## Non-goals (v1)
 
@@ -292,7 +292,7 @@ just a rewrite but a different answer to the problem.
 Chat dibs with a database. Any premium faction member may claim any Torn target at any time;
 multiple members' claims on one target form a FIFO queue ordered by arrival ("call order"), with a
 `position` per claim; claims expire on a faction-configured TTL (30s–15min) counted from claim
-*creation*; all claims, claimer names, and positions are fully visible to the whole faction (and
+_creation_; all claims, claimer names, and positions are fully visible to the whole faction (and
 sealed from non-members). It fixes the record-keeping failures of chat — there is one shared
 ordering, an unambiguous holder, and an auditable trail — and both systems share that fix's
 foundation: server-authoritative state, scoped to the faction.
@@ -301,21 +301,21 @@ foundation: server-authoritative state, scoped to the faction.
 
 Hit Calling resolves contention by **arrival order**. That is first-past-the-chat relocated into
 an API: faster connections and faster fingers still win, just with a UUID attached. This design's
-core invariant — *all requests within a window are identical; arrival order is never an allocator
-input* — is a direct rejection of that model. Contention is resolved by a sealed request window
+core invariant — _all requests within a window are identical; arrival order is never an allocator
+input_ — is a direct rejection of that model. Contention is resolved by a sealed request window
 and a deterministic fairness allocator instead of by who clicked first. Everything else that
 differs follows from that choice plus war-scoping:
 
-| Dimension | Hit Calling (retired) | Dibs (this design) |
-|---|---|---|
-| Contention | FIFO queue by arrival, `position` 1..n | Sealed window, ranked-factor allocation; one holder |
-| Anchor | None — claim any target, any time | Hospital exit timestamp drives the lifecycle |
-| Expiry | TTL from claim *creation* | Grace after *natural exit*; early exit voids |
-| War awareness | None | War is the unit of all state |
-| Fairness data | None | Least-recently-won ledger + war score |
-| Concurrent claims | Up to 30/player; same target claimable repeatedly | Unlimited requests (a set, not a queue); soft cap on *held* dibs |
-| Intra-faction visibility | Fully transparent, names and positions | Sealed-bid: count only until allocation |
-| Handoff | Unclaim → next queue position inherits | Release → allocator re-runs over survivors |
+| Dimension                | Hit Calling (retired)                             | Dibs (this design)                                               |
+| ------------------------ | ------------------------------------------------- | ---------------------------------------------------------------- |
+| Contention               | FIFO queue by arrival, `position` 1..n            | Sealed window, ranked-factor allocation; one holder              |
+| Anchor                   | None — claim any target, any time                 | Hospital exit timestamp drives the lifecycle                     |
+| Expiry                   | TTL from claim _creation_                         | Grace after _natural exit_; early exit voids                     |
+| War awareness            | None                                              | War is the unit of all state                                     |
+| Fairness data            | None                                              | Least-recently-won ledger + war score                            |
+| Concurrent claims        | Up to 30/player; same target claimable repeatedly | Unlimited requests (a set, not a queue); soft cap on _held_ dibs |
+| Intra-faction visibility | Fully transparent, names and positions            | Sealed-bid: count only until allocation                          |
+| Handoff                  | Unclaim → next queue position inherits            | Release → allocator re-runs over survivors                       |
 
 The one structural idea Hit Calling got right survives here in a different form: its queue —
 multiple standing claims per target, one effective winner, inheritance on release — is the
@@ -328,12 +328,12 @@ The FIFO-with-TTL model is not just unfair at the margins; it is trivially farma
 
 - **Mass pre-claiming.** One player can hold 30 simultaneous claims across 30 targets, placed the
   moment each target enters hospital. War hospital stays run ~20–30 minutes minimum, and the
-  maximum TTL is 15 minutes — so a claim placed at hospitalization can be *refreshed once* and
+  maximum TTL is 15 minutes — so a claim placed at hospitalization can be _refreshed once_ and
   still hold position 1 at exit. A single sufficiently-online player (or a trivial script — the
   API is scriptable by design) locks up every upcoming exit and starves the rest of the faction
   indefinitely. There is no fairness factor to push back; it is first come, first served, forever.
 - **Queue stuffing.** Repeat claims by the same member on the same target each append a new queue
-  entry, so one player can occupy positions 1 *and* 3 of the same target's queue — even the
+  entry, so one player can occupy positions 1 _and_ 3 of the same target's queue — even the
   "next in line inherits" consolation is capturable.
 - **Racing rewarded.** Because position is arrival order, the rational play is exactly the chat
   pathology: automate claiming as fast as possible. The system's own rate limits (30 claims/min)
@@ -362,7 +362,7 @@ Dibs stays premium, like the Hit Calling API it replaces — but the gate splits
   is a poaching accident generating exactly the disputes the system exists to kill. The visible
   badge is also, frankly, the upsell.
 
-Acknowledged trade-off: this is a raw deal for the *individual* non-premium member in a mixed
+Acknowledged trade-off: this is a raw deal for the _individual_ non-premium member in a mixed
 faction. They are bound by the social contract — poach a claimed target and the faction is still
 mad — while having no access to its protections, and no way to claim cover for themselves. The
 design accepts this asymmetry deliberately: it is the pressure that makes "buy premium for

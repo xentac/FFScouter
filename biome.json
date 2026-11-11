@@ -1,5 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.6.6/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.6.7/schema.json",
   "vcs": {
     "enabled": true,
     "clientKind": "git",
@@ -7,12 +7,7 @@
   },
   "files": {
     "ignoreUnknown": true,
-    "includes": [
-      "**",
-      "!src/ffscouter.js",
-      "!**/__fixtures__/**/*.html",
-      "!stat_icons.svg"
-    ]
+    "includes": ["**"]
   },
   "formatter": {
     "enabled": true,
@@ -21,6 +16,10 @@
   },
   "linter": {
     "enabled": true,
+    "domains": {
+      "project": "recommended",
+      "react": "recommended"
+    },
     "rules": {
       "preset": "recommended",
       "suspicious": {
@@ -38,13 +37,47 @@
   "javascript": {
     "formatter": {
       "quoteStyle": "double"
-    }
+    },
+    "globals": [
+      "GM",
+      "GM_info",
+      "GM_xmlhttpRequest",
+      "unsafeWindow",
+      "__FF_SCOUTER_V2_VERSION__",
+      "__FF_SCOUTER_EDITION__"
+    ]
   },
   "css": {
     "parser": {
       "cssModules": true
     }
   },
+  "html": {
+    "experimentalFullSupportEnabled": true,
+    "formatter": {
+      "enabled": true
+    }
+  },
+  "overrides": [
+    {
+      "includes": ["**/__fixtures__/**/*.html", "stat_icons.svg"],
+      "linter": {
+        "enabled": false
+      },
+      "assist": {
+        "enabled": false
+      }
+    },
+    {
+      "includes": [
+        "src/features/faction/__fixtures__/torn-markup/2026-09-28/war-row-hospital-until.html",
+        "src/features/status-attack/__fixtures__/torn-markup/2026-07-26/war-list-enemy-rows.html"
+      ],
+      "formatter": {
+        "enabled": false
+      }
+    }
+  ],
   "assist": {
     "enabled": true,
     "actions": {
@@ -52,11 +85,5 @@
         "organizeImports": "on"
       }
     }
-  },
-  "overrides": [
-    {
-      "includes": ["**/*.md"],
-      "formatter": { "enabled": false }
-    }
-  ]
+  }
 }

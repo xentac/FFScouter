@@ -1,7 +1,7 @@
 # Status-attack click investigation: what's confirmed, what's ruled out, what's still open
 
 A user report described clicking an online/idle/offline status icon on the faction/war member
-list and sometimes ending up on the clicked player's own profile page, or on a *different*
+list and sometimes ending up on the clicked player's own profile page, or on a _different_
 player's attack page, instead of the intended attack link. The report initially named "the code we
 wrote to fix the memory leak" as a suspect — that was `mountFilterBox`'s React-root tracking (ADR
 0010, `src/features/faction/index.ts`), read in full during this investigation and found unrelated
@@ -51,7 +51,7 @@ Two distinct symptoms were reported and only one has a supported mechanism:
   never even sees it as a status click, since `target.closest()` won't match the status selector.
 - **"Attacks a different (specifically: the last-clicked) player"** — **not explained by anything
   above.** This is not consistent with simple mis-aim (which would produce a spatially adjacent,
-  effectively random wrong player, not specifically the *previous* click target), not consistent
+  effectively random wrong player, not specifically the _previous_ click target), not consistent
   with the sort engine (rules out moving the wrong data, per above), not consistent with any
   caching in the JS path (there is none), and not consistent with the Mini Profile popup (ruled out
   above). Every static-analysis lead has been exhausted without a mechanism. This needs a live
