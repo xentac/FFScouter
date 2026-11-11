@@ -204,9 +204,6 @@
         "rules": {
           "suspicious": {
             "noConsole": "off"
-          },
-          "nursery": {
-            "noUnsafeReturn": "off"
           }
         }
       }
@@ -257,6 +254,11 @@
       "source": {
         "organizeImports": "on"
       }
+    }
+  },
+  "markdown": {
+    "parser": {
+      "frontmatter": true
     }
   }
 }

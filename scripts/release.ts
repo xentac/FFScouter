@@ -160,8 +160,14 @@ function getNextLogicalVersion(version: string): string {
   return version;
 }
 
+type ReleaseMetadata = {
+  version: string;
+  buildDate: string;
+  sourceCommit: string;
+};
+
 // Helper to get release metadata from branch
-function getReleaseMetadata(branch: string) {
+function getReleaseMetadata(branch: string): ReleaseMetadata | null {
   try {
     const content = execSync(`git show ${branch}:release-metadata.json`, {
       stdio: "pipe",
@@ -169,7 +175,7 @@ function getReleaseMetadata(branch: string) {
       .toString()
       .trim();
     if (content) {
-      return JSON.parse(content);
+      return JSON.parse(content) as ReleaseMetadata;
     }
   } catch {
     try {
@@ -180,7 +186,7 @@ function getReleaseMetadata(branch: string) {
         .toString()
         .trim();
       if (content) {
-        return JSON.parse(content);
+        return JSON.parse(content) as ReleaseMetadata;
       }
     } catch {
       // Ignore
