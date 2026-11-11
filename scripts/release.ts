@@ -9,6 +9,11 @@ import {
 import { stdin as input, stdout as output } from "node:process";
 import readline from "node:readline/promises";
 
+const PRERELEASE_PATTERN = /^(\d+(?:\.\d+)*)-([a-zA-Z]+)(\d+)$/i;
+const DOTTED_PRERELEASE_PATTERN = /^(\d+(?:\.\d+)*)-([a-zA-Z]+)\.(\d+)$/i;
+const DOTTED_VERSION_PATTERN = /^(\d+)\.(\d+)\.(\d+)$/;
+const MINOR_DOTTED_VERSION_PATTERN = /^(\d+)\.(\d+)$/;
+
 const EDITIONS = {
   standard: {
     name: "FF Scouter V2",
@@ -79,7 +84,7 @@ function getAllTagsSorted(): string[] {
         .split("\n")
         .map((t) => t.trim())
         .filter(Boolean);
-  } catch (_e) {
+  } catch {
     // Ignore
   }
   return [];
@@ -102,9 +107,8 @@ function getRecentTagsForEdition(editionKey: EditionKey, count = 5): string[] {
       .slice(0, count);
   } else {
     return allTags
-      .filter(
-        (t) =>
-          !allSuffixes.some((s) => t.toLowerCase().includes(s.toLowerCase())),
+      .filter((t) =>
+        allSuffixes.every((s) => !t.toLowerCase().includes(s.toLowerCase())),
       )
       .slice(0, count);
   }
@@ -122,36 +126,34 @@ function printAllEditionsSummary(): void {
 
 function getNextLogicalVersion(version: string): string {
   // 1. Matches standard prerelease versions like "2.0-beta1", "2.77-xentac1"
-  const prereleaseMatch = version.match(/^(\d+(?:\.\d+)*)-([a-zA-Z]+)(\d+)$/i);
+  const prereleaseMatch = version.match(PRERELEASE_PATTERN);
   if (prereleaseMatch) {
     const [_, base, type, numStr] = prereleaseMatch;
-    const nextNum = parseInt(numStr || "", 10) + 1;
+    const nextNum = Number.parseInt(numStr || "", 10) + 1;
     return `${base}-${type}${nextNum}`;
   }
 
   // 2. Matches standard dotted prerelease SemVer like "2.0.0-beta.1", "2.77-xentac.1"
-  const dottedPrereleaseMatch = version.match(
-    /^(\d+(?:\.\d+)*)-([a-zA-Z]+)\.(\d+)$/i,
-  );
+  const dottedPrereleaseMatch = version.match(DOTTED_PRERELEASE_PATTERN);
   if (dottedPrereleaseMatch) {
     const [_, base, type, numStr] = dottedPrereleaseMatch;
-    const nextNum = parseInt(numStr || "", 10) + 1;
+    const nextNum = Number.parseInt(numStr || "", 10) + 1;
     return `${base}-${type}.${nextNum}`;
   }
 
   // 3. Matches standard dotted versions like "1.17.0"
-  const dottedMatch = version.match(/^(\d+)\.(\d+)\.(\d+)$/);
+  const dottedMatch = version.match(DOTTED_VERSION_PATTERN);
   if (dottedMatch) {
     const [_, major, minor, patch] = dottedMatch;
-    const nextPatch = parseInt(patch || "", 10) + 1;
+    const nextPatch = Number.parseInt(patch || "", 10) + 1;
     return `${major}.${minor}.${nextPatch}`;
   }
 
   // 4. Matches minor dotted versions like "2.0"
-  const minorDottedMatch = version.match(/^(\d+)\.(\d+)$/);
+  const minorDottedMatch = version.match(MINOR_DOTTED_VERSION_PATTERN);
   if (minorDottedMatch) {
     const [_, major, minor] = minorDottedMatch;
-    const nextMinor = parseInt(minor || "", 10) + 1;
+    const nextMinor = Number.parseInt(minor || "", 10) + 1;
     return `${major}.${nextMinor}`;
   }
 
@@ -169,7 +171,7 @@ function getReleaseMetadata(branch: string) {
     if (content) {
       return JSON.parse(content);
     }
-  } catch (_e) {
+  } catch {
     try {
       const content = execSync(
         `git show origin/${branch}:release-metadata.json`,
@@ -180,7 +182,7 @@ function getReleaseMetadata(branch: string) {
       if (content) {
         return JSON.parse(content);
       }
-    } catch (_err) {
+    } catch {
       // Ignore
     }
   }
@@ -286,7 +288,7 @@ async function runDocsPublish(
   );
   const picks = choice
     .split(",")
-    .map((c) => parseInt(c.trim(), 10))
+    .map((c) => Number.parseInt(c.trim(), 10))
     .filter((n) => !Number.isNaN(n));
 
   const selectedKeys = picks.includes(allIdx)
@@ -374,7 +376,7 @@ async function showEditionStatus(editionKey: EditionKey, sourceCommit: string) {
   try {
     execSync(`git cat-file -e ${relSourceCommit}`, { stdio: "ignore" });
     commitExists = true;
-  } catch (_e) {
+  } catch {
     // Ignore
   }
 
@@ -393,7 +395,7 @@ async function showEditionStatus(editionKey: EditionKey, sourceCommit: string) {
     )
       .toString()
       .trim();
-    const count = parseInt(countStr, 10);
+    const count = Number.parseInt(countStr, 10);
 
     if (count === 0) {
       console.log(
@@ -480,7 +482,7 @@ async function main() {
         );
 
         const choice = await rl.question(`Choice (1-${keys.length + 1}): `);
-        const idx = parseInt(choice.trim(), 10) - 1;
+        const idx = Number.parseInt(choice.trim(), 10) - 1;
         if (Number.isNaN(idx) || idx < 0 || idx > keys.length) {
           console.error("Invalid choice.");
           process.exit(1);
@@ -519,7 +521,7 @@ async function main() {
       });
 
       const choice = await rl.question("Choice (1-3): ");
-      const idx = parseInt(choice.trim(), 10) - 1;
+      const idx = Number.parseInt(choice.trim(), 10) - 1;
       if (Number.isNaN(idx) || idx < 0 || idx >= keys.length) {
         console.error("Invalid choice.");
         process.exit(1);
@@ -790,4 +792,4 @@ async function main() {
   }
 }
 
-main();
+void main();
