@@ -1,8 +1,9 @@
 ---
+
 name: feedback_use_bun_not_npx
 description: Always use bun to run scripts/tools, never npx
 metadata:
-  type: feedback
+type: feedback
 ---
 
 Always use `bun` to run scripts and tools. Never use `npx`.

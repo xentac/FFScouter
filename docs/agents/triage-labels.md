@@ -20,10 +20,10 @@ Fixes flow commit → beta release → main release. Two extra labels
 (outside the five triage roles above) track an issue whose fix exists
 but hasn't fully shipped:
 
-| Label          | Meaning                                             |
-| -------------- | --------------------------------------------------- |
-| `pending-beta` | Fix committed/pushed but not yet in a beta release  |
-| `in-beta`      | Fix is in a beta release, awaiting a main release   |
+| Label          | Meaning                                            |
+| -------------- | -------------------------------------------------- |
+| `pending-beta` | Fix committed/pushed but not yet in a beta release |
+| `in-beta`      | Fix is in a beta release, awaiting a main release  |
 
 When a fix lands, remove the triage label (e.g. `ready-for-agent`) and
 apply `pending-beta`. Swap it for `in-beta` at the next beta release.
