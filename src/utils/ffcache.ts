@@ -1,692 +1,604 @@
-import type { FFTarget } from "./api";
-import logger, { LogLevel } from "./logger";
-import { Storage as StorageUtil } from "./storage";
-import type { TornApiKey } from "./types";
+import {
+  //unwrap,
+  //wrap,
+  type DBSchema,
+  deleteDB,
+  type IDBPDatabase,
+  type IDBPTransaction,
+  openDB,
+  type StoreNames,
+} from "idb";
+import logger from "./logger";
+import type {
+  AnalyticsEntry,
+  CachedFFData,
+  CachedFlightData,
+  FFData,
+  PlayerFlightsResponse,
+  PlayerId,
+  Timestamp,
+} from "./types";
 
-export interface CachedTargets {
-  targets: FFTarget[];
-  expiry: number;
-  filters: {
-    minlevel: number | null;
-    maxlevel: number | null;
-    minff: number | null;
-    maxff: number;
-    inactive: boolean;
-    factionless: boolean;
-  };
-  last_updated?: number;
-}
+const log = logger.child("storage");
 
-export enum ChainLinkType {
-  ATTACK = "attack",
-  PROFILE = "profile",
-}
-
-export enum ChainTabType {
-  NEWTAB = "newtab",
-  SAMETAB = "sametab",
-}
-
-export enum WarQuickAttackAction {
-  NEW_TAB = "new_tab",
-  CURRENT = "current",
-}
-
-export enum FactionsColDisplay {
-  FAIR_FIGHT = "fair_fight",
-  BATTLE_STATS = "battle_stats",
-  NONE = "none",
-}
-
-export enum MiniProfileDisplay {
-  FAIR_FIGHT = "fair_fight",
-  BATTLE_STATS = "battle_stats",
-}
-
-export enum GaugeMarkerType {
-  ARROW = "arrow",
-  BUBBLE_FF = "bubble_ff",
-  BUBBLE_ESTIMATE = "bubble_estimate",
-}
-
-export enum GaugeMarkerJustify {
-  GAUGE = "gauge",
-  LEFT = "left",
-  RIGHT = "right",
-}
-
-export enum ColorScheme {
-  CLASSIC = "classic",
-  COOL_DIVERGING = "cool_diverging",
-  NEON = "neon",
-  COLORBLIND_SAFE = "colorblind_safe",
-  GRAYSCALE = "grayscale",
-  GREEN_YELLOW_RED = "green_yellow_red",
-  BLUE_YELLOW_RED = "blue_yellow_red",
-  PLASMA = "plasma",
-  // Reserved for a future color-editing UI. Not offered in the settings
-  // dropdown yet; falls back to CLASSIC if selected without valid custom_colors.
-  CUSTOM = "custom",
-}
-
-export const CONFIG_DEFAULTS = {
-  low_ff_range: 2,
-  high_ff_range: 4,
-  max_ff_range: 8,
-  chain_button_enabled: true,
-  chain_link_type: ChainLinkType.ATTACK,
-  chain_tab_type: ChainTabType.NEWTAB,
-  chain_ff_target: 2.5,
-  ff_history_enabled: true,
-  factions_col_display: FactionsColDisplay.BATTLE_STATS,
-  war_col_display: FactionsColDisplay.BATTLE_STATS,
-  mini_profile_display: MiniProfileDisplay.FAIR_FIGHT,
-  debug_logs: false,
-  analytics_enabled: false,
-  chain_min_level: null as number | null,
-  chain_max_level: null as number | null,
-  chain_inactive: true,
-  chain_min_ff: null as number | null,
-  chain_max_ff: 2.5,
-  chain_factionless: false,
-  gauge_marker_type: GaugeMarkerType.ARROW,
-  gauge_marker_scale: 100,
-  gauge_marker_border_width: 1,
-  gauge_marker_justify: GaugeMarkerJustify.GAUGE,
-  war_quick_attack_action: WarQuickAttackAction.NEW_TAB,
-  network_interception_enabled: false,
-  status_attack_links_enabled: true,
-  debug_disable_pda_http: false,
-  debug_force_react_fallback: false,
-  color_scheme: ColorScheme.CLASSIC,
-  custom_colors: null as string[] | null,
-  settings_panel_own_profile_only: false,
-  faction_filter_enabled: true,
-  war_filter_enabled: true,
-  stat_distribution_badge_enabled: true,
-  bounty_board_enabled: true,
-  od_insurance_enabled: true,
-  bounty_attack_action: WarQuickAttackAction.NEW_TAB,
+export const STORES = {
+  CACHE: "cache",
+  FLIGHTS: "flights",
+  ANALYTICS: "analytics",
+  BOUNTY_BOARD: "bounty_board",
 } as const;
 
-enum CONFIG {
-  KEY = "key",
-  LOW_FF_RANGE = "low_ff_range",
-  HIGH_FF_RANGE = "high_ff_range",
-  MAX_FF_RANGE = "max_ff_range",
-  CHAIN_BUTTON_ENABLED = "chain_button_enabled",
-  CHAIN_LINK_TYPE = "chain_link_type",
-  CHAIN_TAB_TYPE = "chain_tab_type",
-  CHAIN_FF_TARGET = "chain_ff_target",
-  FF_HISTORY_ENABLED = "ff_history_enabled",
-  FACTIONS_COL_DISPLAY = "factions_col_display",
-  WAR_COL_DISPLAY = "war_col_display",
-  MINI_PROFILE_DISPLAY = "mini_profile_display",
-  DEBUG_LOGS = "debug_logs",
-  ANALYTICS_ENABLED = "analytics_enabled",
-  FACTION_FILTER_STATE = "faction_filter_state",
-  FACTION_FILTER_COLLAPSED = "faction_filter_collapsed",
-  WAR_FILTER_STATE = "war_filter_state",
-  WAR_FILTER_COLLAPSED = "war_filter_collapsed",
-  CHAIN_MIN_LEVEL = "chain_min_level",
-  CHAIN_MAX_LEVEL = "chain_max_level",
-  CHAIN_INACTIVE = "chain_inactive",
-  CHAIN_MIN_FF = "chain_min_ff",
-  CHAIN_MAX_FF = "chain_max_ff",
-  CHAIN_FACTIONLESS = "chain_factionless",
-  CHAIN_TARGETS = "chain_targets",
-  CHAIN_TARGET_INDEX = "chain_target_index",
-  GAUGE_MARKER_TYPE = "gauge_marker_type",
-  GAUGE_MARKER_SCALE = "gauge_marker_scale",
-  GAUGE_MARKER_BORDER_WIDTH = "gauge_marker_border_width",
-  GAUGE_MARKER_JUSTIFY = "gauge_marker_justify",
-  WAR_QUICK_ATTACK_ACTION = "war_quick_attack_action",
-  NETWORK_INTERCEPTION_ENABLED = "network_interception_enabled",
-  STATUS_ATTACK_LINKS_ENABLED = "status_attack_links_enabled",
-  DEBUG_DISABLE_PDA_HTTP = "debug_disable_pda_http",
-  DEBUG_FORCE_REACT_FALLBACK = "debug_force_react_fallback",
-  COLOR_SCHEME = "color_scheme",
-  CUSTOM_COLORS = "custom_colors",
-  SETTINGS_PANEL_OWN_PROFILE_ONLY = "settings_panel_own_profile_only",
-  FACTION_FILTER_ENABLED = "faction_filter_enabled",
-  WAR_FILTER_ENABLED = "war_filter_enabled",
-  STAT_DISTRIBUTION_BADGE_ENABLED = "stat_distribution_badge_enabled",
-  BOUNTY_BOARD_ENABLED = "bounty_board_enabled",
-  OD_INSURANCE_ENABLED = "od_insurance_enabled",
-  BOUNTY_ATTACK_ACTION = "bounty_attack_action",
+// Bounty Board Cache rows, keyed by name ("board", "failure"). The value is
+// opaque here — its shape belongs to BountyBoardCache.
+export type BountyBoardEntry<T = unknown> = {
+  key: string;
+  value: T;
+  expiry: Timestamp;
+};
+
+interface CacheDB extends DBSchema {
+  [STORES.CACHE]: {
+    key: PlayerId;
+    value: CachedFFData;
+    indexes: { expiry: number };
+  };
+  [STORES.FLIGHTS]: {
+    key: PlayerId;
+    value: CachedFlightData;
+    indexes: { expiry: number };
+  };
+  [STORES.ANALYTICS]: {
+    key: number;
+    value: AnalyticsEntry;
+    indexes: { timestamp: number };
+  };
+  [STORES.BOUNTY_BOARD]: {
+    key: string;
+    value: BountyBoardEntry;
+    indexes: { expiry: number };
+  };
 }
 
-export class FFConfig {
-  private name: string;
-  private storage: StorageUtil;
+type MigrationFn = (
+  db: IDBPDatabase<CacheDB>,
+  transaction: IDBPTransaction<CacheDB, StoreNames<CacheDB>[], "versionchange">,
+) => void;
 
-  constructor(name: string) {
-    this.name = name;
-    this.storage = new StorageUtil(this.name);
-    // Apply saved debug logs preference to logger at startup
-    logger.setLevel(this.debug_logs ? LogLevel.DEBUG : LogLevel.INFO);
-  }
+export class FFCache {
+  private db_name: string;
+  private db: IDBPDatabase<CacheDB> | null = null;
+  private db_version = 4;
 
-  get key(): TornApiKey {
-    return this.storage.get(CONFIG.KEY) ?? "";
-  }
+  private cache_interval: number = 60 * 60 * 1000; // one hour cache
+  private last_clean = 0;
+  private active_operations = 0;
+  private close_timer: ReturnType<typeof setTimeout> | null = null;
+  private open_promise: Promise<IDBPDatabase<CacheDB>> | null = null;
+  private channel: BroadcastChannel | null = null;
+  private state: "CLOSED" | "OPEN" | "DELETING_LOCAL" | "DELETING_REMOTE" =
+    "CLOSED";
+  private deletion_promise: Promise<void> | null = null;
+  private resolve_deletion: (() => void) | null = null;
 
-  set key(key: TornApiKey) {
-    this.storage.set(CONFIG.KEY, key);
-  }
+  private migrations: Map<number, MigrationFn> = new Map([
+    [
+      1,
+      (db, _) => {
+        const store = db.createObjectStore(STORES.CACHE, {
+          keyPath: "player_id",
+        });
+        store.createIndex("expiry", "expiry", {
+          unique: false,
+        });
+      },
+    ],
+    [
+      2,
+      (db, _) => {
+        const store = db.createObjectStore(STORES.FLIGHTS, {
+          keyPath: "player_id",
+        });
+        store.createIndex("expiry", "expiry", {
+          unique: false,
+        });
+      },
+    ],
+    [
+      3,
+      (db, _) => {
+        const store = db.createObjectStore(STORES.ANALYTICS, {
+          keyPath: "id",
+          autoIncrement: true,
+        });
+        store.createIndex("timestamp", "timestamp", {
+          unique: false,
+        });
+      },
+    ],
+    [
+      4,
+      (db, _) => {
+        const store = db.createObjectStore(STORES.BOUNTY_BOARD, {
+          keyPath: "key",
+        });
+        store.createIndex("expiry", "expiry", {
+          unique: false,
+        });
+      },
+    ],
+  ]);
 
-  get low_ff_range(): number {
-    return (
-      this.storage.get(CONFIG.LOW_FF_RANGE) ?? CONFIG_DEFAULTS.low_ff_range
-    );
-  }
-
-  set low_ff_range(val: number) {
-    this.storage.set(CONFIG.LOW_FF_RANGE, val);
-  }
-
-  get high_ff_range(): number {
-    return (
-      this.storage.get(CONFIG.HIGH_FF_RANGE) ?? CONFIG_DEFAULTS.high_ff_range
-    );
-  }
-
-  set high_ff_range(val: number) {
-    this.storage.set(CONFIG.HIGH_FF_RANGE, val);
-  }
-
-  get max_ff_range(): number {
-    return (
-      this.storage.get(CONFIG.MAX_FF_RANGE) ?? CONFIG_DEFAULTS.max_ff_range
-    );
-  }
-
-  set max_ff_range(val: number) {
-    this.storage.set(CONFIG.MAX_FF_RANGE, val);
-  }
-
-  get chain_button_enabled(): boolean {
-    return (
-      this.storage.get(CONFIG.CHAIN_BUTTON_ENABLED) ??
-      CONFIG_DEFAULTS.chain_button_enabled
-    );
-  }
-
-  set chain_button_enabled(val: boolean) {
-    this.storage.set(CONFIG.CHAIN_BUTTON_ENABLED, val);
-  }
-
-  get chain_link_type(): ChainLinkType {
-    return (
-      this.storage.get(CONFIG.CHAIN_LINK_TYPE) ??
-      CONFIG_DEFAULTS.chain_link_type
-    );
-  }
-
-  set chain_link_type(val: ChainLinkType) {
-    this.storage.set(CONFIG.CHAIN_LINK_TYPE, val);
-  }
-
-  get chain_tab_type(): ChainTabType {
-    return (
-      this.storage.get(CONFIG.CHAIN_TAB_TYPE) ?? CONFIG_DEFAULTS.chain_tab_type
-    );
-  }
-
-  set chain_tab_type(val: ChainTabType) {
-    this.storage.set(CONFIG.CHAIN_TAB_TYPE, val);
-  }
-
-  get war_quick_attack_action(): WarQuickAttackAction {
-    return (
-      this.storage.get(CONFIG.WAR_QUICK_ATTACK_ACTION) ??
-      CONFIG_DEFAULTS.war_quick_attack_action
-    );
-  }
-
-  set war_quick_attack_action(val: WarQuickAttackAction) {
-    this.storage.set(CONFIG.WAR_QUICK_ATTACK_ACTION, val);
-  }
-
-  get chain_ff_target(): number {
-    return (
-      this.storage.get(CONFIG.CHAIN_FF_TARGET) ??
-      CONFIG_DEFAULTS.chain_ff_target
-    );
-  }
-
-  set chain_ff_target(val: number) {
-    this.storage.set(CONFIG.CHAIN_FF_TARGET, val);
-  }
-
-  get chain_min_level(): number | null {
-    return (
-      this.storage.get(CONFIG.CHAIN_MIN_LEVEL) ??
-      CONFIG_DEFAULTS.chain_min_level
-    );
-  }
-
-  set chain_min_level(val: number | null) {
-    if (val === null) {
-      this.storage.remove(CONFIG.CHAIN_MIN_LEVEL);
-    } else {
-      this.storage.set(CONFIG.CHAIN_MIN_LEVEL, val);
+  constructor(db_name: string) {
+    this.db_name = db_name;
+    if (typeof BroadcastChannel !== "undefined") {
+      this.channel = new BroadcastChannel(`ffcache-channel-${db_name}`);
+      this.channel.onmessage = (event) => {
+        this.handle_broadcast(event.data);
+      };
+      if (typeof (this.channel as any).unref === "function") {
+        (this.channel as any).unref();
+      }
     }
   }
 
-  get chain_max_level(): number | null {
-    return (
-      this.storage.get(CONFIG.CHAIN_MAX_LEVEL) ??
-      CONFIG_DEFAULTS.chain_max_level
-    );
-  }
-
-  set chain_max_level(val: number | null) {
-    if (val === null) {
-      this.storage.remove(CONFIG.CHAIN_MAX_LEVEL);
-    } else {
-      this.storage.set(CONFIG.CHAIN_MAX_LEVEL, val);
+  open = async () => {
+    if (this.db) {
+      return this.db;
     }
-  }
-
-  get chain_inactive(): boolean {
-    return (
-      this.storage.get(CONFIG.CHAIN_INACTIVE) ?? CONFIG_DEFAULTS.chain_inactive
-    );
-  }
-
-  set chain_inactive(val: boolean) {
-    this.storage.set(CONFIG.CHAIN_INACTIVE, val);
-  }
-
-  get chain_min_ff(): number | null {
-    return (
-      this.storage.get(CONFIG.CHAIN_MIN_FF) ?? CONFIG_DEFAULTS.chain_min_ff
-    );
-  }
-
-  set chain_min_ff(val: number | null) {
-    if (val === null) {
-      this.storage.remove(CONFIG.CHAIN_MIN_FF);
-    } else {
-      this.storage.set(CONFIG.CHAIN_MIN_FF, val);
+    if (this.open_promise) {
+      return this.open_promise;
     }
-  }
-
-  get chain_max_ff(): number {
-    return (
-      this.storage.get(CONFIG.CHAIN_MAX_FF) ??
-      this.storage.get(CONFIG.CHAIN_FF_TARGET) ??
-      CONFIG_DEFAULTS.chain_max_ff
-    );
-  }
-
-  set chain_max_ff(val: number) {
-    this.storage.set(CONFIG.CHAIN_MAX_FF, val);
-    this.storage.set(CONFIG.CHAIN_FF_TARGET, val);
-  }
-
-  get chain_factionless(): boolean {
-    return (
-      this.storage.get(CONFIG.CHAIN_FACTIONLESS) ??
-      CONFIG_DEFAULTS.chain_factionless
-    );
-  }
-
-  set chain_factionless(val: boolean) {
-    this.storage.set(CONFIG.CHAIN_FACTIONLESS, val);
-  }
-
-  get ff_history_enabled(): boolean {
-    return (
-      this.storage.get(CONFIG.FF_HISTORY_ENABLED) ??
-      CONFIG_DEFAULTS.ff_history_enabled
-    );
-  }
-
-  set ff_history_enabled(val: boolean) {
-    this.storage.set(CONFIG.FF_HISTORY_ENABLED, val);
-  }
-
-  get factions_col_display(): FactionsColDisplay {
-    return (
-      this.storage.get(CONFIG.FACTIONS_COL_DISPLAY) ??
-      CONFIG_DEFAULTS.factions_col_display
-    );
-  }
-
-  set factions_col_display(val: FactionsColDisplay) {
-    this.storage.set(CONFIG.FACTIONS_COL_DISPLAY, val);
-  }
-
-  get war_col_display(): FactionsColDisplay {
-    return (
-      this.storage.get(CONFIG.WAR_COL_DISPLAY) ??
-      CONFIG_DEFAULTS.war_col_display
-    );
-  }
-
-  set war_col_display(val: FactionsColDisplay) {
-    this.storage.set(CONFIG.WAR_COL_DISPLAY, val);
-  }
-
-  get mini_profile_display(): MiniProfileDisplay {
-    return (
-      this.storage.get(CONFIG.MINI_PROFILE_DISPLAY) ??
-      CONFIG_DEFAULTS.mini_profile_display
-    );
-  }
-
-  set mini_profile_display(val: MiniProfileDisplay) {
-    this.storage.set(CONFIG.MINI_PROFILE_DISPLAY, val);
-  }
-
-  get debug_logs(): boolean {
-    return this.storage.get(CONFIG.DEBUG_LOGS) ?? CONFIG_DEFAULTS.debug_logs;
-  }
-
-  set debug_logs(val: boolean) {
-    this.storage.set(CONFIG.DEBUG_LOGS, val);
-    logger.setLevel(val ? LogLevel.DEBUG : LogLevel.INFO);
-  }
-
-  get analytics_enabled(): boolean {
-    return (
-      this.storage.get(CONFIG.ANALYTICS_ENABLED) ??
-      CONFIG_DEFAULTS.analytics_enabled
-    );
-  }
-
-  set analytics_enabled(val: boolean) {
-    this.storage.set(CONFIG.ANALYTICS_ENABLED, val);
-  }
-
-  get network_interception_enabled(): boolean {
-    return (
-      this.storage.get(CONFIG.NETWORK_INTERCEPTION_ENABLED) ??
-      CONFIG_DEFAULTS.network_interception_enabled
-    );
-  }
-
-  set network_interception_enabled(val: boolean) {
-    this.storage.set(CONFIG.NETWORK_INTERCEPTION_ENABLED, val);
-  }
-
-  get status_attack_links_enabled(): boolean {
-    return (
-      this.storage.get(CONFIG.STATUS_ATTACK_LINKS_ENABLED) ??
-      CONFIG_DEFAULTS.status_attack_links_enabled
-    );
-  }
-
-  set status_attack_links_enabled(val: boolean) {
-    this.storage.set(CONFIG.STATUS_ATTACK_LINKS_ENABLED, val);
-  }
-
-  get settings_panel_own_profile_only(): boolean {
-    return (
-      this.storage.get(CONFIG.SETTINGS_PANEL_OWN_PROFILE_ONLY) ??
-      CONFIG_DEFAULTS.settings_panel_own_profile_only
-    );
-  }
-
-  set settings_panel_own_profile_only(val: boolean) {
-    this.storage.set(CONFIG.SETTINGS_PANEL_OWN_PROFILE_ONLY, val);
-  }
-
-  get faction_filter_enabled(): boolean {
-    return (
-      this.storage.get(CONFIG.FACTION_FILTER_ENABLED) ??
-      CONFIG_DEFAULTS.faction_filter_enabled
-    );
-  }
-
-  set faction_filter_enabled(val: boolean) {
-    this.storage.set(CONFIG.FACTION_FILTER_ENABLED, val);
-  }
-
-  get war_filter_enabled(): boolean {
-    return (
-      this.storage.get(CONFIG.WAR_FILTER_ENABLED) ??
-      CONFIG_DEFAULTS.war_filter_enabled
-    );
-  }
-
-  set war_filter_enabled(val: boolean) {
-    this.storage.set(CONFIG.WAR_FILTER_ENABLED, val);
-  }
-
-  get stat_distribution_badge_enabled(): boolean {
-    return (
-      this.storage.get(CONFIG.STAT_DISTRIBUTION_BADGE_ENABLED) ??
-      CONFIG_DEFAULTS.stat_distribution_badge_enabled
-    );
-  }
-
-  set stat_distribution_badge_enabled(val: boolean) {
-    this.storage.set(CONFIG.STAT_DISTRIBUTION_BADGE_ENABLED, val);
-  }
-
-  get bounty_board_enabled(): boolean {
-    return (
-      this.storage.get(CONFIG.BOUNTY_BOARD_ENABLED) ??
-      CONFIG_DEFAULTS.bounty_board_enabled
-    );
-  }
-
-  set bounty_board_enabled(val: boolean) {
-    this.storage.set(CONFIG.BOUNTY_BOARD_ENABLED, val);
-  }
-
-  get od_insurance_enabled(): boolean {
-    return (
-      this.storage.get(CONFIG.OD_INSURANCE_ENABLED) ??
-      CONFIG_DEFAULTS.od_insurance_enabled
-    );
-  }
-
-  set od_insurance_enabled(val: boolean) {
-    this.storage.set(CONFIG.OD_INSURANCE_ENABLED, val);
-  }
-
-  get bounty_attack_action(): WarQuickAttackAction {
-    return (
-      this.storage.get(CONFIG.BOUNTY_ATTACK_ACTION) ??
-      CONFIG_DEFAULTS.bounty_attack_action
-    );
-  }
-
-  set bounty_attack_action(val: WarQuickAttackAction) {
-    this.storage.set(CONFIG.BOUNTY_ATTACK_ACTION, val);
-  }
-
-  get debug_disable_pda_http(): boolean {
-    return (
-      this.storage.get(CONFIG.DEBUG_DISABLE_PDA_HTTP) ??
-      CONFIG_DEFAULTS.debug_disable_pda_http
-    );
-  }
-
-  set debug_disable_pda_http(val: boolean) {
-    this.storage.set(CONFIG.DEBUG_DISABLE_PDA_HTTP, val);
-  }
-
-  get debug_force_react_fallback(): boolean {
-    return (
-      this.storage.get(CONFIG.DEBUG_FORCE_REACT_FALLBACK) ??
-      CONFIG_DEFAULTS.debug_force_react_fallback
-    );
-  }
-
-  set debug_force_react_fallback(val: boolean) {
-    this.storage.set(CONFIG.DEBUG_FORCE_REACT_FALLBACK, val);
-  }
-
-  get gauge_marker_type(): GaugeMarkerType {
-    return (
-      this.storage.get(CONFIG.GAUGE_MARKER_TYPE) ??
-      CONFIG_DEFAULTS.gauge_marker_type
-    );
-  }
-
-  set gauge_marker_type(val: GaugeMarkerType) {
-    this.storage.set(CONFIG.GAUGE_MARKER_TYPE, val);
-  }
-
-  get gauge_marker_scale(): number {
-    return (
-      this.storage.get(CONFIG.GAUGE_MARKER_SCALE) ??
-      CONFIG_DEFAULTS.gauge_marker_scale
-    );
-  }
-
-  set gauge_marker_scale(val: number) {
-    this.storage.set(CONFIG.GAUGE_MARKER_SCALE, val);
-  }
-
-  get gauge_marker_border_width(): number {
-    return (
-      this.storage.get(CONFIG.GAUGE_MARKER_BORDER_WIDTH) ??
-      CONFIG_DEFAULTS.gauge_marker_border_width
-    );
-  }
-
-  set gauge_marker_border_width(val: number) {
-    this.storage.set(CONFIG.GAUGE_MARKER_BORDER_WIDTH, val);
-  }
-
-  get gauge_marker_justify(): GaugeMarkerJustify {
-    return (
-      this.storage.get(CONFIG.GAUGE_MARKER_JUSTIFY) ??
-      CONFIG_DEFAULTS.gauge_marker_justify
-    );
-  }
-
-  set gauge_marker_justify(val: GaugeMarkerJustify) {
-    this.storage.set(CONFIG.GAUGE_MARKER_JUSTIFY, val);
-  }
-
-  get color_scheme(): ColorScheme {
-    return (
-      this.storage.get(CONFIG.COLOR_SCHEME) ?? CONFIG_DEFAULTS.color_scheme
-    );
-  }
-
-  set color_scheme(val: ColorScheme) {
-    this.storage.set(CONFIG.COLOR_SCHEME, val);
-  }
-
-  get custom_colors(): string[] | null {
-    return (
-      this.storage.get(CONFIG.CUSTOM_COLORS) ?? CONFIG_DEFAULTS.custom_colors
-    );
-  }
-
-  set custom_colors(val: string[] | null) {
-    if (val === null) {
-      this.storage.remove(CONFIG.CUSTOM_COLORS);
-    } else {
-      this.storage.set(CONFIG.CUSTOM_COLORS, val);
+    if (typeof BroadcastChannel !== "undefined" && !this.channel) {
+      this.channel = new BroadcastChannel(`ffcache-channel-${this.db_name}`);
+      this.channel.onmessage = (event) => {
+        this.handle_broadcast(event.data);
+      };
+      if (typeof (this.channel as any).unref === "function") {
+        (this.channel as any).unref();
+      }
     }
-  }
+    const cache = this;
+    this.open_promise = (async () => {
+      try {
+        const db = await openDB<CacheDB>(this.db_name, this.db_version, {
+          upgrade(db, oldVersion, newVersion, transaction, _event) {
+            // …
+            log.info("Need to upgrade from", oldVersion, "to", newVersion);
 
-  get faction_filter_state(): any | null {
-    return this.storage.get(CONFIG.FACTION_FILTER_STATE) ?? null;
-  }
+            for (let i = (oldVersion ?? 0) + 1; i <= cache.db_version; i++) {
+              log.debug(`Migration: ${i}`);
+              const m = cache.migrations.get(i);
+              if (m) {
+                m(db, transaction);
+              } else {
+                log.debug(`Migration not found: ${i}`);
+              }
+              log.debug(`Migration complete: ${i}`);
+            }
+          },
+          blocking(currentVersion, blockedVersion, event) {
+            log.debug(
+              `Can't open ${blockedVersion} because ${currentVersion} is open. Closing.`,
+            );
+            cache.close();
+            if (
+              event?.target &&
+              typeof (event.target as any).close === "function"
+            ) {
+              (event.target as any).close();
+            }
+          },
+          /*blocked(currentVersion, blockedVersion, event) {
+            // …
+          },
+          terminated() {
+            // …
+          },*/
+        });
+        cache.db = db;
+        cache.state = "OPEN";
+        return db;
+      } finally {
+        cache.open_promise = null;
+      }
+    })();
 
-  set faction_filter_state(val: any | null) {
-    this.storage.set(CONFIG.FACTION_FILTER_STATE, val);
-  }
+    return this.open_promise;
+  };
 
-  get faction_filter_collapsed(): boolean {
-    return this.storage.get(CONFIG.FACTION_FILTER_COLLAPSED) ?? false;
-  }
-
-  set faction_filter_collapsed(val: boolean) {
-    this.storage.set(CONFIG.FACTION_FILTER_COLLAPSED, val);
-  }
-
-  get war_filter_state(): any | null {
-    return this.storage.get(CONFIG.WAR_FILTER_STATE) ?? null;
-  }
-
-  set war_filter_state(val: any | null) {
-    this.storage.set(CONFIG.WAR_FILTER_STATE, val);
-  }
-
-  get war_filter_collapsed(): boolean {
-    return this.storage.get(CONFIG.WAR_FILTER_COLLAPSED) ?? false;
-  }
-
-  set war_filter_collapsed(val: boolean) {
-    this.storage.set(CONFIG.WAR_FILTER_COLLAPSED, val);
-  }
-
-  get chain_targets(): CachedTargets | null {
-    return this.storage.get(CONFIG.CHAIN_TARGETS);
-  }
-
-  set chain_targets(val: CachedTargets | null) {
-    if (val === null) {
-      this.storage.remove(CONFIG.CHAIN_TARGETS);
-    } else {
-      this.storage.set(CONFIG.CHAIN_TARGETS, val);
+  close = () => {
+    if (this.db) {
+      this.db.close();
+      this.db = null;
     }
-  }
+    this.state = "CLOSED";
+  };
 
-  get chain_target_index(): number {
-    return this.storage.get(CONFIG.CHAIN_TARGET_INDEX) ?? 0;
-  }
+  start_op = async (): Promise<IDBPDatabase<CacheDB>> => {
+    if (this.state === "DELETING_LOCAL" || this.state === "DELETING_REMOTE") {
+      await this.wait_for_deletion_complete();
+    }
+    this.active_operations++;
+    if (this.close_timer) {
+      clearTimeout(this.close_timer);
+      this.close_timer = null;
+    }
+    return await this.open();
+  };
 
-  set chain_target_index(val: number) {
-    this.storage.set(CONFIG.CHAIN_TARGET_INDEX, val);
-  }
+  end_op = () => {
+    this.active_operations = Math.max(0, this.active_operations - 1);
+    if (this.active_operations === 0) {
+      if (this.close_timer) {
+        clearTimeout(this.close_timer);
+      }
+      this.close_timer = setTimeout(() => {
+        this.close();
+        this.close_timer = null;
+      }, 1000);
+    }
+  };
 
-  public reset(): void {
-    this.storage.remove(CONFIG.LOW_FF_RANGE);
-    this.storage.remove(CONFIG.HIGH_FF_RANGE);
-    this.storage.remove(CONFIG.MAX_FF_RANGE);
-    this.storage.remove(CONFIG.CHAIN_BUTTON_ENABLED);
-    this.storage.remove(CONFIG.CHAIN_LINK_TYPE);
-    this.storage.remove(CONFIG.CHAIN_TAB_TYPE);
-    this.storage.remove(CONFIG.CHAIN_FF_TARGET);
-    this.storage.remove(CONFIG.FF_HISTORY_ENABLED);
-    this.storage.remove(CONFIG.FACTIONS_COL_DISPLAY);
-    this.storage.remove(CONFIG.WAR_COL_DISPLAY);
-    this.storage.remove(CONFIG.MINI_PROFILE_DISPLAY);
-    this.storage.remove(CONFIG.DEBUG_LOGS);
-    this.storage.remove(CONFIG.ANALYTICS_ENABLED);
-    this.storage.remove(CONFIG.NETWORK_INTERCEPTION_ENABLED);
-    this.storage.remove(CONFIG.FACTION_FILTER_STATE);
-    this.storage.remove(CONFIG.FACTION_FILTER_COLLAPSED);
-    this.storage.remove(CONFIG.WAR_FILTER_STATE);
-    this.storage.remove(CONFIG.WAR_FILTER_COLLAPSED);
-    this.storage.remove(CONFIG.CHAIN_MIN_LEVEL);
-    this.storage.remove(CONFIG.CHAIN_MAX_LEVEL);
-    this.storage.remove(CONFIG.CHAIN_INACTIVE);
-    this.storage.remove(CONFIG.CHAIN_MIN_FF);
-    this.storage.remove(CONFIG.CHAIN_MAX_FF);
-    this.storage.remove(CONFIG.CHAIN_FACTIONLESS);
-    this.storage.remove(CONFIG.CHAIN_TARGETS);
-    this.storage.remove(CONFIG.CHAIN_TARGET_INDEX);
-    this.storage.remove(CONFIG.GAUGE_MARKER_TYPE);
-    this.storage.remove(CONFIG.GAUGE_MARKER_SCALE);
-    this.storage.remove(CONFIG.GAUGE_MARKER_BORDER_WIDTH);
-    this.storage.remove(CONFIG.GAUGE_MARKER_JUSTIFY);
-    this.storage.remove(CONFIG.WAR_QUICK_ATTACK_ACTION);
-    this.storage.remove(CONFIG.STATUS_ATTACK_LINKS_ENABLED);
-    this.storage.remove(CONFIG.DEBUG_DISABLE_PDA_HTTP);
-    this.storage.remove(CONFIG.DEBUG_FORCE_REACT_FALLBACK);
-    this.storage.remove(CONFIG.COLOR_SCHEME);
-    this.storage.remove(CONFIG.CUSTOM_COLORS);
-    this.storage.remove(CONFIG.SETTINGS_PANEL_OWN_PROFILE_ONLY);
-    this.storage.remove(CONFIG.FACTION_FILTER_ENABLED);
-    this.storage.remove(CONFIG.WAR_FILTER_ENABLED);
-    this.storage.remove(CONFIG.STAT_DISTRIBUTION_BADGE_ENABLED);
-    this.storage.remove(CONFIG.BOUNTY_BOARD_ENABLED);
-    this.storage.remove(CONFIG.OD_INSURANCE_ENABLED);
-    this.storage.remove(CONFIG.BOUNTY_ATTACK_ACTION);
-  }
+  delete_db = async () => {
+    if (this.close_timer) {
+      clearTimeout(this.close_timer);
+      this.close_timer = null;
+    }
+
+    this.state = "DELETING_LOCAL";
+    this.channel?.postMessage({ type: "deleting" });
+
+    await this.wait_for_active_ops();
+    this.close();
+
+    try {
+      await deleteDB(this.db_name, {
+        blocked: () => {
+          log.debug("deleteDB blocked callback called!");
+        },
+      });
+      log.info(`Successfully deleted ${this.db_name} IndexedDB.`);
+    } finally {
+      this.channel?.postMessage({ type: "deleted" });
+      this.state = "CLOSED";
+      if (this.resolve_deletion) {
+        this.resolve_deletion();
+        this.resolve_deletion = null;
+        this.deletion_promise = null;
+      }
+      if (this.channel) {
+        this.channel.close();
+        this.channel = null;
+      }
+    }
+  };
+
+  private handle_broadcast = (data: any) => {
+    if (data && typeof data === "object") {
+      if (data.type === "deleting") {
+        this.state = "DELETING_REMOTE";
+        if (!this.deletion_promise) {
+          this.deletion_promise = new Promise<void>((resolve) => {
+            this.resolve_deletion = resolve;
+          });
+        }
+        this.close();
+      } else if (data.type === "deleted") {
+        this.state = "CLOSED";
+        if (this.resolve_deletion) {
+          this.resolve_deletion();
+          this.resolve_deletion = null;
+          this.deletion_promise = null;
+        }
+      }
+    }
+  };
+
+  private wait_for_deletion_complete = async () => {
+    while (
+      this.state === "DELETING_LOCAL" ||
+      this.state === "DELETING_REMOTE"
+    ) {
+      if (this.deletion_promise) {
+        await this.deletion_promise;
+      } else {
+        await new Promise((resolve) => setTimeout(resolve, 10));
+      }
+    }
+  };
+
+  private wait_for_active_ops = async () => {
+    if (this.open_promise) {
+      try {
+        await this.open_promise;
+      } catch {
+        // ignore
+      }
+    }
+    while (this.active_operations > 0) {
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    }
+  };
+
+  get = async (
+    player_ids: PlayerId[],
+  ): Promise<Map<PlayerId, CachedFFData | null>> => {
+    const db = await this.start_op();
+    try {
+      const tx = db.transaction(STORES.CACHE, "readonly");
+
+      // Issue all get requests in parallel
+      const requests = player_ids.map((id) => tx.store.get(id));
+      const entries = await Promise.all(requests);
+
+      await tx.done;
+
+      // Zip player_ids and entries without indexing
+      const result = new Map<PlayerId, CachedFFData | null>();
+      player_ids.forEach((id, idx) => {
+        const value = entries[idx];
+        result.set(id, !value || value.expiry <= Date.now() ? null : value);
+      });
+
+      return result;
+    } finally {
+      this.end_op();
+    }
+  };
+
+  update = async (values: FFData[]): Promise<void> => {
+    const db = await this.start_op();
+    try {
+      const tx = db.transaction(STORES.CACHE, "readwrite");
+
+      const values_expiry = values.map((value) => {
+        return {
+          ...value,
+          expiry: Date.now() + this.cache_interval,
+        };
+      });
+
+      const requests = values_expiry.map((value) => {
+        return tx.store.put(value);
+      });
+
+      await Promise.all(requests);
+
+      await tx.done;
+    } finally {
+      this.end_op();
+    }
+  };
+
+  clean_expired = (force = false): Promise<void> => {
+    const now = Date.now();
+    if (!force && now - this.last_clean < 60 * 60 * 1000) {
+      return Promise.resolve();
+    }
+    this.last_clean = now;
+
+    const runClean = async () => {
+      const db = await this.start_op();
+      try {
+        // Clean CACHE
+        {
+          const tx = db.transaction(STORES.CACHE, "readwrite");
+          const index = tx.store.index("expiry");
+          const range = IDBKeyRange.upperBound(Date.now());
+          const r = await index.getAllKeys(range);
+          log.info(`Found ${r.length} expired values to delete from cache.`);
+          await Promise.all(r.map((id) => tx.store.delete(id)));
+          await tx.done;
+        }
+
+        // Clean FLIGHTS
+        {
+          const tx = db.transaction(STORES.FLIGHTS, "readwrite");
+          const index = tx.store.index("expiry");
+          const range = IDBKeyRange.upperBound(Date.now());
+          const r = await index.getAllKeys(range);
+          log.info(`Found ${r.length} expired values to delete from flights.`);
+          await Promise.all(r.map((id) => tx.store.delete(id)));
+          await tx.done;
+        }
+
+        // Clean ANALYTICS
+        {
+          const tx = db.transaction(STORES.ANALYTICS, "readwrite");
+          const index = tx.store.index("timestamp");
+          const thirty_days_ago = Date.now() - 30 * 24 * 60 * 60 * 1000;
+          const range = IDBKeyRange.upperBound(thirty_days_ago);
+          const r = await index.getAllKeys(range);
+          log.info(
+            `Found ${r.length} expired values to delete from analytics.`,
+          );
+          await Promise.all(r.map((id) => tx.store.delete(id)));
+          await tx.done;
+        }
+
+        // Clean BOUNTY_BOARD
+        {
+          const tx = db.transaction(STORES.BOUNTY_BOARD, "readwrite");
+          const index = tx.store.index("expiry");
+          const range = IDBKeyRange.upperBound(Date.now());
+          const r = await index.getAllKeys(range);
+          log.info(
+            `Found ${r.length} expired values to delete from bounty_board.`,
+          );
+          await Promise.all(r.map((key) => tx.store.delete(key)));
+          await tx.done;
+        }
+      } finally {
+        this.end_op();
+      }
+    };
+
+    if (typeof window !== "undefined" && "requestIdleCallback" in window) {
+      return new Promise<void>((resolve, reject) => {
+        window.requestIdleCallback(() => {
+          runClean().then(resolve, reject);
+        });
+      });
+    }
+
+    return runClean();
+  };
+
+  get_flight = async (
+    player_id: PlayerId,
+  ): Promise<CachedFlightData | null> => {
+    const db = await this.start_op();
+    try {
+      const tx = db.transaction(STORES.FLIGHTS, "readonly");
+      const entry = await tx.store.get(player_id);
+      await tx.done;
+
+      if (!entry || entry.expiry <= Date.now()) {
+        return null;
+      }
+      return entry;
+    } finally {
+      this.end_op();
+    }
+  };
+
+  update_flight = async (
+    value: PlayerFlightsResponse,
+    cache_interval = 60 * 1000,
+  ): Promise<void> => {
+    const db = await this.start_op();
+    try {
+      const tx = db.transaction(STORES.FLIGHTS, "readwrite");
+
+      const value_expiry = {
+        ...value,
+        expiry: Date.now() + cache_interval,
+      };
+
+      await tx.store.put(value_expiry);
+      await tx.done;
+    } finally {
+      this.end_op();
+    }
+  };
+
+  delete_flight = async (player_id: PlayerId): Promise<void> => {
+    const db = await this.start_op();
+    try {
+      const tx = db.transaction(STORES.FLIGHTS, "readwrite");
+      await tx.store.delete(player_id);
+      await tx.done;
+    } finally {
+      this.end_op();
+    }
+  };
+
+  get_bounty_board = async <T>(
+    key: string,
+  ): Promise<BountyBoardEntry<T> | null> => {
+    const db = await this.start_op();
+    try {
+      const tx = db.transaction(STORES.BOUNTY_BOARD, "readonly");
+      const entry = await tx.store.get(key);
+      await tx.done;
+
+      if (!entry || entry.expiry <= Date.now()) {
+        return null;
+      }
+      return entry as BountyBoardEntry<T>;
+    } finally {
+      this.end_op();
+    }
+  };
+
+  put_bounty_board = async <T>(
+    key: string,
+    value: T,
+    expiry: Timestamp,
+  ): Promise<void> => {
+    const db = await this.start_op();
+    try {
+      const tx = db.transaction(STORES.BOUNTY_BOARD, "readwrite");
+      await tx.store.put({ key, value, expiry });
+      await tx.done;
+    } finally {
+      this.end_op();
+    }
+  };
+
+  delete_bounty_board = async (key: string): Promise<void> => {
+    const db = await this.start_op();
+    try {
+      const tx = db.transaction(STORES.BOUNTY_BOARD, "readwrite");
+      await tx.store.delete(key);
+      await tx.done;
+    } finally {
+      this.end_op();
+    }
+  };
+
+  add_analytics = async (
+    entry: Omit<AnalyticsEntry, "id" | "timestamp">,
+  ): Promise<void> => {
+    const db = await this.start_op();
+    try {
+      const tx = db.transaction(STORES.ANALYTICS, "readwrite");
+      const value: AnalyticsEntry = {
+        ...entry,
+        timestamp: Date.now(),
+      };
+      await tx.store.add(value);
+      await tx.done;
+    } finally {
+      this.end_op();
+    }
+  };
+
+  get_analytics = async (): Promise<AnalyticsEntry[]> => {
+    const db = await this.start_op();
+    try {
+      const tx = db.transaction(STORES.ANALYTICS, "readonly");
+      const res = await tx.store.getAll();
+      await tx.done;
+      return res;
+    } finally {
+      this.end_op();
+    }
+  };
+
+  clear_analytics = async (): Promise<void> => {
+    const db = await this.start_op();
+    try {
+      const tx = db.transaction(STORES.ANALYTICS, "readwrite");
+      await tx.store.clear();
+      await tx.done;
+    } finally {
+      this.end_op();
+    }
+  };
+
+  dump = async () => {
+    const db = await this.start_op();
+    try {
+      const tx = db.transaction(STORES.CACHE, "readonly");
+
+      const res = await tx.store.getAll();
+      await tx.done;
+      return res;
+    } finally {
+      this.end_op();
+    }
+  };
+
+  dump_flights = async () => {
+    const db = await this.start_op();
+    try {
+      const tx = db.transaction(STORES.FLIGHTS, "readonly");
+      const res = await tx.store.getAll();
+      await tx.done;
+      return res;
+    } finally {
+      this.end_op();
+    }
+  };
 }
-
-export const ffconfig = new FFConfig("ffsv3-config");
