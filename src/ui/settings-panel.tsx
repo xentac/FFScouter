@@ -91,6 +91,7 @@ const DEFAULT_VALUES = {
   warFilterEnabled: CONFIG_DEFAULTS.war_filter_enabled,
   statDistributionBadgeEnabled: CONFIG_DEFAULTS.stat_distribution_badge_enabled,
   bountyBoardEnabled: CONFIG_DEFAULTS.bounty_board_enabled,
+  odInsuranceEnabled: CONFIG_DEFAULTS.od_insurance_enabled,
   bountyAttackAction: CONFIG_DEFAULTS.bounty_attack_action,
   isPremium: null as boolean | null,
   isKeyRegistered: null as boolean | null,
@@ -677,6 +678,18 @@ export function SettingsPanelComponent({
               </label>
             </div>
 
+            <div className={`${cls.cell} ${cls.cellCheckbox}`}>
+              <input
+                id="od-insurance-toggle"
+                type="checkbox"
+                checked={drafts.odInsuranceEnabled}
+                onChange={onChange}
+              />
+              <label htmlFor="od-insurance-toggle">
+                Show OD Insurance on the Items page
+              </label>
+            </div>
+
             <div className={cls.cell}>
               <label htmlFor="bounty-attack-action">Bounty Attack Opens:</label>
               <select
@@ -874,6 +887,7 @@ export class FFSettingsPanel extends HTMLElement {
       statDistributionBadgeEnabled: this._props.statDistributionBadgeEnabled,
       bountyBoardEnabled: this._props.bountyBoardEnabled,
       bountyAttackAction: this._props.bountyAttackAction,
+      odInsuranceEnabled: this._props.odInsuranceEnabled,
     };
   }
 
@@ -1010,6 +1024,7 @@ export class FFSettingsPanel extends HTMLElement {
             this._drafts.statDistributionBadgeEnabled,
           bountyBoardEnabled: this._drafts.bountyBoardEnabled,
           bountyAttackAction: this._drafts.bountyAttackAction,
+          odInsuranceEnabled: this._drafts.odInsuranceEnabled,
         },
         bubbles: true,
         composed: true,
@@ -1129,6 +1144,8 @@ export class FFSettingsPanel extends HTMLElement {
       ).checked;
     } else if (id === "bounty-board-toggle") {
       this._drafts.bountyBoardEnabled = (target as HTMLInputElement).checked;
+    } else if (id === "od-insurance-toggle") {
+      this._drafts.odInsuranceEnabled = (target as HTMLInputElement).checked;
     }
 
     this.render();
@@ -1446,6 +1463,15 @@ export class FFSettingsPanel extends HTMLElement {
   set bountyBoardEnabled(val) {
     this._props.bountyBoardEnabled = val;
     this._drafts.bountyBoardEnabled = val;
+    this.render();
+  }
+
+  get odInsuranceEnabled() {
+    return this._props.odInsuranceEnabled;
+  }
+  set odInsuranceEnabled(val) {
+    this._props.odInsuranceEnabled = val;
+    this._drafts.odInsuranceEnabled = val;
     this.render();
   }
 
@@ -1770,6 +1796,14 @@ export class FFSettingsPanel extends HTMLElement {
   }
   set draftBountyBoardEnabled(val) {
     this._drafts.bountyBoardEnabled = val;
+    this.render();
+  }
+
+  get draftOdInsuranceEnabled() {
+    return this._drafts.odInsuranceEnabled;
+  }
+  set draftOdInsuranceEnabled(val) {
+    this._drafts.odInsuranceEnabled = val;
     this.render();
   }
 
