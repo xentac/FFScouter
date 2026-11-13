@@ -253,16 +253,18 @@ function confirm_differences(
 }
 
 // Torn's result: "You sent <b>20x</b> <b>Xanax</b> to <a XID>…</a> with the
-// message: …". Matches only when the ID, the amount, and the message do.
+// message: …". For one item Torn writes "some" in place of "1x". Matches only
+// when the ID, the amount, and the message do.
 function result_matches(result: Element, selected: SelectedPlan): boolean {
   const pay = selected.plan.payment;
   const text = flat_text(result);
-  const amount = text.match(/^You sent (\d[\d,]*)x Xanax /)?.[1];
+  const sent = text.match(/^You sent (?:(\d[\d,]*)x|(some)) Xanax /);
+  const amount = sent?.[2] ? 1 : count_of(sent?.[1]);
   const link = result.querySelector<HTMLAnchorElement>('a[href*="XID="]');
   const id = link?.getAttribute("href")?.match(/XID=(\d+)/)?.[1];
   const message = text.match(/ with the message: (.*)$/)?.[1] ?? "";
   return (
-    count_of(amount) === plan_total(selected) &&
+    amount === plan_total(selected) &&
     id === String(pay.recipient_player_id) &&
     message === pay.message
   );
