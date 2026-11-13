@@ -221,3 +221,18 @@
   line-height: 1.4;
   opacity: 0.75;
 }
+
+.ff-od-insurance__hide {
+  margin-top: 6px;
+  padding: 2px 8px;
+  background: var(--ffscouter-alt-bg-color);
+  color: var(--ffscouter-text-color);
+  border: 1px solid var(--ffscouter-glow-color);
+  border-radius: 4px;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.ff-od-insurance__hide:hover {
+  background: var(--ffscouter-hover-color);
+}

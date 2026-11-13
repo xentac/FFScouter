@@ -31,6 +31,7 @@ const cls = {
   copyStatus: styles["ff-od-insurance__copy-status"],
   note: styles["ff-od-insurance__note"],
   footer: styles["ff-od-insurance__footer"],
+  hide: styles["ff-od-insurance__hide"],
 };
 
 // Portals need a stable key per slot. A slot element keeps its key for as
@@ -228,10 +229,13 @@ export function OdInsuranceModal({
   plans,
   onClose,
   onRetry,
+  onHide,
 }: {
   plans: ModalPlans;
   onClose: () => void;
   onRetry: () => void;
+  // Turns the whole feature off, the same as the Settings toggle.
+  onHide: () => void;
 }) {
   // Mounted only while open, so the Escape listener exists only then.
   useEffect(() => {
@@ -276,8 +280,13 @@ export function OdInsuranceModal({
           <ModalBody plans={plans} onRetry={onRetry} />
           <div className={cls.footer}>
             OD Insurance is a paid ffscouter.com service.{" "}
-            <GuideLink>How it works</GuideLink>. You can turn this off in FF
-            Scouter Settings.
+            <GuideLink>How it works</GuideLink>.
+            <div>
+              <button type="button" className={cls.hide} onClick={onHide}>
+                Hide OD Insurance
+              </button>{" "}
+              You can turn it back on in FF Scouter Settings.
+            </div>
           </div>
         </div>
       </dialog>
@@ -315,9 +324,11 @@ export function OdInsuranceButton({ onOpen }: { onOpen: () => void }) {
 export function OdInsurance({
   slots,
   load,
+  onHide,
 }: {
   slots: HTMLElement[];
   load: () => Promise<PlansState>;
+  onHide: () => void;
 }) {
   const [plans, setPlans] = useState<ModalPlans>(null);
   const [open, setOpen] = useState(false);
@@ -367,6 +378,7 @@ export function OdInsurance({
             setPlans(null);
             refresh();
           }}
+          onHide={onHide}
         />
       )}
     </>
