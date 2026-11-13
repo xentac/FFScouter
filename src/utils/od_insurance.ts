@@ -24,6 +24,20 @@ export function payable_plans(
   );
 }
 
+/**
+ * The Torn item IDs that the payable plans cover, without repeats. The rows
+ * of these items get an OD Insurance button. A plan whose covered item is
+ * not set adds nothing.
+ */
+export function covered_item_ids(response: OdInsurancePlansResponse): number[] {
+  const ids = new Set<number>();
+  for (const plan of payable_plans(response)) {
+    const id = plan.covered_item.item_id;
+    if (id !== null) ids.add(id);
+  }
+  return [...ids];
+}
+
 // The plans endpoint allows 30 requests a minute per IP, and plans change
 // rarely, so a fetched list is served for 10 minutes without a request.
 export const OD_PLANS_FRESH_MS = 10 * 60 * 1000;
@@ -31,7 +45,9 @@ export const OD_PLANS_FRESH_MS = 10 * 60 * 1000;
 // fails, but only up to this age. Older than that it is not trusted.
 export const OD_PLANS_STALE_LIMIT_HOURS = 24;
 
-const PLANS_KEY = "od-insurance-plans";
+// v2: plans carry covered_item (spec 1.21.0). A stored list from before has
+// no covered_item, so it is not read.
+const PLANS_KEY = "od-insurance-plans-v2";
 
 type StoredPlans = {
   response: OdInsurancePlansResponse;
