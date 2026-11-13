@@ -17,11 +17,47 @@ import {
 } from "./__fixtures__/od_insurance";
 import type { query_od_insurance_plans } from "./api";
 import {
+  covered_item_ids,
   OD_PLANS_FRESH_MS,
   OdInsurancePlansCache,
   payable_plans,
 } from "./od_insurance";
 import { Storage } from "./storage";
+
+describe("covered_item_ids", () => {
+  test("gives the item each payable plan covers, once", () => {
+    const xanax_day = { ...WEEKLY_PLAN, plan_key: "xanax" };
+    expect(
+      covered_item_ids({
+        ...PLANS_RESPONSE,
+        plans: [ECSTASY_PLAN, WEEKLY_PLAN, xanax_day],
+      }),
+    ).toEqual([197, 206]);
+  });
+
+  test("skips plans nobody can pay for", () => {
+    const unpayable_ecstasy = {
+      ...UNPAYABLE_PLAN,
+      covered_item: { item_id: 197, name: "Ecstasy" },
+    };
+    expect(
+      covered_item_ids({
+        ...PLANS_RESPONSE,
+        plans: [unpayable_ecstasy, WEEKLY_PLAN],
+      }),
+    ).toEqual([206]);
+  });
+
+  test("skips plans whose covered item is not set", () => {
+    const unset = {
+      ...ECSTASY_PLAN,
+      covered_item: { item_id: null, name: null },
+    };
+    expect(
+      covered_item_ids({ ...PLANS_RESPONSE, plans: [unset, WEEKLY_PLAN] }),
+    ).toEqual([206]);
+  });
+});
 
 test("payable_plans keeps plans that name a recipient", () => {
   expect(payable_plans(PLANS_RESPONSE)).toEqual([ECSTASY_PLAN, WEEKLY_PLAN]);

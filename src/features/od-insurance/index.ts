@@ -2,15 +2,16 @@ import { OdInsurance } from "@ui/od-insurance";
 import { torn_page, wait_for_element } from "@utils/dom";
 import { ffconfig } from "@utils/ffconfig";
 import logger from "@utils/logger";
-import { od_insurance_plans } from "@utils/od_insurance";
+import { covered_item_ids, od_insurance_plans } from "@utils/od_insurance";
 import { createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { type Feature, StartTime } from "../feature";
 import { add_row_slots, remove_row_slots } from "./rows";
 
-// OD Insurance: an "OD Insurance" button on the Xanax and Ecstasy item rows
-// of item.php opens a modal with the ffscouter.com plans and how to buy one.
-// Default on; the od_insurance_enabled toggle in Settings turns it off.
+// OD Insurance: an "OD Insurance" button on the item.php rows of the items
+// that the payable plans cover (each plan's covered_item) opens a modal with
+// the ffscouter.com plans and how to buy one. Default on; the
+// od_insurance_enabled toggle in Settings turns it off.
 
 const log = logger.child("feature:od-insurance");
 
@@ -37,7 +38,38 @@ const slots: HTMLElement[] = [];
 let page_observer: MutationObserver | null = null;
 let wrap_wait: AbortController | null = null;
 
-const load_plans = () => od_insurance_plans.get();
+// The item IDs whose rows get a button, from the last plans that loaded.
+// Empty until the first load. A failed load keeps the IDs it had: a failed
+// Retry in the modal must not take the buttons away.
+let covered: number[] = [];
+
+const same_ids = (a: readonly number[], b: readonly number[]) => {
+  const in_b = new Set(b);
+  return a.length === b.length && a.every((id) => in_b.has(id));
+};
+
+// Every plans load goes through here (the first one on mount, and each open
+// or Retry in the modal), so a change in the covered items updates the rows.
+// One function for the life of the module, so the component's mount effect
+// does not run again on a render.
+async function load_plans() {
+  const state = await od_insurance_plans.get();
+  // The feature can turn off while the request runs.
+  if (mounted && state.status !== "failed") {
+    set_covered(covered_item_ids(state.response));
+  }
+  return state;
+}
+
+function set_covered(ids: number[]): void {
+  if (same_ids(ids, covered)) return;
+  covered = ids;
+  remove_row_slots(document);
+  slots.length = 0;
+  const wrap = document.querySelector(CATEGORY_WRAP);
+  if (page_observer && wrap) slots.push(...add_row_slots(wrap, covered));
+  render();
+}
 
 function render() {
   if (!mounted) {
@@ -51,11 +83,11 @@ function render() {
   );
 }
 
-// Adds slots for new insured rows and forgets slots whose row Torn removed.
+// Adds slots for new covered rows and forgets slots whose row Torn removed.
 // Only re-renders when the slots changed, so the button render it causes
 // does not loop back through the observer.
 function scan_rows(wrap: Element): void {
-  const added = add_row_slots(wrap);
+  const added = add_row_slots(wrap, covered);
   const kept = slots.filter((slot) => slot.isConnected);
   if (added.length === 0 && kept.length === slots.length) return;
   slots.splice(0, slots.length, ...kept, ...added);
@@ -73,8 +105,8 @@ function watch(wrap: Element): void {
 }
 
 function start(): void {
-  // Mounting the root fetches the plans unless the stored list is fresh, so
-  // the buttons can go away when no plan is payable.
+  // Mounting the root loads the plans (no request while the stored list is
+  // fresh). Rows get buttons once the plans say which items they cover.
   if (!mounted) render();
   if (page_observer || wrap_wait) return;
   const wait = new AbortController();
@@ -102,6 +134,7 @@ export function stop_od_insurance(): void {
   mounted = null;
   remove_row_slots(document);
   slots.length = 0;
+  covered = [];
 }
 
 // Idempotent: reads the toggle each time, so a settings save can turn the
@@ -114,7 +147,7 @@ function sync(): void {
 export default {
   name: "OD Insurance",
   description:
-    "OD Insurance buttons on Xanax/Ecstasy item rows (item.php only) opening a plans modal",
+    "OD Insurance buttons on the item rows the plans cover (item.php only) opening a plans modal",
   executionTime: StartTime.DocumentBody,
 
   // Only the page is checked here: shouldRun() runs once at boot, so the

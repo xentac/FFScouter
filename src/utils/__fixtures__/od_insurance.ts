@@ -1,5 +1,5 @@
 // Fixtures for the OD Insurance plans endpoint, shaped by the FFScouter
-// OpenAPI spec 1.20.0 (OdInsurancePlansResponse). The IDs and names are
+// OpenAPI spec 1.22.0 (OdInsurancePlansResponse). The IDs and names are
 // placeholders, like the spec's own example (700001 / InsuranceManager).
 import type { OdInsurancePlan, OdInsurancePlansResponse } from "../api";
 
@@ -12,6 +12,7 @@ export const ECSTASY_PLAN: OdInsurancePlan = {
   duration_label: "2 hours",
   standard_payout_xanax: 22,
   overdose_payout_xanax: 26,
+  covered_item: { item_id: 197, name: "Ecstasy" },
   payment: {
     recipient_player_id: 700001,
     recipient_name: "InsuranceManager",
@@ -29,6 +30,7 @@ export const WEEKLY_PLAN: OdInsurancePlan = {
   duration_label: "7 days",
   standard_payout_xanax: 31,
   overdose_payout_xanax: 37,
+  covered_item: { item_id: 206, name: "Xanax" },
   payment: {
     recipient_player_id: 700001,
     recipient_name: "InsuranceManager",

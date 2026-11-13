@@ -1028,6 +1028,12 @@ test.each([
   ["a missing payout", { overdose_payout_xanax: undefined }],
   ["a missing duration", { duration_seconds: undefined }],
   ["no payment", { payment: null }],
+  ["no covered_item", { covered_item: undefined }],
+  ["a null covered_item", { covered_item: null }],
+  [
+    "a string covered item ID",
+    { covered_item: { item_id: "197", name: "Ecstasy" } },
+  ],
   ["an empty message", { payment: { ...ECSTASY_PLAN.payment, message: "" } }],
   [
     "a string recipient ID",
@@ -1047,6 +1053,20 @@ test.each([
   if (!resp.blank) {
     expect(resp.result.plans).toEqual([PLANS_RESPONSE.plans[1]]);
   }
+});
+
+test("query_od_insurance_plans keeps a plan whose covered item is not set yet", async () => {
+  const unset = {
+    ...ECSTASY_PLAN,
+    covered_item: { item_id: null, name: null },
+  };
+  const body = { ...PLANS_RESPONSE, plans: [unset] };
+  const requester: typeof gmRequest = vi
+    .fn()
+    .mockResolvedValue(bounty_mock_response(200, body));
+
+  const resp = await query_od_insurance_plans(requester);
+  expect(resp).toEqual({ result: body, blank: false, limits: undefined });
 });
 
 test("query_od_insurance_plans fails when the plans list is missing", async () => {
