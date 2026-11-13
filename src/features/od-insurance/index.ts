@@ -1,4 +1,8 @@
-import { gmRequest } from "@utils/api";
+import {
+  type OdInsurancePlan as OdPlan,
+  type OdInsurancePlansResponse as OdPlansData,
+  query_od_insurance_plans,
+} from "@utils/api";
 import { torn_page } from "@utils/dom";
 import { ffconfig } from "@utils/ffconfig";
 import logger from "@utils/logger";
@@ -21,32 +25,8 @@ import { type Feature, StartTime } from "../feature";
 
 const log = logger.child("feature:od-insurance");
 
-const OD_PLANS_URL = "https://ffscouter.com/api/v1/od-insurance/plans";
 const OD_CACHE_KEY = "ffscouter-od-insurance-plans-v1";
 const OD_CACHE_MS = 10 * 60 * 1000;
-
-interface OdPayment {
-  recipient_player_id: number;
-  recipient_name: string;
-  xanax_quantity: number;
-  message: string;
-}
-
-interface OdPlan {
-  name: string;
-  xanax_quantity: number;
-  max_multiplier: number;
-  duration_label: string;
-  standard_payout_xanax: number;
-  overdose_payout_xanax: number;
-  payment?: OdPayment;
-}
-
-interface OdPlansData {
-  manager_player_id?: number;
-  manager_name?: string;
-  plans: OdPlan[];
-}
 
 const OD_FALLBACK: OdPlansData = {
   manager_player_id: 3281931,
@@ -55,7 +35,9 @@ const OD_FALLBACK: OdPlansData = {
     {
       name: "2 Hour Ecstasy Insurance",
       xanax_quantity: 1,
+      plan_key: "ecstasy",
       max_multiplier: 50,
+      duration_seconds: 7200,
       duration_label: "2 hours",
       standard_payout_xanax: 22,
       overdose_payout_xanax: 26,
@@ -69,7 +51,9 @@ const OD_FALLBACK: OdPlansData = {
     {
       name: "2 Hour Xanax Insurance",
       xanax_quantity: 1,
+      plan_key: "xanax",
       max_multiplier: 50,
+      duration_seconds: 7200,
       duration_label: "2 hours",
       standard_payout_xanax: 33,
       overdose_payout_xanax: 39,
@@ -83,7 +67,9 @@ const OD_FALLBACK: OdPlansData = {
     {
       name: "7 Day Xanax Insurance / Multiple Xanax OD's Payout",
       xanax_quantity: 20,
+      plan_key: "7days",
       max_multiplier: 10,
+      duration_seconds: 604800,
       duration_label: "7 days",
       standard_payout_xanax: 31,
       overdose_payout_xanax: 37,
@@ -97,7 +83,9 @@ const OD_FALLBACK: OdPlansData = {
     {
       name: "30 Day Xanax Insurance / Multiple Xanax OD's Payout",
       xanax_quantity: 80,
+      plan_key: "30days",
       max_multiplier: 5,
+      duration_seconds: 2592000,
       duration_label: "30 days",
       standard_payout_xanax: 31,
       overdose_payout_xanax: 37,
@@ -150,29 +138,6 @@ function od_write_cache(data: OdPlansData): void {
   }
 }
 
-function od_parse_response(resp: unknown): OdPlansData | null {
-  if (!resp) return null;
-  if (typeof resp === "object" && Array.isArray((resp as OdPlansData).plans)) {
-    return resp as OdPlansData;
-  }
-  let text: string | null = null;
-  if (typeof resp === "string") text = resp;
-  else if (
-    typeof (resp as { responseText?: unknown }).responseText === "string"
-  ) {
-    text = (resp as { responseText: string }).responseText;
-  } else if (typeof (resp as { response?: unknown }).response === "string") {
-    text = (resp as { response: string }).response;
-  }
-  if (!text) return null;
-  try {
-    const data = JSON.parse(text) as OdPlansData;
-    return data && Array.isArray(data.plans) ? data : null;
-  } catch {
-    return null;
-  }
-}
-
 async function od_fetch_plans(): Promise<{
   data: OdPlansData;
   stale: boolean;
@@ -182,28 +147,12 @@ async function od_fetch_plans(): Promise<{
     return { data: cached.data, stale: false };
   }
   try {
-    const resp = await gmRequest({ method: "GET", url: OD_PLANS_URL });
-    if (typeof resp.status === "number" && resp.status >= 400) {
-      throw new Error(`OD plans HTTP ${resp.status}`);
-    }
-    const data = od_parse_response(resp);
-    if (!data) throw new Error("OD plans response could not be parsed");
-    od_write_cache(data);
-    return { data, stale: false };
+    const resp = await query_od_insurance_plans();
+    if (resp.blank) throw new Error("OD plans response was blank");
+    od_write_cache(resp.result);
+    return { data: resp.result, stale: false };
   } catch (err) {
-    log.warn("OD plans GM request failed, trying fetch()", err);
-  }
-  try {
-    const res = await fetch(OD_PLANS_URL, { method: "GET" });
-    if (!res.ok) throw new Error(`OD plans HTTP ${res.status}`);
-    const data2 = (await res.json()) as OdPlansData;
-    if (!data2 || !Array.isArray(data2.plans)) {
-      throw new Error("OD plans response could not be parsed");
-    }
-    od_write_cache(data2);
-    return { data: data2, stale: false };
-  } catch (err) {
-    log.warn("OD plans fetch failed", err);
+    log.warn("OD plans request failed", err);
   }
   if (cached) return { data: cached.data, stale: true };
   return { data: OD_FALLBACK, stale: true };
@@ -287,11 +236,6 @@ let od_modal: OdModal | null = null;
 
 function od_build_modal(data: OdPlansData, stale: boolean): OdModal {
   if (od_modal) return od_modal;
-  const firstPayment = data.plans[0]?.payment ?? null;
-  const managerName =
-    data.manager_name || firstPayment?.recipient_name || "WTV1";
-  const managerId =
-    data.manager_player_id || firstPayment?.recipient_player_id || 3281931;
   const overlay = od_el("div", "ff-od-overlay");
   overlay.id = "ffscouter-od-insurance";
   overlay.style.display = "none";
@@ -303,9 +247,16 @@ function od_build_modal(data: OdPlansData, stale: boolean): OdModal {
   const header = od_el("div", "ff-od-header");
   const titleWrap = od_el("div");
   titleWrap.appendChild(od_el("div", "ff-od-title", "OD Insurance"));
-  titleWrap.appendChild(
-    od_el("div", "ff-od-sub", `Managed by ${managerName} [${managerId}]`),
-  );
+  if (data.manager_player_id !== null) {
+    const managerName = data.manager_name ?? "";
+    titleWrap.appendChild(
+      od_el(
+        "div",
+        "ff-od-sub",
+        `Managed by ${managerName} [${data.manager_player_id}]`.trim(),
+      ),
+    );
+  }
   header.appendChild(titleWrap);
   const closeBtn = od_el("button", "ff-od-close", "×");
   closeBtn.type = "button";
@@ -346,10 +297,10 @@ function od_build_modal(data: OdPlansData, stale: boolean): OdModal {
     });
     if (btn) btn.classList.add("ff-od-selected");
     const pay = plan.payment;
-    const payQty = pay?.xanax_quantity ?? plan.xanax_quantity;
-    const payName = pay?.recipient_name || managerName;
-    const payId = pay?.recipient_player_id || managerId;
-    const payMsg = pay?.message ?? "";
+    const payQty = pay.xanax_quantity;
+    const payId = pay.recipient_player_id;
+    const payName = pay.recipient_name ?? `[${payId}]`;
+    const payMsg = pay.message;
     detail.textContent = "";
     od_detail_row(detail, "Plan:", plan.name);
     od_detail_row(detail, "Send:", `${payQty}x Xanax`);
