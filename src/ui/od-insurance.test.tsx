@@ -30,10 +30,16 @@ const FRESH: PlansState = { status: "fresh", response: PLANS_RESPONSE };
 
 const modal = (plans: PlansState | null, onRetry = vi.fn()) => {
   const onClose = vi.fn();
+  const onHide = vi.fn();
   render(
-    <OdInsuranceModal plans={plans} onClose={onClose} onRetry={onRetry} />,
+    <OdInsuranceModal
+      plans={plans}
+      onClose={onClose}
+      onRetry={onRetry}
+      onHide={onHide}
+    />,
   );
-  return { onClose, onRetry };
+  return { onClose, onRetry, onHide };
 };
 
 const guide_links = () =>
@@ -133,7 +139,7 @@ describe("OdInsuranceModal", () => {
     modal(FRESH);
     expect(guide_links().length).toBeGreaterThan(0);
     expect(screen.getByRole("dialog").textContent).toContain(
-      "You can turn this off in FF Scouter Settings.",
+      "You can turn it back on in FF Scouter Settings.",
     );
   });
 
@@ -147,7 +153,12 @@ describe("OdInsuranceModal", () => {
   test("removes the Escape listener when it closes", () => {
     const remove = vi.spyOn(document, "removeEventListener");
     const { unmount } = render(
-      <OdInsuranceModal plans={FRESH} onClose={vi.fn()} onRetry={vi.fn()} />,
+      <OdInsuranceModal
+        plans={FRESH}
+        onClose={vi.fn()}
+        onRetry={vi.fn()}
+        onHide={vi.fn()}
+      />,
     );
     unmount();
     expect(remove).toHaveBeenCalledWith("keydown", expect.any(Function));
@@ -183,6 +194,21 @@ describe("OdInsuranceModal", () => {
   });
 });
 
+describe("OdInsuranceModal hide", () => {
+  test("Hide OD Insurance calls onHide", () => {
+    const { onHide } = modal(FRESH);
+    fireEvent.click(screen.getByRole("button", { name: "Hide OD Insurance" }));
+    expect(onHide).toHaveBeenCalledOnce();
+  });
+
+  test("offers Hide even when the plans did not load", () => {
+    modal({ status: "failed" });
+    expect(
+      screen.getByRole("button", { name: "Hide OD Insurance" }),
+    ).toBeTruthy();
+  });
+});
+
 describe("OdInsuranceButton", () => {
   test("has a full and a short label, and the full accessible name", () => {
     render(<OdInsuranceButton onOpen={vi.fn()} />);
@@ -208,7 +234,7 @@ describe("OdInsurance", () => {
 
   test("puts a button in each slot and opens the modal", async () => {
     const load = vi.fn().mockResolvedValue(FRESH);
-    render(<OdInsurance slots={slots} load={load} />);
+    render(<OdInsurance slots={slots} load={load} onHide={vi.fn()} />);
     await waitFor(() => expect(load).toHaveBeenCalledOnce());
     for (const slot of slots) {
       const button = slot.querySelector("button");
@@ -228,7 +254,7 @@ describe("OdInsurance", () => {
       status: "fresh",
       response: { ...PLANS_RESPONSE, plans: [UNPAYABLE_PLAN] },
     } satisfies PlansState);
-    render(<OdInsurance slots={slots} load={load} />);
+    render(<OdInsurance slots={slots} load={load} onHide={vi.fn()} />);
     await waitFor(() => expect(load).toHaveBeenCalledOnce());
     await waitFor(() => expect(slots[0]?.querySelector("button")).toBeNull());
   });
@@ -239,7 +265,7 @@ describe("OdInsurance", () => {
       .mockResolvedValueOnce({ status: "failed" })
       .mockResolvedValueOnce({ status: "failed" })
       .mockResolvedValue(FRESH);
-    render(<OdInsurance slots={slots} load={load} />);
+    render(<OdInsurance slots={slots} load={load} onHide={vi.fn()} />);
     await waitFor(() => expect(load).toHaveBeenCalledOnce());
     await act(async () => {
       slots[0]?.querySelector("button")?.click();
