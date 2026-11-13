@@ -1,4 +1,5 @@
 import { OD_INSURANCE_GUIDE_URL } from "@utils/api";
+import { copy_text } from "@utils/clipboard";
 import { torn_page } from "@utils/dom";
 import { ffconfig } from "@utils/ffconfig";
 import logger from "@utils/logger";
@@ -38,42 +39,10 @@ function od_el<K extends keyof HTMLElementTagNameMap>(
   return el;
 }
 
-function od_copy_fallback(text: string): void {
-  const ta = document.createElement("textarea");
-  ta.value = text;
-  ta.style.position = "fixed";
-  ta.style.opacity = "0";
-  document.body.appendChild(ta);
-  ta.select();
-  try {
-    document.execCommand("copy");
-  } catch {
-    // clipboard unavailable - nothing else we can do
-  }
-  ta.remove();
-}
-
-function od_copy(text: string, btn: HTMLButtonElement | null): void {
-  const done = () => {
-    if (!btn) return;
-    const old = btn.textContent;
-    btn.textContent = "Copied!";
-    setTimeout(() => {
-      btn.textContent = old;
-    }, 1500);
-  };
-  if (navigator.clipboard?.writeText) {
-    navigator.clipboard
-      .writeText(text)
-      .then(done)
-      .catch(() => {
-        od_copy_fallback(text);
-        done();
-      });
-  } else {
-    od_copy_fallback(text);
-    done();
-  }
+function od_copy(text: string, status: HTMLElement): void {
+  void copy_text(text).then((copied) => {
+    status.textContent = copied ? "Copied!" : "Copy failed, select the text";
+  });
 }
 
 function od_detail_row(
@@ -91,7 +60,7 @@ function od_detail_row(
 }
 
 const OD_CSS =
-  ".ff-od-row-btn{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:var(--ffscouter-alt-bg-color);color:var(--ffscouter-text-color);border:1px solid var(--ffscouter-glow-color);border-radius:4px;padding:5px 10px;font-family:Arial,sans-serif;font-size:12px;font-weight:700;cursor:pointer;z-index:5;white-space:nowrap}.ff-od-row-btn:hover{background:var(--ffscouter-hover-color)}.ff-od-row-btn--tile{top:auto;bottom:8px;transform:none}.ff-od-chip{position:fixed;top:8px;right:8px;z-index:9999;background:var(--ffscouter-alt-bg-color);color:var(--ffscouter-text-color);border:1px solid var(--ffscouter-glow-color);border-radius:999px;padding:6px 12px;font-family:Arial,sans-serif;font-size:12px;font-weight:700;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.3)}.ff-od-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:10000;display:flex;align-items:center;justify-content:center;padding:16px 10px 48px;box-sizing:border-box}.ff-od-modal{width:420px;max-width:calc(100vw - 20px);max-height:100%;display:flex;flex-direction:column;background:var(--ffscouter-bg-color);color:var(--ffscouter-text-color);border:1px solid var(--ffscouter-border-color);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.4);font-family:Arial,sans-serif;font-size:13px;box-sizing:border-box}.ff-od-modal *{box-sizing:border-box}.ff-od-header{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 12px;background:var(--ffscouter-alt-bg-color);border-bottom:1px solid var(--ffscouter-border-color);border-radius:7px 7px 0 0}.ff-od-title{font-size:14px;font-weight:700;margin:0;line-height:1.2}.ff-od-sub{font-size:11px;opacity:.75;margin-top:1px}.ff-od-close{background:none;border:none;color:inherit;cursor:pointer;font-size:18px;font-weight:700;padding:2px 6px;line-height:1;flex:none}.ff-od-body{padding:8px 12px 12px;overflow-y:auto}.ff-od-intro{margin:4px 0 8px;line-height:1.4}.ff-od-plan{display:block;width:100%;text-align:left;background:var(--ffscouter-alt-bg-color);color:var(--ffscouter-text-color);border:1px solid var(--ffscouter-border-color);border-radius:6px;padding:8px 10px;margin:0 0 8px;cursor:pointer;font:inherit}.ff-od-plan:hover{background:var(--ffscouter-hover-color)}.ff-od-plan.ff-od-selected{border-color:var(--ffscouter-glow-color);box-shadow:0 0 6px rgba(76,175,80,.5)}.ff-od-plan-name{display:block;font-weight:700;line-height:1.3}.ff-od-plan-meta{display:block;font-size:12px;margin-top:2px;line-height:1.4}.ff-od-detail{border-top:1px solid var(--ffscouter-border-color);margin-top:4px;padding-top:8px}.ff-od-row{display:flex;gap:6px;align-items:baseline;margin:4px 0;line-height:1.4;flex-wrap:wrap}.ff-od-row-label{font-weight:700;flex:none}.ff-od-code{font-family:monospace;background:var(--ffscouter-alt-bg-color);border:1px solid var(--ffscouter-border-color);border-radius:3px;padding:1px 5px;overflow-wrap:anywhere}.ff-od-copy{background:var(--ffscouter-alt-bg-color);color:var(--ffscouter-text-color);border:1px solid var(--ffscouter-border-color);border-radius:3px;padding:2px 8px;font-size:12px;cursor:pointer}.ff-od-back{background:var(--ffscouter-alt-bg-color);color:var(--ffscouter-text-color);border:1px solid var(--ffscouter-border-color);border-radius:4px;padding:5px 12px;font-size:13px;font-weight:700;cursor:pointer;margin:0 0 4px}.ff-od-note{font-size:12px;line-height:1.4;margin:8px 0 0}.ff-od-footer{font-size:11px;opacity:.75;margin-top:10px;line-height:1.4}.ff-od-modal a{color:inherit;font-weight:700}";
+  ".ff-od-row-btn{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:var(--ffscouter-alt-bg-color);color:var(--ffscouter-text-color);border:1px solid var(--ffscouter-glow-color);border-radius:4px;padding:5px 10px;font-family:Arial,sans-serif;font-size:12px;font-weight:700;cursor:pointer;z-index:5;white-space:nowrap}.ff-od-row-btn:hover{background:var(--ffscouter-hover-color)}.ff-od-row-btn--tile{top:auto;bottom:8px;transform:none}.ff-od-chip{position:fixed;top:8px;right:8px;z-index:9999;background:var(--ffscouter-alt-bg-color);color:var(--ffscouter-text-color);border:1px solid var(--ffscouter-glow-color);border-radius:999px;padding:6px 12px;font-family:Arial,sans-serif;font-size:12px;font-weight:700;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.3)}.ff-od-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:10000;display:flex;align-items:center;justify-content:center;padding:16px 10px 48px;box-sizing:border-box}.ff-od-modal{width:420px;max-width:calc(100vw - 20px);max-height:100%;display:flex;flex-direction:column;background:var(--ffscouter-bg-color);color:var(--ffscouter-text-color);border:1px solid var(--ffscouter-border-color);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.4);font-family:Arial,sans-serif;font-size:13px;box-sizing:border-box}.ff-od-modal *{box-sizing:border-box}.ff-od-header{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 12px;background:var(--ffscouter-alt-bg-color);border-bottom:1px solid var(--ffscouter-border-color);border-radius:7px 7px 0 0}.ff-od-title{font-size:14px;font-weight:700;margin:0;line-height:1.2}.ff-od-sub{font-size:11px;opacity:.75;margin-top:1px}.ff-od-close{background:none;border:none;color:inherit;cursor:pointer;font-size:18px;font-weight:700;padding:2px 6px;line-height:1;flex:none}.ff-od-body{padding:8px 12px 12px;overflow-y:auto}.ff-od-intro{margin:4px 0 8px;line-height:1.4}.ff-od-plan{display:block;width:100%;text-align:left;background:var(--ffscouter-alt-bg-color);color:var(--ffscouter-text-color);border:1px solid var(--ffscouter-border-color);border-radius:6px;padding:8px 10px;margin:0 0 8px;cursor:pointer;font:inherit}.ff-od-plan:hover{background:var(--ffscouter-hover-color)}.ff-od-plan.ff-od-selected{border-color:var(--ffscouter-glow-color);box-shadow:0 0 6px rgba(76,175,80,.5)}.ff-od-plan-name{display:block;font-weight:700;line-height:1.3}.ff-od-plan-meta{display:block;font-size:12px;margin-top:2px;line-height:1.4}.ff-od-detail{border-top:1px solid var(--ffscouter-border-color);margin-top:4px;padding-top:8px}.ff-od-row{display:flex;gap:6px;align-items:baseline;margin:4px 0;line-height:1.4;flex-wrap:wrap}.ff-od-row-label{font-weight:700;flex:none}.ff-od-code{font-family:monospace;user-select:all;-webkit-user-select:all;background:var(--ffscouter-alt-bg-color);border:1px solid var(--ffscouter-border-color);border-radius:3px;padding:1px 5px;overflow-wrap:anywhere}.ff-od-copy{background:var(--ffscouter-alt-bg-color);color:var(--ffscouter-text-color);border:1px solid var(--ffscouter-border-color);border-radius:3px;padding:2px 8px;font-size:12px;cursor:pointer}.ff-od-back{background:var(--ffscouter-alt-bg-color);color:var(--ffscouter-text-color);border:1px solid var(--ffscouter-border-color);border-radius:4px;padding:5px 12px;font-size:13px;font-weight:700;cursor:pointer;margin:0 0 4px}.ff-od-note{font-size:12px;line-height:1.4;margin:8px 0 0}.ff-od-footer{font-size:11px;opacity:.75;margin-top:10px;line-height:1.4}.ff-od-modal a{color:inherit;font-weight:700}";
 
 function od_add_styles(): void {
   if (document.getElementById("ff-od-styles")) return;
@@ -222,11 +191,15 @@ function od_build_modal(state: PlansState): OdModal {
     msgWrap.appendChild(od_el("span", "ff-od-code", payMsg));
     const copyMsg = od_el("button", "ff-od-copy", "Copy");
     copyMsg.type = "button";
+    const copyStatus = od_el("span", "ff-od-copy-status");
+    copyStatus.setAttribute("role", "status");
     copyMsg.addEventListener("click", () => {
-      od_copy(payMsg, copyMsg);
+      od_copy(payMsg, copyStatus);
     });
     msgWrap.appendChild(document.createTextNode(" "));
     msgWrap.appendChild(copyMsg);
+    msgWrap.appendChild(document.createTextNode(" "));
+    msgWrap.appendChild(copyStatus);
     od_detail_row(detail, "Message:", msgWrap);
     od_detail_row(detail, "Coverage:", plan.duration_label || "");
     od_detail_row(detail, "Multiplier:", `Up to ${plan.max_multiplier}x`);
