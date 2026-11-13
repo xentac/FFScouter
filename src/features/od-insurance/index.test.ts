@@ -7,6 +7,7 @@ import {
 import { query_od_insurance_plans } from "@utils/api";
 import { ffconfig } from "@utils/ffconfig";
 import { beforeEach, describe, expect, test, vi } from "vitest";
+import drugsTornTools from "./__fixtures__/torn-markup/2026-11-12/item-drugs-torntools.html?raw";
 import feature from "./index";
 
 vi.mock("@utils/api", async (importOriginal) => ({
@@ -19,13 +20,6 @@ vi.mock("@utils/dom", async (importOriginal) => ({
   torn_page: (page: string) => page === "item",
 }));
 
-const ITEMS_HTML = `
-<div class="content-wrapper"><ul>
-  <li class="item-row"><img src="a.png"><span>x1005 Xanax</span></li>
-  <li class="item-row"><img src="b.png"><span>x10 Vicodin</span></li>
-  <li class="item-row"><img src="c.png"><span>x3 Ecstasy</span></li>
-</ul></div>`;
-
 const row_buttons = () =>
   [...document.querySelectorAll("[data-ff-od-slot] button")] as HTMLElement[];
 
@@ -37,7 +31,7 @@ const turn_off = () => {
 beforeEach(() => {
   // Turning the feature off unmounts what a previous test left behind.
   turn_off();
-  document.body.innerHTML = ITEMS_HTML;
+  document.body.innerHTML = drugsTornTools;
   localStorage.clear();
   vi.clearAllMocks();
   ffconfig.reset();
@@ -57,6 +51,10 @@ describe("OD Insurance feature", () => {
   test("adds OD Insurance buttons to the Xanax and Ecstasy rows only", async () => {
     await act(() => feature.run());
     await waitFor(() => expect(row_buttons()).toHaveLength(2));
+    const items = row_buttons().map((b) =>
+      b.closest("li")?.getAttribute("data-item"),
+    );
+    expect(items).toEqual(["197", "206"]);
   });
 
   test("a row button opens the plans modal", async () => {
