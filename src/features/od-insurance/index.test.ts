@@ -249,6 +249,29 @@ describe("toggle", () => {
     expect(document.getElementById("ffscouter-od-insurance")).toBeNull();
   });
 
+  test("Hide OD Insurance in the modal turns the feature off and saves it", async () => {
+    fill_panel(drugsPlain);
+    await act(() => feature.run());
+    await waitFor(() => expect(row_buttons()).toHaveLength(2));
+    await act(async () => row_buttons()[0]?.click());
+
+    const hide = [...document.querySelectorAll("dialog button")].find(
+      (b) => b.textContent === "Hide OD Insurance",
+    ) as HTMLElement;
+    await act(async () => hide.click());
+
+    expect(ffconfig.od_insurance_enabled).toBe(false);
+    expect(row_buttons()).toHaveLength(0);
+    expect(document.querySelector("dialog")).toBeNull();
+    expect(document.getElementById("ffscouter-od-insurance")).toBeNull();
+    expect(document.getElementById("ffscouter-toast")?.textContent).toContain(
+      "OD Insurance hidden",
+    );
+
+    await act(async () => fill_panel(searchXanaxTornTools));
+    expect(document.querySelector("[data-ff-od-slot]")).toBeNull();
+  });
+
   test("toggling back and forth leaves one button per row", async () => {
     fill_panel(drugsPlain);
     await act(() => feature.run());

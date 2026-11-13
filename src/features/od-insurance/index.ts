@@ -1,4 +1,5 @@
 import { OdInsurance } from "@ui/od-insurance";
+import { toast } from "@ui/toast";
 import { torn_page, wait_for_element } from "@utils/dom";
 import { ffconfig } from "@utils/ffconfig";
 import logger from "@utils/logger";
@@ -43,6 +44,15 @@ let wrap_wait: AbortController | null = null;
 // Retry in the modal must not take the buttons away.
 let covered: number[] = [];
 
+// The modal's "Hide OD Insurance" button. It saves the toggle the same way
+// the Settings Panel does, and the event runs sync(), which removes the
+// buttons and the modal.
+function hide_feature(): void {
+  ffconfig.od_insurance_enabled = false;
+  toast("OD Insurance hidden. Turn it back on in FF Scouter Settings.");
+  window.dispatchEvent(new CustomEvent("ff-config-updated"));
+}
+
 const same_ids = (a: readonly number[], b: readonly number[]) => {
   const in_b = new Set(b);
   return a.length === b.length && a.every((id) => in_b.has(id));
@@ -79,7 +89,11 @@ function render() {
     mounted = { root: createRoot(container), container };
   }
   mounted.root.render(
-    createElement(OdInsurance, { slots: [...slots], load: load_plans }),
+    createElement(OdInsurance, {
+      slots: [...slots],
+      load: load_plans,
+      onHide: hide_feature,
+    }),
   );
 }
 
