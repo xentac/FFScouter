@@ -25,9 +25,11 @@ export function recipient_text(selected: SelectedPlan): string {
 }
 
 // The steps, numbered as in issue #38: 0 only when no Xanax row is visible,
-// 1 to 7 for the send, and the Close after a success.
+// 1 to 7 for the send, and the Close after a success. In Torn's narrow
+// layout, Open Xanax row comes first, and the send has 8 steps.
 export const STEPS = [
   { id: "open_drugs", label: "Open Drugs", number: 0 },
+  { id: "open_row", label: "Open Xanax row", number: 0 },
   { id: "open_send", label: "Open send", number: 1 },
   { id: "fill_recipient", label: "Fill recipient", number: 2 },
   { id: "fill_amount", label: "Fill amount", number: 3 },
@@ -38,10 +40,17 @@ export const STEPS = [
   { id: "close_result", label: "Sent! Close", number: 7 },
 ] as const;
 export type StepId = (typeof STEPS)[number]["id"];
-export const STEP_COUNT = 7;
 
 const step_info = (id: StepId) =>
   STEPS.find((s) => s.id === id) as (typeof STEPS)[number];
+
+// The step's number, counted with Open Xanax row in the narrow layout.
+const step_number = (id: StepId, narrow: boolean) => {
+  if (id === "open_row") return 1;
+  const { number } = step_info(id);
+  return narrow && number >= 1 ? number + 1 : number;
+};
+const step_count = (narrow: boolean) => (narrow ? 8 : 7);
 
 /** One change on the page, or none. A press returns exactly one. */
 export type Action =
@@ -66,6 +75,9 @@ export type Shown = {
   key: string;
   // The step the page is at, for the count and the step list.
   step: StepId;
+  // Torn's narrow layout: each row opens like an accordion, so the send
+  // starts with Open Xanax row.
+  narrow: boolean;
   label: string;
   // Set when something keeps the helper from its step.
   problem?: string;
@@ -89,8 +101,13 @@ export type ListedStep = { label: string; done: boolean; current: boolean };
  * shows only while it is the step, and the Close after a success only then.
  */
 export function step_list(shown: Shown): ListedStep[] {
+  const number = (id: StepId) => step_number(id, shown.narrow);
   const current = step_info(shown.step);
-  const core = STEPS.filter((s) => s.number >= 1 && s.id !== "close_result");
+  const core = STEPS.filter(
+    (s) =>
+      (s.number >= 1 || (s.id === "open_row" && shown.narrow)) &&
+      s.id !== "close_result",
+  );
   const listed = [
     ...(shown.step === "open_drugs" ? [current] : []),
     ...core,
@@ -100,7 +117,7 @@ export function step_list(shown: Shown): ListedStep[] {
     label: s.label,
     done:
       s.id !== shown.step &&
-      (shown.step === "close_result" || s.number < current.number),
+      (shown.step === "close_result" || number(s.id) < number(shown.step)),
     current: s.id === shown.step,
   }));
 }
@@ -126,21 +143,17 @@ const count_of = (text: string | null | undefined) => {
   return Number.isNaN(n) ? null : n;
 };
 
-const step_label = (step: StepId) => {
-  const info = step_info(step);
-  return `${info.label} ${info.number}/${STEP_COUNT}`;
-};
+const step_label = (step: StepId, narrow: boolean) =>
+  `${step_info(step).label} ${step_number(step, narrow)}/${step_count(narrow)}`;
 
-const at_step = (step: StepId, action: Action, extra: Partial<Shown> = {}) =>
-  ({
-    key: step,
-    step,
-    label: step_label(step),
-    action,
-    ...extra,
-  }) satisfies Situation;
+// A situation before the layout is known. situation() adds the layout and,
+// for a step without a problem, the label.
+type Read = Omit<Situation, "narrow" | "label"> & { label?: string };
 
-const blocked = (step: StepId, key: string, problem: string): Situation => ({
+const at_step = (step: StepId, action: Action, extra: Partial<Read> = {}) =>
+  ({ key: step, step, action, ...extra }) satisfies Read;
+
+const blocked = (step: StepId, key: string, problem: string): Read => ({
   key: `blocked:${key}`,
   step,
   label: problem,
@@ -154,10 +167,7 @@ const not_enough = (have: number, need: number) =>
 // Torn reads only the ID inside the brackets of the recipient field.
 const bracket_id = (value: string) => value.match(/\[(\d+)\]\s*$/)?.[1] ?? null;
 
-function read_send_form(
-  form: HTMLFormElement,
-  selected: SelectedPlan,
-): Situation {
+function read_send_form(form: HTMLFormElement, selected: SelectedPlan): Read {
   const pay = selected.plan.payment;
   const total = plan_total(selected);
   const user = form.querySelector<HTMLInputElement>("input.user-id");
@@ -262,7 +272,7 @@ function read_send_panel(
   wrap: Element,
   selected: SelectedPlan,
   stale_form: Element | null,
-): Situation {
+): Read {
   const confirm = visible_in<HTMLFormElement>(wrap, 'form[data-confirm="1"]');
   if (confirm) {
     const diffs = confirm_differences(confirm, selected);
@@ -325,12 +335,34 @@ function read_send_panel(
   return blocked("send", `error:${text}`, text || "Torn shows an error");
 }
 
+const XANAX_ROW = `ul.items-cont > li[data-item="${XANAX_ITEM_ID}"][data-rowkey]`;
+
 /** Reads the page and returns where the send is now. */
 function situation(
   doc: Document,
   selected: SelectedPlan,
   stale_form: Element | null,
 ): Situation {
+  const row = visible_in<HTMLElement>(doc, XANAX_ROW);
+  // Below 784px Torn turns each item panel into a jQuery UI accordion. With
+  // no Xanax row yet, any accordion panel tells the layout.
+  const narrow = row
+    ? row.querySelector(":scope > .cont-wrap.ui-accordion-content") !== null
+    : doc.querySelector("ul.items-cont.ui-accordion") !== null;
+  const read = read_page(doc, row, selected, stale_form);
+  return {
+    ...read,
+    narrow,
+    label: read.label ?? step_label(read.step, narrow),
+  };
+}
+
+function read_page(
+  doc: Document,
+  row: HTMLElement | null,
+  selected: SelectedPlan,
+  stale_form: Element | null,
+): Read {
   // Another item's send panel blocks Xanax's: Torn opens one at a time.
   for (const wrap of doc.querySelectorAll("ul.items-cont > li .send-act")) {
     const row = wrap.closest("li[data-item]");
@@ -345,10 +377,6 @@ function situation(
     );
   }
 
-  const row = visible_in<HTMLElement>(
-    doc,
-    `ul.items-cont > li[data-item="${XANAX_ITEM_ID}"][data-rowkey]`,
-  );
   if (!row) {
     const tab = doc.querySelector<HTMLElement>('li[data-type="Drug"]');
     const link = tab?.querySelector<HTMLElement>("a.drugs-category-icon");
@@ -367,6 +395,17 @@ function situation(
   const have = count_of(row.querySelector(".item-amount")?.textContent);
   const total = plan_total(selected);
   if (have !== null && have < total) return not_enough(have, total);
+
+  // In the narrow layout the actions show only in an open row. The header
+  // is a toggle, so the helper taps it only while the row is closed.
+  const content = row.querySelector(":scope > .cont-wrap.ui-accordion-content");
+  if (content && !is_visible(content)) {
+    const header = row.querySelector<HTMLElement>(
+      ":scope > .title-wrap.ui-accordion-header",
+    );
+    if (!header) return blocked("open_row", "no_header", "Tap the Xanax row");
+    return at_step("open_row", { kind: "click", target: header });
+  }
   const send = row.querySelector<HTMLElement>(
     'li[data-action="send"] button.option-send',
   );
@@ -387,10 +426,7 @@ export function first_shown(
 
 /** The send form that is open for Xanax now, if any. */
 export function open_send_form(doc: Document): Element | null {
-  const row = visible_in(
-    doc,
-    `ul.items-cont > li[data-item="${XANAX_ITEM_ID}"][data-rowkey]`,
-  );
+  const row = visible_in(doc, XANAX_ROW);
   const wrap = row && visible_in(row, ".send-act");
   return wrap ? visible_in(wrap, "form:not([data-confirm])") : null;
 }
@@ -399,14 +435,16 @@ export function open_send_form(doc: Document): Element | null {
 // which can take a moment, so the label moves to the step after it; if the
 // page did not follow, the next press only moves the label back.
 function after(done: Situation): Shown {
+  const { narrow } = done;
   const index = STEPS.findIndex((s) => s.id === done.step);
-  const next: StepId =
+  let next: StepId =
     done.key === "close_confirm" ||
     done.key === "close_form" ||
     done.key === "close_other_result"
       ? "open_send"
       : (STEPS[Math.min(index + 1, STEPS.length - 1)]?.id ?? "open_send");
-  return { key: next, step: next, label: step_label(next) };
+  if (next === "open_row" && !narrow) next = "open_send";
+  return { key: next, step: next, narrow, label: step_label(next, narrow) };
 }
 
 export type PressResult = {

@@ -4,6 +4,7 @@ import type { PayablePlan } from "@utils/od_insurance";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import skeleton from "../__fixtures__/torn-markup/2026-11-12/item-category-wrap-skeleton.html?raw";
 import drugsPlain from "../__fixtures__/torn-markup/2026-11-12/item-drugs-plain.html?raw";
+import drugsNarrow from "../__fixtures__/torn-markup/2026-11-13/item-drugs-narrow.html?raw";
 import sendConfirm from "../__fixtures__/torn-markup/2026-11-13/send-confirm.html?raw";
 import sendForm from "../__fixtures__/torn-markup/2026-11-13/send-form.html?raw";
 import sendResult from "../__fixtures__/torn-markup/2026-11-13/send-result.html?raw";
@@ -33,9 +34,9 @@ const xanax_row = () => $('#drugs-items > li[data-item="206"]') as HTMLElement;
 
 // Torn fills the Drugs panel the way the feature tests do: the captured
 // panel replaces the empty one in the skeleton.
-const open_drugs_panel = () => {
+const open_drugs_panel = (html = drugsPlain) => {
   const panel = document.createElement("div");
-  panel.innerHTML = drugsPlain;
+  panel.innerHTML = html;
   const ul = panel.querySelector("ul.items-cont") as HTMLElement;
   document.getElementById(ul.id)?.replaceWith(ul);
 };
@@ -455,7 +456,12 @@ describe("a new pick while a send form is open", () => {
 });
 
 describe("step_list", () => {
-  const shown = (step: StepId) => ({ key: step, step, label: "" });
+  const shown = (step: StepId) => ({
+    key: step,
+    step,
+    narrow: false,
+    label: "",
+  });
 
   test("checks the steps before the current one", () => {
     expect(step_list(shown("fill_amount"))).toEqual([
@@ -488,5 +494,79 @@ describe("step_list", () => {
       done: false,
       current: true,
     });
+  });
+});
+
+describe("Torn's narrow layout", () => {
+  // Below 784px, each row is a jQuery UI accordion. Its content, with the
+  // actions and the send panel, shows only after a tap on the row.
+  const row_content = () =>
+    $(":scope > .cont-wrap", xanax_row()) as HTMLElement;
+  const open_row = () => {
+    row_content().style.display = "";
+  };
+  const close_row = () => {
+    row_content().style.display = "none";
+  };
+
+  test("opens the Xanax row first, as step 1 of 8", () => {
+    open_drugs_panel(drugsNarrow);
+    const state = first_shown(document, SELECTED);
+    expect(state.shown.label).toBe("Open Xanax row 1/8");
+
+    const result = do_press(state);
+    expect(result.changes).toEqual([
+      "click div.title-wrap.ui-accordion-header.ui-helper-reset.ui-state-default.ui-corner-all.ui-accordion-icons",
+    ]);
+    expect(result.state.shown.label).toBe("Open send 2/8");
+  });
+
+  test("walks the rest of the send with 8 steps", () => {
+    open_drugs_panel(drugsNarrow);
+    open_row();
+    let state = first_shown(document, SELECTED);
+    expect(state.shown.label).toBe("Open send 2/8");
+    state = do_press(state).state;
+    show_send_panel(sendForm);
+    expect(state.shown.label).toBe("Fill recipient 3/8");
+    state = do_press(state).state;
+    expect(state.shown.label).toBe("Fill amount 4/8");
+  });
+
+  test("does not tap the row header while the row is open", () => {
+    open_drugs_panel(drugsNarrow);
+    open_row();
+    const changes = do_press(first_shown(document, SELECTED)).changes;
+    expect(changes).toEqual(["click button.option-send.wai-btn"]);
+  });
+
+  test("goes back to Open Xanax row when the player closes the row", () => {
+    open_drugs_panel(drugsNarrow);
+    open_row();
+    show_send_panel(sendForm);
+    const state = first_shown(document, SELECTED);
+    expect(state.shown.step).toBe("fill_recipient");
+    close_row();
+    const result = do_press(state);
+    expect(result.changes).toEqual([]);
+    expect(result.state.shown.label).toBe("Open Xanax row 1/8");
+  });
+
+  test("lists Open Xanax row with the other steps", () => {
+    open_drugs_panel(drugsNarrow);
+    open_row();
+    const list = step_list(first_shown(document, SELECTED).shown);
+    expect(list.map((s) => s.label)).toEqual([
+      "Open Xanax row",
+      "Open send",
+      "Fill recipient",
+      "Fill amount",
+      "Add message",
+      "Fill message",
+      "Send",
+      "Yes",
+    ]);
+    expect(list[0]?.done).toBe(true);
+    expect(list[1]?.current).toBe(true);
   });
 });
