@@ -6,11 +6,13 @@ import {
   render,
   screen,
   waitFor,
+  within,
 } from "@testing-library/react";
 import {
   ECSTASY_PLAN,
   PLANS_RESPONSE,
   UNPAYABLE_PLAN,
+  WEEKLY_PLAN,
 } from "@utils/__fixtures__/od_insurance";
 import { OD_INSURANCE_GUIDE_URL } from "@utils/api";
 import { copy_text } from "@utils/clipboard";
@@ -31,16 +33,20 @@ const FRESH: PlansState = { status: "fresh", response: PLANS_RESPONSE };
 const modal = (plans: PlansState | null, onRetry = vi.fn()) => {
   const onClose = vi.fn();
   const onHide = vi.fn();
+  const onPick = vi.fn();
   render(
     <OdInsuranceModal
       plans={plans}
       onClose={onClose}
       onRetry={onRetry}
       onHide={onHide}
+      onPick={onPick}
     />,
   );
-  return { onClose, onRetry, onHide };
+  return { onClose, onRetry, onHide, onPick };
 };
+
+const card = (name: RegExp) => within(screen.getByRole("group", { name }));
 
 const guide_links = () =>
   screen
@@ -158,6 +164,7 @@ describe("OdInsuranceModal", () => {
         onClose={vi.fn()}
         onRetry={vi.fn()}
         onHide={vi.fn()}
+        onPick={vi.fn()}
       />,
     );
     unmount();
@@ -191,6 +198,51 @@ describe("OdInsuranceModal", () => {
         ),
       );
     });
+  });
+});
+
+describe("OdInsuranceModal helper pick", () => {
+  test("each plan card has a multiplier, the Xanax total, and a pick", () => {
+    modal(FRESH);
+    const weekly = card(/7 Day Xanax/);
+    const multiplier = weekly.getByRole("spinbutton", { name: "Multiplier" });
+    expect(multiplier).toHaveProperty("value", "1");
+    expect(multiplier.getAttribute("max")).toBe("10");
+    expect(weekly.getByText("20 Xanax total")).toBeTruthy();
+
+    fireEvent.change(multiplier, { target: { value: "3" } });
+    expect(weekly.getByText("60 Xanax total")).toBeTruthy();
+  });
+
+  test("a pick passes the plan and the multiplier", () => {
+    const { onPick } = modal(FRESH);
+    const weekly = card(/7 Day Xanax/);
+    fireEvent.change(weekly.getByRole("spinbutton", { name: "Multiplier" }), {
+      target: { value: "3" },
+    });
+    fireEvent.click(weekly.getByRole("button", { name: "Buy with helper" }));
+    expect(onPick).toHaveBeenCalledWith(WEEKLY_PLAN, 3);
+  });
+
+  test.each(["0", "11", "2.5", ""])(
+    "a multiplier of %j cannot be picked",
+    (value) => {
+      const { onPick } = modal(FRESH);
+      const weekly = card(/7 Day Xanax/);
+      fireEvent.change(weekly.getByRole("spinbutton", { name: "Multiplier" }), {
+        target: { value },
+      });
+      const pick = weekly.getByRole("button", { name: "Buy with helper" });
+      expect(pick).toHaveProperty("disabled", true);
+      fireEvent.click(pick);
+      expect(onPick).not.toHaveBeenCalled();
+    },
+  );
+
+  test("the plan detail keeps the Copy button", () => {
+    modal(FRESH);
+    fireEvent.click(screen.getByRole("button", { name: /7 Day Xanax/ }));
+    expect(screen.getByRole("button", { name: "Copy" })).toBeTruthy();
   });
 });
 
@@ -247,6 +299,38 @@ describe("OdInsurance", () => {
     expect(load).toHaveBeenCalledTimes(2);
     expect(screen.getByRole("dialog")).toBeTruthy();
     expect(screen.getByRole("button", { name: /2 Hour Ecstasy/ })).toBeTruthy();
+  });
+
+  test("a pick closes the modal and shows the helper it is given", async () => {
+    const load = vi.fn().mockResolvedValue(FRESH);
+    const onPick = vi.fn();
+    const { rerender } = render(
+      <OdInsurance
+        slots={slots}
+        load={load}
+        onHide={vi.fn()}
+        onPick={onPick}
+      />,
+    );
+    await act(async () => {
+      slots[0]?.querySelector("button")?.click();
+    });
+    fireEvent.click(
+      card(/2 Hour Ecstasy/).getByRole("button", { name: "Buy with helper" }),
+    );
+    expect(onPick).toHaveBeenCalledWith(ECSTASY_PLAN, 1);
+    expect(screen.queryByRole("dialog")).toBeNull();
+
+    rerender(
+      <OdInsurance
+        slots={slots}
+        load={load}
+        onHide={vi.fn()}
+        onPick={onPick}
+        helper={<p>helper here</p>}
+      />,
+    );
+    expect(screen.getByText("helper here")).toBeTruthy();
   });
 
   test("removes the buttons when no plan is payable", async () => {

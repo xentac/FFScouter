@@ -284,3 +284,60 @@ describe("toggle", () => {
     );
   });
 });
+
+describe("Send Helper", () => {
+  const helper_region = () =>
+    document.querySelector('section[aria-label="OD Insurance Send Helper"]');
+  const helper_button = (name: string) =>
+    [...(helper_region()?.querySelectorAll("button") ?? [])].find(
+      (b) => b.textContent === name || b.getAttribute("aria-label") === name,
+    ) as HTMLElement;
+
+  // Opens the modal from a row and picks the 7 Day plan with the helper.
+  const pick_weekly = async () => {
+    fill_panel(drugsPlain);
+    await act(() => feature.run());
+    await waitFor(() => expect(row_buttons()).toHaveLength(2));
+    await act(async () => row_buttons()[0]?.click());
+    const weekly = document.querySelector(
+      'fieldset[aria-label="7 Day Xanax Insurance"]',
+    ) as HTMLElement;
+    const pick = [...weekly.querySelectorAll("button")].find(
+      (b) => b.textContent === "Buy with helper",
+    ) as HTMLElement;
+    await act(async () => pick.click());
+  };
+
+  test("a pick closes the modal and shows the helper at the first step", async () => {
+    await pick_weekly();
+    expect(document.querySelector("dialog")).toBeNull();
+    expect(helper_button("Open send 1/7")).toBeTruthy();
+  });
+
+  test("a press does the shown step on the page", async () => {
+    await pick_weekly();
+    const send = document.querySelector(
+      '#drugs-items > li[data-item="206"] button.option-send',
+    ) as HTMLElement;
+    const clicked = vi.fn();
+    send.addEventListener("click", clicked);
+    await act(async () => helper_button("Open send 1/7").click());
+    expect(clicked).toHaveBeenCalledOnce();
+    expect(helper_button("Fill recipient 2/7")).toBeTruthy();
+  });
+
+  test("the X clears the Selected Plan", async () => {
+    await pick_weekly();
+    await act(async () => helper_button("Cancel the send").click());
+    expect(helper_region()).toBeNull();
+  });
+
+  test("turning the feature off removes the helper", async () => {
+    await pick_weekly();
+    set_enabled(false);
+    expect(helper_region()).toBeNull();
+    set_enabled(true);
+    await waitFor(() => expect(row_buttons()).toHaveLength(2));
+    expect(helper_region()).toBeNull();
+  });
+});
