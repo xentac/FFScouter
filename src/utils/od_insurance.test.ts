@@ -1,12 +1,5 @@
 // @vitest-environment jsdom
-import {
-  ECSTASY_PLAN,
-  PLANS_RESPONSE,
-  UNPAYABLE_PLAN,
-  WEEKLY_PLAN,
-} from "@utils/__fixtures__/od_insurance";
-import type { query_od_insurance_plans } from "@utils/api";
-import { Storage } from "@utils/storage";
+
 import {
   afterEach,
   beforeEach,
@@ -17,10 +10,18 @@ import {
   vi,
 } from "vitest";
 import {
+  ECSTASY_PLAN,
+  PLANS_RESPONSE,
+  UNPAYABLE_PLAN,
+  WEEKLY_PLAN,
+} from "./__fixtures__/od_insurance";
+import type { query_od_insurance_plans } from "./api";
+import {
   OD_PLANS_FRESH_MS,
   OdInsurancePlansCache,
   payable_plans,
-} from "./plans";
+} from "./od_insurance";
+import { Storage } from "./storage";
 
 test("payable_plans keeps plans that name a recipient", () => {
   expect(payable_plans(PLANS_RESPONSE)).toEqual([ECSTASY_PLAN, WEEKLY_PLAN]);
@@ -68,13 +69,13 @@ describe("OdInsurancePlansCache", () => {
   });
 
   test("fetches when nothing is stored", async () => {
-    expect(cache.is_fresh()).toBe(false);
     await expect(cache.get()).resolves.toEqual({
       status: "fresh",
       response: PLANS_RESPONSE,
     });
     expect(query).toHaveBeenCalledTimes(1);
-    expect(cache.is_fresh()).toBe(true);
+    await cache.get();
+    expect(query).toHaveBeenCalledTimes(1);
   });
 
   test("serves a fresh list without a request", async () => {
@@ -87,7 +88,6 @@ describe("OdInsurancePlansCache", () => {
   test("fetches again once the list is 10 minutes old", async () => {
     await cache.get();
     vi.advanceTimersByTime(OD_PLANS_FRESH_MS);
-    expect(cache.is_fresh()).toBe(false);
     await cache.get();
     expect(query).toHaveBeenCalledTimes(2);
   });
