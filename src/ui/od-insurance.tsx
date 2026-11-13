@@ -11,6 +11,8 @@ import styles from "./od-insurance.module.css";
 
 const cls = {
   rowBtn: styles["ff-od-insurance__row-btn"],
+  rowBtnFull: styles["ff-od-insurance__row-btn-full"],
+  rowBtnShort: styles["ff-od-insurance__row-btn-short"],
   overlay: styles["ff-od-insurance__overlay"],
   modal: styles["ff-od-insurance"],
   header: styles["ff-od-insurance__header"],
@@ -285,9 +287,13 @@ export function OdInsuranceModal({
 
 export function OdInsuranceButton({ onOpen }: { onOpen: () => void }) {
   return (
+    // The short label shows in Torn's narrow layout (below 784px), where the
+    // row has less room. The CSS picks the label; the accessible name stays
+    // the full one.
     <button
       type="button"
       className={cls.rowBtn}
+      aria-label="OD Insurance"
       onClick={(e) => {
         // The row itself opens Torn's item info on click.
         e.preventDefault();
@@ -295,7 +301,8 @@ export function OdInsuranceButton({ onOpen }: { onOpen: () => void }) {
         onOpen();
       }}
     >
-      OD Insurance
+      <span className={cls.rowBtnFull}>OD Insurance</span>
+      <span className={cls.rowBtnShort}>OD Ins</span>
     </button>
   );
 }

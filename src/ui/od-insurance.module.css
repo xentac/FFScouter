@@ -23,6 +23,23 @@
   background: var(--ffscouter-hover-color);
 }
 
+/* Torn's narrow layout (below 784px, Torn PDA included) leaves less room in
+   the row, so the button shows "OD Ins". 784px is Torn's only real layout
+   breakpoint; see Content Wrapper Width in CONTEXT.md. */
+.ff-od-insurance__row-btn-full {
+  display: none;
+}
+
+@media (min-width: 784px) {
+  .ff-od-insurance__row-btn-full {
+    display: inline;
+  }
+
+  .ff-od-insurance__row-btn-short {
+    display: none;
+  }
+}
+
 .ff-od-insurance__overlay {
   position: fixed;
   inset: 0;
