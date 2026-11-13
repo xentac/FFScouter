@@ -82,6 +82,29 @@ export type HelperState = {
   stale_form: Element | null;
 };
 
+export type ListedStep = { label: string; done: boolean; current: boolean };
+
+/**
+ * The steps for the expanded helper, with done steps checked. Open Drugs
+ * shows only while it is the step, and the Close after a success only then.
+ */
+export function step_list(shown: Shown): ListedStep[] {
+  const current = step_info(shown.step);
+  const core = STEPS.filter((s) => s.number >= 1 && s.id !== "close_result");
+  const listed = [
+    ...(shown.step === "open_drugs" ? [current] : []),
+    ...core,
+    ...(shown.step === "close_result" ? [current] : []),
+  ];
+  return listed.map((s) => ({
+    label: s.label,
+    done:
+      s.id !== shown.step &&
+      (shown.step === "close_result" || s.number < current.number),
+    current: s.id === shown.step,
+  }));
+}
+
 /** Visible: no ancestor (or the element) has display: none. */
 export function is_visible(el: Element | null): boolean {
   if (!el?.isConnected) return false;

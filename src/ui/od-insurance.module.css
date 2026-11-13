@@ -134,22 +134,58 @@
   line-height: 1.4;
 }
 
+/* A plan card: a button that opens the plan, and the helper pick below. */
 .ff-od-insurance__plan {
-  display: block;
-  width: 100%;
+  min-width: 0;
   margin: 0 0 8px;
-  padding: 8px 10px;
-  text-align: left;
+  padding: 0;
   background: var(--ffscouter-alt-bg-color);
   color: var(--ffscouter-text-color);
   border: 1px solid var(--ffscouter-border-color);
   border-radius: 6px;
+}
+
+.ff-od-insurance__plan-open {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 8px 10px;
+  text-align: left;
+  background: none;
+  color: inherit;
+  border: none;
+  border-radius: 6px 6px 0 0;
   font: inherit;
   cursor: pointer;
 }
 
-.ff-od-insurance__plan:hover {
+.ff-od-insurance__plan-open:hover {
   background: var(--ffscouter-hover-color);
+}
+
+.ff-od-insurance__pick {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  padding: 6px 10px 4px;
+  border-top: 1px solid var(--ffscouter-border-color);
+  font-size: 12px;
+}
+
+.ff-od-insurance__multiplier {
+  width: 4em;
+  padding: 2px 4px;
+  background: var(--ffscouter-bg-color);
+  color: var(--ffscouter-text-color);
+  border: 1px solid var(--ffscouter-border-color);
+  border-radius: 3px;
+  font: inherit;
+}
+
+.ff-od-insurance__button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
 }
 
 .ff-od-insurance__plan-name {
@@ -235,4 +271,80 @@
 
 .ff-od-insurance__hide:hover {
   background: var(--ffscouter-hover-color);
+}
+
+/* The Send Helper: a floating bar on item.php while a Selected Plan exists.
+   Below the modal overlay (10000). The inline style places it. */
+.ff-od-helper {
+  position: fixed;
+  z-index: 9999;
+  max-width: calc(100vw - 16px);
+  font-family: Arial, sans-serif;
+  font-size: 12px;
+  color: var(--ffscouter-text-color);
+}
+
+.ff-od-helper__bar {
+  display: flex;
+  align-items: stretch;
+  background: var(--ffscouter-bg-color);
+  border: 1px solid var(--ffscouter-glow-color);
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+}
+
+.ff-od-helper[data-problem="true"] .ff-od-helper__bar {
+  border-color: #c0392b;
+}
+
+.ff-od-helper__grip,
+.ff-od-helper__press,
+.ff-od-helper__icon {
+  margin: 0;
+  padding: 6px 8px;
+  background: none;
+  border: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+/* No browser scroll or zoom while a finger drags the grip (Torn PDA). */
+.ff-od-helper__grip {
+  cursor: grab;
+  touch-action: none;
+  opacity: 0.7;
+}
+
+.ff-od-helper__press {
+  flex: 1;
+  min-width: 0;
+  font-weight: 700;
+  text-align: left;
+  overflow-wrap: anywhere;
+  background: var(--ffscouter-alt-bg-color);
+}
+
+.ff-od-helper__press:hover,
+.ff-od-helper__icon:hover {
+  background: var(--ffscouter-hover-color);
+}
+
+.ff-od-helper__icon {
+  font-weight: 700;
+}
+
+.ff-od-helper__steps {
+  margin: 0 0 4px;
+  padding: 6px 10px;
+  list-style: none;
+  background: var(--ffscouter-bg-color);
+  border: 1px solid var(--ffscouter-border-color);
+  border-radius: 6px;
+  line-height: 1.6;
+}
+
+.ff-od-helper__current {
+  font-weight: 700;
 }
