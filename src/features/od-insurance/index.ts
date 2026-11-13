@@ -6,6 +6,7 @@ import { od_insurance_plans } from "@utils/od_insurance";
 import { createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { type Feature, StartTime } from "../feature";
+import { add_row_slots, remove_row_slots } from "./rows";
 
 // OD Insurance: an "OD Insurance" button on the Xanax and Ecstasy item rows
 // of item.php opens a modal with the ffscouter.com plans and how to buy one.
@@ -33,71 +34,22 @@ function render() {
   );
 }
 
-function od_norm_text(s: string | null | undefined): string {
-  return (s || "").replace(/\s+/g, " ").trim();
-}
-
-function od_insured_name_of(text: string | null | undefined): string | null {
-  const m = od_norm_text(text).match(/^(?:x[\d,]+\s+)?(Xanax|Ecstasy)$/i);
-  return m?.[1] ?? null;
-}
-
-function od_row_for(leaf: Element): HTMLElement | null {
-  let node: HTMLElement | null = leaf as HTMLElement;
-  for (let depth = 0; depth < 5 && node && node !== document.body; depth++) {
-    node = node.parentElement as HTMLElement | null;
-    if (!node) break;
-    if (
-      node.querySelector("img") &&
-      od_norm_text(node.textContent).length <= 220
-    )
-      return node;
-    if (node.tagName === "LI" && od_norm_text(node.textContent).length <= 220)
-      return node;
-  }
-  return leaf.parentElement as HTMLElement | null;
-}
-
-function od_scan_rows(): number {
-  if (!ffconfig.od_insurance_enabled) return 0;
-  const scope =
-    document.querySelector(".content-wrapper") ||
-    document.querySelector(".page-template-cont") ||
-    document.body;
-  if (!scope) return 0;
-  let added = 0;
-  const all = scope.querySelectorAll("*");
-  all.forEach((el) => {
-    if (el.children.length > 2) return;
-    if (el.querySelector("img")) return;
-    if (!od_insured_name_of(el.textContent)) return;
-    if (el.closest("#ffscouter-od-insurance, [data-ff-od-slot]")) return;
-    if (el.closest("a, button")) return;
-    const row = od_row_for(el);
-    if (!row) return;
-    if (row.querySelector("[data-ff-od-slot]")) return;
-    if (row.offsetWidth && row.offsetWidth < 180) return;
-    if (
-      window.getComputedStyle &&
-      window.getComputedStyle(row).position === "static"
-    ) {
-      row.style.position = "relative";
-    }
-    const slot = document.createElement("span");
-    slot.setAttribute("data-ff-od-slot", "");
-    row.appendChild(slot);
-    slots.push(slot);
-    added++;
-  });
-  if (added > 0) render();
-  return added;
+// Adds slots for new insured rows and forgets slots whose row Torn removed
+// (a tab change or a new search replaces the panel's rows).
+function od_scan_rows(): void {
+  if (!ffconfig.od_insurance_enabled) return;
+  const added = add_row_slots(document);
+  const kept = slots.filter((slot) => slot.isConnected);
+  if (added.length === 0 && kept.length === slots.length) return;
+  slots.splice(0, slots.length, ...kept, ...added);
+  render();
 }
 
 function od_remove_all(): void {
   mounted?.root.unmount();
   mounted?.container.remove();
   mounted = null;
-  for (const slot of slots) slot.remove();
+  remove_row_slots(document);
   slots.length = 0;
 }
 
