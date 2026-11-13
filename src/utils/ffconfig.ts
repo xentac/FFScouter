@@ -105,6 +105,7 @@ export const CONFIG_DEFAULTS = {
   war_filter_enabled: true,
   stat_distribution_badge_enabled: true,
   bounty_board_enabled: true,
+  od_insurance_enabled: true,
   bounty_attack_action: WarQuickAttackAction.NEW_TAB,
 } as const;
 
@@ -151,6 +152,7 @@ enum CONFIG {
   WAR_FILTER_ENABLED = "war_filter_enabled",
   STAT_DISTRIBUTION_BADGE_ENABLED = "stat_distribution_badge_enabled",
   BOUNTY_BOARD_ENABLED = "bounty_board_enabled",
+  OD_INSURANCE_ENABLED = "od_insurance_enabled",
   BOUNTY_ATTACK_ACTION = "bounty_attack_action",
 }
 
@@ -476,6 +478,17 @@ export class FFConfig {
     this.storage.set(CONFIG.BOUNTY_BOARD_ENABLED, val);
   }
 
+  get od_insurance_enabled(): boolean {
+    return (
+      this.storage.get(CONFIG.OD_INSURANCE_ENABLED) ??
+      CONFIG_DEFAULTS.od_insurance_enabled
+    );
+  }
+
+  set od_insurance_enabled(val: boolean) {
+    this.storage.set(CONFIG.OD_INSURANCE_ENABLED, val);
+  }
+
   get bounty_attack_action(): WarQuickAttackAction {
     return (
       this.storage.get(CONFIG.BOUNTY_ATTACK_ACTION) ??
@@ -671,6 +684,7 @@ export class FFConfig {
     this.storage.remove(CONFIG.WAR_FILTER_ENABLED);
     this.storage.remove(CONFIG.STAT_DISTRIBUTION_BADGE_ENABLED);
     this.storage.remove(CONFIG.BOUNTY_BOARD_ENABLED);
+    this.storage.remove(CONFIG.OD_INSURANCE_ENABLED);
     this.storage.remove(CONFIG.BOUNTY_ATTACK_ACTION);
   }
 }
