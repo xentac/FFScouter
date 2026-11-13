@@ -1,5 +1,5 @@
 import {
-  type OdInsurancePlan as OdPlan,
+  OD_INSURANCE_GUIDE_URL,
   type OdInsurancePlansResponse as OdPlansData,
   query_od_insurance_plans,
 } from "@utils/api";
@@ -7,6 +7,7 @@ import { torn_page } from "@utils/dom";
 import { ffconfig } from "@utils/ffconfig";
 import logger from "@utils/logger";
 import { type Feature, StartTime } from "../feature";
+import { type PayablePlan, payable_plans } from "./plans";
 
 // OD Insurance
 // - Only runs on https://www.torn.com/item.php (see shouldRun below)
@@ -267,10 +268,21 @@ function od_build_modal(data: OdPlansData, stale: boolean): OdModal {
   modal.appendChild(body);
   const listView = od_el("div", "ff-od-view");
   body.appendChild(listView);
-  let introText = "Tap a plan to see how to buy it.";
+  const plans = payable_plans(data);
+  let introText =
+    plans.length > 0
+      ? "Tap a plan to see how to buy it."
+      : "OD Insurance is not taking new policies right now.";
   if (stale)
     introText += " Showing saved plans - the live list could not be refreshed.";
   listView.appendChild(od_el("p", "ff-od-intro", introText));
+  if (plans.length === 0) {
+    const guide = od_el("a", null, "Read the OD Insurance guide");
+    guide.href = OD_INSURANCE_GUIDE_URL;
+    guide.target = "_blank";
+    guide.rel = "noreferrer";
+    listView.appendChild(guide);
+  }
   const detailView = od_el("div", "ff-od-view");
   detailView.style.display = "none";
   const backBtn = od_el("button", "ff-od-back", "← Back to plans");
@@ -291,7 +303,7 @@ function od_build_modal(data: OdPlansData, stale: boolean): OdModal {
       detailView.style.minHeight = `${lh}px`;
     }
   };
-  const selectPlan = (plan: OdPlan, btn: HTMLButtonElement | null) => {
+  const selectPlan = (plan: PayablePlan, btn: HTMLButtonElement | null) => {
     planButtons.forEach((b) => {
       b.classList.remove("ff-od-selected");
     });
@@ -299,12 +311,16 @@ function od_build_modal(data: OdPlansData, stale: boolean): OdModal {
     const pay = plan.payment;
     const payQty = pay.xanax_quantity;
     const payId = pay.recipient_player_id;
-    const payName = pay.recipient_name ?? `[${payId}]`;
+    const payName = pay.recipient_name ?? `player [${payId}]`;
     const payMsg = pay.message;
     detail.textContent = "";
     od_detail_row(detail, "Plan:", plan.name);
     od_detail_row(detail, "Send:", `${payQty}x Xanax`);
-    const toLink = od_el("a", null, `${payName} [${payId}]`);
+    const toLink = od_el(
+      "a",
+      null,
+      pay.recipient_name ? `${pay.recipient_name} [${payId}]` : `[${payId}]`,
+    );
     toLink.href = `https://www.torn.com/profiles.php?XID=${payId}`;
     toLink.target = "_blank";
     toLink.rel = "noreferrer";
@@ -341,7 +357,7 @@ function od_build_modal(data: OdPlansData, stale: boolean): OdModal {
     detailView.style.display = "block";
     body.scrollTop = 0;
   };
-  (data.plans || []).forEach((plan) => {
+  plans.forEach((plan) => {
     const btn = od_el("button", "ff-od-plan");
     btn.type = "button";
     btn.appendChild(od_el("span", "ff-od-plan-name", plan.name));
