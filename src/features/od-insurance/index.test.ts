@@ -6,6 +6,7 @@ import {
   UNPAYABLE_PLAN,
 } from "@utils/__fixtures__/od_insurance";
 import { OD_INSURANCE_GUIDE_URL, query_od_insurance_plans } from "@utils/api";
+import { copy_text } from "@utils/clipboard";
 import { ffconfig } from "@utils/ffconfig";
 import storage, { Time } from "@utils/storage";
 import { beforeEach, describe, expect, test, vi } from "vitest";
@@ -15,6 +16,8 @@ vi.mock("@utils/api", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@utils/api")>()),
   query_od_insurance_plans: vi.fn(),
 }));
+
+vi.mock("@utils/clipboard", () => ({ copy_text: vi.fn() }));
 
 vi.mock("@utils/dom", async (importOriginal) => {
   const original = await importOriginal<typeof import("@utils/dom")>();
@@ -184,5 +187,36 @@ describe("OD Insurance plans without a recipient", () => {
       `a[href="${OD_INSURANCE_GUIDE_URL}"]`,
     );
     expect(guide).not.toBeNull();
+  });
+});
+
+describe("OD Insurance copy button", () => {
+  const open_weekly_plan = async () => {
+    await feature.run();
+    (document.querySelector(".ff-od-row-btn") as HTMLElement).click();
+    await sleep(100);
+    const plans = document.querySelectorAll<HTMLElement>(
+      "#ffscouter-od-insurance .ff-od-plan",
+    );
+    plans[1]?.click();
+  };
+
+  const copy = async () => {
+    document.querySelector<HTMLElement>(".ff-od-copy")?.click();
+    await sleep(0);
+    return document.querySelector(".ff-od-copy-status")?.textContent;
+  };
+
+  test("says Copied! when the message was copied", async () => {
+    vi.mocked(copy_text).mockResolvedValue(true);
+    await open_weekly_plan();
+    expect(await copy()).toBe("Copied!");
+    expect(copy_text).toHaveBeenCalledWith("insurance:7days");
+  });
+
+  test("asks the player to select the text when copying failed", async () => {
+    vi.mocked(copy_text).mockResolvedValue(false);
+    await open_weekly_plan();
+    expect(await copy()).toBe("Copy failed, select the text");
   });
 });
