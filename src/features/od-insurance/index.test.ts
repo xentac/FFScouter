@@ -7,6 +7,7 @@ import {
 } from "@utils/__fixtures__/od_insurance";
 import { OD_INSURANCE_GUIDE_URL, query_od_insurance_plans } from "@utils/api";
 import { ffconfig } from "@utils/ffconfig";
+import storage, { Time } from "@utils/storage";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import feature from "./index";
 
@@ -84,16 +85,54 @@ describe("OD Insurance feature", () => {
     expect(detail.textContent).toContain("Overdose X payout:");
   });
 
-  test("falls back to the built-in plans when the API is unreachable", async () => {
+  test("shows Retry and a page link when plans fail with nothing stored", async () => {
     vi.mocked(query_od_insurance_plans).mockRejectedValue(new Error("offline"));
     await feature.run();
     (document.querySelector(".ff-od-row-btn") as HTMLElement).click();
     await sleep(100);
-    const plans = document.querySelectorAll(
-      "#ffscouter-od-insurance .ff-od-plan",
+    const modal = document.getElementById("ffscouter-od-insurance");
+    expect(modal?.textContent).toContain("Plans did not load");
+    expect(
+      modal?.querySelector(`a[href="${OD_INSURANCE_GUIDE_URL}"]`),
+    ).not.toBeNull();
+
+    vi.mocked(query_od_insurance_plans).mockResolvedValue({
+      result: PLANS_RESPONSE,
+      blank: false,
+    });
+    const retry = [...(modal?.querySelectorAll("button") ?? [])].find(
+      (b) => b.textContent === "Retry",
     );
-    expect(plans.length).toBe(4);
-    expect(plans[0]?.textContent).toContain("2 Hour Ecstasy Insurance");
+    retry?.click();
+    await sleep(100);
+    expect(
+      document.querySelectorAll("#ffscouter-od-insurance .ff-od-plan").length,
+    ).toBe(2);
+  });
+
+  test("shows a stored list with a note when the refresh fails", async () => {
+    storage.set(
+      "od-insurance-plans",
+      { response: PLANS_RESPONSE, fetched_at: Date.now() - 60 * 60 * 1000 },
+      { amount: 23, unit: Time.Hours },
+    );
+    vi.mocked(query_od_insurance_plans).mockRejectedValue(new Error("offline"));
+    await feature.run();
+    (document.querySelector(".ff-od-row-btn") as HTMLElement).click();
+    await sleep(100);
+    const modal = document.getElementById("ffscouter-od-insurance");
+    expect(modal?.querySelectorAll(".ff-od-plan").length).toBe(2);
+    expect(modal?.textContent).toContain("The live list did not load");
+  });
+
+  test("removes the row buttons when no plan is payable", async () => {
+    vi.mocked(query_od_insurance_plans).mockResolvedValue({
+      result: { ...PLANS_RESPONSE, plans: [UNPAYABLE_PLAN] },
+      blank: false,
+    });
+    await feature.run();
+    await sleep(0);
+    expect(document.querySelectorAll(".ff-od-row-btn").length).toBe(0);
   });
 
   test("disabling the setting removes buttons and modal", async () => {
