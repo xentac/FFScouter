@@ -950,6 +950,12 @@ export type FFApiOdInsurancePlansResponse =
       blank: true;
     };
 
+// The OD Insurance guide on ffscouter.com: how the service works and what it
+// pays. The modal links it, as Torn's rules ask scripts to link each
+// feature's terms.
+export const OD_INSURANCE_GUIDE_URL =
+  "https://ffscouter.com/guides/od-insurance";
+
 export const make_od_insurance_plans_url = () => {
   return `${FF_SCOUTER_BASE_URL}/od-insurance/plans`;
 };
