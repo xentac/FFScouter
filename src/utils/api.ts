@@ -703,11 +703,11 @@ export type FFApiBountyBoardResponse =
       blank: true;
     };
 
-// Shared parse/validate step for the bounty endpoints: surfaces the API's
-// code + message (consent 86, unregistered key 6, no open bounties 91,
-// attacks access 87, rate limit 21 with retry_after_seconds) as FFApiError
-// so UI slices can branch on them.
-const parse_bounty_response = <T>(
+// Shared parse/validate step for the bounty and OD Insurance endpoints:
+// surfaces the API's code + message (consent 86, unregistered key 6, no open
+// bounties 91, attacks access 87, rate limit 21 with retry_after_seconds) as
+// FFApiError so UI slices can branch on them.
+const parse_ff_response = <T>(
   resp: Tampermonkey.Response<object>,
   label: string,
   ok_statuses: number[] = [200],
@@ -780,7 +780,7 @@ export const query_bounty_seller_board = async (
     return { blank: true };
   }
 
-  const { result, limits } = parse_bounty_response<BountySellerBoardResponse>(
+  const { result, limits } = parse_ff_response<BountySellerBoardResponse>(
     resp,
     "query_bounty_seller_board",
   );
@@ -837,7 +837,7 @@ export const accept_bounty_seller_policy = async (
     return { blank: true };
   }
 
-  const { result, limits } = parse_bounty_response<BountyPolicyAcceptResponse>(
+  const { result, limits } = parse_ff_response<BountyPolicyAcceptResponse>(
     resp,
     "accept_bounty_seller_policy",
   );
@@ -900,10 +900,137 @@ export const submit_bounty_seller_claim = async (
   }
 
   // 200 = existing open claim reused, 201 = claim created
-  const { result, limits } = parse_bounty_response<BountyClaimCreateResponse>(
+  const { result, limits } = parse_ff_response<BountyClaimCreateResponse>(
     resp,
     "submit_bounty_seller_claim",
     [200, 201],
   );
   return { result, blank: false, limits };
+};
+
+// OD Insurance: a paid ffscouter.com service. Players send Xanax with a plan
+// message to the service manager and get paid out in Xanax on an overdose.
+// The plans endpoint is public (no key) and rate-limited to 30/min per IP;
+// its only documented error is 429 code 21 (spec 1.20.0).
+export type OdInsurancePlanPayment = {
+  // null when the service has no manager configured: the plan is not payable
+  recipient_player_id: PlayerId | null;
+  recipient_name: string | null;
+  xanax_quantity: number;
+  // The exact item message to send with the Xanax, e.g. "insurance:ecstasy"
+  message: string;
+};
+
+export type OdInsurancePlan = {
+  name: string;
+  plan_key: string;
+  xanax_quantity: number;
+  // Whole-number cap; 1 means the exact quantity only
+  max_multiplier: number;
+  duration_seconds: number;
+  duration_label: string;
+  standard_payout_xanax: number;
+  overdose_payout_xanax: number;
+  payment: OdInsurancePlanPayment;
+};
+
+export type OdInsurancePlansResponse = {
+  manager_player_id: PlayerId | null;
+  manager_name: string | null;
+  plans: OdInsurancePlan[];
+};
+
+export type FFApiOdInsurancePlansResponse =
+  | {
+      result: OdInsurancePlansResponse;
+      blank: false;
+      limits?: FFApiRateLimits;
+    }
+  | {
+      blank: true;
+    };
+
+export const make_od_insurance_plans_url = () => {
+  return `${FF_SCOUTER_BASE_URL}/od-insurance/plans`;
+};
+
+const is_int = (v: unknown): v is number => Number.isInteger(v);
+const is_str = (v: unknown): v is string => typeof v === "string";
+const is_nullable = <T>(v: unknown, check: (v: unknown) => v is T) =>
+  v === null || check(v);
+
+// The UI prints every one of these fields, so a plan missing one would show
+// "undefined Xanax" or copy an empty message. A null recipient is allowed
+// here (the spec permits it); the feature decides what an unpayable plan
+// means.
+export const is_od_insurance_plan = (v: unknown): v is OdInsurancePlan => {
+  if (typeof v !== "object" || v === null) return false;
+  const plan = v as { [K in keyof OdInsurancePlan]?: unknown };
+  const payment = plan.payment as
+    | { [K in keyof OdInsurancePlanPayment]?: unknown }
+    | null
+    | undefined;
+  return (
+    is_str(plan.name) &&
+    is_str(plan.plan_key) &&
+    is_int(plan.xanax_quantity) &&
+    is_int(plan.max_multiplier) &&
+    is_int(plan.duration_seconds) &&
+    is_str(plan.duration_label) &&
+    is_int(plan.standard_payout_xanax) &&
+    is_int(plan.overdose_payout_xanax) &&
+    typeof payment === "object" &&
+    payment !== null &&
+    is_nullable(payment.recipient_player_id, is_int) &&
+    is_nullable(payment.recipient_name, is_str) &&
+    is_int(payment.xanax_quantity) &&
+    is_str(payment.message) &&
+    payment.message !== ""
+  );
+};
+
+export const query_od_insurance_plans = async (
+  requester: typeof gmRequest = gmRequest,
+): Promise<FFApiOdInsurancePlansResponse> => {
+  logger.debug("Calling query_od_insurance_plans");
+  const url = make_od_insurance_plans_url();
+
+  const resp = await requester({
+    method: "GET",
+    url: url,
+  });
+
+  if (!resp) {
+    return { blank: true };
+  }
+
+  const { result, limits } = parse_ff_response<OdInsurancePlansResponse>(
+    resp,
+    "query_od_insurance_plans",
+  );
+  if (!Array.isArray(result.plans)) {
+    throw new FFApiError("API request failed. Response has no plans list.", {
+      ff_api_limits: limits,
+      ff_http_status: resp.status,
+    });
+  }
+
+  // One malformed plan drops only itself, so the rest stay buyable.
+  const plans = result.plans.filter((plan: unknown) => {
+    if (is_od_insurance_plan(plan)) return true;
+    logger.warn("query_od_insurance_plans: dropping malformed plan", plan);
+    return false;
+  });
+
+  return {
+    result: {
+      manager_player_id: is_int(result.manager_player_id)
+        ? result.manager_player_id
+        : null,
+      manager_name: is_str(result.manager_name) ? result.manager_name : null,
+      plans,
+    },
+    blank: false,
+    limits,
+  };
 };
