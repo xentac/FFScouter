@@ -911,7 +911,7 @@ export const submit_bounty_seller_claim = async (
 // OD Insurance: a paid ffscouter.com service. Players send Xanax with a plan
 // message to the service manager and get paid out in Xanax on an overdose.
 // The plans endpoint is public (no key) and rate-limited to 30/min per IP;
-// its only documented error is 429 code 21 (spec 1.20.0).
+// its only documented error is 429 code 21 (spec 1.22.0).
 export type OdInsurancePlanPayment = {
   // null when the service has no manager configured: the plan is not payable
   recipient_player_id: PlayerId | null;
@@ -919,6 +919,15 @@ export type OdInsurancePlanPayment = {
   xanax_quantity: number;
   // The exact item message to send with the Xanax, e.g. "insurance:ecstasy"
   message: string;
+};
+
+// The Torn item a plan covers (spec 1.21.0). The spec allows null members:
+// 1.21.0 sent nulls until the service backfilled each plan, and 1.22.0 says
+// plans always set them. A plan with a null item_id still lists in the
+// modal, but no item row gets a button for it.
+export type OdInsuranceCoveredItem = {
+  item_id: number | null;
+  name: string | null;
 };
 
 export type OdInsurancePlan = {
@@ -931,6 +940,7 @@ export type OdInsurancePlan = {
   duration_label: string;
   standard_payout_xanax: number;
   overdose_payout_xanax: number;
+  covered_item: OdInsuranceCoveredItem;
   payment: OdInsurancePlanPayment;
 };
 
@@ -976,6 +986,10 @@ export const is_od_insurance_plan = (v: unknown): v is OdInsurancePlan => {
     | { [K in keyof OdInsurancePlanPayment]?: unknown }
     | null
     | undefined;
+  const covered = plan.covered_item as
+    | { [K in keyof OdInsuranceCoveredItem]?: unknown }
+    | null
+    | undefined;
   return (
     is_str(plan.name) &&
     is_str(plan.plan_key) &&
@@ -985,6 +999,10 @@ export const is_od_insurance_plan = (v: unknown): v is OdInsurancePlan => {
     is_str(plan.duration_label) &&
     is_int(plan.standard_payout_xanax) &&
     is_int(plan.overdose_payout_xanax) &&
+    typeof covered === "object" &&
+    covered !== null &&
+    is_nullable(covered.item_id, is_int) &&
+    is_nullable(covered.name, is_str) &&
     typeof payment === "object" &&
     payment !== null &&
     is_nullable(payment.recipient_player_id, is_int) &&

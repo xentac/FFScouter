@@ -1,8 +1,10 @@
 // @vitest-environment jsdom
 import { act, waitFor } from "@testing-library/react";
 import {
+  ECSTASY_PLAN,
   PLANS_RESPONSE,
   UNPAYABLE_PLAN,
+  WEEKLY_PLAN,
 } from "@utils/__fixtures__/od_insurance";
 import { query_od_insurance_plans } from "@utils/api";
 import { torn_page } from "@utils/dom";
@@ -77,7 +79,7 @@ describe("shouldRun", () => {
 });
 
 describe("rows", () => {
-  test("adds buttons to the Xanax and Ecstasy rows only", async () => {
+  test("adds buttons to the rows of the covered items only", async () => {
     fill_panel(drugsTornTools);
     await act(() => feature.run());
     await waitFor(() => expect(row_items()).toEqual(["197", "206"]));
@@ -119,6 +121,62 @@ describe("rows", () => {
       fill_panel(drugsPlain);
     });
     await waitFor(() => expect(row_buttons()).toHaveLength(2));
+  });
+
+  test("takes the items from the plans, not from a fixed list", async () => {
+    vi.mocked(query_od_insurance_plans).mockResolvedValue({
+      result: { ...PLANS_RESPONSE, plans: [WEEKLY_PLAN] },
+      blank: false,
+    });
+    fill_panel(drugsPlain);
+    await act(() => feature.run());
+    await waitFor(() => expect(row_items()).toEqual(["206"]));
+  });
+
+  test("adds no button for a plan whose covered item is not set", async () => {
+    const unset = {
+      ...ECSTASY_PLAN,
+      covered_item: { item_id: null, name: null },
+    };
+    vi.mocked(query_od_insurance_plans).mockResolvedValue({
+      result: { ...PLANS_RESPONSE, plans: [unset, WEEKLY_PLAN] },
+      blank: false,
+    });
+    fill_panel(drugsPlain);
+    await act(() => feature.run());
+    await waitFor(() => expect(row_items()).toEqual(["206"]));
+  });
+
+  test("moves the buttons when a reload changes the covered items", async () => {
+    vi.mocked(query_od_insurance_plans).mockResolvedValue({
+      result: { ...PLANS_RESPONSE, plans: [WEEKLY_PLAN] },
+      blank: false,
+    });
+    fill_panel(drugsPlain);
+    await act(() => feature.run());
+    await waitFor(() => expect(row_items()).toEqual(["206"]));
+
+    // The stored list goes stale, so opening the modal asks again.
+    localStorage.clear();
+    vi.mocked(query_od_insurance_plans).mockResolvedValue({
+      result: { ...PLANS_RESPONSE, plans: [ECSTASY_PLAN] },
+      blank: false,
+    });
+    await act(async () => row_buttons()[0]?.click());
+    await waitFor(() => expect(row_items()).toEqual(["197"]));
+    expect(document.querySelectorAll("[data-ff-od]")).toHaveLength(1);
+    expect(document.querySelector("dialog")).not.toBeNull();
+  });
+
+  test("adds no buttons when the plans fail to load and none are stored", async () => {
+    vi.mocked(query_od_insurance_plans).mockRejectedValue(new Error("down"));
+    fill_panel(drugsPlain);
+    await act(() => feature.run());
+    await waitFor(() =>
+      expect(query_od_insurance_plans).toHaveBeenCalledOnce(),
+    );
+    await act(async () => {});
+    expect(row_buttons()).toHaveLength(0);
   });
 
   test("removes the buttons when no plan is payable", async () => {
@@ -168,6 +226,27 @@ describe("toggle", () => {
 
     await act(async () => fill_panel(searchXanaxTornTools));
     expect(document.querySelector("[data-ff-od-slot]")).toBeNull();
+  });
+
+  test("plans that arrive after it turns off change nothing", async () => {
+    let resolve_plans: (v: {
+      result: typeof PLANS_RESPONSE;
+      blank: false;
+    }) => void = () => {};
+    vi.mocked(query_od_insurance_plans).mockReturnValue(
+      new Promise((resolve) => {
+        resolve_plans = resolve;
+      }),
+    );
+    fill_panel(drugsPlain);
+    await act(() => feature.run());
+    set_enabled(false);
+    await act(async () =>
+      resolve_plans({ result: PLANS_RESPONSE, blank: false }),
+    );
+    expect(document.querySelector("[data-ff-od-slot]")).toBeNull();
+    expect(document.querySelector("[data-ff-od]")).toBeNull();
+    expect(document.getElementById("ffscouter-od-insurance")).toBeNull();
   });
 
   test("toggling back and forth leaves one button per row", async () => {
