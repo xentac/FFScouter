@@ -66,6 +66,9 @@ test("FFConfig gets default values when storage is empty", () => {
   expect(config.bounty_board_enabled).toEqual(
     CONFIG_DEFAULTS.bounty_board_enabled,
   );
+  expect(config.od_insurance_enabled).toEqual(
+    CONFIG_DEFAULTS.od_insurance_enabled,
+  );
   expect(config.bounty_attack_action).toEqual(
     CONFIG_DEFAULTS.bounty_attack_action,
   );
@@ -98,6 +101,7 @@ test("FFConfig sets and gets custom configuration values", () => {
   config.gauge_marker_justify = GaugeMarkerJustify.LEFT;
   config.stat_distribution_badge_enabled = false;
   config.bounty_board_enabled = false;
+  config.od_insurance_enabled = false;
   config.bounty_attack_action = WarQuickAttackAction.CURRENT;
 
   expect(config.key).toEqual("myapi-key");
@@ -126,6 +130,7 @@ test("FFConfig sets and gets custom configuration values", () => {
   expect(config.gauge_marker_justify).toEqual(GaugeMarkerJustify.LEFT);
   expect(config.stat_distribution_badge_enabled).toBe(false);
   expect(config.bounty_board_enabled).toBe(false);
+  expect(config.od_insurance_enabled).toBe(false);
   expect(config.bounty_attack_action).toEqual(WarQuickAttackAction.CURRENT);
 
   const mockTargets = {
@@ -172,6 +177,7 @@ test("FFConfig.reset resets values to their default states except the api key", 
   config.settings_panel_own_profile_only = true;
   config.stat_distribution_badge_enabled = false;
   config.bounty_board_enabled = false;
+  config.od_insurance_enabled = false;
   config.bounty_attack_action = WarQuickAttackAction.CURRENT;
 
   config.reset();
@@ -217,7 +223,14 @@ test("FFConfig.reset resets values to their default states except the api key", 
   expect(config.bounty_board_enabled).toEqual(
     CONFIG_DEFAULTS.bounty_board_enabled,
   );
+  expect(config.od_insurance_enabled).toEqual(
+    CONFIG_DEFAULTS.od_insurance_enabled,
+  );
   expect(config.bounty_attack_action).toEqual(
     CONFIG_DEFAULTS.bounty_attack_action,
   );
+});
+
+test("od_insurance_enabled defaults on", () => {
+  expect(CONFIG_DEFAULTS.od_insurance_enabled).toBe(true);
 });

@@ -662,3 +662,42 @@ test("ff-settings-panel retains unsaved draft changes for other properties when 
   expect(panel.draftApiKey).toBe("new-verified-key");
   expect(panel.draftLowRange).toBe(1.5);
 });
+
+test("ff-settings-panel dispatches ff-save event with the OD Insurance toggle when saved", async () => {
+  const el = document.createElement("ff-settings-panel") as FFSettingsPanel;
+  document.body.appendChild(el);
+  await el.updateComplete;
+
+  const saveEvents: CustomEvent[] = [];
+  el.addEventListener("ff-save", (e: Event) => {
+    saveEvents.push(e as CustomEvent);
+  });
+
+  const toggle = el.querySelector("#od-insurance-toggle") as HTMLInputElement;
+  expect(toggle).not.toBeNull();
+  // Defaults on; a real click toggles it off.
+  expect(toggle.checked).toBe(true);
+  toggle.click();
+  await el.updateComplete;
+  expect(toggle.checked).toBe(false);
+
+  const saveBtn = Array.from(el.querySelectorAll("button")).find(
+    (btn) => btn.textContent?.trim() === "Save Settings",
+  ) as HTMLButtonElement;
+  saveBtn.click();
+
+  expect(saveEvents.length).toBe(1);
+  expect(saveEvents[0]?.detail?.odInsuranceEnabled).toBe(false);
+});
+
+test("ff-settings-panel shows the odInsuranceEnabled prop in the toggle", async () => {
+  const el = document.createElement("ff-settings-panel") as FFSettingsPanel;
+  document.body.appendChild(el);
+  await el.updateComplete;
+
+  el.odInsuranceEnabled = false;
+  await el.updateComplete;
+  const toggle = el.querySelector("#od-insurance-toggle") as HTMLInputElement;
+  expect(toggle.checked).toBe(false);
+  expect(el.draftOdInsuranceEnabled).toBe(false);
+});
