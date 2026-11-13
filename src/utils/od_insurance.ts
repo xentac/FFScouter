@@ -2,9 +2,10 @@ import {
   type OdInsurancePlan,
   type OdInsurancePlansResponse,
   query_od_insurance_plans,
-} from "@utils/api";
-import logger from "@utils/logger";
-import default_storage, { type Storage, Time } from "@utils/storage";
+} from "./api";
+import logger from "./logger";
+import default_storage, { type Storage, Time } from "./storage";
+import type { PlayerId } from "./types";
 
 const log = logger.child("od-insurance");
 
@@ -12,7 +13,7 @@ const log = logger.child("od-insurance");
 // to. The API lists a plan with a null recipient while no manager is set,
 // and nobody can buy it then.
 export type PayablePlan = OdInsurancePlan & {
-  payment: OdInsurancePlan["payment"] & { recipient_player_id: number };
+  payment: OdInsurancePlan["payment"] & { recipient_player_id: PlayerId };
 };
 
 export function payable_plans(
@@ -69,14 +70,6 @@ export class OdInsurancePlansCache {
 
   private read(): StoredPlans | null {
     return this.storage.get<StoredPlans>(PLANS_KEY);
-  }
-
-  /** True when the stored list can be served without a request. */
-  is_fresh(): boolean {
-    const stored = this.read();
-    return (
-      stored !== null && Date.now() - stored.fetched_at < OD_PLANS_FRESH_MS
-    );
   }
 
   /**
