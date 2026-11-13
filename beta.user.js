@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FF Scouter V2 beta
 // @namespace    xentac-beta
-// @version      3.5-beta2
+// @version      3.5-beta3
 // @author       xentac [3354782], MAVRI [2402357], rDacted [2670953], Weav3r [1853324], Glasnost [1844049]
 // @description  Shows the expected Fair Fight score against targets and faction war status
 // @license      GPLv3
@@ -26,8 +26,20 @@
 			(document.head || document.documentElement).appendChild(style);
 		})(t);
 	};
-	_css(" ._ffscouter-attack-bounty-row_60dre_2{flex-wrap:wrap;align-items:center;gap:6px;margin-top:4px;font-size:12px;display:flex}._ffscouter-attack-bounty-row__label_60dre_11{font-weight:700}._ffscouter-attack-bounty-row__claim_60dre_15{background-color:var(--ffscouter-alt-bg-color);color:var(--ffscouter-text-color);border:1px solid var(--ffscouter-border-color);cursor:pointer;border-radius:3px;padding:2px 8px;font-size:12px}._ffscouter-attack-bounty-row__claim_60dre_15:disabled{opacity:.6;cursor:default}._ffscouter-info-line__label_aofgj_1{margin-right:6px;font-weight:700}._ffscouter-info-line__badge_aofgj_8{border-radius:4px;padding:2px 6px;font-weight:700;display:inline-block}._ffscouter-info-line__premium-upgrade_aofgj_15{white-space:nowrap;margin-top:4px;font-size:12px;font-style:normal;line-height:1.3;display:block}@media (width<=768px){._ffscouter-info-line__premium-upgrade_aofgj_15{white-space:normal;overflow-wrap:anywhere;margin-top:6px;line-height:1.35}}._ffscouter-info-line__freshness-trigger_aofgj_44{appearance:none!important;box-shadow:none!important;width:auto!important;min-width:0!important;min-height:0!important;font:inherit!important;color:inherit!important;text-transform:none!important;cursor:pointer!important;vertical-align:baseline!important;text-underline-offset:2px!important;background:0 0!important;border:none!important;margin:0!important;padding:0!important;-webkit-text-decoration:underline dotted!important;text-decoration:underline dotted!important;display:inline!important}._ffscouter-explainer-glyph_aofgj_64{appearance:none!important;box-shadow:none!important;vertical-align:middle!important;cursor:pointer!important;background:0 0!important;border:none!important;width:auto!important;min-width:0!important;min-height:0!important;margin:0 0 0 6px!important;padding:0!important;line-height:1!important;display:inline-flex!important}._ffscouter-explainer-glyph_aofgj_64 svg{width:14px!important;height:14px!important}._ffscouter-explainer-card_aofgj_90{background:var(--ffscouter-alt-bg-color)!important;border:1px solid var(--ffscouter-border-color)!important;color:var(--ffscouter-text-color)!important;text-align:left!important;border-radius:6px!important;margin:6px 0 0!important;padding:10px 30px 10px 12px!important;font-size:12px!important;font-style:normal!important;font-weight:400!important;line-height:1.5!important;display:block!important;position:relative!important}._ffscouter-explainer-card_aofgj_90 p{float:none!important;margin:0 0 8px!important;padding:0!important;display:block!important}._ffscouter-explainer-card_aofgj_90 p:last-child{margin-bottom:0!important}._ffscouter-explainer-card_aofgj_90 p:before,._ffscouter-explainer-card_aofgj_90 p:after{content:none!important}._ffscouter-explainer-card_aofgj_90 a{font:inherit!important;color:inherit!important;background:0 0!important;margin:0!important;padding:0!important;text-decoration:underline!important;display:inline!important;position:static!important}._ffscouter-explainer-card__close_aofgj_140{appearance:none!important;box-shadow:none!important;cursor:pointer!important;width:auto!important;min-width:0!important;min-height:0!important;color:inherit!important;background:0 0!important;border:none!important;margin:0!important;padding:4px!important;font-size:14px!important;line-height:1!important;position:absolute!important;top:2px!important;right:4px!important}@media (width<=784px){._ffscouter-explainer-card_aofgj_90{font-size:13px!important;line-height:1.55!important}}._ff-bounty-modal_1r3gd_5,._ff-bounty-modal_1r3gd_5 *,._ff-bounty-modal_1r3gd_5 :before,._ff-bounty-modal_1r3gd_5 :after{box-sizing:border-box}._ff-bounty-modal_1r3gd_5{z-index:9999;background-color:var(--ffscouter-bg-color);width:420px;max-width:calc(100vw - 32px);max-height:70vh;color:var(--ffscouter-text-color);border:1px solid var(--ffscouter-border-color);border-radius:8px;flex-direction:column;font-family:Arial,sans-serif;font-size:13px;display:flex;position:fixed;box-shadow:0 4px 16px #0000004d}._ff-bounty-modal__header_1r3gd_30{background-color:var(--ffscouter-alt-bg-color);border-bottom:1px solid var(--ffscouter-border-color);border-radius:7px 7px 0 0;justify-content:space-between;align-items:center;gap:8px;padding:8px 12px;display:flex}._ff-bounty-modal__header--drag_1r3gd_43{cursor:move;touch-action:none;-webkit-user-select:none;user-select:none}._ff-bounty-modal--minimized_1r3gd_49 ._ff-bounty-modal__header_1r3gd_30{border-bottom:none;border-radius:7px}._ff-bounty-modal--in-flow_1r3gd_57{z-index:auto;width:auto;max-width:100%;box-shadow:none;margin-bottom:10px;position:static}._ff-bounty-modal__header_1r3gd_30 ._ff-bounty-modal__title_1r3gd_67{margin:0;font-size:14px;font-weight:700}._ff-bounty-modal__header-btn_1r3gd_73{color:inherit;cursor:pointer;background:0 0;border:none;padding:0 4px;font-size:16px;font-weight:700;line-height:1}._ff-bounty-modal__body_1r3gd_84{padding:8px 12px 12px;overflow-y:auto}._ff-bounty-modal__notice_1r3gd_89{margin:4px 0;line-height:1.4}._ff-bounty-modal__notice_1r3gd_89 a{color:inherit;font-weight:700;text-decoration:underline}._ff-bounty-modal__primary-btn_1r3gd_100{background-color:var(--ffscouter-alt-bg-color);color:var(--ffscouter-text-color);border:1px solid var(--ffscouter-border-color);cursor:pointer;border-radius:4px;margin-top:8px;padding:6px 10px;font-size:13px;font-weight:700}._ff-bounty-modal__primary-btn_1r3gd_100:disabled{opacity:.6;cursor:default}._ff-bounty-modal__filters_1r3gd_117{flex-wrap:wrap;gap:8px;margin-bottom:8px;display:flex}._ff-bounty-modal__filter_1r3gd_117{align-items:center;gap:4px;display:flex}._ff-bounty-modal__filter_1r3gd_117 input{background-color:var(--ffscouter-alt-bg-color);width:70px;color:var(--ffscouter-text-color);border:1px solid var(--ffscouter-input-color);border-radius:3px;padding:2px 4px;font-size:13px}._ff-bounty-modal__filter_1r3gd_117 input[type=checkbox]{width:auto;padding:0}._ff-bounty-modal__list_1r3gd_145,._ff-bounty-modal__member-list_1r3gd_146,._ff-bounty-modal__tier-ladder_1r3gd_147{margin:0;padding:0;list-style:none}._ff-bounty-modal__row_1r3gd_153,._ff-bounty-modal__faction-card_1r3gd_154{border-top:1px solid var(--ffscouter-border-color);padding:4px 0}._ff-bounty-modal__row-main_1r3gd_159,._ff-bounty-modal__faction-header_1r3gd_160{align-items:center;gap:6px;display:flex}._ff-bounty-modal__faction-header_1r3gd_160{width:100%;color:inherit;text-align:left;cursor:pointer;background:0 0;border:none;padding:2px 0;font-size:13px}._ff-bounty-modal__member-list_1r3gd_146{margin-left:12px}._ff-bounty-modal__name_1r3gd_181{text-overflow:ellipsis;white-space:nowrap;min-width:0;color:inherit;flex:auto;font-weight:700;overflow:hidden}._ff-bounty-modal__status_1r3gd_192{white-space:nowrap;flex:none;font-size:12px}._ff-bounty-modal__status--okay_1r3gd_198{color:var(--ffscouter-status-okay-color)}._ff-bounty-modal__status--out_1r3gd_202{color:var(--ffscouter-status-out-color)}._ff-bounty-modal__status--away_1r3gd_206{color:var(--ffscouter-status-away-color)}._ff-bounty-modal__estimate_1r3gd_210{text-align:center;background-color:var(--ffscouter-alt-bg-color);border-radius:4px;flex:none;min-width:44px;padding:1px 6px;font-weight:700}._ff-bounty-modal__tier-label_1r3gd_220,._ff-bounty-modal__tier-toggle_1r3gd_221,._ff-bounty-modal__pool_1r3gd_222{white-space:nowrap;flex:none}._ff-bounty-modal__tier-toggle_1r3gd_221{color:inherit;cursor:pointer;background:0 0;border:none;padding:0;font-size:13px}._ff-bounty-modal__tier-ladder_1r3gd_147{margin:2px 0 2px 12px;font-size:12px}._ff-bounty-modal__action_1r3gd_241{background-color:var(--ffscouter-alt-bg-color);color:var(--ffscouter-text-color);border:1px solid var(--ffscouter-border-color);cursor:pointer;border-radius:3px;flex:none;padding:2px 6px;font-size:12px}._ff-bounty-modal--own_1r3gd_252{opacity:.6}._ff-bounty-modal--own_1r3gd_252 ._ff-bounty-modal--own_1r3gd_252{opacity:1}._ff-bounty-modal__own-label_1r3gd_262{margin-top:2px;font-size:12px;font-style:italic;font-weight:700}._ff-bounty-modal__action_1r3gd_241:disabled{opacity:.6;cursor:default}._ff-bounty-launcher_1r3gd_276{z-index:9999;box-sizing:border-box;background-color:var(--ffscouter-alt-bg-color);width:40px;height:40px;color:var(--ffscouter-text-color);border:1px solid var(--ffscouter-border-color);cursor:pointer;touch-action:none;-webkit-user-select:none;user-select:none;border-radius:8px;padding:0;font-family:Arial,sans-serif;font-size:11px;font-weight:700;position:fixed;box-shadow:0 4px 16px #0000004d}._ff-filter-box_j1w9b_1,._ff-filter-box_j1w9b_1 *,._ff-filter-box_j1w9b_1 :before,._ff-filter-box_j1w9b_1 :after{box-sizing:border-box!important}._ff-filter-box_j1w9b_1{background-color:var(--ffscouter-bg-color);border:1px solid var(--ffscouter-border-color);color:var(--ffscouter-text-color);border-radius:8px;margin-bottom:16px;padding:12px 16px;font-family:Arial,sans-serif;box-shadow:0 2px 5px #0000000d}._ff-filter-box_j1w9b_1._ff-filter-box--no-borders_j1w9b_19{background-color:var(--default-bg-panel-color);border-top:1px solid var(--ffscouter-border-color);border-bottom:1px solid var(--ffscouter-border-color);box-shadow:none;border-left:none;border-right:none;border-radius:0;margin:0;padding:12px 10px}._ff-filter-box_j1w9b_1 summary{cursor:pointer;-webkit-user-select:none;user-select:none;outline:none;font-size:14px;font-weight:700}._ff-filter-box_j1w9b_1[open] summary{border-bottom:1px solid var(--ffscouter-border-color);margin-bottom:12px;padding-bottom:6px}._ff-filter-box_j1w9b_1 summary:focus-visible{outline:2px solid var(--ffscouter-glow-color);outline-offset:2px}._ff-filter-box__header_j1w9b_52{vertical-align:middle;justify-content:space-between;align-items:center;width:calc(100% - 24px);display:inline-flex}._ff-filter-box__header-actions_j1w9b_60{align-items:center;gap:6px;display:flex}._ff-filter-box_j1w9b_1 ._ff-filter-box__action-btn_j1w9b_66{background:var(--ffscouter-alt-bg-color);border:1px solid var(--ffscouter-border-color);color:var(--ffscouter-text-color);cursor:pointer;border-radius:4px;justify-content:center;align-items:center;width:24px;height:24px;padding:0;transition:background-color .2s,color .2s,opacity .2s;display:inline-flex}._ff-filter-box_j1w9b_1 ._ff-filter-box__action-btn_j1w9b_66:hover{background-color:var(--ffscouter-hover-color)}._ff-filter-box_j1w9b_1 ._ff-filter-box__action-btn_j1w9b_66._ff-filter-box__action-btn--active_j1w9b_88{color:var(--ffscouter-text-color);opacity:1}._ff-filter-box_j1w9b_1 ._ff-filter-box__action-btn_j1w9b_66._ff-filter-box__action-btn--inactive_j1w9b_93{color:var(--ffscouter-text-color);opacity:.4}._ff-filter-box_j1w9b_1 ._ff-filter-box__action-btn_j1w9b_66 svg{fill:currentColor;width:14px;height:14px}._ff-filter-box_j1w9b_1 ._ff-filter-box__action-btn_j1w9b_66._ff-filter-box__action-btn--reset_j1w9b_104 svg{transition:transform .25s ease-in-out}._ff-filter-box_j1w9b_1 ._ff-filter-box__action-btn_j1w9b_66._ff-filter-box__action-btn--reset_j1w9b_104:hover svg{transform:rotate(-180deg)}._ff-filter-box__grid_j1w9b_114{grid-template-columns:repeat(2,1fr);gap:12px;margin-top:12px;display:grid}._ff-filter-box__group--sort_j1w9b_121{order:1}._ff-filter-box__group--level_j1w9b_125{order:2}._ff-filter-box__group--activity_j1w9b_129{order:3}._ff-filter-box__group--status_j1w9b_133{order:4}._ff-filter-box__group--ff_j1w9b_137{order:5}._ff-filter-box__group--stats_j1w9b_141{order:6}._ff-filter-box__group--last-action_j1w9b_145{order:7}._ff-filter-box__group--columns_j1w9b_149{order:8}@media (width>=784px){._ff-filter-box__grid_j1w9b_114{grid-template-columns:repeat(3,1fr)}._ff-filter-box__grid_j1w9b_114>*{order:0}}._ff-filter-box__group_j1w9b_121{flex-direction:column;gap:2px;display:flex}._ff-filter-box__sort-controls_j1w9b_171{flex-direction:column;gap:8px;display:flex}._ff-filter-box__sort-controls_j1w9b_171 ._ff-filter-box__sort-btn_j1w9b_177{width:100%}._ff-filter-box__sort-controls_j1w9b_171 ._ff-filter-box__compare-btn_j1w9b_181{width:100%;height:32px}._ff-filter-box__display-select_j1w9b_186{border:1px solid var(--ffscouter-border-color);background:var(--ffscouter-alt-bg-color);color:var(--ffscouter-text-color);cursor:pointer;border-radius:4px;height:32px;padding:4px;font-size:11px}._ff-filter-box__options_j1w9b_197{flex-direction:column;display:flex}._ff-filter-box__options_j1w9b_197 label{cursor:pointer;align-items:center;gap:6px;font-size:12px;display:flex}._ff-filter-box__option--out-soon_j1w9b_212{margin-left:16px}._ff-filter-box__range-inputs_j1w9b_216{align-items:center;gap:4px;display:flex}._ff-filter-box__range-inputs_j1w9b_216 input{border:1px solid var(--ffscouter-border-color);background:var(--ffscouter-alt-bg-color);width:0;min-width:30px;max-width:80px;color:var(--ffscouter-text-color);text-align:center;border-radius:4px;flex:1;padding:4px;font-size:11px}._ff-filter-box_j1w9b_1 button{border:1px solid var(--ffscouter-border-color);background:var(--ffscouter-alt-bg-color);color:var(--ffscouter-text-color);cursor:pointer;border-radius:4px;justify-content:center;align-items:center;gap:6px;padding:6px 10px;font-size:12px;transition:background-color .2s;display:inline-flex}._ff-filter-box_j1w9b_1 button:hover{background-color:var(--ffscouter-hover-color)}._ff-settings-panel__accordion_6bhvd_1{background-color:var(--ffscouter-bg-color);border:1px solid var(--ffscouter-border-color);color:var(--ffscouter-text-color);border-radius:5px;margin:10px 0;padding:15px}._ff-settings-panel__accordion_6bhvd_1._ff-settings-panel__accordion--glow_6bhvd_10{border-color:var(--ffscouter-glow-color);box-shadow:0 0 8px #4caf5080}._ff-settings-panel__accordion_6bhvd_1 summary{cursor:pointer;font-weight:700}._ff-settings-panel__body_6bhvd_20{margin-top:15px}._ff-settings-panel__input-row_6bhvd_24{flex-direction:column;gap:5px;margin-bottom:15px;display:flex}._ff-settings-panel__range-row_6bhvd_32{align-items:center;gap:10px;display:flex}._ff-settings-panel__blur_6bhvd_38{filter:blur(4px);transition:filter .2s}._ff-settings-panel__blur_6bhvd_38:hover,._ff-settings-panel__blur_6bhvd_38:focus{filter:blur()}._ff-settings-panel__error-msg_6bhvd_48{color:#f33;margin-top:5px;font-size:13px}._ff-settings-panel__accordion_6bhvd_1 input[type=text],._ff-settings-panel__accordion_6bhvd_1 input[type=number]{text-align:left;vertical-align:top;width:178px;margin-right:8px;padding:9px 10px;line-height:14px;display:inline-block;box-sizing:border-box!important;height:34px!important}._ff-settings-panel__accordion_6bhvd_1 input[type=number]._ff-settings-panel__number_6bhvd_67{width:80px}._ff-settings-panel__accordion_6bhvd_1 select{box-sizing:border-box;text-align:left;vertical-align:top;border:var(--input-border-color,1px solid var(--ffscouter-border-color));width:178px;height:34px;color:var(--input-color,var(--ffscouter-text-color));background:var(--input-background-color,var(--ffscouter-alt-bg-color));border-radius:5px;margin-right:8px;padding:8px 10px;font-family:Arial,serif;line-height:14px;display:inline-block}.dark-mode ._ff-settings-panel__accordion_6bhvd_1 select option{color:var(--input-color);background-color:#000}._ff-settings-panel__api-explanation_6bhvd_94{color:var(--ffscouter-text-color);margin-bottom:20px;font-size:13px;line-height:1.5}._ff-settings-panel__accordion_6bhvd_1 a{color:var(--ffscouter-success-color);text-decoration:underline}._ff-settings-panel__premium-badge_6bhvd_107{color:#fff;vertical-align:middle;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:700;display:inline-block}._ff-settings-panel__premium-badge--enabled_6bhvd_117{background:#4caf50}._ff-settings-panel__premium-badge--disabled_6bhvd_121{background:#c62828}._ff-settings-panel__premium-badge--unknown_6bhvd_125{background:#f39c12}._ff-settings-panel__section_6bhvd_138{grid-template-columns:1fr;gap:12px;margin-bottom:15px;display:grid}@media (width>=784px){._ff-settings-panel__section_6bhvd_138{grid-template-columns:repeat(3,1fr)}}._ff-settings-panel__span_6bhvd_152{grid-column:1/-1;margin-bottom:0}._ff-settings-panel__cell_6bhvd_160{flex-direction:column;gap:5px;min-width:0;margin-bottom:0;display:flex}._ff-settings-panel__cell_6bhvd_160._ff-settings-panel__cell--checkbox_6bhvd_169{flex-direction:row;align-items:flex-start;gap:10px}._ff-settings-panel__cell_6bhvd_160 input[type=text]{width:100%;margin-right:0}._ff-settings-panel__cell_6bhvd_160 select{width:auto;max-width:100%;margin-right:0}._ff-settings-panel__api-block_6bhvd_193{flex-direction:column;gap:10px;display:flex}._ff-settings-panel__api-block_6bhvd_193 ._ff-settings-panel__cell_6bhvd_160 input[type=text]{max-width:360px}._ff-settings-panel__api-status-row_6bhvd_203{flex-wrap:wrap;align-items:center;gap:10px;display:flex}._ff-settings-panel__chain-suboptions_6bhvd_213{border-left:2px solid var(--ffscouter-border-color);grid-template-columns:repeat(2,1fr);margin-top:10px;padding-left:8px}._ff-settings-panel__chain-suboptions_6bhvd_213 ._ff-settings-panel__chain-wide_6bhvd_218{grid-column:1/-1}@media (width>=784px){._ff-settings-panel__chain-suboptions_6bhvd_213{grid-template-columns:repeat(3,1fr);padding-left:16px}._ff-settings-panel__chain-suboptions_6bhvd_213 ._ff-settings-panel__chain-wide_6bhvd_218{grid-column:auto}}._ff-settings-panel__group_6bhvd_242{background-color:var(--ffscouter-alt-bg-color);border:1px solid var(--ffscouter-border-color);border-radius:5px;margin-bottom:15px;padding:12px}._ff-settings-panel__group_6bhvd_242 h4{margin:0 0 12px}._ff-settings-panel__marker-size_6bhvd_256,._ff-settings-panel__marker-border-width_6bhvd_257{flex-direction:column;gap:5px;display:flex}._ff-settings-panel__marker-size-controls_6bhvd_263{flex-wrap:wrap;align-items:center;gap:10px;display:flex}._ff-settings-panel__marker-size-controls_6bhvd_263 input[type=range]{flex:120px;min-width:120px}._ff-settings-panel__color-scheme_6bhvd_276{flex-direction:column;gap:5px;display:flex}._ff-settings-panel__color-scheme-controls_6bhvd_282{flex-wrap:wrap;align-items:center;gap:10px;display:flex}._ff-settings-panel__accordion_6bhvd_1 .ffscouter-swatch-row{flex-wrap:wrap}._ff-settings-panel__actions_6bhvd_295{flex-wrap:wrap;justify-content:center;align-items:center;gap:10px;margin-top:20px;display:flex}._ff-settings-panel__saved-msg_6bhvd_304{color:#4caf50}\n/*$vite$:1*/ ");
+	_css(" ._ffscouter-attack-bounty-row_60dre_2{flex-wrap:wrap;align-items:center;gap:6px;margin-top:4px;font-size:12px;display:flex}._ffscouter-attack-bounty-row__label_60dre_11{font-weight:700}._ffscouter-attack-bounty-row__claim_60dre_15{background-color:var(--ffscouter-alt-bg-color);color:var(--ffscouter-text-color);border:1px solid var(--ffscouter-border-color);cursor:pointer;border-radius:3px;padding:2px 8px;font-size:12px}._ffscouter-attack-bounty-row__claim_60dre_15:disabled{opacity:.6;cursor:default}._ffscouter-info-line__label_aofgj_1{margin-right:6px;font-weight:700}._ffscouter-info-line__badge_aofgj_8{border-radius:4px;padding:2px 6px;font-weight:700;display:inline-block}._ffscouter-info-line__premium-upgrade_aofgj_15{white-space:nowrap;margin-top:4px;font-size:12px;font-style:normal;line-height:1.3;display:block}@media (width<=768px){._ffscouter-info-line__premium-upgrade_aofgj_15{white-space:normal;overflow-wrap:anywhere;margin-top:6px;line-height:1.35}}._ffscouter-info-line__freshness-trigger_aofgj_44{appearance:none!important;box-shadow:none!important;width:auto!important;min-width:0!important;min-height:0!important;font:inherit!important;color:inherit!important;text-transform:none!important;cursor:pointer!important;vertical-align:baseline!important;text-underline-offset:2px!important;background:0 0!important;border:none!important;margin:0!important;padding:0!important;-webkit-text-decoration:underline dotted!important;text-decoration:underline dotted!important;display:inline!important}._ffscouter-explainer-glyph_aofgj_64{appearance:none!important;box-shadow:none!important;vertical-align:middle!important;cursor:pointer!important;background:0 0!important;border:none!important;width:auto!important;min-width:0!important;min-height:0!important;margin:0 0 0 6px!important;padding:0!important;line-height:1!important;display:inline-flex!important}._ffscouter-explainer-glyph_aofgj_64 svg{width:14px!important;height:14px!important}._ffscouter-explainer-card_aofgj_90{background:var(--ffscouter-alt-bg-color)!important;border:1px solid var(--ffscouter-border-color)!important;color:var(--ffscouter-text-color)!important;text-align:left!important;border-radius:6px!important;margin:6px 0 0!important;padding:10px 30px 10px 12px!important;font-size:12px!important;font-style:normal!important;font-weight:400!important;line-height:1.5!important;display:block!important;position:relative!important}._ffscouter-explainer-card_aofgj_90 p{float:none!important;margin:0 0 8px!important;padding:0!important;display:block!important}._ffscouter-explainer-card_aofgj_90 p:last-child{margin-bottom:0!important}._ffscouter-explainer-card_aofgj_90 p:before,._ffscouter-explainer-card_aofgj_90 p:after{content:none!important}._ffscouter-explainer-card_aofgj_90 a{font:inherit!important;color:inherit!important;background:0 0!important;margin:0!important;padding:0!important;text-decoration:underline!important;display:inline!important;position:static!important}._ffscouter-explainer-card__close_aofgj_140{appearance:none!important;box-shadow:none!important;cursor:pointer!important;width:auto!important;min-width:0!important;min-height:0!important;color:inherit!important;background:0 0!important;border:none!important;margin:0!important;padding:4px!important;font-size:14px!important;line-height:1!important;position:absolute!important;top:2px!important;right:4px!important}@media (width<=784px){._ffscouter-explainer-card_aofgj_90{font-size:13px!important;line-height:1.55!important}}._ff-bounty-modal_1r3gd_5,._ff-bounty-modal_1r3gd_5 *,._ff-bounty-modal_1r3gd_5 :before,._ff-bounty-modal_1r3gd_5 :after{box-sizing:border-box}._ff-bounty-modal_1r3gd_5{z-index:9999;background-color:var(--ffscouter-bg-color);width:420px;max-width:calc(100vw - 32px);max-height:70vh;color:var(--ffscouter-text-color);border:1px solid var(--ffscouter-border-color);border-radius:8px;flex-direction:column;font-family:Arial,sans-serif;font-size:13px;display:flex;position:fixed;box-shadow:0 4px 16px #0000004d}._ff-bounty-modal__header_1r3gd_30{background-color:var(--ffscouter-alt-bg-color);border-bottom:1px solid var(--ffscouter-border-color);border-radius:7px 7px 0 0;justify-content:space-between;align-items:center;gap:8px;padding:8px 12px;display:flex}._ff-bounty-modal__header--drag_1r3gd_43{cursor:move;touch-action:none;-webkit-user-select:none;user-select:none}._ff-bounty-modal--minimized_1r3gd_49 ._ff-bounty-modal__header_1r3gd_30{border-bottom:none;border-radius:7px}._ff-bounty-modal--in-flow_1r3gd_57{z-index:auto;width:auto;max-width:100%;box-shadow:none;margin-bottom:10px;position:static}._ff-bounty-modal__header_1r3gd_30 ._ff-bounty-modal__title_1r3gd_67{margin:0;font-size:14px;font-weight:700}._ff-bounty-modal__header-btn_1r3gd_73{color:inherit;cursor:pointer;background:0 0;border:none;padding:0 4px;font-size:16px;font-weight:700;line-height:1}._ff-bounty-modal__body_1r3gd_84{padding:8px 12px 12px;overflow-y:auto}._ff-bounty-modal__notice_1r3gd_89{margin:4px 0;line-height:1.4}._ff-bounty-modal__notice_1r3gd_89 a{color:inherit;font-weight:700;text-decoration:underline}._ff-bounty-modal__primary-btn_1r3gd_100{background-color:var(--ffscouter-alt-bg-color);color:var(--ffscouter-text-color);border:1px solid var(--ffscouter-border-color);cursor:pointer;border-radius:4px;margin-top:8px;padding:6px 10px;font-size:13px;font-weight:700}._ff-bounty-modal__primary-btn_1r3gd_100:disabled{opacity:.6;cursor:default}._ff-bounty-modal__filters_1r3gd_117{flex-wrap:wrap;gap:8px;margin-bottom:8px;display:flex}._ff-bounty-modal__filter_1r3gd_117{align-items:center;gap:4px;display:flex}._ff-bounty-modal__filter_1r3gd_117 input{background-color:var(--ffscouter-alt-bg-color);width:70px;color:var(--ffscouter-text-color);border:1px solid var(--ffscouter-input-color);border-radius:3px;padding:2px 4px;font-size:13px}._ff-bounty-modal__filter_1r3gd_117 input[type=checkbox]{width:auto;padding:0}._ff-bounty-modal__list_1r3gd_145,._ff-bounty-modal__member-list_1r3gd_146,._ff-bounty-modal__tier-ladder_1r3gd_147{margin:0;padding:0;list-style:none}._ff-bounty-modal__row_1r3gd_153,._ff-bounty-modal__faction-card_1r3gd_154{border-top:1px solid var(--ffscouter-border-color);padding:4px 0}._ff-bounty-modal__row-main_1r3gd_159,._ff-bounty-modal__faction-header_1r3gd_160{align-items:center;gap:6px;display:flex}._ff-bounty-modal__faction-header_1r3gd_160{width:100%;color:inherit;text-align:left;cursor:pointer;background:0 0;border:none;padding:2px 0;font-size:13px}._ff-bounty-modal__member-list_1r3gd_146{margin-left:12px}._ff-bounty-modal__name_1r3gd_181{text-overflow:ellipsis;white-space:nowrap;min-width:0;color:inherit;flex:auto;font-weight:700;overflow:hidden}._ff-bounty-modal__status_1r3gd_192{white-space:nowrap;flex:none;font-size:12px}._ff-bounty-modal__status--okay_1r3gd_198{color:var(--ffscouter-status-okay-color)}._ff-bounty-modal__status--out_1r3gd_202{color:var(--ffscouter-status-out-color)}._ff-bounty-modal__status--away_1r3gd_206{color:var(--ffscouter-status-away-color)}._ff-bounty-modal__estimate_1r3gd_210{text-align:center;background-color:var(--ffscouter-alt-bg-color);border-radius:4px;flex:none;min-width:44px;padding:1px 6px;font-weight:700}._ff-bounty-modal__tier-label_1r3gd_220,._ff-bounty-modal__tier-toggle_1r3gd_221,._ff-bounty-modal__pool_1r3gd_222{white-space:nowrap;flex:none}._ff-bounty-modal__tier-toggle_1r3gd_221{color:inherit;cursor:pointer;background:0 0;border:none;padding:0;font-size:13px}._ff-bounty-modal__tier-ladder_1r3gd_147{margin:2px 0 2px 12px;font-size:12px}._ff-bounty-modal__action_1r3gd_241{background-color:var(--ffscouter-alt-bg-color);color:var(--ffscouter-text-color);border:1px solid var(--ffscouter-border-color);cursor:pointer;border-radius:3px;flex:none;padding:2px 6px;font-size:12px}._ff-bounty-modal--own_1r3gd_252{opacity:.6}._ff-bounty-modal--own_1r3gd_252 ._ff-bounty-modal--own_1r3gd_252{opacity:1}._ff-bounty-modal__own-label_1r3gd_262{margin-top:2px;font-size:12px;font-style:italic;font-weight:700}._ff-bounty-modal__action_1r3gd_241:disabled{opacity:.6;cursor:default}._ff-bounty-launcher_1r3gd_276{z-index:9999;box-sizing:border-box;background-color:var(--ffscouter-alt-bg-color);width:40px;height:40px;color:var(--ffscouter-text-color);border:1px solid var(--ffscouter-border-color);cursor:pointer;touch-action:none;-webkit-user-select:none;user-select:none;border-radius:8px;padding:0;font-family:Arial,sans-serif;font-size:11px;font-weight:700;position:fixed;box-shadow:0 4px 16px #0000004d}._ff-filter-box_j1w9b_1,._ff-filter-box_j1w9b_1 *,._ff-filter-box_j1w9b_1 :before,._ff-filter-box_j1w9b_1 :after{box-sizing:border-box!important}._ff-filter-box_j1w9b_1{background-color:var(--ffscouter-bg-color);border:1px solid var(--ffscouter-border-color);color:var(--ffscouter-text-color);border-radius:8px;margin-bottom:16px;padding:12px 16px;font-family:Arial,sans-serif;box-shadow:0 2px 5px #0000000d}._ff-filter-box_j1w9b_1._ff-filter-box--no-borders_j1w9b_19{background-color:var(--default-bg-panel-color);border-top:1px solid var(--ffscouter-border-color);border-bottom:1px solid var(--ffscouter-border-color);box-shadow:none;border-left:none;border-right:none;border-radius:0;margin:0;padding:12px 10px}._ff-filter-box_j1w9b_1 summary{cursor:pointer;-webkit-user-select:none;user-select:none;outline:none;font-size:14px;font-weight:700}._ff-filter-box_j1w9b_1[open] summary{border-bottom:1px solid var(--ffscouter-border-color);margin-bottom:12px;padding-bottom:6px}._ff-filter-box_j1w9b_1 summary:focus-visible{outline:2px solid var(--ffscouter-glow-color);outline-offset:2px}._ff-filter-box__header_j1w9b_52{vertical-align:middle;justify-content:space-between;align-items:center;width:calc(100% - 24px);display:inline-flex}._ff-filter-box__header-actions_j1w9b_60{align-items:center;gap:6px;display:flex}._ff-filter-box_j1w9b_1 ._ff-filter-box__action-btn_j1w9b_66{background:var(--ffscouter-alt-bg-color);border:1px solid var(--ffscouter-border-color);color:var(--ffscouter-text-color);cursor:pointer;border-radius:4px;justify-content:center;align-items:center;width:24px;height:24px;padding:0;transition:background-color .2s,color .2s,opacity .2s;display:inline-flex}._ff-filter-box_j1w9b_1 ._ff-filter-box__action-btn_j1w9b_66:hover{background-color:var(--ffscouter-hover-color)}._ff-filter-box_j1w9b_1 ._ff-filter-box__action-btn_j1w9b_66._ff-filter-box__action-btn--active_j1w9b_88{color:var(--ffscouter-text-color);opacity:1}._ff-filter-box_j1w9b_1 ._ff-filter-box__action-btn_j1w9b_66._ff-filter-box__action-btn--inactive_j1w9b_93{color:var(--ffscouter-text-color);opacity:.4}._ff-filter-box_j1w9b_1 ._ff-filter-box__action-btn_j1w9b_66 svg{fill:currentColor;width:14px;height:14px}._ff-filter-box_j1w9b_1 ._ff-filter-box__action-btn_j1w9b_66._ff-filter-box__action-btn--reset_j1w9b_104 svg{transition:transform .25s ease-in-out}._ff-filter-box_j1w9b_1 ._ff-filter-box__action-btn_j1w9b_66._ff-filter-box__action-btn--reset_j1w9b_104:hover svg{transform:rotate(-180deg)}._ff-filter-box__grid_j1w9b_114{grid-template-columns:repeat(2,1fr);gap:12px;margin-top:12px;display:grid}._ff-filter-box__group--sort_j1w9b_121{order:1}._ff-filter-box__group--level_j1w9b_125{order:2}._ff-filter-box__group--activity_j1w9b_129{order:3}._ff-filter-box__group--status_j1w9b_133{order:4}._ff-filter-box__group--ff_j1w9b_137{order:5}._ff-filter-box__group--stats_j1w9b_141{order:6}._ff-filter-box__group--last-action_j1w9b_145{order:7}._ff-filter-box__group--columns_j1w9b_149{order:8}@media (width>=784px){._ff-filter-box__grid_j1w9b_114{grid-template-columns:repeat(3,1fr)}._ff-filter-box__grid_j1w9b_114>*{order:0}}._ff-filter-box__group_j1w9b_121{flex-direction:column;gap:2px;display:flex}._ff-filter-box__sort-controls_j1w9b_171{flex-direction:column;gap:8px;display:flex}._ff-filter-box__sort-controls_j1w9b_171 ._ff-filter-box__sort-btn_j1w9b_177{width:100%}._ff-filter-box__sort-controls_j1w9b_171 ._ff-filter-box__compare-btn_j1w9b_181{width:100%;height:32px}._ff-filter-box__display-select_j1w9b_186{border:1px solid var(--ffscouter-border-color);background:var(--ffscouter-alt-bg-color);color:var(--ffscouter-text-color);cursor:pointer;border-radius:4px;height:32px;padding:4px;font-size:11px}._ff-filter-box__options_j1w9b_197{flex-direction:column;display:flex}._ff-filter-box__options_j1w9b_197 label{cursor:pointer;align-items:center;gap:6px;font-size:12px;display:flex}._ff-filter-box__option--out-soon_j1w9b_212{margin-left:16px}._ff-filter-box__range-inputs_j1w9b_216{align-items:center;gap:4px;display:flex}._ff-filter-box__range-inputs_j1w9b_216 input{border:1px solid var(--ffscouter-border-color);background:var(--ffscouter-alt-bg-color);width:0;min-width:30px;max-width:80px;color:var(--ffscouter-text-color);text-align:center;border-radius:4px;flex:1;padding:4px;font-size:11px}._ff-filter-box_j1w9b_1 button{border:1px solid var(--ffscouter-border-color);background:var(--ffscouter-alt-bg-color);color:var(--ffscouter-text-color);cursor:pointer;border-radius:4px;justify-content:center;align-items:center;gap:6px;padding:6px 10px;font-size:12px;transition:background-color .2s;display:inline-flex}._ff-filter-box_j1w9b_1 button:hover{background-color:var(--ffscouter-hover-color)}._ff-od-insurance__row-btn_1yru3_6{vertical-align:middle;background:var(--ffscouter-alt-bg-color);color:var(--ffscouter-text-color);border:1px solid var(--ffscouter-glow-color);white-space:nowrap;cursor:pointer;border-radius:4px;margin-left:8px;padding:1px 6px;font-family:Arial,sans-serif;font-size:11px;font-weight:700;line-height:16px}._ff-od-insurance__row-btn_1yru3_6:hover{background:var(--ffscouter-hover-color)}._ff-od-insurance__row-btn-full_1yru3_29{display:none}@media (width>=784px){._ff-od-insurance__row-btn-full_1yru3_29{display:inline}._ff-od-insurance__row-btn-short_1yru3_38{display:none}}._ff-od-insurance__overlay_1yru3_43{z-index:10000;box-sizing:border-box;background:#0000008c;justify-content:center;align-items:center;padding:16px 10px 48px;display:flex;position:fixed;inset:0}._ff-od-insurance_1yru3_6,._ff-od-insurance_1yru3_6 *,._ff-od-insurance_1yru3_6 :before,._ff-od-insurance_1yru3_6 :after{box-sizing:border-box}._ff-od-insurance_1yru3_6{background:var(--ffscouter-bg-color);width:420px;max-width:calc(100vw - 20px);height:480px;max-height:100%;color:var(--ffscouter-text-color);border:1px solid var(--ffscouter-border-color);border-radius:8px;flex-direction:column;margin:0;padding:0;font-family:Arial,sans-serif;font-size:13px;display:flex;position:static;box-shadow:0 4px 16px #0006}._ff-od-insurance_1yru3_6 a{color:inherit;font-weight:700}._ff-od-insurance__header_1yru3_90{background:var(--ffscouter-alt-bg-color);border-bottom:1px solid var(--ffscouter-border-color);border-radius:7px 7px 0 0;justify-content:space-between;align-items:center;gap:8px;padding:8px 12px;display:flex}._ff-od-insurance__title_1yru3_101{margin:0;font-size:14px;font-weight:700;line-height:1.2}._ff-od-insurance__sub_1yru3_108{opacity:.75;margin-top:1px;font-size:11px}._ff-od-insurance__close_1yru3_114{color:inherit;cursor:pointer;background:0 0;border:none;flex:none;padding:2px 6px;font-size:18px;font-weight:700;line-height:1}._ff-od-insurance__body_1yru3_126{flex:1;padding:8px 12px 12px;overflow-y:auto}._ff-od-insurance__intro_1yru3_132{margin:4px 0 8px;line-height:1.4}._ff-od-insurance__plan_1yru3_138{background:var(--ffscouter-alt-bg-color);min-width:0;color:var(--ffscouter-text-color);border:1px solid var(--ffscouter-border-color);border-radius:6px;margin:0 0 8px;padding:0}._ff-od-insurance__plan-open_1yru3_148{text-align:left;width:100%;color:inherit;font:inherit;cursor:pointer;background:0 0;border:none;border-radius:6px 6px 0 0;margin:0;padding:8px 10px;display:block}._ff-od-insurance__plan-open_1yru3_148:hover{background:var(--ffscouter-hover-color)}._ff-od-insurance__pick_1yru3_166{border-top:1px solid var(--ffscouter-border-color);flex-wrap:wrap;align-items:center;gap:6px 10px;padding:6px 10px 4px;font-size:12px;display:flex}._ff-od-insurance__multiplier_1yru3_176{background:var(--ffscouter-bg-color);width:4em;color:var(--ffscouter-text-color);border:1px solid var(--ffscouter-border-color);font:inherit;border-radius:3px;padding:2px 4px}._ff-od-insurance__button_1yru3_186:disabled{cursor:not-allowed;opacity:.5}._ff-od-insurance__plan-name_1yru3_191{font-weight:700;line-height:1.3;display:block}._ff-od-insurance__plan-meta_1yru3_197{margin-top:2px;font-size:12px;line-height:1.4;display:block}._ff-od-insurance__button_1yru3_186{background:var(--ffscouter-alt-bg-color);color:var(--ffscouter-text-color);border:1px solid var(--ffscouter-border-color);cursor:pointer;border-radius:4px;margin:0 0 4px;padding:3px 10px;font-size:12px;font-weight:700}._ff-od-insurance__row_1yru3_6{flex-wrap:wrap;align-items:baseline;gap:6px;margin:4px 0;line-height:1.4;display:flex}._ff-od-insurance__row-label_1yru3_225{flex:none;font-weight:700}._ff-od-insurance__code_1yru3_231{background:var(--ffscouter-alt-bg-color);border:1px solid var(--ffscouter-border-color);overflow-wrap:anywhere;-webkit-user-select:all;user-select:all;border-radius:3px;padding:1px 5px;font-family:monospace}._ff-od-insurance__copy-status_1yru3_242{-webkit-user-select:text;user-select:text;font-size:12px}._ff-od-insurance__note_1yru3_248{margin:8px 0 0;font-size:12px;line-height:1.4}._ff-od-insurance__footer_1yru3_254{opacity:.75;margin-top:10px;font-size:11px;line-height:1.4}._ff-od-insurance__hide_1yru3_261{background:var(--ffscouter-alt-bg-color);color:var(--ffscouter-text-color);border:1px solid var(--ffscouter-glow-color);cursor:pointer;border-radius:4px;margin-top:6px;padding:2px 8px;font-size:11px}._ff-od-insurance__hide_1yru3_261:hover{background:var(--ffscouter-hover-color)}._ff-od-helper_1yru3_278{z-index:9999;max-width:calc(100vw - 16px);color:var(--ffscouter-text-color);font-family:Arial,sans-serif;font-size:12px;position:fixed}._ff-od-helper__bar_1yru3_287{background:var(--ffscouter-bg-color);border:1px solid var(--ffscouter-glow-color);border-radius:6px;align-items:stretch;display:flex;overflow:hidden;box-shadow:0 2px 8px #0006}._ff-od-helper_1yru3_278[data-problem=true] ._ff-od-helper__bar_1yru3_287{border-color:#c0392b}._ff-od-helper__grip_1yru3_301,._ff-od-helper__press_1yru3_302,._ff-od-helper__icon_1yru3_303{color:inherit;font:inherit;cursor:pointer;background:0 0;border:none;margin:0;padding:6px 8px}._ff-od-helper__grip_1yru3_301{cursor:grab;touch-action:none;opacity:.7}._ff-od-helper__press_1yru3_302{text-align:left;overflow-wrap:anywhere;background:var(--ffscouter-alt-bg-color);flex:1;min-width:0;font-weight:700}._ff-od-helper__press_1yru3_302:hover,._ff-od-helper__icon_1yru3_303:hover{background:var(--ffscouter-hover-color)}._ff-od-helper__icon_1yru3_303{font-weight:700}._ff-od-helper__steps_1yru3_338{background:var(--ffscouter-bg-color);border:1px solid var(--ffscouter-border-color);border-radius:6px;margin:0 0 4px;padding:6px 10px;line-height:1.6;list-style:none}._ff-od-helper__current_1yru3_348{font-weight:700}._ff-settings-panel__accordion_6bhvd_1{background-color:var(--ffscouter-bg-color);border:1px solid var(--ffscouter-border-color);color:var(--ffscouter-text-color);border-radius:5px;margin:10px 0;padding:15px}._ff-settings-panel__accordion_6bhvd_1._ff-settings-panel__accordion--glow_6bhvd_10{border-color:var(--ffscouter-glow-color);box-shadow:0 0 8px #4caf5080}._ff-settings-panel__accordion_6bhvd_1 summary{cursor:pointer;font-weight:700}._ff-settings-panel__body_6bhvd_20{margin-top:15px}._ff-settings-panel__input-row_6bhvd_24{flex-direction:column;gap:5px;margin-bottom:15px;display:flex}._ff-settings-panel__range-row_6bhvd_32{align-items:center;gap:10px;display:flex}._ff-settings-panel__blur_6bhvd_38{filter:blur(4px);transition:filter .2s}._ff-settings-panel__blur_6bhvd_38:hover,._ff-settings-panel__blur_6bhvd_38:focus{filter:blur()}._ff-settings-panel__error-msg_6bhvd_48{color:#f33;margin-top:5px;font-size:13px}._ff-settings-panel__accordion_6bhvd_1 input[type=text],._ff-settings-panel__accordion_6bhvd_1 input[type=number]{text-align:left;vertical-align:top;width:178px;margin-right:8px;padding:9px 10px;line-height:14px;display:inline-block;box-sizing:border-box!important;height:34px!important}._ff-settings-panel__accordion_6bhvd_1 input[type=number]._ff-settings-panel__number_6bhvd_67{width:80px}._ff-settings-panel__accordion_6bhvd_1 select{box-sizing:border-box;text-align:left;vertical-align:top;border:var(--input-border-color,1px solid var(--ffscouter-border-color));width:178px;height:34px;color:var(--input-color,var(--ffscouter-text-color));background:var(--input-background-color,var(--ffscouter-alt-bg-color));border-radius:5px;margin-right:8px;padding:8px 10px;font-family:Arial,serif;line-height:14px;display:inline-block}.dark-mode ._ff-settings-panel__accordion_6bhvd_1 select option{color:var(--input-color);background-color:#000}._ff-settings-panel__api-explanation_6bhvd_94{color:var(--ffscouter-text-color);margin-bottom:20px;font-size:13px;line-height:1.5}._ff-settings-panel__accordion_6bhvd_1 a{color:var(--ffscouter-success-color);text-decoration:underline}._ff-settings-panel__premium-badge_6bhvd_107{color:#fff;vertical-align:middle;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:700;display:inline-block}._ff-settings-panel__premium-badge--enabled_6bhvd_117{background:#4caf50}._ff-settings-panel__premium-badge--disabled_6bhvd_121{background:#c62828}._ff-settings-panel__premium-badge--unknown_6bhvd_125{background:#f39c12}._ff-settings-panel__section_6bhvd_138{grid-template-columns:1fr;gap:12px;margin-bottom:15px;display:grid}@media (width>=784px){._ff-settings-panel__section_6bhvd_138{grid-template-columns:repeat(3,1fr)}}._ff-settings-panel__span_6bhvd_152{grid-column:1/-1;margin-bottom:0}._ff-settings-panel__cell_6bhvd_160{flex-direction:column;gap:5px;min-width:0;margin-bottom:0;display:flex}._ff-settings-panel__cell_6bhvd_160._ff-settings-panel__cell--checkbox_6bhvd_169{flex-direction:row;align-items:flex-start;gap:10px}._ff-settings-panel__cell_6bhvd_160 input[type=text]{width:100%;margin-right:0}._ff-settings-panel__cell_6bhvd_160 select{width:auto;max-width:100%;margin-right:0}._ff-settings-panel__api-block_6bhvd_193{flex-direction:column;gap:10px;display:flex}._ff-settings-panel__api-block_6bhvd_193 ._ff-settings-panel__cell_6bhvd_160 input[type=text]{max-width:360px}._ff-settings-panel__api-status-row_6bhvd_203{flex-wrap:wrap;align-items:center;gap:10px;display:flex}._ff-settings-panel__chain-suboptions_6bhvd_213{border-left:2px solid var(--ffscouter-border-color);grid-template-columns:repeat(2,1fr);margin-top:10px;padding-left:8px}._ff-settings-panel__chain-suboptions_6bhvd_213 ._ff-settings-panel__chain-wide_6bhvd_218{grid-column:1/-1}@media (width>=784px){._ff-settings-panel__chain-suboptions_6bhvd_213{grid-template-columns:repeat(3,1fr);padding-left:16px}._ff-settings-panel__chain-suboptions_6bhvd_213 ._ff-settings-panel__chain-wide_6bhvd_218{grid-column:auto}}._ff-settings-panel__group_6bhvd_242{background-color:var(--ffscouter-alt-bg-color);border:1px solid var(--ffscouter-border-color);border-radius:5px;margin-bottom:15px;padding:12px}._ff-settings-panel__group_6bhvd_242 h4{margin:0 0 12px}._ff-settings-panel__marker-size_6bhvd_256,._ff-settings-panel__marker-border-width_6bhvd_257{flex-direction:column;gap:5px;display:flex}._ff-settings-panel__marker-size-controls_6bhvd_263{flex-wrap:wrap;align-items:center;gap:10px;display:flex}._ff-settings-panel__marker-size-controls_6bhvd_263 input[type=range]{flex:120px;min-width:120px}._ff-settings-panel__color-scheme_6bhvd_276{flex-direction:column;gap:5px;display:flex}._ff-settings-panel__color-scheme-controls_6bhvd_282{flex-wrap:wrap;align-items:center;gap:10px;display:flex}._ff-settings-panel__accordion_6bhvd_1 .ffscouter-swatch-row{flex-wrap:wrap}._ff-settings-panel__actions_6bhvd_295{flex-wrap:wrap;justify-content:center;align-items:center;gap:10px;margin-top:20px;display:flex}._ff-settings-panel__saved-msg_6bhvd_304{color:#4caf50}\n/*$vite$:1*/ ");
 	var __defProp = Object.defineProperty;
+	var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+	var __getOwnPropNames = Object.getOwnPropertyNames;
+	var __hasOwnProp = Object.prototype.hasOwnProperty;
+	var __esmMin = (fn, res, err) => () => {
+		if (err) throw err[0];
+		try {
+			return fn && (res = fn(fn = 0)), res;
+		} catch (e) {
+			throw err = [e], e;
+		}
+	};
+	var __commonJSMin = (cb, mod) => () => (mod || (cb((mod = { exports: {} }).exports, mod, mod.exports), cb = null), mod.exports);
 	var __exportAll = (all, no_symbols) => {
 		let target = {};
 		for (var name in all) __defProp(target, name, {
@@ -37,6 +49,17 @@
 		if (!no_symbols) __defProp(target, Symbol.toStringTag, { value: "Module" });
 		return target;
 	};
+	var __copyProps = (to, from, except, desc) => {
+		if (from && typeof from === "object" || typeof from === "function") for (var keys = __getOwnPropNames(from), i = 0, n = keys.length, key; i < n; i++) {
+			key = keys[i];
+			if (!__hasOwnProp.call(to, key) && key !== except) __defProp(to, key, {
+				get: ((k) => from[k]).bind(null, key),
+				enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable
+			});
+		}
+		return to;
+	};
+	var __toCommonJS = (mod) => __hasOwnProp.call(mod, "module.exports") ? mod["module.exports"] : __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 	var StartTime = function(StartTime) {
 		StartTime[StartTime["DocumentStart"] = 0] = "DocumentStart";
 		StartTime[StartTime["DocumentBody"] = 1] = "DocumentBody";
@@ -118,103 +141,7 @@
 	function isInPDA() {
 		return typeof window !== "undefined" && typeof window.PDA_httpGet === "function";
 	}
-	var LogLevel = function(LogLevel) {
-		LogLevel[LogLevel["DEBUG"] = 0] = "DEBUG";
-		LogLevel[LogLevel["INFO"] = 1] = "INFO";
-		LogLevel[LogLevel["WARN"] = 2] = "WARN";
-		LogLevel[LogLevel["ERROR"] = 3] = "ERROR";
-		LogLevel[LogLevel["NONE"] = 4] = "NONE";
-		return LogLevel;
-	}({});
-	var Logger = class Logger {
-		constructor(prefix = "", defaultLevel = 1, state = {}) {
-			this.isPDA = false;
-			this.colors = {
-				debug: "#7f8c8d",
-				info: "#3498db",
-				warn: "#f39c12",
-				error: "#e74c3c"
-			};
-			this.prefix = prefix;
-			this.defaultLevel = defaultLevel;
-			this.state = state;
-			this.detectPDA();
-		}
-		detectPDA() {
-			this.isPDA = isInPDA();
-		}
-		setLevel(level) {
-			this.state.explicitLevel = level;
-		}
-		getLevel() {
-			return this.state.explicitLevel !== void 0 ? this.state.explicitLevel : this.defaultLevel;
-		}
-		debug(...args) {
-			if (this.getLevel() <= 0) {
-				if (this.isPDA) console.log(`${this.formatPrefix("DEBUG")}`, ...this.formatArgs(args));
-				else console.log(`%c${this.formatPrefix("DEBUG")}`, `color: ${this.colors.debug}; font-weight: bold`, ...args);
-			}
-		}
-		info(...args) {
-			if (this.getLevel() <= 1) {
-				if (this.isPDA) console.info(`${this.formatPrefix("INFO")}`, ...this.formatArgs(args));
-				else console.info(`%c${this.formatPrefix("INFO")}`, `color: ${this.colors.info}; font-weight: bold`, ...args);
-			}
-		}
-		warn(...args) {
-			if (this.getLevel() <= 2) {
-				if (this.isPDA) console.warn(`${this.formatPrefix("WARN")}`, ...this.formatArgs(args));
-				else console.warn(`%c${this.formatPrefix("WARN")}`, `color: ${this.colors.warn}; font-weight: bold`, ...args);
-			}
-		}
-		error(...args) {
-			if (this.getLevel() <= 3) {
-				if (this.isPDA) console.error(`${this.formatPrefix("ERROR")}`, ...this.formatArgs(args));
-				else console.error(`%c${this.formatPrefix("ERROR")}`, `color: ${this.colors.error}; font-weight: bold`, ...args);
-			}
-		}
-		group(label, collapsed = false) {
-			if (this.getLevel() < 4) {
-				if (collapsed) console.groupCollapsed(this.formatPrefix(""), label);
-				else console.group(this.formatPrefix(""), label);
-			}
-		}
-		groupEnd() {
-			if (this.getLevel() < 4) console.groupEnd();
-		}
-		child(subPrefix) {
-			const childPrefix = this.prefix ? `${this.prefix}:${subPrefix}` : subPrefix;
-			return new Logger(childPrefix, this.defaultLevel, this.state);
-		}
-		formatPrefix(level) {
-			const prefix = this.prefix ? `[${this.prefix}]` : "";
-			return level ? `${prefix} - [${level}]: ` : `${prefix}: `;
-		}
-		formatArgs(args) {
-			return args.map((arg) => {
-				if (isDOMNode(arg)) return formatDOMNode(arg);
-				if (typeof arg === "object" && arg !== null) try {
-					const seen = new WeakSet();
-					return JSON.stringify(arg, (_key, val) => {
-						if (typeof val === "object" && val !== null) {
-							if (seen.has(val)) return "[Circular]";
-							seen.add(val);
-						}
-						if (isDOMNode(val)) return formatDOMNode(val);
-						if (val instanceof Error) return {
-							message: val.message,
-							stack: val.stack,
-							name: val.name
-						};
-						return val;
-					}, 2);
-				} catch {
-					return String(arg);
-				}
-				return arg;
-			});
-		}
-	};
+	var init_pda = __esmMin((() => {}));
 	function isDOMNode(val) {
 		return typeof val === "object" && val !== null && "nodeType" in val && typeof val.nodeType === "number" && "nodeName" in val && typeof val.nodeName === "string";
 	}
@@ -222,474 +149,606 @@
 		if (node.nodeType === 1) return `<${node.tagName.toLowerCase()}${node.id ? `#${node.id}` : ""}${node.className && typeof node.className === "string" && node.className.trim() ? `.${node.className.trim().split(/\s+/).join(".")}` : ""}>`;
 		return `[Node: ${node.nodeName}]`;
 	}
-	var logger_default = new Logger("FFSV2", 0);
-	var log$22 = logger_default.child("storage");
-	var Time = function(Time) {
-		Time[Time["Seconds"] = 1e3] = "Seconds";
-		Time[Time["Minutes"] = 6e4] = "Minutes";
-		Time[Time["Hours"] = 36e5] = "Hours";
-		Time[Time["Days"] = 864e5] = "Days";
-		Time[Time["Weeks"] = 6048e5] = "Weeks";
-		Time[Time["Years"] = 31536e6] = "Years";
-		return Time;
-	}({});
-	var Storage = class {
-		constructor(prefix) {
-			this.prefix = prefix;
-		}
-		set(key, value, expireConfig) {
-			try {
-				const item = {
-					value,
-					expiration: expireConfig ? Date.now() + expireConfig.amount * (expireConfig.unit || 6e4) : null
+	var LogLevel;
+	var Logger;
+	var logger_default;
+	var init_logger = __esmMin((() => {
+		init_pda();
+		LogLevel = function(LogLevel) {
+			LogLevel[LogLevel["DEBUG"] = 0] = "DEBUG";
+			LogLevel[LogLevel["INFO"] = 1] = "INFO";
+			LogLevel[LogLevel["WARN"] = 2] = "WARN";
+			LogLevel[LogLevel["ERROR"] = 3] = "ERROR";
+			LogLevel[LogLevel["NONE"] = 4] = "NONE";
+			return LogLevel;
+		}({});
+		Logger = class Logger {
+			constructor(prefix = "", defaultLevel = 1, state = {}) {
+				this.isPDA = false;
+				this.colors = {
+					debug: "#7f8c8d",
+					info: "#3498db",
+					warn: "#f39c12",
+					error: "#e74c3c"
 				};
-				localStorage.setItem(this.prefix + key, JSON.stringify(item));
-			} catch (error) {
-				log$22.error(`Error storing item '${key}':`, error);
+				this.prefix = prefix;
+				this.defaultLevel = defaultLevel;
+				this.state = state;
+				this.detectPDA();
 			}
-		}
-		get(key) {
-			try {
-				const itemStr = localStorage.getItem(this.prefix + key);
-				if (!itemStr) return null;
-				let item = null;
-				try {
-					item = JSON.parse(itemStr);
-				} catch {
-					item = null;
-				}
-				if (!item) {
-					log$22.warn(`Key '${key}' has invalid JSON in it.`);
-					this.remove(key);
-					return null;
-				}
-				if (item.expiration && Date.now() > item.expiration) {
-					this.remove(key);
-					log$22.debug(`Key ${key} has expired.`);
-					return null;
-				}
-				return item.value;
-			} catch (error) {
-				log$22.error(`Error retrieving item '${key}':`, error);
-				return null;
+			detectPDA() {
+				this.isPDA = isInPDA();
 			}
-		}
-		remove(key) {
-			try {
-				localStorage.removeItem(this.prefix + key);
-			} catch (error) {
-				log$22.error(`Error removing item [${key}]:`, error);
+			setLevel(level) {
+				this.state.explicitLevel = level;
 			}
-		}
-		has(key) {
-			return this.get(key) !== null;
-		}
-		clearAll() {
-			try {
-				Object.keys(localStorage).filter((key) => key.startsWith(this.prefix)).forEach((key) => {
-					localStorage.removeItem(key);
+			getLevel() {
+				return this.state.explicitLevel !== void 0 ? this.state.explicitLevel : this.defaultLevel;
+			}
+			debug(...args) {
+				if (this.getLevel() <= 0) {
+					if (this.isPDA) console.log(`${this.formatPrefix("DEBUG")}`, ...this.formatArgs(args));
+					else console.log(`%c${this.formatPrefix("DEBUG")}`, `color: ${this.colors.debug}; font-weight: bold`, ...args);
+				}
+			}
+			info(...args) {
+				if (this.getLevel() <= 1) {
+					if (this.isPDA) console.info(`${this.formatPrefix("INFO")}`, ...this.formatArgs(args));
+					else console.info(`%c${this.formatPrefix("INFO")}`, `color: ${this.colors.info}; font-weight: bold`, ...args);
+				}
+			}
+			warn(...args) {
+				if (this.getLevel() <= 2) {
+					if (this.isPDA) console.warn(`${this.formatPrefix("WARN")}`, ...this.formatArgs(args));
+					else console.warn(`%c${this.formatPrefix("WARN")}`, `color: ${this.colors.warn}; font-weight: bold`, ...args);
+				}
+			}
+			error(...args) {
+				if (this.getLevel() <= 3) {
+					if (this.isPDA) console.error(`${this.formatPrefix("ERROR")}`, ...this.formatArgs(args));
+					else console.error(`%c${this.formatPrefix("ERROR")}`, `color: ${this.colors.error}; font-weight: bold`, ...args);
+				}
+			}
+			group(label, collapsed = false) {
+				if (this.getLevel() < 4) {
+					if (collapsed) console.groupCollapsed(this.formatPrefix(""), label);
+					else console.group(this.formatPrefix(""), label);
+				}
+			}
+			groupEnd() {
+				if (this.getLevel() < 4) console.groupEnd();
+			}
+			child(subPrefix) {
+				const childPrefix = this.prefix ? `${this.prefix}:${subPrefix}` : subPrefix;
+				return new Logger(childPrefix, this.defaultLevel, this.state);
+			}
+			formatPrefix(level) {
+				const prefix = this.prefix ? `[${this.prefix}]` : "";
+				return level ? `${prefix} - [${level}]: ` : `${prefix}: `;
+			}
+			formatArgs(args) {
+				return args.map((arg) => {
+					if (isDOMNode(arg)) return formatDOMNode(arg);
+					if (typeof arg === "object" && arg !== null) try {
+						const seen = new WeakSet();
+						return JSON.stringify(arg, (_key, val) => {
+							if (typeof val === "object" && val !== null) {
+								if (seen.has(val)) return "[Circular]";
+								seen.add(val);
+							}
+							if (isDOMNode(val)) return formatDOMNode(val);
+							if (val instanceof Error) return {
+								message: val.message,
+								stack: val.stack,
+								name: val.name
+							};
+							return val;
+						}, 2);
+					} catch {
+						return String(arg);
+					}
+					return arg;
 				});
-			} catch (error) {
-				log$22.error("Error clearing storage:", error);
 			}
-		}
-	};
-	var storage_default = new Storage("ffscouterv3.");
-	var WarQuickAttackAction = function(WarQuickAttackAction) {
-		WarQuickAttackAction["NEW_TAB"] = "new_tab";
-		WarQuickAttackAction["CURRENT"] = "current";
-		return WarQuickAttackAction;
-	}({});
-	var FactionsColDisplay = function(FactionsColDisplay) {
-		FactionsColDisplay["FAIR_FIGHT"] = "fair_fight";
-		FactionsColDisplay["BATTLE_STATS"] = "battle_stats";
-		FactionsColDisplay["NONE"] = "none";
-		return FactionsColDisplay;
-	}({});
-	var MiniProfileDisplay = function(MiniProfileDisplay) {
-		MiniProfileDisplay["FAIR_FIGHT"] = "fair_fight";
-		MiniProfileDisplay["BATTLE_STATS"] = "battle_stats";
-		return MiniProfileDisplay;
-	}({});
-	var GaugeMarkerType = function(GaugeMarkerType) {
-		GaugeMarkerType["ARROW"] = "arrow";
-		GaugeMarkerType["BUBBLE_FF"] = "bubble_ff";
-		GaugeMarkerType["BUBBLE_ESTIMATE"] = "bubble_estimate";
-		return GaugeMarkerType;
-	}({});
-	var GaugeMarkerJustify = function(GaugeMarkerJustify) {
-		GaugeMarkerJustify["GAUGE"] = "gauge";
-		GaugeMarkerJustify["LEFT"] = "left";
-		GaugeMarkerJustify["RIGHT"] = "right";
-		return GaugeMarkerJustify;
-	}({});
-	var ColorScheme = function(ColorScheme) {
-		ColorScheme["CLASSIC"] = "classic";
-		ColorScheme["COOL_DIVERGING"] = "cool_diverging";
-		ColorScheme["NEON"] = "neon";
-		ColorScheme["COLORBLIND_SAFE"] = "colorblind_safe";
-		ColorScheme["GRAYSCALE"] = "grayscale";
-		ColorScheme["GREEN_YELLOW_RED"] = "green_yellow_red";
-		ColorScheme["BLUE_YELLOW_RED"] = "blue_yellow_red";
-		ColorScheme["PLASMA"] = "plasma";
-		ColorScheme["CUSTOM"] = "custom";
-		return ColorScheme;
-	}({});
-	var CONFIG_DEFAULTS = {
-		low_ff_range: 2,
-		high_ff_range: 4,
-		max_ff_range: 8,
-		chain_button_enabled: true,
-		chain_link_type: "attack",
-		chain_tab_type: "newtab",
-		chain_ff_target: 2.5,
-		ff_history_enabled: true,
-		factions_col_display: "battle_stats",
-		war_col_display: "battle_stats",
-		mini_profile_display: "fair_fight",
-		debug_logs: false,
-		analytics_enabled: false,
-		chain_min_level: null,
-		chain_max_level: null,
-		chain_inactive: true,
-		chain_min_ff: null,
-		chain_max_ff: 2.5,
-		chain_factionless: false,
-		gauge_marker_type: "arrow",
-		gauge_marker_scale: 100,
-		gauge_marker_border_width: 1,
-		gauge_marker_justify: "gauge",
-		war_quick_attack_action: "new_tab",
-		network_interception_enabled: false,
-		status_attack_links_enabled: true,
-		debug_disable_pda_http: false,
-		debug_force_react_fallback: false,
-		color_scheme: "classic",
-		custom_colors: null,
-		settings_panel_own_profile_only: false,
-		faction_filter_enabled: true,
-		war_filter_enabled: true,
-		stat_distribution_badge_enabled: true,
-		bounty_board_enabled: true,
-		bounty_attack_action: "new_tab"
-	};
-	var FFConfig = class {
-		constructor(name) {
-			this.name = name;
-			this.storage = new Storage(this.name);
-			logger_default.setLevel(this.debug_logs ? LogLevel.DEBUG : LogLevel.INFO);
-		}
-		get key() {
-			return this.storage.get("key") ?? "";
-		}
-		set key(key) {
-			this.storage.set("key", key);
-		}
-		get low_ff_range() {
-			return this.storage.get("low_ff_range") ?? CONFIG_DEFAULTS.low_ff_range;
-		}
-		set low_ff_range(val) {
-			this.storage.set("low_ff_range", val);
-		}
-		get high_ff_range() {
-			return this.storage.get("high_ff_range") ?? CONFIG_DEFAULTS.high_ff_range;
-		}
-		set high_ff_range(val) {
-			this.storage.set("high_ff_range", val);
-		}
-		get max_ff_range() {
-			return this.storage.get("max_ff_range") ?? CONFIG_DEFAULTS.max_ff_range;
-		}
-		set max_ff_range(val) {
-			this.storage.set("max_ff_range", val);
-		}
-		get chain_button_enabled() {
-			return this.storage.get("chain_button_enabled") ?? CONFIG_DEFAULTS.chain_button_enabled;
-		}
-		set chain_button_enabled(val) {
-			this.storage.set("chain_button_enabled", val);
-		}
-		get chain_link_type() {
-			return this.storage.get("chain_link_type") ?? CONFIG_DEFAULTS.chain_link_type;
-		}
-		set chain_link_type(val) {
-			this.storage.set("chain_link_type", val);
-		}
-		get chain_tab_type() {
-			return this.storage.get("chain_tab_type") ?? CONFIG_DEFAULTS.chain_tab_type;
-		}
-		set chain_tab_type(val) {
-			this.storage.set("chain_tab_type", val);
-		}
-		get war_quick_attack_action() {
-			return this.storage.get("war_quick_attack_action") ?? CONFIG_DEFAULTS.war_quick_attack_action;
-		}
-		set war_quick_attack_action(val) {
-			this.storage.set("war_quick_attack_action", val);
-		}
-		get chain_ff_target() {
-			return this.storage.get("chain_ff_target") ?? CONFIG_DEFAULTS.chain_ff_target;
-		}
-		set chain_ff_target(val) {
-			this.storage.set("chain_ff_target", val);
-		}
-		get chain_min_level() {
-			return this.storage.get("chain_min_level") ?? CONFIG_DEFAULTS.chain_min_level;
-		}
-		set chain_min_level(val) {
-			if (val === null) this.storage.remove("chain_min_level");
-			else this.storage.set("chain_min_level", val);
-		}
-		get chain_max_level() {
-			return this.storage.get("chain_max_level") ?? CONFIG_DEFAULTS.chain_max_level;
-		}
-		set chain_max_level(val) {
-			if (val === null) this.storage.remove("chain_max_level");
-			else this.storage.set("chain_max_level", val);
-		}
-		get chain_inactive() {
-			return this.storage.get("chain_inactive") ?? CONFIG_DEFAULTS.chain_inactive;
-		}
-		set chain_inactive(val) {
-			this.storage.set("chain_inactive", val);
-		}
-		get chain_min_ff() {
-			return this.storage.get("chain_min_ff") ?? CONFIG_DEFAULTS.chain_min_ff;
-		}
-		set chain_min_ff(val) {
-			if (val === null) this.storage.remove("chain_min_ff");
-			else this.storage.set("chain_min_ff", val);
-		}
-		get chain_max_ff() {
-			return this.storage.get("chain_max_ff") ?? this.storage.get("chain_ff_target") ?? CONFIG_DEFAULTS.chain_max_ff;
-		}
-		set chain_max_ff(val) {
-			this.storage.set("chain_max_ff", val);
-			this.storage.set("chain_ff_target", val);
-		}
-		get chain_factionless() {
-			return this.storage.get("chain_factionless") ?? CONFIG_DEFAULTS.chain_factionless;
-		}
-		set chain_factionless(val) {
-			this.storage.set("chain_factionless", val);
-		}
-		get ff_history_enabled() {
-			return this.storage.get("ff_history_enabled") ?? CONFIG_DEFAULTS.ff_history_enabled;
-		}
-		set ff_history_enabled(val) {
-			this.storage.set("ff_history_enabled", val);
-		}
-		get factions_col_display() {
-			return this.storage.get("factions_col_display") ?? CONFIG_DEFAULTS.factions_col_display;
-		}
-		set factions_col_display(val) {
-			this.storage.set("factions_col_display", val);
-		}
-		get war_col_display() {
-			return this.storage.get("war_col_display") ?? CONFIG_DEFAULTS.war_col_display;
-		}
-		set war_col_display(val) {
-			this.storage.set("war_col_display", val);
-		}
-		get mini_profile_display() {
-			return this.storage.get("mini_profile_display") ?? CONFIG_DEFAULTS.mini_profile_display;
-		}
-		set mini_profile_display(val) {
-			this.storage.set("mini_profile_display", val);
-		}
-		get debug_logs() {
-			return this.storage.get("debug_logs") ?? CONFIG_DEFAULTS.debug_logs;
-		}
-		set debug_logs(val) {
-			this.storage.set("debug_logs", val);
-			logger_default.setLevel(val ? LogLevel.DEBUG : LogLevel.INFO);
-		}
-		get analytics_enabled() {
-			return this.storage.get("analytics_enabled") ?? CONFIG_DEFAULTS.analytics_enabled;
-		}
-		set analytics_enabled(val) {
-			this.storage.set("analytics_enabled", val);
-		}
-		get network_interception_enabled() {
-			return this.storage.get("network_interception_enabled") ?? CONFIG_DEFAULTS.network_interception_enabled;
-		}
-		set network_interception_enabled(val) {
-			this.storage.set("network_interception_enabled", val);
-		}
-		get status_attack_links_enabled() {
-			return this.storage.get("status_attack_links_enabled") ?? CONFIG_DEFAULTS.status_attack_links_enabled;
-		}
-		set status_attack_links_enabled(val) {
-			this.storage.set("status_attack_links_enabled", val);
-		}
-		get settings_panel_own_profile_only() {
-			return this.storage.get("settings_panel_own_profile_only") ?? CONFIG_DEFAULTS.settings_panel_own_profile_only;
-		}
-		set settings_panel_own_profile_only(val) {
-			this.storage.set("settings_panel_own_profile_only", val);
-		}
-		get faction_filter_enabled() {
-			return this.storage.get("faction_filter_enabled") ?? CONFIG_DEFAULTS.faction_filter_enabled;
-		}
-		set faction_filter_enabled(val) {
-			this.storage.set("faction_filter_enabled", val);
-		}
-		get war_filter_enabled() {
-			return this.storage.get("war_filter_enabled") ?? CONFIG_DEFAULTS.war_filter_enabled;
-		}
-		set war_filter_enabled(val) {
-			this.storage.set("war_filter_enabled", val);
-		}
-		get stat_distribution_badge_enabled() {
-			return this.storage.get("stat_distribution_badge_enabled") ?? CONFIG_DEFAULTS.stat_distribution_badge_enabled;
-		}
-		set stat_distribution_badge_enabled(val) {
-			this.storage.set("stat_distribution_badge_enabled", val);
-		}
-		get bounty_board_enabled() {
-			return this.storage.get("bounty_board_enabled") ?? CONFIG_DEFAULTS.bounty_board_enabled;
-		}
-		set bounty_board_enabled(val) {
-			this.storage.set("bounty_board_enabled", val);
-		}
-		get bounty_attack_action() {
-			return this.storage.get("bounty_attack_action") ?? CONFIG_DEFAULTS.bounty_attack_action;
-		}
-		set bounty_attack_action(val) {
-			this.storage.set("bounty_attack_action", val);
-		}
-		get debug_disable_pda_http() {
-			return this.storage.get("debug_disable_pda_http") ?? CONFIG_DEFAULTS.debug_disable_pda_http;
-		}
-		set debug_disable_pda_http(val) {
-			this.storage.set("debug_disable_pda_http", val);
-		}
-		get debug_force_react_fallback() {
-			return this.storage.get("debug_force_react_fallback") ?? CONFIG_DEFAULTS.debug_force_react_fallback;
-		}
-		set debug_force_react_fallback(val) {
-			this.storage.set("debug_force_react_fallback", val);
-		}
-		get gauge_marker_type() {
-			return this.storage.get("gauge_marker_type") ?? CONFIG_DEFAULTS.gauge_marker_type;
-		}
-		set gauge_marker_type(val) {
-			this.storage.set("gauge_marker_type", val);
-		}
-		get gauge_marker_scale() {
-			return this.storage.get("gauge_marker_scale") ?? CONFIG_DEFAULTS.gauge_marker_scale;
-		}
-		set gauge_marker_scale(val) {
-			this.storage.set("gauge_marker_scale", val);
-		}
-		get gauge_marker_border_width() {
-			return this.storage.get("gauge_marker_border_width") ?? CONFIG_DEFAULTS.gauge_marker_border_width;
-		}
-		set gauge_marker_border_width(val) {
-			this.storage.set("gauge_marker_border_width", val);
-		}
-		get gauge_marker_justify() {
-			return this.storage.get("gauge_marker_justify") ?? CONFIG_DEFAULTS.gauge_marker_justify;
-		}
-		set gauge_marker_justify(val) {
-			this.storage.set("gauge_marker_justify", val);
-		}
-		get color_scheme() {
-			return this.storage.get("color_scheme") ?? CONFIG_DEFAULTS.color_scheme;
-		}
-		set color_scheme(val) {
-			this.storage.set("color_scheme", val);
-		}
-		get custom_colors() {
-			return this.storage.get("custom_colors") ?? CONFIG_DEFAULTS.custom_colors;
-		}
-		set custom_colors(val) {
-			if (val === null) this.storage.remove("custom_colors");
-			else this.storage.set("custom_colors", val);
-		}
-		get faction_filter_state() {
-			return this.storage.get("faction_filter_state") ?? null;
-		}
-		set faction_filter_state(val) {
-			this.storage.set("faction_filter_state", val);
-		}
-		get faction_filter_collapsed() {
-			return this.storage.get("faction_filter_collapsed") ?? false;
-		}
-		set faction_filter_collapsed(val) {
-			this.storage.set("faction_filter_collapsed", val);
-		}
-		get war_filter_state() {
-			return this.storage.get("war_filter_state") ?? null;
-		}
-		set war_filter_state(val) {
-			this.storage.set("war_filter_state", val);
-		}
-		get war_filter_collapsed() {
-			return this.storage.get("war_filter_collapsed") ?? false;
-		}
-		set war_filter_collapsed(val) {
-			this.storage.set("war_filter_collapsed", val);
-		}
-		get chain_targets() {
-			return this.storage.get("chain_targets");
-		}
-		set chain_targets(val) {
-			if (val === null) this.storage.remove("chain_targets");
-			else this.storage.set("chain_targets", val);
-		}
-		get chain_target_index() {
-			return this.storage.get("chain_target_index") ?? 0;
-		}
-		set chain_target_index(val) {
-			this.storage.set("chain_target_index", val);
-		}
-		reset() {
-			this.storage.remove("low_ff_range");
-			this.storage.remove("high_ff_range");
-			this.storage.remove("max_ff_range");
-			this.storage.remove("chain_button_enabled");
-			this.storage.remove("chain_link_type");
-			this.storage.remove("chain_tab_type");
-			this.storage.remove("chain_ff_target");
-			this.storage.remove("ff_history_enabled");
-			this.storage.remove("factions_col_display");
-			this.storage.remove("war_col_display");
-			this.storage.remove("mini_profile_display");
-			this.storage.remove("debug_logs");
-			this.storage.remove("analytics_enabled");
-			this.storage.remove("network_interception_enabled");
-			this.storage.remove("faction_filter_state");
-			this.storage.remove("faction_filter_collapsed");
-			this.storage.remove("war_filter_state");
-			this.storage.remove("war_filter_collapsed");
-			this.storage.remove("chain_min_level");
-			this.storage.remove("chain_max_level");
-			this.storage.remove("chain_inactive");
-			this.storage.remove("chain_min_ff");
-			this.storage.remove("chain_max_ff");
-			this.storage.remove("chain_factionless");
-			this.storage.remove("chain_targets");
-			this.storage.remove("chain_target_index");
-			this.storage.remove("gauge_marker_type");
-			this.storage.remove("gauge_marker_scale");
-			this.storage.remove("gauge_marker_border_width");
-			this.storage.remove("gauge_marker_justify");
-			this.storage.remove("war_quick_attack_action");
-			this.storage.remove("status_attack_links_enabled");
-			this.storage.remove("debug_disable_pda_http");
-			this.storage.remove("debug_force_react_fallback");
-			this.storage.remove("color_scheme");
-			this.storage.remove("custom_colors");
-			this.storage.remove("settings_panel_own_profile_only");
-			this.storage.remove("faction_filter_enabled");
-			this.storage.remove("war_filter_enabled");
-			this.storage.remove("stat_distribution_badge_enabled");
-			this.storage.remove("bounty_board_enabled");
-			this.storage.remove("bounty_attack_action");
-		}
-	};
-	var ffconfig = new FFConfig("ffsv3-config");
+		};
+		logger_default = new Logger("FFSV2", 0);
+	}));
+	var log$25;
+	var Time;
+	var Storage;
+	var storage_default;
+	var init_storage = __esmMin((() => {
+		init_logger();
+		log$25 = logger_default.child("storage");
+		Time = function(Time) {
+			Time[Time["Seconds"] = 1e3] = "Seconds";
+			Time[Time["Minutes"] = 6e4] = "Minutes";
+			Time[Time["Hours"] = 36e5] = "Hours";
+			Time[Time["Days"] = 864e5] = "Days";
+			Time[Time["Weeks"] = 6048e5] = "Weeks";
+			Time[Time["Years"] = 31536e6] = "Years";
+			return Time;
+		}({});
+		Storage = class {
+			constructor(prefix) {
+				this.prefix = prefix;
+			}
+			set(key, value, expireConfig) {
+				try {
+					const item = {
+						value,
+						expiration: expireConfig ? Date.now() + expireConfig.amount * (expireConfig.unit || 6e4) : null
+					};
+					localStorage.setItem(this.prefix + key, JSON.stringify(item));
+				} catch (error) {
+					log$25.error(`Error storing item '${key}':`, error);
+				}
+			}
+			get(key) {
+				try {
+					const itemStr = localStorage.getItem(this.prefix + key);
+					if (!itemStr) return null;
+					let item = null;
+					try {
+						item = JSON.parse(itemStr);
+					} catch {
+						item = null;
+					}
+					if (!item) {
+						log$25.warn(`Key '${key}' has invalid JSON in it.`);
+						this.remove(key);
+						return null;
+					}
+					if (item.expiration && Date.now() > item.expiration) {
+						this.remove(key);
+						log$25.debug(`Key ${key} has expired.`);
+						return null;
+					}
+					return item.value;
+				} catch (error) {
+					log$25.error(`Error retrieving item '${key}':`, error);
+					return null;
+				}
+			}
+			remove(key) {
+				try {
+					localStorage.removeItem(this.prefix + key);
+				} catch (error) {
+					log$25.error(`Error removing item [${key}]:`, error);
+				}
+			}
+			has(key) {
+				return this.get(key) !== null;
+			}
+			clearAll() {
+				try {
+					Object.keys(localStorage).filter((key) => key.startsWith(this.prefix)).forEach((key) => {
+						localStorage.removeItem(key);
+					});
+				} catch (error) {
+					log$25.error("Error clearing storage:", error);
+				}
+			}
+		};
+		storage_default = new Storage("ffscouterv3.");
+	}));
+	var WarQuickAttackAction;
+	var FactionsColDisplay;
+	var MiniProfileDisplay;
+	var GaugeMarkerType;
+	var GaugeMarkerJustify;
+	var ColorScheme;
+	var CONFIG_DEFAULTS;
+	var FFConfig;
+	var ffconfig;
+	var init_ffconfig = __esmMin((() => {
+		init_logger();
+		init_storage();
+		WarQuickAttackAction = function(WarQuickAttackAction) {
+			WarQuickAttackAction["NEW_TAB"] = "new_tab";
+			WarQuickAttackAction["CURRENT"] = "current";
+			return WarQuickAttackAction;
+		}({});
+		FactionsColDisplay = function(FactionsColDisplay) {
+			FactionsColDisplay["FAIR_FIGHT"] = "fair_fight";
+			FactionsColDisplay["BATTLE_STATS"] = "battle_stats";
+			FactionsColDisplay["NONE"] = "none";
+			return FactionsColDisplay;
+		}({});
+		MiniProfileDisplay = function(MiniProfileDisplay) {
+			MiniProfileDisplay["FAIR_FIGHT"] = "fair_fight";
+			MiniProfileDisplay["BATTLE_STATS"] = "battle_stats";
+			return MiniProfileDisplay;
+		}({});
+		GaugeMarkerType = function(GaugeMarkerType) {
+			GaugeMarkerType["ARROW"] = "arrow";
+			GaugeMarkerType["BUBBLE_FF"] = "bubble_ff";
+			GaugeMarkerType["BUBBLE_ESTIMATE"] = "bubble_estimate";
+			return GaugeMarkerType;
+		}({});
+		GaugeMarkerJustify = function(GaugeMarkerJustify) {
+			GaugeMarkerJustify["GAUGE"] = "gauge";
+			GaugeMarkerJustify["LEFT"] = "left";
+			GaugeMarkerJustify["RIGHT"] = "right";
+			return GaugeMarkerJustify;
+		}({});
+		ColorScheme = function(ColorScheme) {
+			ColorScheme["CLASSIC"] = "classic";
+			ColorScheme["COOL_DIVERGING"] = "cool_diverging";
+			ColorScheme["NEON"] = "neon";
+			ColorScheme["COLORBLIND_SAFE"] = "colorblind_safe";
+			ColorScheme["GRAYSCALE"] = "grayscale";
+			ColorScheme["GREEN_YELLOW_RED"] = "green_yellow_red";
+			ColorScheme["BLUE_YELLOW_RED"] = "blue_yellow_red";
+			ColorScheme["PLASMA"] = "plasma";
+			ColorScheme["CUSTOM"] = "custom";
+			return ColorScheme;
+		}({});
+		CONFIG_DEFAULTS = {
+			low_ff_range: 2,
+			high_ff_range: 4,
+			max_ff_range: 8,
+			chain_button_enabled: true,
+			chain_link_type: "attack",
+			chain_tab_type: "newtab",
+			chain_ff_target: 2.5,
+			ff_history_enabled: true,
+			factions_col_display: "battle_stats",
+			war_col_display: "battle_stats",
+			mini_profile_display: "fair_fight",
+			debug_logs: false,
+			analytics_enabled: false,
+			chain_min_level: null,
+			chain_max_level: null,
+			chain_inactive: true,
+			chain_min_ff: null,
+			chain_max_ff: 2.5,
+			chain_factionless: false,
+			gauge_marker_type: "arrow",
+			gauge_marker_scale: 100,
+			gauge_marker_border_width: 1,
+			gauge_marker_justify: "gauge",
+			war_quick_attack_action: "new_tab",
+			network_interception_enabled: false,
+			status_attack_links_enabled: true,
+			debug_disable_pda_http: false,
+			debug_force_react_fallback: false,
+			color_scheme: "classic",
+			custom_colors: null,
+			settings_panel_own_profile_only: false,
+			faction_filter_enabled: true,
+			war_filter_enabled: true,
+			stat_distribution_badge_enabled: true,
+			bounty_board_enabled: true,
+			od_insurance_enabled: true,
+			bounty_attack_action: "new_tab"
+		};
+		FFConfig = class {
+			constructor(name) {
+				this.name = name;
+				this.storage = new Storage(this.name);
+				logger_default.setLevel(this.debug_logs ? LogLevel.DEBUG : LogLevel.INFO);
+			}
+			get key() {
+				return this.storage.get("key") ?? "";
+			}
+			set key(key) {
+				this.storage.set("key", key);
+			}
+			get low_ff_range() {
+				return this.storage.get("low_ff_range") ?? CONFIG_DEFAULTS.low_ff_range;
+			}
+			set low_ff_range(val) {
+				this.storage.set("low_ff_range", val);
+			}
+			get high_ff_range() {
+				return this.storage.get("high_ff_range") ?? CONFIG_DEFAULTS.high_ff_range;
+			}
+			set high_ff_range(val) {
+				this.storage.set("high_ff_range", val);
+			}
+			get max_ff_range() {
+				return this.storage.get("max_ff_range") ?? CONFIG_DEFAULTS.max_ff_range;
+			}
+			set max_ff_range(val) {
+				this.storage.set("max_ff_range", val);
+			}
+			get chain_button_enabled() {
+				return this.storage.get("chain_button_enabled") ?? CONFIG_DEFAULTS.chain_button_enabled;
+			}
+			set chain_button_enabled(val) {
+				this.storage.set("chain_button_enabled", val);
+			}
+			get chain_link_type() {
+				return this.storage.get("chain_link_type") ?? CONFIG_DEFAULTS.chain_link_type;
+			}
+			set chain_link_type(val) {
+				this.storage.set("chain_link_type", val);
+			}
+			get chain_tab_type() {
+				return this.storage.get("chain_tab_type") ?? CONFIG_DEFAULTS.chain_tab_type;
+			}
+			set chain_tab_type(val) {
+				this.storage.set("chain_tab_type", val);
+			}
+			get war_quick_attack_action() {
+				return this.storage.get("war_quick_attack_action") ?? CONFIG_DEFAULTS.war_quick_attack_action;
+			}
+			set war_quick_attack_action(val) {
+				this.storage.set("war_quick_attack_action", val);
+			}
+			get chain_ff_target() {
+				return this.storage.get("chain_ff_target") ?? CONFIG_DEFAULTS.chain_ff_target;
+			}
+			set chain_ff_target(val) {
+				this.storage.set("chain_ff_target", val);
+			}
+			get chain_min_level() {
+				return this.storage.get("chain_min_level") ?? CONFIG_DEFAULTS.chain_min_level;
+			}
+			set chain_min_level(val) {
+				if (val === null) this.storage.remove("chain_min_level");
+				else this.storage.set("chain_min_level", val);
+			}
+			get chain_max_level() {
+				return this.storage.get("chain_max_level") ?? CONFIG_DEFAULTS.chain_max_level;
+			}
+			set chain_max_level(val) {
+				if (val === null) this.storage.remove("chain_max_level");
+				else this.storage.set("chain_max_level", val);
+			}
+			get chain_inactive() {
+				return this.storage.get("chain_inactive") ?? CONFIG_DEFAULTS.chain_inactive;
+			}
+			set chain_inactive(val) {
+				this.storage.set("chain_inactive", val);
+			}
+			get chain_min_ff() {
+				return this.storage.get("chain_min_ff") ?? CONFIG_DEFAULTS.chain_min_ff;
+			}
+			set chain_min_ff(val) {
+				if (val === null) this.storage.remove("chain_min_ff");
+				else this.storage.set("chain_min_ff", val);
+			}
+			get chain_max_ff() {
+				return this.storage.get("chain_max_ff") ?? this.storage.get("chain_ff_target") ?? CONFIG_DEFAULTS.chain_max_ff;
+			}
+			set chain_max_ff(val) {
+				this.storage.set("chain_max_ff", val);
+				this.storage.set("chain_ff_target", val);
+			}
+			get chain_factionless() {
+				return this.storage.get("chain_factionless") ?? CONFIG_DEFAULTS.chain_factionless;
+			}
+			set chain_factionless(val) {
+				this.storage.set("chain_factionless", val);
+			}
+			get ff_history_enabled() {
+				return this.storage.get("ff_history_enabled") ?? CONFIG_DEFAULTS.ff_history_enabled;
+			}
+			set ff_history_enabled(val) {
+				this.storage.set("ff_history_enabled", val);
+			}
+			get factions_col_display() {
+				return this.storage.get("factions_col_display") ?? CONFIG_DEFAULTS.factions_col_display;
+			}
+			set factions_col_display(val) {
+				this.storage.set("factions_col_display", val);
+			}
+			get war_col_display() {
+				return this.storage.get("war_col_display") ?? CONFIG_DEFAULTS.war_col_display;
+			}
+			set war_col_display(val) {
+				this.storage.set("war_col_display", val);
+			}
+			get mini_profile_display() {
+				return this.storage.get("mini_profile_display") ?? CONFIG_DEFAULTS.mini_profile_display;
+			}
+			set mini_profile_display(val) {
+				this.storage.set("mini_profile_display", val);
+			}
+			get debug_logs() {
+				return this.storage.get("debug_logs") ?? CONFIG_DEFAULTS.debug_logs;
+			}
+			set debug_logs(val) {
+				this.storage.set("debug_logs", val);
+				logger_default.setLevel(val ? LogLevel.DEBUG : LogLevel.INFO);
+			}
+			get analytics_enabled() {
+				return this.storage.get("analytics_enabled") ?? CONFIG_DEFAULTS.analytics_enabled;
+			}
+			set analytics_enabled(val) {
+				this.storage.set("analytics_enabled", val);
+			}
+			get network_interception_enabled() {
+				return this.storage.get("network_interception_enabled") ?? CONFIG_DEFAULTS.network_interception_enabled;
+			}
+			set network_interception_enabled(val) {
+				this.storage.set("network_interception_enabled", val);
+			}
+			get status_attack_links_enabled() {
+				return this.storage.get("status_attack_links_enabled") ?? CONFIG_DEFAULTS.status_attack_links_enabled;
+			}
+			set status_attack_links_enabled(val) {
+				this.storage.set("status_attack_links_enabled", val);
+			}
+			get settings_panel_own_profile_only() {
+				return this.storage.get("settings_panel_own_profile_only") ?? CONFIG_DEFAULTS.settings_panel_own_profile_only;
+			}
+			set settings_panel_own_profile_only(val) {
+				this.storage.set("settings_panel_own_profile_only", val);
+			}
+			get faction_filter_enabled() {
+				return this.storage.get("faction_filter_enabled") ?? CONFIG_DEFAULTS.faction_filter_enabled;
+			}
+			set faction_filter_enabled(val) {
+				this.storage.set("faction_filter_enabled", val);
+			}
+			get war_filter_enabled() {
+				return this.storage.get("war_filter_enabled") ?? CONFIG_DEFAULTS.war_filter_enabled;
+			}
+			set war_filter_enabled(val) {
+				this.storage.set("war_filter_enabled", val);
+			}
+			get stat_distribution_badge_enabled() {
+				return this.storage.get("stat_distribution_badge_enabled") ?? CONFIG_DEFAULTS.stat_distribution_badge_enabled;
+			}
+			set stat_distribution_badge_enabled(val) {
+				this.storage.set("stat_distribution_badge_enabled", val);
+			}
+			get bounty_board_enabled() {
+				return this.storage.get("bounty_board_enabled") ?? CONFIG_DEFAULTS.bounty_board_enabled;
+			}
+			set bounty_board_enabled(val) {
+				this.storage.set("bounty_board_enabled", val);
+			}
+			get od_insurance_enabled() {
+				return this.storage.get("od_insurance_enabled") ?? CONFIG_DEFAULTS.od_insurance_enabled;
+			}
+			set od_insurance_enabled(val) {
+				this.storage.set("od_insurance_enabled", val);
+			}
+			get bounty_attack_action() {
+				return this.storage.get("bounty_attack_action") ?? CONFIG_DEFAULTS.bounty_attack_action;
+			}
+			set bounty_attack_action(val) {
+				this.storage.set("bounty_attack_action", val);
+			}
+			get debug_disable_pda_http() {
+				return this.storage.get("debug_disable_pda_http") ?? CONFIG_DEFAULTS.debug_disable_pda_http;
+			}
+			set debug_disable_pda_http(val) {
+				this.storage.set("debug_disable_pda_http", val);
+			}
+			get debug_force_react_fallback() {
+				return this.storage.get("debug_force_react_fallback") ?? CONFIG_DEFAULTS.debug_force_react_fallback;
+			}
+			set debug_force_react_fallback(val) {
+				this.storage.set("debug_force_react_fallback", val);
+			}
+			get gauge_marker_type() {
+				return this.storage.get("gauge_marker_type") ?? CONFIG_DEFAULTS.gauge_marker_type;
+			}
+			set gauge_marker_type(val) {
+				this.storage.set("gauge_marker_type", val);
+			}
+			get gauge_marker_scale() {
+				return this.storage.get("gauge_marker_scale") ?? CONFIG_DEFAULTS.gauge_marker_scale;
+			}
+			set gauge_marker_scale(val) {
+				this.storage.set("gauge_marker_scale", val);
+			}
+			get gauge_marker_border_width() {
+				return this.storage.get("gauge_marker_border_width") ?? CONFIG_DEFAULTS.gauge_marker_border_width;
+			}
+			set gauge_marker_border_width(val) {
+				this.storage.set("gauge_marker_border_width", val);
+			}
+			get gauge_marker_justify() {
+				return this.storage.get("gauge_marker_justify") ?? CONFIG_DEFAULTS.gauge_marker_justify;
+			}
+			set gauge_marker_justify(val) {
+				this.storage.set("gauge_marker_justify", val);
+			}
+			get color_scheme() {
+				return this.storage.get("color_scheme") ?? CONFIG_DEFAULTS.color_scheme;
+			}
+			set color_scheme(val) {
+				this.storage.set("color_scheme", val);
+			}
+			get custom_colors() {
+				return this.storage.get("custom_colors") ?? CONFIG_DEFAULTS.custom_colors;
+			}
+			set custom_colors(val) {
+				if (val === null) this.storage.remove("custom_colors");
+				else this.storage.set("custom_colors", val);
+			}
+			get faction_filter_state() {
+				return this.storage.get("faction_filter_state") ?? null;
+			}
+			set faction_filter_state(val) {
+				this.storage.set("faction_filter_state", val);
+			}
+			get faction_filter_collapsed() {
+				return this.storage.get("faction_filter_collapsed") ?? false;
+			}
+			set faction_filter_collapsed(val) {
+				this.storage.set("faction_filter_collapsed", val);
+			}
+			get war_filter_state() {
+				return this.storage.get("war_filter_state") ?? null;
+			}
+			set war_filter_state(val) {
+				this.storage.set("war_filter_state", val);
+			}
+			get war_filter_collapsed() {
+				return this.storage.get("war_filter_collapsed") ?? false;
+			}
+			set war_filter_collapsed(val) {
+				this.storage.set("war_filter_collapsed", val);
+			}
+			get chain_targets() {
+				return this.storage.get("chain_targets");
+			}
+			set chain_targets(val) {
+				if (val === null) this.storage.remove("chain_targets");
+				else this.storage.set("chain_targets", val);
+			}
+			get chain_target_index() {
+				return this.storage.get("chain_target_index") ?? 0;
+			}
+			set chain_target_index(val) {
+				this.storage.set("chain_target_index", val);
+			}
+			reset() {
+				this.storage.remove("low_ff_range");
+				this.storage.remove("high_ff_range");
+				this.storage.remove("max_ff_range");
+				this.storage.remove("chain_button_enabled");
+				this.storage.remove("chain_link_type");
+				this.storage.remove("chain_tab_type");
+				this.storage.remove("chain_ff_target");
+				this.storage.remove("ff_history_enabled");
+				this.storage.remove("factions_col_display");
+				this.storage.remove("war_col_display");
+				this.storage.remove("mini_profile_display");
+				this.storage.remove("debug_logs");
+				this.storage.remove("analytics_enabled");
+				this.storage.remove("network_interception_enabled");
+				this.storage.remove("faction_filter_state");
+				this.storage.remove("faction_filter_collapsed");
+				this.storage.remove("war_filter_state");
+				this.storage.remove("war_filter_collapsed");
+				this.storage.remove("chain_min_level");
+				this.storage.remove("chain_max_level");
+				this.storage.remove("chain_inactive");
+				this.storage.remove("chain_min_ff");
+				this.storage.remove("chain_max_ff");
+				this.storage.remove("chain_factionless");
+				this.storage.remove("chain_targets");
+				this.storage.remove("chain_target_index");
+				this.storage.remove("gauge_marker_type");
+				this.storage.remove("gauge_marker_scale");
+				this.storage.remove("gauge_marker_border_width");
+				this.storage.remove("gauge_marker_justify");
+				this.storage.remove("war_quick_attack_action");
+				this.storage.remove("status_attack_links_enabled");
+				this.storage.remove("debug_disable_pda_http");
+				this.storage.remove("debug_force_react_fallback");
+				this.storage.remove("color_scheme");
+				this.storage.remove("custom_colors");
+				this.storage.remove("settings_panel_own_profile_only");
+				this.storage.remove("faction_filter_enabled");
+				this.storage.remove("war_filter_enabled");
+				this.storage.remove("stat_distribution_badge_enabled");
+				this.storage.remove("bounty_board_enabled");
+				this.storage.remove("od_insurance_enabled");
+				this.storage.remove("bounty_attack_action");
+			}
+		};
+		ffconfig = new FFConfig("ffsv3-config");
+	}));
+	init_ffconfig();
 	var DAY = 86400;
 	var OLD_ESTIMATE_INTERVAL = 14 * DAY;
 	function get_source_marker(source) {
@@ -1160,9 +1219,12 @@
 			return `${url}?${Object.entries(allParams).filter((entry) => !!entry[1]).map(([key, value]) => `${key}=${value}`).join("&")}`;
 		}
 	};
+	init_ffconfig();
+	init_logger();
+	init_pda();
 	var FF_SCOUTER_BASE_URL = "https://ffscouter.com/api/v1";
 	new TornApiClient({
-		defaultComment: `FFScouterV2-3.5-beta2`,
+		defaultComment: `FFScouterV2-3.5-beta3`,
 		defaultTimeout: 30
 	});
 	async function gmRequest(options) {
@@ -1413,7 +1475,7 @@
 		if (parsed.error) throw new Error(parsed.error);
 		return parsed;
 	};
-	var parse_bounty_response = (resp, label, ok_statuses = [200]) => {
+	var parse_ff_response = (resp, label, ok_statuses = [200]) => {
 		const limits = parse_limit_headers(resp.responseHeaders);
 		let parsed = null;
 		try {
@@ -1460,7 +1522,7 @@
 			url: make_bounty_board_url(key)
 		});
 		if (!resp) return { blank: true };
-		const { result, limits } = parse_bounty_response(resp, "query_bounty_seller_board");
+		const { result, limits } = parse_ff_response(resp, "query_bounty_seller_board");
 		return {
 			result,
 			blank: false,
@@ -1483,7 +1545,7 @@
 			i_have_read_rules_and_data_policy
 		}, requester);
 		if (!resp) return { blank: true };
-		const { result, limits } = parse_bounty_response(resp, "accept_bounty_seller_policy");
+		const { result, limits } = parse_ff_response(resp, "accept_bounty_seller_policy");
 		return {
 			result,
 			blank: false,
@@ -1503,9 +1565,50 @@
 			referrer_player_id
 		}, requester);
 		if (!resp) return { blank: true };
-		const { result, limits } = parse_bounty_response(resp, "submit_bounty_seller_claim", [200, 201]);
+		const { result, limits } = parse_ff_response(resp, "submit_bounty_seller_claim", [200, 201]);
 		return {
 			result,
+			blank: false,
+			limits
+		};
+	};
+	var OD_INSURANCE_GUIDE_URL = "https://ffscouter.com/guides/od-insurance";
+	var make_od_insurance_plans_url = () => {
+		return `${FF_SCOUTER_BASE_URL}/od-insurance/plans`;
+	};
+	var is_int = (v) => Number.isInteger(v);
+	var is_str = (v) => typeof v === "string";
+	var is_nullable = (v, check) => v === null || check(v);
+	var is_od_insurance_plan = (v) => {
+		if (typeof v !== "object" || v === null) return false;
+		const plan = v;
+		const payment = plan.payment;
+		const covered = plan.covered_item;
+		return is_str(plan.name) && is_str(plan.plan_key) && is_int(plan.xanax_quantity) && is_int(plan.max_multiplier) && is_int(plan.duration_seconds) && is_str(plan.duration_label) && is_int(plan.standard_payout_xanax) && is_int(plan.overdose_payout_xanax) && typeof covered === "object" && covered !== null && is_nullable(covered.item_id, is_int) && is_nullable(covered.name, is_str) && typeof payment === "object" && payment !== null && is_nullable(payment.recipient_player_id, is_int) && is_nullable(payment.recipient_name, is_str) && is_int(payment.xanax_quantity) && is_str(payment.message) && payment.message !== "";
+	};
+	var query_od_insurance_plans = async (requester = gmRequest) => {
+		logger_default.debug("Calling query_od_insurance_plans");
+		const resp = await requester({
+			method: "GET",
+			url: make_od_insurance_plans_url()
+		});
+		if (!resp) return { blank: true };
+		const { result, limits } = parse_ff_response(resp, "query_od_insurance_plans");
+		if (!Array.isArray(result.plans)) throw new FFApiError("API request failed. Response has no plans list.", {
+			ff_api_limits: limits,
+			ff_http_status: resp.status
+		});
+		const plans = result.plans.filter((plan) => {
+			if (is_od_insurance_plan(plan)) return true;
+			logger_default.warn("query_od_insurance_plans: dropping malformed plan", plan);
+			return false;
+		});
+		return {
+			result: {
+				manager_player_id: is_int(result.manager_player_id) ? result.manager_player_id : null,
+				manager_name: is_str(result.manager_name) ? result.manager_name : null,
+				plans
+			},
 			blank: false,
 			limits
 		};
@@ -1701,6 +1804,10 @@
 		if (!ffconfig.debug_force_react_fallback && hasWorkingUnsafeWindowReact()) return unsafeWindowReact().ReactDOM;
 		return requiredReact().ReactDOM;
 	}
+	var init_react_loader = __esmMin((() => {
+		init_ffconfig();
+	}));
+	init_react_loader();
 	var FRAGMENT_SENTINEL = Symbol("ReactFragment");
 	var Fragment$1 = FRAGMENT_SENTINEL;
 	function jsx(type, { children, ...props }, key) {
@@ -1712,7 +1819,7 @@
 		return Array.isArray(children) ? createElement(realType, props, ...children) : createElement(realType, props, children);
 	}
 	var jsxs = jsx;
-	var cls$3 = {
+	var cls$5 = {
 		row: attack_bounty_row_module_default["ffscouter-attack-bounty-row"],
 		label: attack_bounty_row_module_default["ffscouter-attack-bounty-row__label"],
 		claim: attack_bounty_row_module_default["ffscouter-attack-bounty-row__claim"]
@@ -1723,10 +1830,10 @@
 		const remaining = match.total_remaining;
 		return jsxs("div", {
 			id: "ffscouter-attack-bounty-row",
-			className: cls$3.row,
+			className: cls$5.row,
 			children: [
 				jsx("span", {
-					className: cls$3.label,
+					className: cls$5.label,
 					children: "FF Scouter Bounty:"
 				}),
 				top ? jsxs("span", {
@@ -1745,7 +1852,7 @@
 				] }),
 				jsx("button", {
 					type: "button",
-					className: cls$3.claim,
+					className: cls$5.claim,
 					disabled: claimPending,
 					title: claimed ? CLAIM_SUBMITTED : void 0,
 					onClick: onClaim,
@@ -1963,7 +2070,8 @@
 			return isIteratorProp(target, prop) || oldTraps.has(target, prop);
 		}
 	}));
-	var log$21 = logger_default.child("storage");
+	init_logger();
+	var log$24 = logger_default.child("storage");
 	var STORES = {
 		CACHE: "cache",
 		FLIGHTS: "flights",
@@ -2015,17 +2123,17 @@
 					try {
 						const db = await openDB(this.db_name, this.db_version, {
 							upgrade(db, oldVersion, newVersion, transaction, _event) {
-								log$21.info("Need to upgrade from", oldVersion, "to", newVersion);
+								log$24.info("Need to upgrade from", oldVersion, "to", newVersion);
 								for (let i = (oldVersion ?? 0) + 1; i <= cache.db_version; i++) {
-									log$21.debug(`Migration: ${i}`);
+									log$24.debug(`Migration: ${i}`);
 									const m = cache.migrations.get(i);
 									if (m) m(db, transaction);
-									else log$21.debug(`Migration not found: ${i}`);
-									log$21.debug(`Migration complete: ${i}`);
+									else log$24.debug(`Migration not found: ${i}`);
+									log$24.debug(`Migration complete: ${i}`);
 								}
 							},
 							blocking(currentVersion, blockedVersion, event) {
-								log$21.debug(`Can't open ${blockedVersion} because ${currentVersion} is open. Closing.`);
+								log$24.debug(`Can't open ${blockedVersion} because ${currentVersion} is open. Closing.`);
 								cache.close();
 								if (event?.target && typeof event.target.close === "function") event.target.close();
 							}
@@ -2076,9 +2184,9 @@
 				this.close();
 				try {
 					await deleteDB(this.db_name, { blocked: () => {
-						log$21.debug("deleteDB blocked callback called!");
+						log$24.debug("deleteDB blocked callback called!");
 					} });
-					log$21.info(`Successfully deleted ${this.db_name} IndexedDB.`);
+					log$24.info(`Successfully deleted ${this.db_name} IndexedDB.`);
 				} finally {
 					this.channel?.postMessage({ type: "deleted" });
 					this.state = "CLOSED";
@@ -2168,7 +2276,7 @@
 							const index = tx.store.index("expiry");
 							const range = IDBKeyRange.upperBound(Date.now());
 							const r = await index.getAllKeys(range);
-							log$21.info(`Found ${r.length} expired values to delete from cache.`);
+							log$24.info(`Found ${r.length} expired values to delete from cache.`);
 							await Promise.all(r.map((id) => tx.store.delete(id)));
 							await tx.done;
 						}
@@ -2177,7 +2285,7 @@
 							const index = tx.store.index("expiry");
 							const range = IDBKeyRange.upperBound(Date.now());
 							const r = await index.getAllKeys(range);
-							log$21.info(`Found ${r.length} expired values to delete from flights.`);
+							log$24.info(`Found ${r.length} expired values to delete from flights.`);
 							await Promise.all(r.map((id) => tx.store.delete(id)));
 							await tx.done;
 						}
@@ -2187,7 +2295,7 @@
 							const thirty_days_ago = Date.now() - 2592e6;
 							const range = IDBKeyRange.upperBound(thirty_days_ago);
 							const r = await index.getAllKeys(range);
-							log$21.info(`Found ${r.length} expired values to delete from analytics.`);
+							log$24.info(`Found ${r.length} expired values to delete from analytics.`);
 							await Promise.all(r.map((id) => tx.store.delete(id)));
 							await tx.done;
 						}
@@ -2196,7 +2304,7 @@
 							const index = tx.store.index("expiry");
 							const range = IDBKeyRange.upperBound(Date.now());
 							const r = await index.getAllKeys(range);
-							log$21.info(`Found ${r.length} expired values to delete from bounty_board.`);
+							log$24.info(`Found ${r.length} expired values to delete from bounty_board.`);
 							await Promise.all(r.map((key) => tx.store.delete(key)));
 							await tx.done;
 						}
@@ -2350,7 +2458,10 @@
 			}
 		}
 	};
-	var log$20 = logger_default.child("api");
+	init_logger();
+	init_storage();
+	init_ffconfig();
+	var log$23 = logger_default.child("api");
 	var CHECK_KEY = "check-key-status";
 	var CheckKeyStatus = class {
 		constructor(config, storage) {
@@ -2363,7 +2474,7 @@
 				try {
 					result = await check_key(this.config.key);
 				} catch (err) {
-					log$20.error("Received error response querying ffscouter check-key api:", err);
+					log$23.error("Received error response querying ffscouter check-key api:", err);
 					throw err;
 				}
 				if (result.blank) return null;
@@ -2379,7 +2490,7 @@
 					if (!status) return null;
 					return status.is_premium;
 				} catch (err) {
-					log$20.warn("Failed to check premium status:", err);
+					log$23.warn("Failed to check premium status:", err);
 					return null;
 				}
 			};
@@ -2389,7 +2500,7 @@
 					if (!status) return null;
 					return status.is_registered;
 				} catch (err) {
-					log$20.warn("Failed to check key registration status:", err);
+					log$23.warn("Failed to check key registration status:", err);
 					return null;
 				}
 			};
@@ -2401,7 +2512,9 @@
 		}
 	};
 	var check_key_status = new CheckKeyStatus(ffconfig, new Storage("ffsv3-check"));
-	var log$19 = logger_default.child("api");
+	init_ffconfig();
+	init_logger();
+	var log$22 = logger_default.child("api");
 	var DB_NAME = "FFSV3-cache";
 	var RECHECK_RETRY_DELAY = 6e4;
 	var RECHECK_WINDOW_DURATION = 18e4;
@@ -2484,7 +2597,7 @@
 				try {
 					await this.cache.delete_flight(player_id);
 				} catch (err) {
-					log$19.error("Failed to delete flight from cache", err);
+					log$22.error("Failed to delete flight from cache", err);
 				}
 			};
 			this.calculate_flight_cache_ttl = (result) => {
@@ -2530,7 +2643,7 @@
 				this.flight_timer = null;
 				if (this.flight_queue.length === 0) return;
 				if (this.last_limits && this.last_limits.reset_time > new Date() && this.last_limits.remaining <= GLOBAL_BUDGET_RESERVE) {
-					log$19.warn(`Total API quota <= ${GLOBAL_BUDGET_RESERVE}. Deferring flight status checks to prioritize stats.`);
+					log$22.warn(`Total API quota <= ${GLOBAL_BUDGET_RESERVE}. Deferring flight status checks to prioritize stats.`);
 					this.schedule_flight_processor(5e3);
 					return;
 				}
@@ -2541,7 +2654,7 @@
 					this.schedule_flight_processor(0);
 					return;
 				}
-				log$19.debug(`Querying paced flight API for player ${player_id}`);
+				log$22.debug(`Querying paced flight API for player ${player_id}`);
 				try {
 					const response = await query_flights(this.config.key, player_id);
 					if (response.blank) throw new Error(`Empty flight response returned for player ${player_id}`);
@@ -2551,10 +2664,10 @@
 						const ttl = this.calculate_flight_cache_ttl(response.result);
 						await this.cache.update_flight(response.result, ttl);
 					} catch (err) {
-						log$19.error("Failed to update flight cache", err);
+						log$22.error("Failed to update flight cache", err);
 					}
 					else {
-						log$19.debug(`Start rechecking cycle for player ${player_id}`);
+						log$22.debug(`Start rechecking cycle for player ${player_id}`);
 						const now = Date.now();
 						const next_retry_at = now + RECHECK_RETRY_DELAY;
 						const recheck_until = this.flight_recheck_until.get(player_id) ?? now + RECHECK_WINDOW_DURATION;
@@ -2570,13 +2683,13 @@
 							const remaining_ttl = Math.max(0, recheck_until - now);
 							await this.cache.update_flight(rechecking_response, remaining_ttl);
 						} catch (err) {
-							log$19.error("Failed to update flight cache during recheck", err);
+							log$22.error("Failed to update flight cache during recheck", err);
 						}
 						finalResult = rechecking_response;
 					}
 					for (const job of pending) job.resolve(finalResult);
 				} catch (err) {
-					log$19.error(`Paced flight API query failed for ${player_id}:`, err);
+					log$22.error(`Paced flight API query failed for ${player_id}:`, err);
 					const apiErr = err;
 					if (apiErr?.ff_api_limits) this.last_limits = apiErr.ff_api_limits;
 					for (const job of pending) job.reject(err);
@@ -2586,13 +2699,13 @@
 					try {
 						await this.cache.clean_expired();
 					} catch (err) {
-						log$19.error("Failed to clean expired cache entries", err);
+						log$22.error("Failed to clean expired cache entries", err);
 					}
 					if (this.flight_queue.length > 0) this.schedule_flight_processor(FLIGHT_PACING_DELAY);
 				}
 			};
 			this.get_flights = async (player_id) => {
-				log$19.debug(`get_flights called for ${player_id}`);
+				log$22.debug(`get_flights called for ${player_id}`);
 				if (!this.config.key) return {
 					player_id,
 					current: null,
@@ -2602,14 +2715,14 @@
 				try {
 					cached = await this.cache.get_flight(player_id);
 				} catch (err) {
-					log$19.error("Failed to query flight cache", err);
+					log$22.error("Failed to query flight cache", err);
 				}
 				if (cached) {
-					log$19.debug(`Flight cache hit for player ${player_id}`);
+					log$22.debug(`Flight cache hit for player ${player_id}`);
 					if (cached.rechecking) {
 						const now = Date.now();
 						if (cached.recheck_until && now >= cached.recheck_until) {
-							log$19.debug(`Rechecking window expired for player ${player_id}. Finalizing no data.`);
+							log$22.debug(`Rechecking window expired for player ${player_id}. Finalizing no data.`);
 							const final_response = {
 								player_id: cached.player_id,
 								current: null,
@@ -2619,12 +2732,12 @@
 							try {
 								await this.cache.update_flight(final_response, FINALIZED_NO_FLIGHT_TTL);
 							} catch (err) {
-								log$19.error("Failed to finalize flight cache", err);
+								log$22.error("Failed to finalize flight cache", err);
 							}
 							return final_response;
 						}
 						if (cached.next_retry_at && now >= cached.next_retry_at) {
-							log$19.debug(`Retrying API call for player ${player_id} during recheck window`);
+							log$22.debug(`Retrying API call for player ${player_id} during recheck window`);
 							return await this.enqueue_flight_api(player_id, cached.recheck_until);
 						}
 						return {
@@ -2642,23 +2755,23 @@
 						recent_flights: cached.recent_flights
 					};
 				}
-				log$19.debug(`Flight cache miss for player ${player_id}. Querying API paced.`);
+				log$22.debug(`Flight cache miss for player ${player_id}. Querying API paced.`);
 				return await this.enqueue_flight_api(player_id);
 			};
 			this.complete = () => {
 				this.process_cache();
 			};
 			this.enqueue_cache = (player_id) => {
-				log$19.debug(`Enqueuing cache ${player_id}`);
+				log$22.debug(`Enqueuing cache ${player_id}`);
 				this.cache_queue.add(player_id);
 				this.schedule_cache();
 			};
 			this.schedule_cache = () => {
 				if (this.cache_timer) {
-					log$19.debug(`schedule_cache called but job already scheduled`);
+					log$22.debug(`schedule_cache called but job already scheduled`);
 					return;
 				}
-				log$19.debug(`schedule_cache called and job scheduled for ${this.cache_delay} ms`);
+				log$22.debug(`schedule_cache called and job scheduled for ${this.cache_delay} ms`);
 				this.cache_timer = this.schedule(this.process_cache, this.cache_delay);
 			};
 			this.process_cache = async () => {
@@ -2675,39 +2788,39 @@
 				} catch (_) {
 					results = new Map();
 				}
-				log$19.debug(`Received ${results.size} cache results`);
+				log$22.debug(`Received ${results.size} cache results`);
 				for (const id of ids) {
 					const v = results.get(id);
 					if (v) {
-						log$19.debug("Id", id, "found in cache. Resolving value.");
+						log$22.debug("Id", id, "found in cache. Resolving value.");
 						this.resolve(id, v);
 					} else {
-						log$19.debug("Id", id, "not found in cache. Scheduling api call.");
+						log$22.debug("Id", id, "not found in cache. Scheduling api call.");
 						this.enqueue_api(id);
 					}
 				}
 			};
 			this.clear_cache = () => {
 				this.cache.delete_db().catch((err) => {
-					log$19.error("Failed to delete IndexedDB cache", err);
+					log$22.error("Failed to delete IndexedDB cache", err);
 				});
 				check_key_status.clear();
 			};
 			this.enqueue_api = (player_id) => {
-				log$19.debug(`Enqueuing api ${player_id}`);
+				log$22.debug(`Enqueuing api ${player_id}`);
 				this.api_queue.add(player_id);
 				this.schedule_api();
 			};
 			this.schedule_api = (delay = this.api_initial_delay) => {
 				if (this.api_timer) {
-					log$19.debug(`schedule_api called but job already scheduled`);
+					log$22.debug(`schedule_api called but job already scheduled`);
 					return;
 				}
-				log$19.debug(`schedule_api called and job scheduled for ${delay} ms`);
+				log$22.debug(`schedule_api called and job scheduled for ${delay} ms`);
 				this.api_timer = this.schedule(this.process_api, delay);
 			};
 			this.process_api = async () => {
-				log$19.debug("process_api called");
+				log$22.debug("process_api called");
 				if (this.api_timer) {
 					this.clear(this.api_timer);
 					this.api_timer = null;
@@ -2715,18 +2828,18 @@
 				let ids = Array.from(this.api_queue);
 				if (ids.length > this.api_max_batch_size) ids = ids.slice(0, this.api_max_batch_size);
 				for (const id of ids) this.api_queue.delete(id);
-				log$19.debug(`Processing ${ids} api requests`);
+				log$22.debug(`Processing ${ids} api requests`);
 				if (ids.length <= 0) {
-					log$19.debug("No ids found to query");
+					log$22.debug("No ids found to query");
 					return;
 				}
 				let next_run = this.api_default_delay;
 				let results;
 				try {
-					log$19.debug(`Calling query_stats with key=*** ids=[${ids}]`);
+					log$22.debug(`Calling query_stats with key=*** ids=[${ids}]`);
 					results = await query_stats(this.config.key, ids);
 				} catch (err) {
-					log$19.error("Received error response querying ffscouter api:", err);
+					log$22.error("Received error response querying ffscouter api:", err);
 					for (const id of ids) this.reject(id, err);
 					results = {
 						result: new Map(),
@@ -2734,21 +2847,21 @@
 						limits: err.ff_api_limits
 					};
 				}
-				log$19.debug(`Received api results: blank=${results.blank}, count=${results.result.size}`);
+				log$22.debug(`Received api results: blank=${results.blank}, count=${results.result.size}`);
 				if (results.blank) for (const id of ids) this.requeue_api(id);
 				else {
 					try {
 						await this.cache.update(Array.from(results.result.values()));
 					} catch (err) {
-						log$19.error("Failed to update cache", err);
+						log$22.error("Failed to update cache", err);
 					}
 					for (const id of ids) {
 						const v = results.result.get(id);
 						if (v) {
-							log$19.debug("Id", id, "found in results. Resolving value.");
+							log$22.debug("Id", id, "found in results. Resolving value.");
 							this.resolve(id, v);
 						} else {
-							log$19.debug("Id", id, "not found in results. Resolving no_data.");
+							log$22.debug("Id", id, "not found in results. Resolving no_data.");
 							this.resolve(id, {
 								player_id: id,
 								no_data: true
@@ -2764,7 +2877,7 @@
 				try {
 					await this.cache.clean_expired();
 				} catch (err) {
-					log$19.error("Failed to clean expired cache entries", err);
+					log$22.error("Failed to clean expired cache entries", err);
 				}
 			};
 			this.calculate_next_api_run = (limits) => {
@@ -2811,14 +2924,14 @@
 						hash
 					});
 				} catch (err) {
-					log$19.error("Failed to add analytics entry", err);
+					log$22.error("Failed to add analytics entry", err);
 				}
 			};
 			this.get_analytics_entries = async () => {
 				try {
 					return await this.cache.get_analytics();
 				} catch (err) {
-					log$19.error("Failed to get analytics entries", err);
+					log$22.error("Failed to get analytics entries", err);
 					return [];
 				}
 			};
@@ -2852,7 +2965,7 @@
 				try {
 					await this.cache.clear_analytics();
 				} catch (err) {
-					log$19.error("Failed to clear analytics entries", err);
+					log$22.error("Failed to clear analytics entries", err);
 				}
 			};
 			this.config = config;
@@ -2863,7 +2976,9 @@
 		}
 	};
 	var ffscouter = new FFScouter(ffconfig);
-	var log$18 = logger_default.child("bounty-board");
+	init_ffconfig();
+	init_logger();
+	var log$21 = logger_default.child("bounty-board");
 	var BOUNTY_BOARD_FRESHNESS_FLOOR_MS = 6e4;
 	var BOUNTY_BOARD_EXPIRY_MS = 6e5;
 	var BOARD_CACHE_KEY = "board";
@@ -2881,7 +2996,7 @@
 				try {
 					return await this.cache.get_bounty_board(key);
 				} catch (err) {
-					log$18.error(`Failed to read bounty board cache '${key}'`, err);
+					log$21.error(`Failed to read bounty board cache '${key}'`, err);
 					return null;
 				}
 			};
@@ -2889,14 +3004,14 @@
 				try {
 					await this.cache.put_bounty_board(key, value, expiry);
 				} catch (err) {
-					log$18.error(`Failed to write bounty board cache '${key}'`, err);
+					log$21.error(`Failed to write bounty board cache '${key}'`, err);
 				}
 			};
 			this.remove = async (key) => {
 				try {
 					await this.cache.delete_bounty_board(key);
 				} catch (err) {
-					log$18.error(`Failed to delete bounty board cache '${key}'`, err);
+					log$21.error(`Failed to delete bounty board cache '${key}'`, err);
 				}
 			};
 			this.get_board = async () => {
@@ -2937,7 +3052,7 @@
 				try {
 					await this.get_board();
 				} catch (err) {
-					log$18.error("Bounty board refresh failed", err);
+					log$21.error("Bounty board refresh failed", err);
 				}
 			};
 			this.fetch_board = async () => {
@@ -2988,7 +3103,8 @@
 		}
 	};
 	var bounty_board_cache = new BountyBoardCache(ffconfig);
-	var log$17 = logger_default.child("ui");
+	init_logger();
+	var log$20 = logger_default.child("ui");
 	var TOAST_LEVEL = function(TOAST_LEVEL) {
 		TOAST_LEVEL[TOAST_LEVEL["DEBUG"] = 0] = "DEBUG";
 		TOAST_LEVEL[TOAST_LEVEL["INFO"] = 1] = "INFO";
@@ -3042,7 +3158,7 @@
 		const msg = document.createElement("span");
 		if (message === "Invalid API key. Please sign up at ffscouter.com to use this service") msg.innerHTML = "FairFight Scouter V2: Invalid API key. Please sign up at <a href=\"https://ffscouter.com\" target=\"_blank\" style=\"color: #fff; text-decoration: underline; font-weight: bold;\">ffscouter.com</a> to use this service. Register the API key with the script.";
 		else msg.textContent = `FairFight Scouter V2: ${message}`;
-		log$17.info("[FF Scouter V2] Toast: ", message);
+		log$20.info("[FF Scouter V2] Toast: ", message);
 		toast.appendChild(msg);
 		toast.appendChild(closeBtn);
 		document.body.appendChild(toast);
@@ -3062,20 +3178,92 @@
 			return false;
 		});
 	}
-	new Proxy({}, { get(_, prop) {
-		return getReact()[prop];
-	} });
-	var useState = ((...args) => getReact().useState(...args));
-	var useEffect = ((...args) => getReact().useEffect(...args));
-	var useRef = ((...args) => getReact().useRef(...args));
-	var useMemo = ((...args) => getReact().useMemo(...args));
-	var useReducer = ((...args) => getReact().useReducer(...args));
-	var useImperativeHandle = ((...args) => getReact().useImperativeHandle(...args));
-	var createElement = ((...args) => getReact().createElement(...args));
-	new Proxy({}, { get: (_, prop) => getReact().Fragment[prop] });
-	new Proxy({}, { get: (_, prop) => getReact().StrictMode[prop] });
-	new Proxy({}, { get: (_, prop) => getReact().Suspense[prop] });
-	new Proxy({}, { get: (_, prop) => getReact().Children[prop] });
+	var react_exports = __exportAll({
+		Children: () => Children,
+		Fragment: () => Fragment,
+		StrictMode: () => StrictMode,
+		Suspense: () => Suspense,
+		cloneElement: () => cloneElement,
+		createContext: () => createContext,
+		createElement: () => createElement,
+		createRef: () => createRef,
+		default: () => ReactProxy,
+		isValidElement: () => isValidElement,
+		memo: () => memo,
+		startTransition: () => startTransition,
+		useCallback: () => useCallback,
+		useContext: () => useContext,
+		useDebugValue: () => useDebugValue,
+		useDeferredValue: () => useDeferredValue,
+		useEffect: () => useEffect,
+		useId: () => useId,
+		useImperativeHandle: () => useImperativeHandle,
+		useLayoutEffect: () => useLayoutEffect,
+		useMemo: () => useMemo,
+		useReducer: () => useReducer,
+		useRef: () => useRef,
+		useState: () => useState,
+		useSyncExternalStore: () => useSyncExternalStore,
+		useTransition: () => useTransition
+	});
+	var ReactProxy;
+	var useState;
+	var useEffect;
+	var useLayoutEffect;
+	var useRef;
+	var useCallback;
+	var useMemo;
+	var useContext;
+	var useReducer;
+	var useId;
+	var useDebugValue;
+	var useDeferredValue;
+	var useTransition;
+	var useSyncExternalStore;
+	var useImperativeHandle;
+	var createElement;
+	var createContext;
+	var createRef;
+	var memo;
+	var cloneElement;
+	var isValidElement;
+	var startTransition;
+	var Fragment;
+	var StrictMode;
+	var Suspense;
+	var Children;
+	var init_react = __esmMin((() => {
+		init_react_loader();
+		ReactProxy = new Proxy({}, { get(_, prop) {
+			return getReact()[prop];
+		} });
+		useState = ((...args) => getReact().useState(...args));
+		useEffect = ((...args) => getReact().useEffect(...args));
+		useLayoutEffect = ((...args) => getReact().useLayoutEffect(...args));
+		useRef = ((...args) => getReact().useRef(...args));
+		useCallback = ((...args) => getReact().useCallback(...args));
+		useMemo = ((...args) => getReact().useMemo(...args));
+		useContext = ((...args) => getReact().useContext(...args));
+		useReducer = ((...args) => getReact().useReducer(...args));
+		useId = (() => getReact().useId());
+		useDebugValue = ((...args) => getReact().useDebugValue(...args));
+		useDeferredValue = ((...args) => getReact().useDeferredValue(...args));
+		useTransition = (() => getReact().useTransition());
+		useSyncExternalStore = ((...args) => getReact().useSyncExternalStore(...args));
+		useImperativeHandle = ((...args) => getReact().useImperativeHandle(...args));
+		createElement = ((...args) => getReact().createElement(...args));
+		createContext = ((...args) => getReact().createContext(...args));
+		createRef = (() => getReact().createRef());
+		memo = ((...args) => getReact().memo(...args));
+		cloneElement = ((...args) => getReact().cloneElement(...args));
+		isValidElement = ((...args) => getReact().isValidElement(...args));
+		startTransition = ((...args) => getReact().startTransition(...args));
+		Fragment = new Proxy({}, { get: (_, prop) => getReact().Fragment[prop] });
+		StrictMode = new Proxy({}, { get: (_, prop) => getReact().StrictMode[prop] });
+		Suspense = new Proxy({}, { get: (_, prop) => getReact().Suspense[prop] });
+		Children = new Proxy({}, { get: (_, prop) => getReact().Children[prop] });
+	}));
+	init_react();
 	var info_line_module_default = {
 		"ffscouter-info-line__label": "_ffscouter-info-line__label_aofgj_1",
 		"ffscouter-info-line__badge": "_ffscouter-info-line__badge_aofgj_8",
@@ -3125,7 +3313,7 @@
 			})
 		});
 	}
-	function GuideLink() {
+	function GuideLink$1() {
 		return jsx("a", {
 			href: GUIDE_URL,
 			target: "_blank",
@@ -3161,7 +3349,7 @@
 				jsx("p", { children: jsx("strong", { children: dynamic_line(data) }) }),
 				jsxs("p", { children: [
 					"Estimates come from Fair Fight scores recorded when FFScouter users attack this player. Only recent attacks with a Fair Fight score between roughly 1.05 and 3.00 count. If nobody has landed a qualifying attack lately, the estimate simply ages. ",
-					jsx(GuideLink, {}),
+					jsx(GuideLink$1, {}),
 					"."
 				] }),
 				jsxs("p", { children: [
@@ -3173,7 +3361,7 @@
 				jsx("p", { children: jsx("strong", { children: "FFScouter has no estimate for this player yet." }) }),
 				jsxs("p", { children: [
 					"Estimates come from Fair Fight scores recorded when FFScouter users attack a player. Only recent attacks with a Fair Fight score between roughly 1.05 and 3.00 count, so there's no estimate when no FFScouter user has attacked this player, or when their fights fell outside that range. ",
-					jsx(GuideLink, {}),
+					jsx(GuideLink$1, {}),
 					"."
 				] }),
 				jsxs("p", { children: [
@@ -3214,7 +3402,8 @@
 			})]
 		});
 	}
-	var log$16 = logger_default.child("ui");
+	init_logger();
+	var log$19 = logger_default.child("ui");
 	var PREMIUM_UPGRADE_URL$1 = "https://ffscouter.com/premium";
 	function FFHeaderLine({ playerId, showExplainer = false }) {
 		const [data, setData] = useState(null);
@@ -3227,7 +3416,7 @@
 			ffscouter.get(playerId).then((result) => {
 				if (!cancelled) setData(result);
 			}).catch((err) => {
-				log$16.error(err);
+				log$19.error(err);
 			});
 			return () => {
 				cancelled = true;
@@ -3240,7 +3429,7 @@
 			check_key_status.is_premium().then((premium) => {
 				if (!cancelled) setIsPremium(premium);
 			}).catch((err) => {
-				log$16.error(err);
+				log$19.error(err);
 			}).finally(() => {
 				if (!cancelled) setPremiumLoading(false);
 			});
@@ -3366,6 +3555,7 @@
 			})
 		] });
 	}
+	init_storage();
 	var SILENCE_KEY = "bounty_attack_silenced";
 	var SILENCE_DURATION = {
 		amount: 1,
@@ -3381,7 +3571,9 @@
 	function clear_attack_bounty_silence() {
 		storage_default.remove(SILENCE_KEY);
 	}
-	var log$15 = logger_default.child("dom");
+	init_ffconfig();
+	init_logger();
+	var log$18 = logger_default.child("dom");
 	var ID_PARAMS = ["XID", "user2ID"];
 	var GaugeAttachMode = function(GaugeAttachMode) {
 		GaugeAttachMode["HONOR_BAR"] = "honor-bar";
@@ -3561,7 +3753,7 @@
 			if (width !== null) element.style.setProperty("--ffscouter-marker-actual-width", `${width}px`);
 			ffscouter.add_analytics_entry(featureName, player_id, "applied");
 		}).catch((err) => {
-			log$15.error(err);
+			log$18.error(err);
 		});
 	}
 	function has_href(el) {
@@ -3607,7 +3799,7 @@
 		if (!status) {
 			if (!seenUnknownActivityLabels.has(label)) {
 				seenUnknownActivityLabels.add(label);
-				log$15.warn(`Unrecognized activity aria-label: "${label}"`);
+				log$18.warn(`Unrecognized activity aria-label: "${label}"`);
 			}
 			return "unknown";
 		}
@@ -3669,9 +3861,9 @@
 			if (delay > 0) await new Promise((resolve) => setTimeout(resolve, delay));
 			const element = document.createElement(tagName);
 			if (!ctor || element instanceof ctor) return element;
-			log$15.warn(`<${tagName}> construction produced a fallback element; retrying`);
+			log$18.warn(`<${tagName}> construction produced a fallback element; retrying`);
 		}
-		log$15.error(`Failed to construct a working <${tagName}> after multiple attempts`);
+		log$18.error(`Failed to construct a working <${tagName}> after multiple attempts`);
 		return null;
 	}
 	var MonitorElements = class {
@@ -3726,13 +3918,13 @@
 	async function getLocalUserId() {
 		const name = await wait_for_element(".settings-menu > .link > a:first-child", 15e3);
 		if (!name?.href) {
-			log$15.debug("Failed to find the XID element.");
+			log$18.debug("Failed to find the XID element.");
 			return null;
 		}
 		try {
 			return new URL(name.href).searchParams.get("XID");
 		} catch {
-			log$15.debug("User XID is malformed");
+			log$18.debug("User XID is malformed");
 			return null;
 		}
 	}
@@ -3807,6 +3999,7 @@
 			tab
 		};
 	}
+	init_react_loader();
 	new Proxy({}, { get(_, prop) {
 		return getReactDOM()[prop];
 	} });
@@ -3823,7 +4016,10 @@
 		default: () => attack_default,
 		unmount_bounty_row: () => unmount_bounty_row
 	});
-	var log$14 = logger_default.child("feature:attack");
+	init_ffconfig();
+	init_logger();
+	init_react();
+	var log$17 = logger_default.child("feature:attack");
 	var FIGHT_BUTTON = "[class*=\"dialogButtons\"] button";
 	var attack_target = null;
 	var bounty_row = null;
@@ -3854,7 +4050,7 @@
 		if (!result.ok) {
 			const phase = classify_board_error(result.err).phase;
 			gate_failed ||= phase === "consent" || phase === "key_unregistered";
-			if (!gate_failed) log$14.error("Bounty board read failed on the attack page", result.err);
+			if (!gate_failed) log$17.error("Bounty board read failed on the attack page", result.err);
 		}
 		if (gate_failed) silence_attack_bounty();
 		const match = !gate_failed && result.ok ? find_bounty_match(result.response.board.targets, player_id) : null;
@@ -3932,7 +4128,7 @@
 		async run() {
 			const player_id = extract_id_from_url(window.location.href);
 			if (!player_id) return;
-			log$14.debug("On the attack page, found player_id", player_id);
+			log$17.debug("On the attack page, found player_id", player_id);
 			const info_line = create_info_line();
 			mountComponent(createElement(FFHeaderLine, { playerId: player_id }), info_line);
 			await inject_info_line$1(info_line);
@@ -3987,7 +4183,7 @@
 		"ff-bounty-modal__own-label": "_ff-bounty-modal__own-label_1r3gd_262",
 		"ff-bounty-launcher": "_ff-bounty-launcher_1r3gd_276"
 	};
-	var cls$2 = {
+	var cls$4 = {
 		modal: bounty_board_module_default["ff-bounty-modal"],
 		modalMinimized: bounty_board_module_default["ff-bounty-modal--minimized"],
 		inFlow: bounty_board_module_default["ff-bounty-modal--in-flow"],
@@ -4029,7 +4225,7 @@
 		if (ff && !ff.no_data) {
 			const background = get_ff_colour(ff);
 			return jsx("span", {
-				className: cls$2.estimate,
+				className: cls$4.estimate,
 				style: {
 					background,
 					color: get_contrast_color(background)
@@ -4039,7 +4235,7 @@
 			});
 		}
 		return jsx("span", {
-			className: cls$2.estimate,
+			className: cls$4.estimate,
 			title: known ? "FF unknown" : "No estimate available",
 			children: text
 		});
@@ -4071,7 +4267,7 @@
 		const checked = row.status_last_checked != null ? `checked ${format_short_age(now - row.status_last_checked)} ago` : null;
 		const title = [detail, checked].filter(Boolean).join(" · ");
 		return jsx("span", {
-			className: `${cls$2.status} ${STATUS_TONE[tone]}`,
+			className: `${cls$4.status} ${STATUS_TONE[tone]}`,
 			title: title || void 0,
 			children: text
 		});
@@ -4088,21 +4284,21 @@
 		return format_duration_human(remaining, true);
 	}
 	var STATUS_TONE = {
-		okay: cls$2.statusOkay,
-		out: cls$2.statusOut,
-		away: cls$2.statusAway,
+		okay: cls$4.statusOkay,
+		out: cls$4.statusOut,
+		away: cls$4.statusAway,
 		other: ""
 	};
 	function BountyRow({ row, ff, now, expanded, onToggleExpanded, onAttack, onClaim, claimPending }) {
 		const [top, ...rest] = row.tiers;
 		return jsxs("li", {
-			className: row.own_bounty ? `${cls$2.row} ${cls$2.own}` : cls$2.row,
+			className: row.own_bounty ? `${cls$4.row} ${cls$4.own}` : cls$4.row,
 			children: [
 				jsxs("div", {
-					className: cls$2.rowMain,
+					className: cls$4.rowMain,
 					children: [
 						jsx("a", {
-							className: cls$2.name,
+							className: cls$4.name,
 							href: `https://www.torn.com/profiles.php?XID=${row.player_id}`,
 							children: row.name
 						}),
@@ -4116,7 +4312,7 @@
 						}),
 						rest.length > 0 ? jsxs("button", {
 							type: "button",
-							className: cls$2.tierToggle,
+							className: cls$4.tierToggle,
 							"aria-expanded": expanded,
 							"aria-label": `${expanded ? "Hide" : "Show"} all bounty tiers for ${row.name}`,
 							onClick: () => onToggleExpanded(row.row_key),
@@ -4126,18 +4322,18 @@
 								expanded ? "▴" : "▾"
 							]
 						}) : jsx("span", {
-							className: cls$2.tierLabel,
+							className: cls$4.tierLabel,
 							children: top ? format_tier_label(top) : ""
 						}),
 						row.own_bounty ? null : jsxs(Fragment$1, { children: [jsx("button", {
 							type: "button",
-							className: cls$2.action,
+							className: cls$4.action,
 							"aria-label": `Attack ${row.name}`,
 							onClick: () => onAttack(row),
 							children: "Attack"
 						}), jsx("button", {
 							type: "button",
-							className: cls$2.action,
+							className: cls$4.action,
 							"aria-label": `Claim bounty on ${row.name}`,
 							disabled: claimPending,
 							onClick: () => onClaim(row),
@@ -4146,12 +4342,12 @@
 					]
 				}),
 				row.own_bounty ? jsx("div", {
-					className: cls$2.ownLabel,
+					className: cls$4.ownLabel,
 					title: OWN_TITLE,
 					children: OWN_LABEL
 				}) : null,
 				expanded && rest.length > 0 ? jsx("ul", {
-					className: cls$2.tierLadder,
+					className: cls$4.tierLadder,
 					children: rest.map((tier) => jsxs("li", { children: ["then ", format_tier_label(tier)] }, tier.price_per_hit))
 				}) : null
 			]
@@ -4161,25 +4357,25 @@
 		const top = card.tiers[0];
 		const label = card.faction_tag ? `[${card.faction_tag}] ${card.faction_name}` : card.faction_name;
 		return jsxs("li", {
-			className: card.own_bounty ? `${cls$2.factionCard} ${cls$2.own}` : cls$2.factionCard,
+			className: card.own_bounty ? `${cls$4.factionCard} ${cls$4.own}` : cls$4.factionCard,
 			children: [
 				jsxs("button", {
 					type: "button",
-					className: cls$2.factionHeader,
+					className: cls$4.factionHeader,
 					"aria-expanded": expanded,
 					"aria-label": `${expanded ? "Collapse" : "Expand"} faction bounty on ${card.faction_name}`,
 					onClick: () => onToggleExpanded(card.faction_id),
 					children: [
 						jsx("span", {
-							className: cls$2.name,
+							className: cls$4.name,
 							children: label
 						}),
 						jsx("span", {
-							className: cls$2.tierLabel,
+							className: cls$4.tierLabel,
 							children: top ? format_tier_label(top) : ""
 						}),
 						jsxs("span", {
-							className: cls$2.pool,
+							className: cls$4.pool,
 							children: [
 								card.total_remaining,
 								" hits shared ",
@@ -4189,12 +4385,12 @@
 					]
 				}),
 				card.own_bounty ? jsx("div", {
-					className: cls$2.ownLabel,
+					className: cls$4.ownLabel,
 					title: OWN_TITLE,
 					children: OWN_LABEL
 				}) : null,
 				expanded ? jsx("ul", {
-					className: cls$2.memberList,
+					className: cls$4.memberList,
 					children: card.members.map(renderMember)
 				}) : null
 			]
@@ -4262,6 +4458,8 @@
 	function measure_zones(extra = []) {
 		return [...SHARED_KEEP_OUT_ZONES, ...extra].map((zone) => zone()).filter((rect) => rect !== null);
 	}
+	init_storage();
+	init_react();
 	var DEFAULT_SIDE = "right";
 	var EDGE_GAP = 8;
 	var DEFAULT_BOTTOM = 64;
@@ -4518,7 +4716,11 @@
 			}
 		};
 	}
-	var log$13 = logger_default.child("ui");
+	init_ffconfig();
+	init_logger();
+	init_storage();
+	init_react();
+	var log$16 = logger_default.child("ui");
 	var VIEW_STATE_KEY = "bounty_board_view";
 	var DEFAULT_VIEW_STATE = {
 		stats_less_than: "",
@@ -4587,14 +4789,14 @@
 			getLocalUserId().then((id) => {
 				if (id && !cancelled) setHref(`https://www.torn.com/profiles.php?XID=${id}#ff-scouter-api-key`);
 			}).catch((err) => {
-				log$13.error(err);
+				log$16.error(err);
 			});
 			return () => {
 				cancelled = true;
 			};
 		}, []);
 		return jsxs("p", {
-			className: cls$2.notice,
+			className: cls$4.notice,
 			children: [
 				unregistered ? "Your FF Scouter API key isn't registered. Check it in " : "FF Scouter Bounties need your FF Scouter API key. Enter it in ",
 				href ? jsx("a", {
@@ -4624,7 +4826,7 @@
 			}
 		};
 		return jsxs("div", { children: [jsxs("p", {
-			className: cls$2.notice,
+			className: cls$4.notice,
 			children: [
 				"FF Scouter Bounties are a separate system from Torn's own bounties. To view and claim them, read the",
 				" ",
@@ -4638,7 +4840,7 @@
 			]
 		}), jsx("button", {
 			type: "button",
-			className: cls$2.primaryBtn,
+			className: cls$4.primaryBtn,
 			disabled: submitting,
 			onClick: () => {
 				accept();
@@ -4694,7 +4896,7 @@
 					return next;
 				});
 			}).catch((err) => {
-				log$13.error(err);
+				log$16.error(err);
 			});
 		}, [
 			targets,
@@ -4739,23 +4941,23 @@
 		}, row.row_key);
 		switch (state.phase) {
 			case "loading": return jsx("p", {
-				className: cls$2.notice,
+				className: cls$4.notice,
 				children: "Loading FF Scouter Bounties…"
 			});
 			case "key_missing": return jsx(KeyNudge, { unregistered: false });
 			case "key_unregistered": return jsx(KeyNudge, { unregistered: true });
 			case "consent": return jsx(ConsentGate, { onAccepted: () => dispatch({ type: "reload" }) });
 			case "error": return jsxs("p", {
-				className: cls$2.notice,
+				className: cls$4.notice,
 				children: ["Couldn't load FF Scouter Bounties: ", state.message]
 			});
 		}
 		const anyShown = state.response.board.targets.some(is_shown_target);
 		return jsxs("div", { children: [jsxs("div", {
-			className: cls$2.filters,
+			className: cls$4.filters,
 			children: [
 				jsxs("label", {
-					className: cls$2.filter,
+					className: cls$4.filter,
 					children: ["Stats less than", jsx("input", {
 						type: "text",
 						inputMode: "decimal",
@@ -4766,7 +4968,7 @@
 					})]
 				}),
 				jsxs("label", {
-					className: cls$2.filter,
+					className: cls$4.filter,
 					children: ["FF less than", jsx("input", {
 						type: "text",
 						inputMode: "decimal",
@@ -4777,7 +4979,7 @@
 					})]
 				}),
 				jsxs("label", {
-					className: cls$2.filter,
+					className: cls$4.filter,
 					children: [jsx("input", {
 						type: "checkbox",
 						checked: view.hide_unavailable,
@@ -4786,10 +4988,10 @@
 				})
 			]
 		}), rows.length === 0 ? jsx("p", {
-			className: cls$2.notice,
+			className: cls$4.notice,
 			children: anyShown ? "No FF Scouter Bounties match your filters." : "No open FF Scouter Bounties right now."
 		}) : jsx("ul", {
-			className: cls$2.list,
+			className: cls$4.list,
 			children: rows.map((row) => row.kind === "faction" ? jsx(FactionBountyCard, {
 				card: row,
 				expanded: view.expanded_factions.includes(row.faction_id),
@@ -4800,12 +5002,12 @@
 	}
 	var SHELL = {
 		modal: {
-			className: cls$2.modal,
+			className: cls$4.modal,
 			collapse: "Minimize",
 			expanded: "−"
 		},
 		section: {
-			className: `${cls$2.modal} ${cls$2.inFlow}`,
+			className: `${cls$4.modal} ${cls$4.inFlow}`,
 			collapse: "Collapse",
 			collapsed: "▾",
 			expanded: "▴"
@@ -4829,7 +5031,7 @@
 		});
 		if (floating && view.minimized) return jsx("button", {
 			type: "button",
-			className: cls$2.launcher,
+			className: cls$4.launcher,
 			"aria-label": "Expand FF Scouter Bounties",
 			"aria-expanded": false,
 			style: edge_style(drag.box, drag.side, drag.viewport),
@@ -4845,18 +5047,18 @@
 			};
 		}
 		return jsxs("section", {
-			className: `${shell.className}${view.minimized ? ` ${cls$2.modalMinimized}` : ""}`,
+			className: `${shell.className}${view.minimized ? ` ${cls$4.modalMinimized}` : ""}`,
 			"aria-label": "FF Scouter Bounties",
 			style,
 			children: [jsxs("div", {
-				className: floating ? `${cls$2.header} ${cls$2.dragHandle}` : cls$2.header,
+				className: floating ? `${cls$4.header} ${cls$4.dragHandle}` : cls$4.header,
 				onPointerDown: floating ? drag.handleProps.onPointerDown : void 0,
 				children: [jsx("h2", {
-					className: cls$2.title,
+					className: cls$4.title,
 					children: "FF Scouter Bounties"
 				}), jsx("button", {
 					type: "button",
-					className: cls$2.headerBtn,
+					className: cls$4.headerBtn,
 					onPointerDown: (e) => e.stopPropagation(),
 					"aria-expanded": !view.minimized,
 					"aria-label": view.minimized ? "Expand FF Scouter Bounties" : `${shell.collapse} FF Scouter Bounties`,
@@ -4864,7 +5066,7 @@
 					children: view.minimized ? shell.collapsed : shell.expanded
 				})]
 			}), view.minimized ? null : jsx("div", {
-				className: cls$2.body,
+				className: cls$4.body,
 				children: jsx(BountyBoardBody, {
 					view,
 					updateView
@@ -4878,6 +5080,9 @@
 		should_show_bounty_board: () => should_show_bounty_board,
 		unmount_bounty_board: () => unmount_bounty_board
 	});
+	init_ffconfig();
+	init_logger();
+	init_react();
 	function is_bounty_main_route() {
 		const route = new URLSearchParams(location.hash.replace(/^#\/?!?/, "")).get("p");
 		return route === null || route === "main";
@@ -4886,49 +5091,49 @@
 	var TEMPLATE = ".page-template-cont";
 	var BOUNTY_ROWS = `${TEMPLATE} .bounties-list > li`;
 	var BOUNTY_LIST_TIMEOUT_MS = 3e4;
-	var log$12 = logger_default.child("feature:bounties");
+	var log$15 = logger_default.child("feature:bounties");
 	function should_show_bounty_board() {
 		return ffconfig.bounty_board_enabled && torn_page("bounties") && is_bounty_main_route();
 	}
-	var mounted = null;
-	var page_observer = null;
+	var mounted$1 = null;
+	var page_observer$1 = null;
 	var rows_wait = null;
 	function create_container() {
 		const container = document.createElement("div");
 		container.id = "ffscouter-bounty-board";
 		return container;
 	}
-	function render(variant) {
-		if (!mounted || mounted.rendered === variant) return;
-		mounted.rendered = variant;
-		mounted.root.render(createElement(BountyBoard, { variant }));
+	function render$1(variant) {
+		if (!mounted$1 || mounted$1.rendered === variant) return;
+		mounted$1.rendered = variant;
+		mounted$1.root.render(createElement(BountyBoard, { variant }));
 	}
 	function watch_page() {
-		page_observer ??= new MutationObserver(() => sync());
-		page_observer.disconnect();
+		page_observer$1 ??= new MutationObserver(() => sync$1());
+		page_observer$1.disconnect();
 		for (const selector of [CONTENT_WRAPPER, TEMPLATE]) {
 			const el = document.querySelector(selector);
-			if (el) page_observer.observe(el, { childList: true });
+			if (el) page_observer$1.observe(el, { childList: true });
 		}
 	}
 	function stop_watching() {
 		rows_wait?.abort();
 		rows_wait = null;
-		page_observer?.disconnect();
+		page_observer$1?.disconnect();
 	}
 	function float_modal() {
-		if (!mounted) return;
-		if (mounted.container.parentElement !== document.body) document.body.appendChild(mounted.container);
-		render("modal");
+		if (!mounted$1) return;
+		if (mounted$1.container.parentElement !== document.body) document.body.appendChild(mounted$1.container);
+		render$1("modal");
 	}
 	function place_section() {
-		if (!mounted) return;
+		if (!mounted$1) return;
 		const template = document.querySelector(TEMPLATE);
 		if (template && document.querySelector(BOUNTY_ROWS)) {
 			rows_wait?.abort();
 			rows_wait = null;
-			if (template.firstElementChild !== mounted.container) template.prepend(mounted.container);
-			render("section");
+			if (template.firstElementChild !== mounted$1.container) template.prepend(mounted$1.container);
+			render$1("section");
 			watch_page();
 			return;
 		}
@@ -4939,29 +5144,29 @@
 			if (wait.signal.aborted) return;
 			rows_wait = null;
 			if (rows) {
-				sync();
+				sync$1();
 				return;
 			}
-			log$12.warn("Torn's bounty list didn't render; floating FF Scouter Bounties");
+			log$15.warn("Torn's bounty list didn't render; floating FF Scouter Bounties");
 			float_modal();
 			watch_page();
 		});
 	}
 	function unmount_bounty_board() {
 		stop_watching();
-		if (!mounted) return;
-		mounted.root.unmount();
-		mounted.container.remove();
-		mounted = null;
+		if (!mounted$1) return;
+		mounted$1.root.unmount();
+		mounted$1.container.remove();
+		mounted$1 = null;
 	}
-	function sync() {
+	function sync$1() {
 		if (!should_show_bounty_board()) {
 			unmount_bounty_board();
 			return;
 		}
-		if (!mounted) {
+		if (!mounted$1) {
 			const container = create_container();
-			mounted = {
+			mounted$1 = {
 				root: createRoot(container),
 				container,
 				rendered: null
@@ -4981,10 +5186,10 @@
 			return torn_page("bounties");
 		},
 		async run() {
-			on_navigation(sync);
-			window.addEventListener("ff-config-updated", sync);
-			window.matchMedia?.(NARROW_LAYOUT_QUERY).addEventListener("change", sync);
-			sync();
+			on_navigation(sync$1);
+			window.addEventListener("ff-config-updated", sync$1);
+			window.matchMedia?.(NARROW_LAYOUT_QUERY).addEventListener("change", sync$1);
+			sync$1();
 		}
 	};
 	var _deprecated_stub_exports = __exportAll({ default: () => null });
@@ -5015,7 +5220,9 @@
 		"ff-filter-box__option--out-soon": "_ff-filter-box__option--out-soon_j1w9b_212",
 		"ff-filter-box__range-inputs": "_ff-filter-box__range-inputs_j1w9b_216"
 	};
-	var cls$1 = {
+	init_ffconfig();
+	init_react();
+	var cls$3 = {
 		box: faction_filter_box_module_default["ff-filter-box"],
 		boxNoBorders: faction_filter_box_module_default["ff-filter-box--no-borders"],
 		header: faction_filter_box_module_default["ff-filter-box__header"],
@@ -5437,20 +5644,20 @@
 		const sortText = colDisplay === FactionsColDisplay.BATTLE_STATS ? "Stats" : "FF";
 		return jsxs("details", {
 			ref: rootRef,
-			className: `${cls$1.box}${mode === "war" ? ` ${cls$1.boxNoBorders}` : ""}`,
+			className: `${cls$3.box}${mode === "war" ? ` ${cls$3.boxNoBorders}` : ""}`,
 			open: !collapsed,
 			onToggle,
 			children: [jsx("summary", { children: jsxs("div", {
-				className: cls$1.header,
+				className: cls$3.header,
 				children: [jsx("span", { children: "FFScouter Filter & Sort Controls" }), jsxs("div", {
-					className: cls$1.headerActions,
+					className: cls$3.headerActions,
 					onClick: (e) => {
 						e.preventDefault();
 						e.stopPropagation();
 					},
 					children: [jsx("button", {
 						type: "button",
-						className: `${cls$1.actionBtn} ${s.filterEnabled ? cls$1.actionBtnActive : cls$1.actionBtnInactive}`,
+						className: `${cls$3.actionBtn} ${s.filterEnabled ? cls$3.actionBtnActive : cls$3.actionBtnInactive}`,
 						title: s.filterEnabled ? "Turn off filtering" : "Turn on filtering",
 						onClick: onToggleFilter,
 						children: s.filterEnabled ? jsx("svg", {
@@ -5471,7 +5678,7 @@
 						})
 					}), jsx("button", {
 						type: "button",
-						className: `${cls$1.actionBtn} ${cls$1.actionBtnReset}`,
+						className: `${cls$3.actionBtn} ${cls$3.actionBtnReset}`,
 						title: "Reset filters to default",
 						onClick: onResetFilters,
 						children: jsxs("svg", {
@@ -5485,17 +5692,17 @@
 					})]
 				})]
 			}) }), jsxs("div", {
-				className: cls$1.grid,
+				className: cls$3.grid,
 				children: [
 					jsxs("div", {
-						className: `${cls$1.group} ${cls$1.groupSort}`,
+						className: `${cls$3.group} ${cls$3.groupSort}`,
 						children: [jsx("strong", { children: "Sort & Display" }), jsxs("div", {
-							className: cls$1.sortControls,
+							className: cls$3.sortControls,
 							children: [
 								jsx("button", {
 									type: "button",
 									id: "sort-toggle-btn",
-									className: cls$1.sortBtn,
+									className: cls$3.sortBtn,
 									onClick: onSortToggle,
 									children: s.sortBy === "none" ? "Sort: Default" : s.sortBy === "ff-asc" ? `Sort: ${sortText} ▲` : `Sort: ${sortText} ▼`
 								}),
@@ -5503,7 +5710,7 @@
 									id: mode === "war" ? "war-col-display-filter" : "factions-col-display-filter",
 									value: colDisplay,
 									onChange: onDisplayChange,
-									className: cls$1.displaySelect,
+									className: cls$3.displaySelect,
 									children: [
 										jsx("option", {
 											value: "fair_fight",
@@ -5522,7 +5729,7 @@
 								mode === "war" && jsx("button", {
 									type: "button",
 									id: "compare-faction-activity-btn",
-									className: cls$1.compareBtn,
+									className: cls$3.compareBtn,
 									onClick: onCompareActivity,
 									children: "Compare Activity"
 								})
@@ -5530,9 +5737,9 @@
 						})]
 					}),
 					jsxs("div", {
-						className: `${cls$1.group} ${cls$1.groupActivity}`,
+						className: `${cls$3.group} ${cls$3.groupActivity}`,
 						children: [jsx("strong", { children: "Activity" }), jsx("div", {
-							className: cls$1.options,
+							className: cls$3.options,
 							children: [
 								["online", "Online"],
 								["idle", "Idle"],
@@ -5545,9 +5752,9 @@
 						})]
 					}),
 					jsxs("div", {
-						className: `${cls$1.group} ${cls$1.groupStatus}`,
+						className: `${cls$3.group} ${cls$3.groupStatus}`,
 						children: [jsx("strong", { children: "Status" }), jsx("div", {
-							className: cls$1.options,
+							className: cls$3.options,
 							children: [
 								["okay", "Okay"],
 								["hospital", "Hospital"],
@@ -5563,7 +5770,7 @@
 									onChange: (e) => onStatusChange(key, e.target.checked)
 								}), label] }, key)];
 								if (key === "hospital" && mode === "war" && hasUntilData) items.push(jsxs("label", {
-									className: cls$1.optionOutSoon,
+									className: cls$3.optionOutSoon,
 									children: [jsx("input", {
 										type: "checkbox",
 										checked: s.outSoon,
@@ -5575,9 +5782,9 @@
 						})]
 					}),
 					jsxs("div", {
-						className: `${cls$1.group} ${cls$1.groupLevel}`,
+						className: `${cls$3.group} ${cls$3.groupLevel}`,
 						children: [jsx("strong", { children: "Level Range" }), jsxs("div", {
-							className: cls$1.rangeInputs,
+							className: cls$3.rangeInputs,
 							children: [
 								jsx("input", {
 									type: "number",
@@ -5596,9 +5803,9 @@
 						})]
 					}),
 					jsxs("div", {
-						className: `${cls$1.group} ${cls$1.groupFf}`,
+						className: `${cls$3.group} ${cls$3.groupFf}`,
 						children: [jsx("strong", { children: "FF Range" }), jsxs("div", {
-							className: cls$1.rangeInputs,
+							className: cls$3.rangeInputs,
 							children: [
 								jsx("input", {
 									type: "number",
@@ -5619,9 +5826,9 @@
 						})]
 					}),
 					jsxs("div", {
-						className: `${cls$1.group} ${cls$1.groupStats}`,
+						className: `${cls$3.group} ${cls$3.groupStats}`,
 						children: [jsx("strong", { children: "Stats Range" }), jsxs("div", {
-							className: cls$1.rangeInputs,
+							className: cls$3.rangeInputs,
 							children: [
 								jsx("input", {
 									type: "text",
@@ -5640,9 +5847,9 @@
 						})]
 					}),
 					mode === "war" && hasLastActionData && jsxs("div", {
-						className: `${cls$1.group} ${cls$1.groupLastAction}`,
+						className: `${cls$3.group} ${cls$3.groupLastAction}`,
 						children: [jsx("strong", { children: "Last Action Range" }), jsxs("div", {
-							className: cls$1.rangeInputs,
+							className: cls$3.rangeInputs,
 							children: [
 								jsx("input", {
 									type: "text",
@@ -5663,9 +5870,9 @@
 						})]
 					}),
 					mode === "war" && jsxs("div", {
-						className: `${cls$1.group} ${cls$1.groupColumns}`,
+						className: `${cls$3.group} ${cls$3.groupColumns}`,
 						children: [jsx("strong", { children: "Visible Columns" }), jsx("div", {
-							className: cls$1.options,
+							className: cls$3.options,
 							children: [
 								["level", "Level"],
 								["status", "Status"],
@@ -5681,6 +5888,7 @@
 			})]
 		});
 	}
+	init_ffconfig();
 	var isApplying = new WeakMap();
 	function is_applying(list) {
 		return isApplying.get(list) ?? false;
@@ -5838,7 +6046,9 @@
 		if (filters.sortBy !== "none") return true;
 		return false;
 	}
-	var log$11 = logger_default.child("feature:faction");
+	init_ffconfig();
+	init_logger();
+	var log$14 = logger_default.child("feature:faction");
 	async function poll_traveling_flights(membersList) {
 		const travelingPlayers = Array.from(membersList.querySelectorAll(".enemy, .your")).map((row) => {
 			const player_id = get_player_id_in_element(row);
@@ -5876,7 +6086,7 @@
 					p.row.removeAttribute("data-latest-arrival");
 				}
 			} catch (err) {
-				log$11.error(`Failed to fetch flights for player ${p.player_id}`, err);
+				log$14.error(`Failed to fetch flights for player ${p.player_id}`, err);
 			}
 		}));
 	}
@@ -5956,7 +6166,7 @@
 					e.preventDefault();
 					e.stopPropagation();
 					const freshPlayerId = get_player_id_in_element(rp.row);
-					log$11.info("FF/Est cell click: id-binding cross-check:", {
+					log$14.info("FF/Est cell click: id-binding cross-check:", {
 						staleClosurePlayerId: rp.player_id,
 						freshPlayerId,
 						stale: freshPlayerId !== rp.player_id
@@ -6005,7 +6215,8 @@
 		update_header_sort_indicator(membersList, handle?.sortBy ?? "none");
 		poll_traveling_flights(membersList);
 	}
-	var log$10 = logger_default.child("feature:faction");
+	init_logger();
+	var log$13 = logger_default.child("feature:faction");
 	var MAX_REORDERS_PER_FRAME = 3;
 	function watch_native_reorder(list, getFilters) {
 		let reordersThisFrame = 0;
@@ -6036,7 +6247,7 @@
 				deferred = true;
 				if (!warned) {
 					warned = true;
-					log$10.warn("Native reorder re-sorts exceeded the per-frame limit; deferring to animation frames", list);
+					log$13.warn("Native reorder re-sorts exceeded the per-frame limit; deferring to animation frames", list);
 				}
 				return;
 			}
@@ -6052,7 +6263,10 @@
 		setup_war_features: () => setup_war_features,
 		should_run_faction: () => should_run_faction
 	});
-	var log$9 = logger_default.child("feature:faction");
+	init_ffconfig();
+	init_logger();
+	init_react();
+	var log$12 = logger_default.child("feature:faction");
 	var FEATURE_NAME$4 = "faction";
 	function cleanup_when_detached(el, dispose) {
 		const cleanupInterval = setInterval(() => {
@@ -6272,7 +6486,7 @@
 		inject_filter_box(membersList);
 		setup_header_click(membersList, ".table-header", "[role='button']");
 		apply_ff_columns(membersList).catch((err) => {
-			log$9.error(err);
+			log$12.error(err);
 		});
 		setup_reapply_watcher(membersList, membersList.querySelector(".table-body") || membersList, () => ffconfig.factions_col_display);
 	}
@@ -6364,49 +6578,49 @@
 	function initialize_war_list(list) {
 		setup_header_click(list, ".white-grad", "[class*='tab___']");
 		apply_ff_columns(list).catch((err) => {
-			log$9.error(err);
+			log$12.error(err);
 		});
 		setup_reapply_watcher(list, list, () => ffconfig.war_col_display);
 	}
 	var process_page = () => {
 		wait_for_element(".members-list", 1e4).then((node) => {
 			if (node instanceof HTMLElement) {
-				log$9.debug("Found members-list!");
+				log$12.debug("Found members-list!");
 				monitor_member_list(node);
 			}
 		}).catch((err) => {
-			log$9.error(err);
+			log$12.error(err);
 		});
 		wait_for_element(".chain-attacks-list", 1e4).then((node) => {
 			if (node instanceof HTMLElement) {
-				log$9.debug("Found chain-attacks-list!");
+				log$12.debug("Found chain-attacks-list!");
 				monitor_member_list(node, true);
 			}
 		}).catch((err) => {
-			log$9.error(err);
+			log$12.error(err);
 		});
 		wait_for_element("#faction_war_list_id", 1e4).then(async (node) => {
 			if (!node) return;
-			log$9.debug("Found faction_war_list_id");
+			log$12.debug("Found faction_war_list_id");
 			new MutationObserver(async (mutations) => {
 				try {
 					for (const mutation of mutations) for (const node of mutation.addedNodes) if (node instanceof HTMLElement && node.classList.contains("descriptions")) {
-						log$9.debug("Observed mutation that included adding descriptions", node);
+						log$12.debug("Observed mutation that included adding descriptions", node);
 						const faction_war = await wait_for_element(".faction-war", 1e4);
 						if (faction_war instanceof HTMLElement) setup_war_features(faction_war);
 					}
 				} catch (err) {
-					log$9.error(err);
+					log$12.error(err);
 				}
 			}).observe(node, { childList: true });
-			log$9.debug(`Set up descriptions observer on <${node.tagName.toLowerCase()}> .${[...node.classList].join(".")}`);
+			log$12.debug(`Set up descriptions observer on <${node.tagName.toLowerCase()}> .${[...node.classList].join(".")}`);
 			const existing_descriptions = node.querySelector(".descriptions");
 			if (existing_descriptions) {
 				const faction_war = await wait_for_element(" .faction-war", 1e4, existing_descriptions);
 				if (faction_war instanceof HTMLElement) setup_war_features(faction_war);
 			}
 		}).catch((err) => {
-			log$9.error(err);
+			log$12.error(err);
 		});
 	};
 	function should_run_faction() {
@@ -6450,7 +6664,7 @@
 				link.rel = "noopener noreferrer";
 			}
 		}).catch((err) => {
-			log$9.error(err);
+			log$12.error(err);
 		});
 		const closeBtn = document.createElement("button");
 		closeBtn.textContent = "×";
@@ -6502,7 +6716,7 @@
 	}
 	function update_api_key_notice() {
 		apiKeyNoticeQueue = apiKeyNoticeQueue.then(update_api_key_notice_impl).catch((err) => {
-			log$9.error(err);
+			log$12.error(err);
 		});
 	}
 	var faction_default = {
@@ -6521,7 +6735,7 @@
 				if (should_run_faction()) {
 					const lists = document.querySelectorAll(".members-list, .chain-attacks-list, .enemy-faction, .your-faction");
 					for (const list of lists) if (list instanceof HTMLElement) apply_ff_columns(list).catch((err) => {
-						log$9.error(err);
+						log$12.error(err);
 					});
 				}
 				update_api_key_notice();
@@ -6531,7 +6745,8 @@
 		}
 	};
 	var fallback_exports = __exportAll({ default: () => fallback_default });
-	var log$8 = logger_default.child("feature:fallback");
+	init_logger();
+	var log$11 = logger_default.child("feature:fallback");
 	var FEATURE_NAME_HONOR_BAR = "fallback-honor-bar";
 	var FEATURE_NAME_USER_NAME = "fallback-user-name";
 	var FEATURE_NAME$3 = "fallback";
@@ -6690,7 +6905,7 @@
 					if (is_observing) {
 						ff_gauge_observer.disconnect();
 						is_observing = false;
-						log$8.debug("Disconnected fallback MutationObserver (excluded page)");
+						log$11.debug("Disconnected fallback MutationObserver (excluded page)");
 					}
 				} else {
 					current_config = get_page_selectors();
@@ -6703,13 +6918,13 @@
 							subtree: true
 						});
 						is_observing = true;
-						log$8.debug("Connected fallback MutationObserver (included page)");
+						log$11.debug("Connected fallback MutationObserver (included page)");
 						if (target) check_mutation(target);
 					}
 				}
 			};
 			on_navigation(() => {
-				log$8.debug("Navigation detected, re-evaluating fallback observer state");
+				log$11.debug("Navigation detected, re-evaluating fallback observer state");
 				update_observer_state();
 			});
 			update_observer_state();
@@ -6732,7 +6947,9 @@
 		update_anchor_attributes: () => update_anchor_attributes,
 		update_ff_targets: () => update_ff_targets
 	});
-	var log$7 = logger_default.child("feature:ff-button");
+	init_ffconfig();
+	init_logger();
+	var log$10 = logger_default.child("feature:ff-button");
 	var CACHE_LIFETIME_MS = 6048e5;
 	var POLL_INTERVAL_MS = 864e5;
 	function get_active_filters() {
@@ -6751,7 +6968,7 @@
 	async function update_ff_targets(force = false) {
 		const key = ffconfig.key;
 		if (!key) {
-			log$7.debug("API key not set, skipping target fetch");
+			log$10.debug("API key not set, skipping target fetch");
 			return;
 		}
 		const currentFilters = get_active_filters();
@@ -6760,7 +6977,7 @@
 		const filtersChanged = cached && filters_changed(cached.filters, currentFilters);
 		const timeToRefresh = cached && (!cached.last_updated || Date.now() - cached.last_updated > 864e5);
 		if (!force && !hasNoCacheOrExpired && !filtersChanged && !timeToRefresh) {
-			log$7.debug("Using cached targets, not expired, filters match, and not time to poll yet");
+			log$10.debug("Using cached targets, not expired, filters match, and not time to poll yet");
 			return;
 		}
 		try {
@@ -6781,10 +6998,10 @@
 					filters: currentFilters
 				};
 				ffconfig.chain_target_index = 0;
-				log$7.info(`Chain targets updated successfully: ${response.targets.length} targets found`);
+				log$10.info(`Chain targets updated successfully: ${response.targets.length} targets found`);
 			}
 		} catch (err) {
-			log$7.error("Failed to update chain targets:", err);
+			log$10.error("Failed to update chain targets:", err);
 		}
 	}
 	function get_next_target_index(maxLen) {
@@ -6902,7 +7119,7 @@
 				const cached = ffconfig.chain_targets;
 				const currentFilters = get_active_filters();
 				if (!cached || filters_changed(cached.filters, currentFilters)) {
-					log$7.info("Target filters changed, refetching targets immediately");
+					log$10.info("Target filters changed, refetching targets immediately");
 					await update_ff_targets(true);
 				}
 				create_chain_button();
@@ -6910,8 +7127,9 @@
 		}
 	};
 	var item_market_exports = __exportAll({ default: () => item_market_default });
+	init_logger();
 	var FEATURE_NAME$2 = "item_market";
-	var log$6 = logger_default.child(`feature:${FEATURE_NAME$2}`);
+	var log$9 = logger_default.child(`feature:${FEATURE_NAME$2}`);
 	var item_market_default = {
 		name: "Item market FF display",
 		description: "Shows FF on the item market page",
@@ -6922,8 +7140,8 @@
 		async run() {
 			const root = await wait_for_element("[class*=\"marketWrapper__\"", 1e4);
 			if (!root) return;
-			log$6.info("Found item list wrapper!");
-			log$6.debug("Root element:", root);
+			log$9.info("Found item list wrapper!");
+			log$9.debug("Root element:", root);
 			const process = () => {
 				apply_ff_gauge_selector(root.querySelectorAll("div.bazaar-listing-card div:first-child div:first-child > a"), FEATURE_NAME$2, GaugeAttachMode.FALLBACK);
 				apply_ff_gauge_selector(root.querySelectorAll(".bazaar-card a"), FEATURE_NAME$2, GaugeAttachMode.FALLBACK);
@@ -6942,11 +7160,13 @@
 		}
 	};
 	var mini_profile_exports = __exportAll({ default: () => mini_profile_default });
-	var log$5 = logger_default.child("feature:mini-profile");
+	init_ffconfig();
+	init_logger();
+	var log$8 = logger_default.child("feature:mini-profile");
 	var FEATURE_NAME$1 = "mini-profile";
 	var monitor_mini_profile_root$1 = () => {
 		if (document.querySelector("#profile-mini-root")) {
-			log$5.debug("profile-mini-root already exists.");
+			log$8.debug("profile-mini-root already exists.");
 			setup_mini_observer();
 			return;
 		}
@@ -6977,7 +7197,7 @@
 			ffscouter.get(player_id).then(async (d) => {
 				if (get_player_id_in_element(miniroot) !== player_id) return;
 				if (d.no_data) return;
-				log$5.debug(`Found mini profile update for ${player_id}, adding ff data`);
+				log$8.debug(`Found mini profile update for ${player_id}, adding ff data`);
 				for (const bar of miniroot.querySelectorAll(".honor-text-wrap")) apply_ff_gauge(bar, FEATURE_NAME$1, GaugeAttachMode.HONOR_BAR);
 				miniroot.querySelector(".ffscouter-mini-desc")?.remove();
 				const value_string = ffconfig.mini_profile_display === MiniProfileDisplay.BATTLE_STATS ? `Est ${format_bs_estimate(d)}` : `FF ${format_ff_score(d)}`;
@@ -6992,7 +7212,7 @@
 				lastaction?.appendChild(document.createElement("br"));
 				lastaction?.appendChild(desc);
 			}).catch((err) => {
-				log$5.error(err);
+				log$8.error(err);
 			});
 			ffscouter.complete();
 		}).observe(miniroot, {
@@ -7009,14 +7229,16 @@
 		},
 		async run() {
 			monitor_mini_profile_root$1();
-			log$5.debug("mini-profile installed");
+			log$8.debug("mini-profile installed");
 		},
 		httpIntercept: {
 			before(_url, _init) {},
 			after(_bodyText, _response, _ctx) {}
 		}
 	};
-	var log$4 = logger_default.child("ui");
+	init_logger();
+	init_react();
+	var log$7 = logger_default.child("ui");
 	var PREMIUM_UPGRADE_URL = "https://ffscouter.com/premium";
 	function format_tct_time(unixSeconds) {
 		if (!Number.isFinite(unixSeconds)) return null;
@@ -7050,7 +7272,7 @@
 				try {
 					isPremiumResult = await check_key_status.is_premium();
 				} catch (err) {
-					log$4.error("Failed to check premium status", err);
+					log$7.error("Failed to check premium status", err);
 					if (active) setLoading(false);
 					return;
 				}
@@ -7067,7 +7289,7 @@
 					setError(null);
 				} catch (err) {
 					if (!active) return;
-					log$4.error("Failed to fetch flight data", err);
+					log$7.error("Failed to fetch flight data", err);
 					if (err instanceof FFApiError) {
 						const code = err.ff_api_error?.code;
 						if (code === 19) setIsPremium(false);
@@ -7194,14 +7416,16 @@
 		});
 	}
 	var mini_profile_flights_exports = __exportAll({ default: () => mini_profile_flights_default });
-	var log$3 = logger_default.child("feature:mini-profile-flights");
+	init_logger();
+	init_react();
+	var log$6 = logger_default.child("feature:mini-profile-flights");
 	var FLIGHT_CONTAINER_CLASS = "ff-flight-element";
 	function is_flying$1(status) {
 		return status.classList.contains("travelling");
 	}
 	var monitor_mini_profile_root = () => {
 		if (document.querySelector("#profile-mini-root")) {
-			log$3.debug("profile-mini-root already exists.");
+			log$6.debug("profile-mini-root already exists.");
 			setup_mini_flight_observer();
 			return;
 		}
@@ -7242,7 +7466,7 @@
 			if (is_flying$1(status)) {
 				const description = status.querySelector(".description");
 				if (description && !description.contains(container)) {
-					log$3.debug(`Player ${player_id} is flying, adding flight tracker to mini-profile`);
+					log$6.debug(`Player ${player_id} is flying, adding flight tracker to mini-profile`);
 					description.appendChild(container);
 				}
 			} else {
@@ -7273,14 +7497,1220 @@
 		},
 		async run() {
 			monitor_mini_profile_root();
-			log$3.debug("mini-profile-flights installed");
+			log$6.debug("mini-profile-flights installed");
 		},
 		httpIntercept: {
 			before(_url, _init) {},
 			after(_bodyText, _response, _ctx) {}
 		}
 	};
+	init_logger();
+	var log$5 = logger_default.child("clipboard");
+	function copy_with_exec_command(text) {
+		const field = document.createElement("textarea");
+		field.value = text;
+		field.readOnly = true;
+		field.style.position = "fixed";
+		field.style.top = "0";
+		field.style.left = "-9999px";
+		document.body.appendChild(field);
+		try {
+			field.focus();
+			field.select();
+			return document.execCommand("copy");
+		} catch (err) {
+			log$5.debug("execCommand copy threw", err);
+			return false;
+		} finally {
+			field.remove();
+		}
+	}
+	async function copy_text(text) {
+		if (navigator.clipboard?.writeText) try {
+			await navigator.clipboard.writeText(text);
+			return true;
+		} catch (err) {
+			log$5.debug("Clipboard API refused, trying execCommand", err);
+		}
+		return copy_with_exec_command(text);
+	}
+	init_logger();
+	init_storage();
+	var log$4 = logger_default.child("od-insurance");
+	function payable_plans(response) {
+		return response.plans.filter((plan) => plan.payment.recipient_player_id !== null);
+	}
+	function covered_item_ids(response) {
+		const ids = new Set();
+		for (const plan of payable_plans(response)) {
+			const id = plan.covered_item.item_id;
+			if (id !== null) ids.add(id);
+		}
+		return [...ids];
+	}
+	var PLANS_KEY = "od-insurance-plans-v2";
+	var OdInsurancePlansCache = class {
+		constructor(options = {}) {
+			this.inflight = null;
+			this.storage = options.storage ?? storage_default;
+			this.query = options.query ?? query_od_insurance_plans;
+		}
+		read() {
+			return this.storage.get(PLANS_KEY);
+		}
+		get() {
+			const stored = this.read();
+			if (stored && Date.now() - stored.fetched_at < 6e5) return Promise.resolve({
+				status: "fresh",
+				response: stored.response
+			});
+			this.inflight ??= this.refresh().finally(() => {
+				this.inflight = null;
+			});
+			return this.inflight;
+		}
+		async refresh() {
+			try {
+				const resp = await this.query();
+				if (resp.blank) throw new Error("OD Insurance plans response was blank");
+				this.storage.set(PLANS_KEY, {
+					response: resp.result,
+					fetched_at: Date.now()
+				}, {
+					amount: 24,
+					unit: Time.Hours
+				});
+				return {
+					status: "fresh",
+					response: resp.result
+				};
+			} catch (err) {
+				log$4.warn("OD Insurance plans did not load", err);
+			}
+			const stored = this.read();
+			if (stored) return {
+				status: "stale",
+				response: stored.response,
+				fetched_at: stored.fetched_at
+			};
+			return { status: "failed" };
+		}
+	};
+	var od_insurance_plans = new OdInsurancePlansCache();
+	var require_react_dom_production = __commonJSMin(((exports) => {
+		var React = (init_react(), __toCommonJS(react_exports));
+		function formatProdErrorMessage(code) {
+			var url = "https://react.dev/errors/" + code;
+			if (1 < arguments.length) {
+				url += "?args[]=" + encodeURIComponent(arguments[1]);
+				for (var i = 2; i < arguments.length; i++) url += "&args[]=" + encodeURIComponent(arguments[i]);
+			}
+			return "Minified React error #" + code + "; visit " + url + " for the full message or use the non-minified dev environment for full errors and additional helpful warnings.";
+		}
+		var REACT_PORTAL_TYPE = Symbol.for("react.portal");
+		var REACT_OPTIMISTIC_KEY = Symbol.for("react.optimistic_key");
+		function createPortal$1(children, containerInfo, implementation) {
+			var key = 3 < arguments.length && void 0 !== arguments[3] ? arguments[3] : null;
+			return {
+				$$typeof: REACT_PORTAL_TYPE,
+				key: null == key ? null : key === REACT_OPTIMISTIC_KEY ? REACT_OPTIMISTIC_KEY : "" + key,
+				children,
+				containerInfo,
+				implementation
+			};
+		}
+		React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
+		exports.createPortal = function(children, container) {
+			var key = 2 < arguments.length && void 0 !== arguments[2] ? arguments[2] : null;
+			if (!container || 1 !== container.nodeType && 9 !== container.nodeType && 11 !== container.nodeType) throw Error(formatProdErrorMessage(299));
+			return createPortal$1(children, container, null, key);
+		};
+	}));
+	var import_react_dom = __commonJSMin(((exports, module) => {
+		function checkDCE() {
+			if (typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ === "undefined" || typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.checkDCE !== "function") return;
+			try {
+				__REACT_DEVTOOLS_GLOBAL_HOOK__.checkDCE(checkDCE);
+			} catch (err) {
+				console.error(err);
+			}
+		}
+		checkDCE();
+		module.exports = require_react_dom_production();
+	}))();
+	var od_insurance_module_default = {
+		"ff-od-insurance__row-btn": "_ff-od-insurance__row-btn_1yru3_6",
+		"ff-od-insurance__row-btn-full": "_ff-od-insurance__row-btn-full_1yru3_29",
+		"ff-od-insurance__row-btn-short": "_ff-od-insurance__row-btn-short_1yru3_38",
+		"ff-od-insurance__overlay": "_ff-od-insurance__overlay_1yru3_43",
+		"ff-od-insurance": "_ff-od-insurance_1yru3_6",
+		"ff-od-insurance__header": "_ff-od-insurance__header_1yru3_90",
+		"ff-od-insurance__title": "_ff-od-insurance__title_1yru3_101",
+		"ff-od-insurance__sub": "_ff-od-insurance__sub_1yru3_108",
+		"ff-od-insurance__close": "_ff-od-insurance__close_1yru3_114",
+		"ff-od-insurance__body": "_ff-od-insurance__body_1yru3_126",
+		"ff-od-insurance__intro": "_ff-od-insurance__intro_1yru3_132",
+		"ff-od-insurance__plan": "_ff-od-insurance__plan_1yru3_138",
+		"ff-od-insurance__plan-open": "_ff-od-insurance__plan-open_1yru3_148",
+		"ff-od-insurance__pick": "_ff-od-insurance__pick_1yru3_166",
+		"ff-od-insurance__multiplier": "_ff-od-insurance__multiplier_1yru3_176",
+		"ff-od-insurance__button": "_ff-od-insurance__button_1yru3_186",
+		"ff-od-insurance__plan-name": "_ff-od-insurance__plan-name_1yru3_191",
+		"ff-od-insurance__plan-meta": "_ff-od-insurance__plan-meta_1yru3_197",
+		"ff-od-insurance__row": "_ff-od-insurance__row_1yru3_6",
+		"ff-od-insurance__row-label": "_ff-od-insurance__row-label_1yru3_225",
+		"ff-od-insurance__code": "_ff-od-insurance__code_1yru3_231",
+		"ff-od-insurance__copy-status": "_ff-od-insurance__copy-status_1yru3_242",
+		"ff-od-insurance__note": "_ff-od-insurance__note_1yru3_248",
+		"ff-od-insurance__footer": "_ff-od-insurance__footer_1yru3_254",
+		"ff-od-insurance__hide": "_ff-od-insurance__hide_1yru3_261",
+		"ff-od-helper": "_ff-od-helper_1yru3_278",
+		"ff-od-helper__bar": "_ff-od-helper__bar_1yru3_287",
+		"ff-od-helper__grip": "_ff-od-helper__grip_1yru3_301",
+		"ff-od-helper__press": "_ff-od-helper__press_1yru3_302",
+		"ff-od-helper__icon": "_ff-od-helper__icon_1yru3_303",
+		"ff-od-helper__steps": "_ff-od-helper__steps_1yru3_338",
+		"ff-od-helper__current": "_ff-od-helper__current_1yru3_348"
+	};
+	init_react();
+	var cls$2 = {
+		rowBtn: od_insurance_module_default["ff-od-insurance__row-btn"],
+		rowBtnFull: od_insurance_module_default["ff-od-insurance__row-btn-full"],
+		rowBtnShort: od_insurance_module_default["ff-od-insurance__row-btn-short"],
+		overlay: od_insurance_module_default["ff-od-insurance__overlay"],
+		modal: od_insurance_module_default["ff-od-insurance"],
+		header: od_insurance_module_default["ff-od-insurance__header"],
+		title: od_insurance_module_default["ff-od-insurance__title"],
+		sub: od_insurance_module_default["ff-od-insurance__sub"],
+		close: od_insurance_module_default["ff-od-insurance__close"],
+		body: od_insurance_module_default["ff-od-insurance__body"],
+		intro: od_insurance_module_default["ff-od-insurance__intro"],
+		plan: od_insurance_module_default["ff-od-insurance__plan"],
+		planOpen: od_insurance_module_default["ff-od-insurance__plan-open"],
+		pick: od_insurance_module_default["ff-od-insurance__pick"],
+		multiplier: od_insurance_module_default["ff-od-insurance__multiplier"],
+		planName: od_insurance_module_default["ff-od-insurance__plan-name"],
+		planMeta: od_insurance_module_default["ff-od-insurance__plan-meta"],
+		button: od_insurance_module_default["ff-od-insurance__button"],
+		row: od_insurance_module_default["ff-od-insurance__row"],
+		rowLabel: od_insurance_module_default["ff-od-insurance__row-label"],
+		code: od_insurance_module_default["ff-od-insurance__code"],
+		copyStatus: od_insurance_module_default["ff-od-insurance__copy-status"],
+		note: od_insurance_module_default["ff-od-insurance__note"],
+		footer: od_insurance_module_default["ff-od-insurance__footer"],
+		hide: od_insurance_module_default["ff-od-insurance__hide"]
+	};
+	var slot_keys = new WeakMap();
+	var next_slot_key = 0;
+	function slot_key(slot) {
+		let key = slot_keys.get(slot);
+		if (key === void 0) {
+			key = `od-slot-${next_slot_key++}`;
+			slot_keys.set(slot, key);
+		}
+		return key;
+	}
+	function ExternalLink({ href, children }) {
+		return jsx("a", {
+			href,
+			target: "_blank",
+			rel: "noreferrer",
+			children
+		});
+	}
+	function GuideLink({ children }) {
+		return jsx(ExternalLink, {
+			href: OD_INSURANCE_GUIDE_URL,
+			children
+		});
+	}
+	function saved_age(fetched_at) {
+		const minutes = Math.max(1, Math.round((Date.now() - fetched_at) / 6e4));
+		if (minutes < 60) return `${minutes} min ago`;
+		return `${Math.round(minutes / 60)} h ago`;
+	}
+	function DetailRow({ label, children }) {
+		return jsxs("div", {
+			className: cls$2.row,
+			children: [jsx("span", {
+				className: cls$2.rowLabel,
+				children: label
+			}), jsx("span", { children })]
+		});
+	}
+	function CopyMessage({ message }) {
+		const [status, setStatus] = useState("");
+		const copy = async () => {
+			const copied = await copy_text(message);
+			setStatus(copied ? "Copied!" : "Copy failed, select the text");
+		};
+		return jsxs(Fragment$1, { children: [
+			jsx("span", {
+				className: cls$2.code,
+				children: message
+			}),
+			" ",
+			jsx("button", {
+				type: "button",
+				className: cls$2.button,
+				onClick: copy,
+				children: "Copy"
+			}),
+			" ",
+			jsx("span", {
+				className: cls$2.copyStatus,
+				role: "status",
+				children: status
+			})
+		] });
+	}
+	function PlanDetail({ plan, onBack }) {
+		const pay = plan.payment;
+		const id = pay.recipient_player_id;
+		const recipient = pay.recipient_name ? `${pay.recipient_name} [${id}]` : `player [${id}]`;
+		return jsxs("div", { children: [
+			jsx("button", {
+				type: "button",
+				className: cls$2.button,
+				onClick: onBack,
+				children: "← Back to plans"
+			}),
+			jsx(DetailRow, {
+				label: "Plan:",
+				children: plan.name
+			}),
+			jsxs(DetailRow, {
+				label: "Send:",
+				children: [pay.xanax_quantity, "x Xanax"]
+			}),
+			jsx(DetailRow, {
+				label: "To:",
+				children: jsx(ExternalLink, {
+					href: `https://www.torn.com/profiles.php?XID=${id}`,
+					children: recipient
+				})
+			}),
+			jsx(DetailRow, {
+				label: "Message:",
+				children: jsx(CopyMessage, { message: pay.message })
+			}),
+			jsx(DetailRow, {
+				label: "Coverage:",
+				children: plan.duration_label
+			}),
+			jsxs(DetailRow, {
+				label: "Multiplier:",
+				children: [
+					"Up to ",
+					plan.max_multiplier,
+					"x"
+				]
+			}),
+			jsxs(DetailRow, {
+				label: "Standard payout:",
+				children: [plan.standard_payout_xanax, " Xanax"]
+			}),
+			jsxs(DetailRow, {
+				label: "Overdose X payout:",
+				children: [plan.overdose_payout_xanax, " Xanax"]
+			}),
+			jsxs("p", {
+				className: cls$2.note,
+				children: [
+					"Send the Xanax from your items with exactly that message. Your cover starts when ",
+					recipient,
+					" receives it."
+				]
+			})
+		] });
+	}
+	function parse_multiplier(value, max) {
+		if (!/^\d+$/.test(value)) return null;
+		const n = Number(value);
+		return n >= 1 && n <= max ? n : null;
+	}
+	function HelperPick({ plan, onPick }) {
+		const [value, setValue] = useState("1");
+		const multiplier = parse_multiplier(value, plan.max_multiplier);
+		return jsxs("div", {
+			className: cls$2.pick,
+			children: [
+				jsxs("label", { children: [
+					"Multiplier",
+					" ",
+					jsx("input", {
+						type: "number",
+						className: cls$2.multiplier,
+						min: 1,
+						max: plan.max_multiplier,
+						step: 1,
+						value,
+						onChange: (e) => setValue(e.target.value)
+					})
+				] }),
+				jsx("span", { children: multiplier === null ? `1 to ${plan.max_multiplier}` : `${plan.payment.xanax_quantity * multiplier} Xanax total` }),
+				jsx("button", {
+					type: "button",
+					className: cls$2.button,
+					disabled: multiplier === null,
+					onClick: () => {
+						if (multiplier !== null) onPick(plan, multiplier);
+					},
+					children: "Buy with helper"
+				})
+			]
+		});
+	}
+	function PlanList({ plans, onSelect, onPick }) {
+		return jsx(Fragment$1, { children: plans.map((plan) => jsxs("fieldset", {
+			className: cls$2.plan,
+			"aria-label": plan.name,
+			children: [jsxs("button", {
+				type: "button",
+				className: cls$2.planOpen,
+				onClick: () => onSelect(plan),
+				children: [jsx("span", {
+					className: cls$2.planName,
+					children: plan.name
+				}), jsxs("span", {
+					className: cls$2.planMeta,
+					children: [
+						plan.xanax_quantity,
+						"x Xanax · ",
+						plan.duration_label,
+						" · Standard payout ",
+						plan.standard_payout_xanax,
+						" Xanax · Overdose X payout",
+						" ",
+						plan.overdose_payout_xanax,
+						" Xanax · Up to ",
+						plan.max_multiplier,
+						"x"
+					]
+				})]
+			}), jsx(HelperPick, {
+				plan,
+				onPick
+			})]
+		}, plan.plan_key)) });
+	}
+	function ModalBody({ plans, onRetry, onPick }) {
+		const [selected, setSelected] = useState(null);
+		if (plans === null) return jsx("p", {
+			className: cls$2.intro,
+			children: "Loading plans…"
+		});
+		if (plans.status === "failed") return jsxs(Fragment$1, { children: [
+			jsx("p", {
+				className: cls$2.intro,
+				children: "Plans did not load."
+			}),
+			jsx("button", {
+				type: "button",
+				className: cls$2.button,
+				onClick: onRetry,
+				children: "Retry"
+			}),
+			" ",
+			jsx(GuideLink, { children: "Read the OD Insurance guide" })
+		] });
+		const payable = payable_plans(plans.response);
+		const plan = payable.find((p) => p.plan_key === selected);
+		if (plan) return jsx(PlanDetail, {
+			plan,
+			onBack: () => setSelected(null)
+		});
+		return jsxs(Fragment$1, { children: [plans.status === "stale" && jsxs("p", {
+			className: cls$2.note,
+			children: [
+				"The live list did not load. Showing plans saved",
+				" ",
+				saved_age(plans.fetched_at),
+				"."
+			]
+		}), payable.length > 0 ? jsxs(Fragment$1, { children: [jsx("p", {
+			className: cls$2.intro,
+			children: "Tap a plan to see how to buy it, or buy it with the helper. The helper walks you through the Xanax send, one tap for each change."
+		}), jsx(PlanList, {
+			plans: payable,
+			onSelect: (p) => setSelected(p.plan_key),
+			onPick
+		})] }) : jsxs("p", {
+			className: cls$2.intro,
+			children: [
+				"OD Insurance is not taking new policies right now.",
+				" ",
+				jsx(GuideLink, { children: "Read the OD Insurance guide" })
+			]
+		})] });
+	}
+	function OdInsuranceModal({ plans, onClose, onRetry, onHide, onPick }) {
+		useEffect(() => {
+			const onKeydown = (e) => {
+				if (e.key === "Escape") onClose();
+			};
+			document.addEventListener("keydown", onKeydown);
+			return () => document.removeEventListener("keydown", onKeydown);
+		}, [onClose]);
+		const response = plans !== null && plans.status !== "failed" ? plans.response : null;
+		const manager = response?.manager_player_id ?? null;
+		return jsx("div", {
+			className: cls$2.overlay,
+			children: jsxs("dialog", {
+				open: true,
+				className: cls$2.modal,
+				"aria-modal": "true",
+				"aria-label": "OD Insurance",
+				children: [jsxs("div", {
+					className: cls$2.header,
+					children: [jsxs("div", { children: [jsx("div", {
+						className: cls$2.title,
+						children: "OD Insurance"
+					}), manager !== null && jsxs("div", {
+						className: cls$2.sub,
+						children: [
+							"Managed by ",
+							response?.manager_name ?? "",
+							" [",
+							manager,
+							"]"
+						]
+					})] }), jsx("button", {
+						type: "button",
+						className: cls$2.close,
+						"aria-label": "Close OD Insurance",
+						onClick: onClose,
+						children: "×"
+					})]
+				}), jsxs("div", {
+					className: cls$2.body,
+					children: [jsx(ModalBody, {
+						plans,
+						onRetry,
+						onPick
+					}), jsxs("div", {
+						className: cls$2.footer,
+						children: [
+							"OD Insurance is a paid ffscouter.com service.",
+							" ",
+							jsx(GuideLink, { children: "How it works" }),
+							".",
+							jsxs("div", { children: [
+								jsx("button", {
+									type: "button",
+									className: cls$2.hide,
+									onClick: onHide,
+									children: "Hide OD Insurance"
+								}),
+								" ",
+								"You can turn it back on in FF Scouter Settings."
+							] })
+						]
+					})]
+				})]
+			})
+		});
+	}
+	function OdInsuranceButton({ onOpen }) {
+		return jsxs("button", {
+			type: "button",
+			className: cls$2.rowBtn,
+			"aria-label": "OD Insurance",
+			onClick: (e) => {
+				e.preventDefault();
+				e.stopPropagation();
+				onOpen();
+			},
+			children: [jsx("span", {
+				className: cls$2.rowBtnFull,
+				children: "OD Insurance"
+			}), jsx("span", {
+				className: cls$2.rowBtnShort,
+				children: "OD Ins"
+			})]
+		});
+	}
+	function OdInsurance({ slots, load, onHide, onPick = () => {}, helper = null }) {
+		const [plans, setPlans] = useState(null);
+		const [open, setOpen] = useState(false);
+		const close = useCallback(() => setOpen(false), []);
+		const refresh = () => {
+			load().then(setPlans);
+		};
+		useEffect(() => {
+			let live = true;
+			load().then((state) => {
+				if (live) setPlans(state);
+			});
+			return () => {
+				live = false;
+			};
+		}, [load]);
+		return jsxs(Fragment$1, { children: [
+			!(plans !== null && plans.status !== "failed" && payable_plans(plans.response).length === 0) && slots.map((slot) => (0, import_react_dom.createPortal)(jsx(OdInsuranceButton, { onOpen: () => {
+				setOpen(true);
+				refresh();
+			} }), slot, slot_key(slot))),
+			open && jsx(OdInsuranceModal, {
+				plans,
+				onClose: close,
+				onRetry: () => {
+					setPlans(null);
+					refresh();
+				},
+				onHide,
+				onPick: (plan, multiplier) => {
+					setOpen(false);
+					onPick(plan, multiplier);
+				}
+			}),
+			helper
+		] });
+	}
+	init_storage();
+	init_react();
+	var cls$1 = {
+		helper: od_insurance_module_default["ff-od-helper"],
+		bar: od_insurance_module_default["ff-od-helper__bar"],
+		grip: od_insurance_module_default["ff-od-helper__grip"],
+		press: od_insurance_module_default["ff-od-helper__press"],
+		icon: od_insurance_module_default["ff-od-helper__icon"],
+		steps: od_insurance_module_default["ff-od-helper__steps"],
+		current: od_insurance_module_default["ff-od-helper__current"]
+	};
+	var SEND_HELPER_POSITION_KEY = "od_send_helper_position";
+	var DEFAULT_POSITION = {
+		left: 8,
+		bottom: 51
+	};
+	var KEEP_VISIBLE = 40;
+	function clamp_position(pos) {
+		const clamp = (v, max) => Math.max(0, Math.min(v, Math.max(0, max)));
+		return {
+			left: clamp(pos.left, window.innerWidth - KEEP_VISIBLE),
+			bottom: clamp(pos.bottom, window.innerHeight - KEEP_VISIBLE)
+		};
+	}
+	function load_position() {
+		return clamp_position(storage_default.get("od_send_helper_position") ?? DEFAULT_POSITION);
+	}
+	var mark = (step) => step.done ? "✓" : step.current ? "▸" : "·";
+	function SendHelper({ label, problem, steps, onPress, onCancel }) {
+		const [position, setPosition] = useState(load_position);
+		const [expanded, setExpanded] = useState(false);
+		const endDrag = useRef(null);
+		useEffect(() => {
+			const onResize = () => setPosition((p) => clamp_position(p));
+			window.addEventListener("resize", onResize);
+			return () => {
+				window.removeEventListener("resize", onResize);
+				endDrag.current?.();
+			};
+		}, []);
+		const onPointerDown = (e) => {
+			if (e.button !== 0) return;
+			e.preventDefault();
+			endDrag.current?.();
+			const grip = e.currentTarget;
+			const pointerId = e.pointerId;
+			grip.setPointerCapture?.(pointerId);
+			const start = position;
+			const startX = e.clientX;
+			const startY = e.clientY;
+			const at = (ev) => clamp_position({
+				left: start.left + (ev.clientX - startX),
+				bottom: start.bottom - (ev.clientY - startY)
+			});
+			const move = (ev) => {
+				if (ev.pointerId === pointerId) setPosition(at(ev));
+			};
+			const up = (ev) => {
+				if (ev.pointerId !== pointerId) return;
+				end();
+				const dropped = at(ev);
+				setPosition(dropped);
+				storage_default.set(SEND_HELPER_POSITION_KEY, dropped);
+			};
+			const end = () => {
+				window.removeEventListener("pointermove", move);
+				window.removeEventListener("pointerup", up);
+				window.removeEventListener("pointercancel", end);
+				if (grip.hasPointerCapture?.(pointerId)) grip.releasePointerCapture(pointerId);
+				endDrag.current = null;
+			};
+			window.addEventListener("pointermove", move);
+			window.addEventListener("pointerup", up);
+			window.addEventListener("pointercancel", end);
+			endDrag.current = end;
+		};
+		return jsxs("section", {
+			className: cls$1.helper,
+			"aria-label": "OD Insurance Send Helper",
+			"data-problem": problem ? "true" : "false",
+			style: {
+				left: `${position.left}px`,
+				bottom: `${position.bottom}px`
+			},
+			children: [expanded && jsx("ol", {
+				className: cls$1.steps,
+				children: steps.map((step) => jsxs("li", {
+					className: step.current ? cls$1.current : void 0,
+					children: [
+						mark(step),
+						" ",
+						step.label
+					]
+				}, step.label))
+			}), jsxs("div", {
+				className: cls$1.bar,
+				children: [
+					jsx("button", {
+						type: "button",
+						className: cls$1.grip,
+						"aria-label": "Move the Send Helper",
+						onPointerDown,
+						children: "⠿"
+					}),
+					jsx("button", {
+						type: "button",
+						className: cls$1.press,
+						onClick: onPress,
+						children: label
+					}),
+					jsx("button", {
+						type: "button",
+						className: cls$1.icon,
+						"aria-label": "Show all steps",
+						"aria-expanded": expanded,
+						onClick: () => setExpanded((open) => !open),
+						children: expanded ? "▾" : "▴"
+					}),
+					jsx("button", {
+						type: "button",
+						className: cls$1.icon,
+						"aria-label": "Cancel the send",
+						onClick: onCancel,
+						children: "×"
+					})
+				]
+			})]
+		});
+	}
+	var row_selector = (item_ids) => item_ids.map((id) => `ul.items-cont > li[data-item="${id}"]`).join(", ");
+	var OD_ROW_MARK = "data-ff-od";
+	var SLOT_ATTR = "data-ff-od-slot";
+	function add_row_slots(root, item_ids) {
+		const added = [];
+		if (item_ids.length === 0) return added;
+		for (const row of root.querySelectorAll(row_selector(item_ids))) {
+			if (row.hasAttribute("data-ff-od")) continue;
+			const name = row.querySelector(".title > .name-wrap");
+			if (!name) continue;
+			const slot = document.createElement("span");
+			slot.setAttribute(SLOT_ATTR, "");
+			name.insertBefore(slot, name.querySelector(":scope > .tt-item-price"));
+			row.setAttribute(OD_ROW_MARK, "");
+			added.push(slot);
+		}
+		return added;
+	}
+	function remove_row_slots(root) {
+		for (const slot of root.querySelectorAll(`[${SLOT_ATTR}]`)) slot.remove();
+		for (const row of root.querySelectorAll(`[${OD_ROW_MARK}]`)) row.removeAttribute(OD_ROW_MARK);
+	}
+	function plan_total(selected) {
+		return selected.plan.payment.xanax_quantity * selected.multiplier;
+	}
+	function recipient_text(selected) {
+		const pay = selected.plan.payment;
+		return `${pay.recipient_name ?? "player"} [${pay.recipient_player_id}]`;
+	}
+	var STEPS = [
+		{
+			id: "open_drugs",
+			label: "Open Drugs",
+			number: 0
+		},
+		{
+			id: "open_row",
+			label: "Open Xanax row",
+			number: 0
+		},
+		{
+			id: "open_send",
+			label: "Open send",
+			number: 1
+		},
+		{
+			id: "fill_recipient",
+			label: "Fill recipient",
+			number: 2
+		},
+		{
+			id: "fill_amount",
+			label: "Fill amount",
+			number: 3
+		},
+		{
+			id: "add_message",
+			label: "Add message",
+			number: 4
+		},
+		{
+			id: "fill_message",
+			label: "Fill message",
+			number: 5
+		},
+		{
+			id: "send",
+			label: "Send",
+			number: 6
+		},
+		{
+			id: "confirm",
+			label: "Yes",
+			number: 7
+		},
+		{
+			id: "close_result",
+			label: "Sent! Close",
+			number: 7
+		}
+	];
+	var step_info = (id) => STEPS.find((s) => s.id === id);
+	var step_number = (id, narrow) => {
+		if (id === "open_row") return 1;
+		const { number } = step_info(id);
+		return narrow && number >= 1 ? number + 1 : number;
+	};
+	var step_count = (narrow) => narrow ? 8 : 7;
+	var NONE = { kind: "none" };
+	function step_list(shown) {
+		const number = (id) => step_number(id, shown.narrow);
+		const current = step_info(shown.step);
+		const core = STEPS.filter((s) => (s.number >= 1 || s.id === "open_row" && shown.narrow) && s.id !== "close_result");
+		return [
+			...shown.step === "open_drugs" ? [current] : [],
+			...core,
+			...shown.step === "close_result" ? [current] : []
+		].map((s) => ({
+			label: s.label,
+			done: s.id !== shown.step && (shown.step === "close_result" || number(s.id) < number(shown.step)),
+			current: s.id === shown.step
+		}));
+	}
+	function is_visible(el) {
+		if (!el?.isConnected) return false;
+		const view = el.ownerDocument.defaultView;
+		for (let e = el; e; e = e.parentElement) if (view?.getComputedStyle(e).display === "none") return false;
+		return true;
+	}
+	var visible_in = (root, sel) => [...root.querySelectorAll(sel)].find(is_visible) ?? null;
+	var flat_text = (el) => (el.textContent ?? "").replace(/\s+/g, " ").trim();
+	var count_of = (text) => {
+		const n = Number.parseInt((text ?? "").replace(/[^\d]/g, ""), 10);
+		return Number.isNaN(n) ? null : n;
+	};
+	var step_label = (step, narrow) => `${step_info(step).label} ${step_number(step, narrow)}/${step_count(narrow)}`;
+	var at_step = (step, action, extra = {}) => ({
+		key: step,
+		step,
+		action,
+		...extra
+	});
+	var blocked = (step, key, problem) => ({
+		key: `blocked:${key}`,
+		step,
+		label: problem,
+		problem,
+		action: NONE
+	});
+	var not_enough = (have, need) => blocked("open_send", "not_enough", `Not enough Xanax: ${have} of ${need}`);
+	var bracket_id = (value) => value.match(/\[(\d+)\]\s*$/)?.[1] ?? null;
+	function read_send_form(form, selected) {
+		const pay = selected.plan.payment;
+		const total = plan_total(selected);
+		const user = form.querySelector("input.user-id");
+		const amount = visible_in(form, "input.amount");
+		const hidden_amount = form.querySelector("input[type=\"hidden\"][name=\"amount\"]");
+		const message = form.querySelector("input.message[name=\"tag\"]");
+		const add_message = form.querySelector("a.action-message");
+		const send = form.querySelector("input.torn-btn[value=\"SEND\"]");
+		if (!user || !amount || !hidden_amount || !message || !add_message || !send) return blocked("open_send", "form", "Torn's send form looks different");
+		const have = count_of(amount.getAttribute("data-max"));
+		if (have !== null && have < total) return not_enough(have, total);
+		if (bracket_id(user.value) !== String(pay.recipient_player_id)) return at_step("fill_recipient", {
+			kind: "fill",
+			target: user,
+			value: recipient_text(selected),
+			events: []
+		});
+		if (count_of(amount.value) !== total || count_of(hidden_amount.value) !== total) return at_step("fill_amount", {
+			kind: "fill",
+			target: amount,
+			value: String(total),
+			events: [
+				"input",
+				"keyup",
+				"change"
+			]
+		});
+		if (!is_visible(message)) return at_step("add_message", {
+			kind: "click",
+			target: add_message
+		});
+		if (message.value !== pay.message) return at_step("fill_message", {
+			kind: "fill",
+			target: message,
+			value: pay.message,
+			events: ["input", "change"]
+		});
+		return at_step("send", {
+			kind: "click",
+			target: send
+		});
+	}
+	function confirm_differences(form, selected) {
+		const pay = selected.plan.payment;
+		const value = (name) => form.querySelector(`input[type="hidden"][name="${name}"]`)?.value ?? "";
+		const diffs = [];
+		const user = value("userID");
+		if (user !== String(pay.recipient_player_id)) {
+			const name = (form.querySelector("p")?.textContent ?? "").match(/ to (.+?)(?: with the message:.*)?\?\s*$/)?.[1];
+			diffs.push(`to ${name ?? "player"} [${user}], not ${recipient_text(selected)}`);
+		}
+		const amount = value("amount");
+		if (amount !== String(plan_total(selected))) diffs.push(`${amount} Xanax, not ${plan_total(selected)}`);
+		const tag = value("tag");
+		if (tag !== pay.message) diffs.push(`message "${tag}", not "${pay.message}"`);
+		return diffs;
+	}
+	function result_matches(result, selected) {
+		const pay = selected.plan.payment;
+		const text = flat_text(result);
+		const sent = text.match(/^You sent (?:(\d[\d,]*)x|(some)) Xanax /);
+		const amount = sent?.[2] ? 1 : count_of(sent?.[1]);
+		const id = result.querySelector("a[href*=\"XID=\"]")?.getAttribute("href")?.match(/XID=(\d+)/)?.[1];
+		const message = text.match(/ with the message: (.*)$/)?.[1] ?? "";
+		return amount === plan_total(selected) && id === String(pay.recipient_player_id) && message === pay.message;
+	}
+	function read_send_panel(wrap, selected, stale_form) {
+		const confirm = visible_in(wrap, "form[data-confirm=\"1\"]");
+		if (confirm) {
+			const diffs = confirm_differences(confirm, selected);
+			const close = confirm.querySelector("a.close-act");
+			const yes = confirm.querySelector("a.next-act");
+			if (diffs.length === 0 && yes) return at_step("confirm", {
+				kind: "click",
+				target: yes
+			});
+			const problem = `Torn's confirm does not match: ${diffs.join("; ") || "no Yes link"}. Press to close it.`;
+			return {
+				key: "close_confirm",
+				step: "send",
+				label: problem,
+				problem,
+				action: close ? {
+					kind: "click",
+					target: close
+				} : NONE
+			};
+		}
+		const form = visible_in(wrap, "form");
+		if (form) {
+			if (stale_form && form === stale_form) {
+				const close = wrap.querySelector("button.close-icon");
+				const problem = "This form is from before your new pick. Press to close it.";
+				return {
+					key: "close_form",
+					step: "open_send",
+					label: problem,
+					problem,
+					action: close ? {
+						kind: "click",
+						target: close
+					} : NONE
+				};
+			}
+			return read_send_form(form, selected);
+		}
+		const result = [...wrap.querySelectorAll("p")].find((p) => is_visible(p) && flat_text(p).startsWith("You sent"));
+		if (result) {
+			const close = visible_in(wrap, "a.close-act");
+			if (result_matches(result, selected)) return at_step("close_result", close ? {
+				kind: "click",
+				target: close
+			} : NONE, { finishes: true });
+			const problem = "This send result is not for your plan. Press to close it.";
+			return {
+				key: "close_other_result",
+				step: "open_send",
+				label: problem,
+				problem,
+				action: close ? {
+					kind: "click",
+					target: close
+				} : NONE
+			};
+		}
+		const text = flat_text(wrap);
+		return blocked("send", `error:${text}`, text || "Torn shows an error");
+	}
+	var XANAX_ROW = `ul.items-cont > li[data-item="206"][data-rowkey]`;
+	function situation(doc, selected, stale_form) {
+		const row = visible_in(doc, XANAX_ROW);
+		const narrow = row ? row.querySelector(":scope > .cont-wrap.ui-accordion-content") !== null : doc.querySelector("ul.items-cont.ui-accordion") !== null;
+		const read = read_page(doc, row, selected, stale_form);
+		return {
+			...read,
+			narrow,
+			label: read.label ?? step_label(read.step, narrow)
+		};
+	}
+	function read_page(doc, row, selected, stale_form) {
+		for (const wrap of doc.querySelectorAll("ul.items-cont > li .send-act")) {
+			const row = wrap.closest("li[data-item]");
+			if (row?.getAttribute("data-item") === String(206)) continue;
+			if (!is_visible(wrap)) continue;
+			return blocked("open_send", "other_form", `Close the ${row?.querySelector(".name")?.textContent?.trim() ?? "another item"} send form first`);
+		}
+		if (!row) {
+			const tab = doc.querySelector("li[data-type=\"Drug\"]");
+			const link = tab?.querySelector("a.drugs-category-icon");
+			if (tab?.matches(".ui-state-disabled, .no-items")) return blocked("open_drugs", "no_xanax", "You hold no Xanax");
+			if (link && !is_visible(doc.querySelector("#drugs-items"))) return at_step("open_drugs", {
+				kind: "click",
+				target: link
+			});
+			return blocked("open_drugs", "no_row", "No Xanax row on the page");
+		}
+		const wrap = visible_in(row, ".send-act");
+		if (wrap) return read_send_panel(wrap, selected, stale_form);
+		const have = count_of(row.querySelector(".item-amount")?.textContent);
+		const total = plan_total(selected);
+		if (have !== null && have < total) return not_enough(have, total);
+		const content = row.querySelector(":scope > .cont-wrap.ui-accordion-content");
+		if (content && !is_visible(content)) {
+			const header = row.querySelector(":scope > .title-wrap.ui-accordion-header");
+			if (!header) return blocked("open_row", "no_header", "Tap the Xanax row");
+			return at_step("open_row", {
+				kind: "click",
+				target: header
+			});
+		}
+		const send = row.querySelector("li[data-action=\"send\"] button.option-send");
+		if (!send) return blocked("open_send", "no_send", "No send button on Xanax");
+		return at_step("open_send", {
+			kind: "click",
+			target: send
+		});
+	}
+	var shown_of = ({ action: _, ...shown }) => shown;
+	function first_shown(doc, selected, stale_form = null) {
+		return {
+			shown: shown_of(situation(doc, selected, stale_form)),
+			stale_form
+		};
+	}
+	function open_send_form(doc) {
+		const row = visible_in(doc, XANAX_ROW);
+		const wrap = row && visible_in(row, ".send-act");
+		return wrap ? visible_in(wrap, "form:not([data-confirm])") : null;
+	}
+	function after(done) {
+		const { narrow } = done;
+		const index = STEPS.findIndex((s) => s.id === done.step);
+		let next = done.key === "close_confirm" || done.key === "close_form" || done.key === "close_other_result" ? "open_send" : STEPS[Math.min(index + 1, STEPS.length - 1)]?.id ?? "open_send";
+		if (next === "open_row" && !narrow) next = "open_send";
+		return {
+			key: next,
+			step: next,
+			narrow,
+			label: step_label(next, narrow)
+		};
+	}
+	function press(doc, selected, state) {
+		const stale = state.stale_form && is_visible(state.stale_form) ? state.stale_form : null;
+		const now = situation(doc, selected, stale);
+		if (now.key !== state.shown.key || now.action.kind === "none") return {
+			action: NONE,
+			state: {
+				shown: shown_of(now),
+				stale_form: stale
+			},
+			finished: false
+		};
+		return {
+			action: now.action,
+			state: {
+				shown: after(now),
+				stale_form: now.key === "close_form" ? null : stale
+			},
+			finished: now.finishes === true
+		};
+	}
+	function apply(action) {
+		if (action.kind === "click") action.target.click();
+		else if (action.kind === "fill") {
+			action.target.value = action.value;
+			for (const type of action.events) action.target.dispatchEvent(new Event(type, { bubbles: true }));
+		}
+	}
+	var od_insurance_exports = __exportAll({
+		CATEGORY_WRAP_TIMEOUT_MS: () => CATEGORY_WRAP_TIMEOUT_MS,
+		default: () => od_insurance_default,
+		stop_od_insurance: () => stop_od_insurance
+	});
+	init_ffconfig();
+	init_logger();
+	init_react();
+	var log$3 = logger_default.child("feature:od-insurance");
+	var CATEGORY_WRAP = "#category-wrap";
+	var CATEGORY_WRAP_TIMEOUT_MS = 3e4;
+	var mounted = null;
+	var slots = [];
+	var page_observer = null;
+	var wrap_wait = null;
+	var covered = [];
+	var helper = null;
+	function pick(plan, multiplier) {
+		const selected = {
+			plan,
+			multiplier
+		};
+		helper = {
+			selected,
+			state: first_shown(document, selected, open_send_form(document))
+		};
+		render();
+	}
+	function press_helper() {
+		if (!helper) return;
+		const result = press(document, helper.selected, helper.state);
+		apply(result.action);
+		helper = result.finished ? null : {
+			...helper,
+			state: result.state
+		};
+		render();
+	}
+	function cancel_helper() {
+		helper = null;
+		render();
+	}
+	function hide_feature() {
+		ffconfig.od_insurance_enabled = false;
+		toast("OD Insurance hidden. Turn it back on in FF Scouter Settings.");
+		window.dispatchEvent(new CustomEvent("ff-config-updated"));
+	}
+	var same_ids = (a, b) => {
+		const in_b = new Set(b);
+		return a.length === b.length && a.every((id) => in_b.has(id));
+	};
+	async function load_plans() {
+		const state = await od_insurance_plans.get();
+		if (mounted && state.status !== "failed") set_covered(covered_item_ids(state.response));
+		return state;
+	}
+	function set_covered(ids) {
+		if (same_ids(ids, covered)) return;
+		covered = ids;
+		remove_row_slots(document);
+		slots.length = 0;
+		const wrap = document.querySelector(CATEGORY_WRAP);
+		if (page_observer && wrap) slots.push(...add_row_slots(wrap, covered));
+		render();
+	}
+	function render() {
+		if (!mounted) {
+			const container = document.createElement("div");
+			container.id = "ffscouter-od-insurance";
+			document.body.appendChild(container);
+			mounted = {
+				root: createRoot(container),
+				container
+			};
+		}
+		mounted.root.render(createElement(OdInsurance, {
+			slots: [...slots],
+			load: load_plans,
+			onHide: hide_feature,
+			onPick: pick,
+			helper: helper ? createElement(SendHelper, {
+				label: helper.state.shown.label,
+				problem: helper.state.shown.problem !== void 0,
+				steps: step_list(helper.state.shown),
+				onPress: press_helper,
+				onCancel: cancel_helper
+			}) : null
+		}));
+	}
+	function scan_rows(wrap) {
+		const added = add_row_slots(wrap, covered);
+		const kept = slots.filter((slot) => slot.isConnected);
+		if (added.length === 0 && kept.length === slots.length) return;
+		slots.splice(0, slots.length, ...kept, ...added);
+		render();
+	}
+	function watch(wrap) {
+		page_observer ??= new MutationObserver(() => {
+			const current = document.querySelector(CATEGORY_WRAP);
+			if (current) scan_rows(current);
+		});
+		page_observer.disconnect();
+		page_observer.observe(wrap, {
+			childList: true,
+			subtree: true
+		});
+		scan_rows(wrap);
+	}
+	function start() {
+		if (!mounted) render();
+		if (page_observer || wrap_wait) return;
+		const wait = new AbortController();
+		wrap_wait = wait;
+		wait_for_element(CATEGORY_WRAP, CATEGORY_WRAP_TIMEOUT_MS, void 0, { signal: wait.signal }).then((wrap) => {
+			if (wait.signal.aborted) return;
+			wrap_wait = null;
+			if (!wrap) {
+				log$3.warn("Torn's #category-wrap did not render; no OD Insurance rows");
+				return;
+			}
+			watch(wrap);
+		});
+	}
+	function stop_od_insurance() {
+		wrap_wait?.abort();
+		wrap_wait = null;
+		page_observer?.disconnect();
+		page_observer = null;
+		mounted?.root.unmount();
+		mounted?.container.remove();
+		mounted = null;
+		remove_row_slots(document);
+		slots.length = 0;
+		covered = [];
+		helper = null;
+	}
+	function sync() {
+		if (ffconfig.od_insurance_enabled) start();
+		else stop_od_insurance();
+	}
+	var od_insurance_default = {
+		name: "OD Insurance",
+		description: "OD Insurance buttons on the item rows the plans cover (item.php only) opening a plans modal",
+		executionTime: StartTime.DocumentBody,
+		async shouldRun() {
+			return torn_page("item");
+		},
+		async run() {
+			window.addEventListener("ff-config-updated", sync);
+			sync();
+		}
+	};
 	var profile_exports = __exportAll({ default: () => profile_default });
+	init_ffconfig();
+	init_react();
 	async function inject_info_line(info_line) {
 		const h4 = await wait_for_element("h4", 1e4);
 		if (!h4) return;
@@ -7316,6 +8746,7 @@
 		}
 	};
 	var profile_flights_exports = __exportAll({ default: () => profile_flights_default });
+	init_react();
 	function is_flying(status) {
 		return status.classList.contains("travelling");
 	}
@@ -7356,6 +8787,7 @@
 		}
 	};
 	var profile_history_exports = __exportAll({ default: () => profile_history_default });
+	init_ffconfig();
 	var profile_history_default = {
 		name: "Profile FF history",
 		description: "Add a button to all user's profiles to link to ffscouter.com",
@@ -7461,6 +8893,8 @@
 		"ff-settings-panel__actions": "_ff-settings-panel__actions_6bhvd_295",
 		"ff-settings-panel__saved-msg": "_ff-settings-panel__saved-msg_6bhvd_304"
 	};
+	init_ffconfig();
+	init_react();
 	var cls = {
 		accordion: settings_panel_module_default["ff-settings-panel__accordion"],
 		accordionGlow: settings_panel_module_default["ff-settings-panel__accordion--glow"],
@@ -7528,6 +8962,7 @@
 		warFilterEnabled: CONFIG_DEFAULTS.war_filter_enabled,
 		statDistributionBadgeEnabled: CONFIG_DEFAULTS.stat_distribution_badge_enabled,
 		bountyBoardEnabled: CONFIG_DEFAULTS.bounty_board_enabled,
+		odInsuranceEnabled: CONFIG_DEFAULTS.od_insurance_enabled,
 		bountyAttackAction: CONFIG_DEFAULTS.bounty_attack_action,
 		isPremium: null,
 		isKeyRegistered: null
@@ -8173,6 +9608,18 @@
 									})]
 								}),
 								jsxs("div", {
+									className: `${cls.cell} ${cls.cellCheckbox}`,
+									children: [jsx("input", {
+										id: "od-insurance-toggle",
+										type: "checkbox",
+										checked: drafts.odInsuranceEnabled,
+										onChange
+									}), jsx("label", {
+										htmlFor: "od-insurance-toggle",
+										children: "Show OD Insurance on the Items page"
+									})]
+								}),
+								jsxs("div", {
 									className: cls.cell,
 									children: [jsx("label", {
 										htmlFor: "bounty-attack-action",
@@ -8376,6 +9823,7 @@
 				else if (id === "war-filter-toggle") this._drafts.warFilterEnabled = target.checked;
 				else if (id === "stat-distribution-badge-toggle") this._drafts.statDistributionBadgeEnabled = target.checked;
 				else if (id === "bounty-board-toggle") this._drafts.bountyBoardEnabled = target.checked;
+				else if (id === "od-insurance-toggle") this._drafts.odInsuranceEnabled = target.checked;
 				this.render();
 			};
 			this.handleApiKeyBlur = (e) => {
@@ -8439,7 +9887,8 @@
 				warFilterEnabled: this._props.warFilterEnabled,
 				statDistributionBadgeEnabled: this._props.statDistributionBadgeEnabled,
 				bountyBoardEnabled: this._props.bountyBoardEnabled,
-				bountyAttackAction: this._props.bountyAttackAction
+				bountyAttackAction: this._props.bountyAttackAction,
+				odInsuranceEnabled: this._props.odInsuranceEnabled
 			};
 		}
 		render() {
@@ -8549,7 +9998,8 @@
 					warFilterEnabled: this._drafts.warFilterEnabled,
 					statDistributionBadgeEnabled: this._drafts.statDistributionBadgeEnabled,
 					bountyBoardEnabled: this._drafts.bountyBoardEnabled,
-					bountyAttackAction: this._drafts.bountyAttackAction
+					bountyAttackAction: this._drafts.bountyAttackAction,
+					odInsuranceEnabled: this._drafts.odInsuranceEnabled
 				},
 				bubbles: true,
 				composed: true
@@ -8817,6 +10267,14 @@
 		set bountyBoardEnabled(val) {
 			this._props.bountyBoardEnabled = val;
 			this._drafts.bountyBoardEnabled = val;
+			this.render();
+		}
+		get odInsuranceEnabled() {
+			return this._props.odInsuranceEnabled;
+		}
+		set odInsuranceEnabled(val) {
+			this._props.odInsuranceEnabled = val;
+			this._drafts.odInsuranceEnabled = val;
 			this.render();
 		}
 		get bountyAttackAction() {
@@ -9102,6 +10560,13 @@
 			this._drafts.bountyBoardEnabled = val;
 			this.render();
 		}
+		get draftOdInsuranceEnabled() {
+			return this._drafts.odInsuranceEnabled;
+		}
+		set draftOdInsuranceEnabled(val) {
+			this._drafts.odInsuranceEnabled = val;
+			this.render();
+		}
 		get draftBountyAttackAction() {
 			return this._drafts.bountyAttackAction;
 		}
@@ -9183,6 +10648,8 @@
 		} catch {}
 	}
 	var settings_exports = __exportAll({ default: () => settings_default });
+	init_ffconfig();
+	init_logger();
 	var settings_default = {
 		name: "FF Scouter settings panel",
 		description: "Give users a FF Scouter settings box injected on the profile page",
@@ -9239,6 +10706,7 @@
 			panel.statDistributionBadgeEnabled = ffconfig.stat_distribution_badge_enabled;
 			panel.bountyBoardEnabled = ffconfig.bounty_board_enabled;
 			panel.bountyAttackAction = ffconfig.bounty_attack_action;
+			panel.odInsuranceEnabled = ffconfig.od_insurance_enabled;
 			panel.addEventListener("ff-save", async (e) => {
 				const detail = e.detail;
 				ffconfig.key = detail.apiKey;
@@ -9280,6 +10748,7 @@
 				ffconfig.stat_distribution_badge_enabled = detail.statDistributionBadgeEnabled;
 				ffconfig.bounty_board_enabled = detail.bountyBoardEnabled;
 				ffconfig.bounty_attack_action = detail.bountyAttackAction;
+				ffconfig.od_insurance_enabled = detail.odInsuranceEnabled;
 				panel.isPremium = await check_key_status.is_premium(true);
 				panel.isKeyRegistered = await check_key_status.is_registered(false);
 				toast("Settings saved successfully!");
@@ -9324,6 +10793,7 @@
 				panel.statDistributionBadgeEnabled = ffconfig.stat_distribution_badge_enabled;
 				panel.bountyBoardEnabled = ffconfig.bounty_board_enabled;
 				panel.bountyAttackAction = ffconfig.bounty_attack_action;
+				panel.odInsuranceEnabled = ffconfig.od_insurance_enabled;
 				toast("Settings reset to defaults!");
 				window.dispatchEvent(new CustomEvent("ff-config-updated"));
 			});
@@ -9407,6 +10877,8 @@
 		}
 	};
 	var status_attack_exports = __exportAll({ default: () => status_attack_default });
+	init_ffconfig();
+	init_logger();
 	var log$2 = logger_default.child("feature:status-attack");
 	function updateBodyClass() {
 		if (ffconfig.status_attack_links_enabled) document.body.setAttribute("data-ff-status-attack-enabled", "true");
@@ -9601,6 +11073,7 @@
 		}
 	};
 	var test_feature_exports = __exportAll({ default: () => test_feature_default });
+	init_logger();
 	var log$1 = logger_default.child("feature:test-feature");
 	var test_feature_default = {
 		name: "Test Feature!",
@@ -9627,6 +11100,7 @@
 		"./item_market/index.ts": item_market_exports,
 		"./mini-profile/index.ts": mini_profile_exports,
 		"./mini-profile-flights/index.ts": mini_profile_flights_exports,
+		"./od-insurance/index.ts": od_insurance_exports,
 		"./profile/index.ts": profile_exports,
 		"./profile-flights/index.ts": profile_flights_exports,
 		"./profile-history/index.ts": profile_history_exports,
@@ -9641,6 +11115,7 @@
 		httpInterceptors.sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0));
 	}
 	_css(".ffscouter-gauge{padding:0;display:block;position:relative}.ffscouter-arrow,.ffscouter-preview-arrow{width:var(--ffscouter-arrow-width);object-fit:cover;pointer-events:none}.ffscouter-arrow{padding:0;display:block}.ffscouter-preview-arrow{vertical-align:middle;display:inline-block}.ffscouter-marker-wrapper{pointer-events:none;transform:translate(var(--ffscouter-marker-tx,-50%), var(--ffscouter-marker-ty,-30%));z-index:10;line-height:0;display:inline-block;position:absolute}.ffscouter-gauge[data-ffscouter-band-side=left]>.ffscouter-marker-wrapper{left:calc(var(--ffscouter-marker-actual-width,var(--ffscouter-arrow-width)) / 2 + var(--band-percent) * ( 100% - var(--ffscouter-marker-actual-width,var(--ffscouter-arrow-width)) ) / 100);--ffscouter-marker-tx:-50%}.ffscouter-gauge[data-ffscouter-band-side=right]>.ffscouter-marker-wrapper{right:calc(var(--ffscouter-marker-actual-width,var(--ffscouter-arrow-width)) / 2 + (100 - var(--band-percent)) * ( 100% - var(--ffscouter-marker-actual-width,var(--ffscouter-arrow-width)) ) / 100 + .35 * var(--ffscouter-source-marker-size));--ffscouter-marker-tx:50%}.ffscouter-gauge[data-ffscouter-attach-mode=honor-bar]>.ffscouter-marker-wrapper{--ffscouter-marker-ty:-30%;top:0}.ffscouter-gauge[data-ffscouter-attach-mode=fallback]>.ffscouter-marker-wrapper{--ffscouter-marker-ty:0%;margin:auto 0;top:0;bottom:0}.ffscouter-bubble,.ffscouter-preview-bubble{min-width:2.5882em;height:1.6471em;line-height:1.4118;font-size:var(--ffscouter-bubble-font-size);text-align:center;box-sizing:border-box;white-space:nowrap;text-shadow:0 1px 1px #00000080;border:1px solid #0006;border-radius:999px;justify-content:center;align-items:center;padding:0 .4706em;font-family:Geneva,Arial,sans-serif;font-weight:700;display:inline-flex;box-shadow:0 1px 2px #0000004d}.ffscouter-bubble{pointer-events:none}.ffscouter-preview-bubble{vertical-align:middle}.ffscouter-source-marker{top:calc(-.35 * var(--ffscouter-source-marker-size));right:calc(-.35 * var(--ffscouter-source-marker-size));width:var(--ffscouter-source-marker-size);height:var(--ffscouter-source-marker-size);pointer-events:auto;position:absolute;overflow:visible}.ffscouter-preview-marker-slot{display:inline-block;position:relative}.ffscouter-inline-source-marker{float:none!important;vertical-align:middle!important;width:16px!important;height:16px!important;margin:0 0 0 4px!important;display:inline-block!important;position:static!important}.ffscouter-marker-preview{--ffscouter-arrow-width:calc(20px * var(--ffscouter-marker-scale));--ffscouter-bubble-font-size:calc(8.5px * var(--ffscouter-marker-scale));--ffscouter-source-marker-size:calc(12px * var(--ffscouter-marker-scale));align-items:center;gap:10px;display:inline-flex}.ffscouter-mini-desc{padding:0 5px}.ffscouter-swatch-row{gap:3px;display:inline-flex}.ffscouter-swatch{width:20px;height:13px;display:inline-block}body{--ffscouter-bg-color:#f0f0f0;--ffscouter-alt-bg-color:#fff;--ffscouter-border-color:#ccc;--ffscouter-input-color:#ccc;--ffscouter-text-color:#000;--ffscouter-hover-color:#ddd;--ffscouter-glow-color:#4caf50;--ffscouter-success-color:#4caf50;--ffscouter-status-okay-color:#2e7d32;--ffscouter-status-out-color:#c62828;--ffscouter-status-away-color:#1565c0;--ffscouter-marker-scale:1;--ffscouter-arrow-width:calc(20px * var(--ffscouter-marker-scale));--ffscouter-bubble-font-size:calc(8.5px * var(--ffscouter-marker-scale));--ffscouter-source-marker-size:calc(12px * var(--ffscouter-marker-scale));--ffscouter-stat-badge-outline-color:#fff}body.dark-mode{--ffscouter-bg-color:#333;--ffscouter-alt-bg-color:#383838;--ffscouter-border-color:#444;--ffscouter-input-color:#504f4f;--ffscouter-text-color:#ccc;--ffscouter-hover-color:#555;--ffscouter-glow-color:#4caf50;--ffscouter-success-color:#4caf50;--ffscouter-status-okay-color:#81c784;--ffscouter-status-out-color:#ef7070;--ffscouter-status-away-color:#64b5f6;--ffscouter-stat-badge-outline-color:#000}ff-settings-panel{display:block}.profile-status{position:relative}.ff-flight-element{z-index:2;position:absolute;bottom:2px;right:10px}.ff-scouter-profile-flight-info{text-align:right;color:#fff;text-shadow:0 1px 2px #000000d9;font-size:11px;line-height:1.25;display:inline-block}.profile-status .ff-scouter-profile-flight-info a{color:#fff;text-decoration:underline}.ffscouter-cell{cursor:pointer!important;position:relative!important;overflow:visible!important}.faction-war .ffscouter-cell{float:left!important;box-sizing:border-box!important;text-align:center!important;z-index:10!important;border-radius:3px!important;width:32px!important;height:20px!important;margin:7px 4px!important;padding:0!important;font-size:11px!important;font-weight:700!important;line-height:20px!important}.ffscouter-stat-badge{width:12px!important;height:12px!important;color:var(--ffscouter-text-color)!important;pointer-events:none!important;z-index:11!important;position:absolute!important;top:6px!important;overflow:visible!important}.faction-war .ffscouter-stat-badge{top:0!important}.ffscouter-stat-badge path{stroke:var(--ffscouter-stat-badge-outline-color)!important;stroke-width:1px!important;stroke-linejoin:round!important;paint-order:stroke fill!important}.ffscouter-stat-badge--left{left:0!important;transform:translate(-50%,-50%)!important}.ffscouter-stat-badge--right{right:0!important;transform:translate(50%,-50%)!important}.faction-war .ffscouter-header,.table-header .ffscouter-header{float:left!important;text-align:center!important;cursor:pointer!important;background-color:#0000!important;width:38px!important;padding:0!important;font-size:12px!important;font-weight:700!important}:is(.faction-war:has(.ffscouter-header[data-ffscouter-sort]) [class*=sortIcon___]:not(.ffscouter-sort-icon),.members-list:has(.ffscouter-header[data-ffscouter-sort]) [class*=sortIcon___]:not(.ffscouter-sort-icon)){visibility:hidden!important}[data-ffscouter-hidden],.faction-war[data-ffscouter-hide-level=true] .level:not(.ffscouter-cell):not(.ffscouter-header),.faction-war[data-ffscouter-hide-status=true] .status,.faction-war[data-ffscouter-hide-score=true] .points{display:none!important}.faction-war[data-ffscouter-col-display=fair_fight]:not([data-ffscouter-hide-level=true]) .level:not(.ffscouter-cell):not(.ffscouter-header),.faction-war[data-ffscouter-col-display=battle_stats]:not([data-ffscouter-hide-level=true]) .level:not(.ffscouter-cell):not(.ffscouter-header){width:29px!important}.faction-war[data-ffscouter-col-display=fair_fight]:not([data-ffscouter-hide-level=true]) .status,.faction-war[data-ffscouter-col-display=battle_stats]:not([data-ffscouter-hide-level=true]) .status{width:50px!important}.faction-war[data-ffscouter-col-display=fair_fight]:not([data-ffscouter-hide-level=true]) .points,.faction-war[data-ffscouter-col-display=battle_stats]:not([data-ffscouter-hide-level=true]) .points{width:38px!important}.members-list[data-ffscouter-col-display=fair_fight] .table-cell.position,.members-list[data-ffscouter-col-display=battle_stats] .table-cell.position{width:15%!important}@media (width>=784px){.members-list[data-ffscouter-col-display=fair_fight] .table-cell.position,.members-list[data-ffscouter-col-display=battle_stats] .table-cell.position{width:10%!important}}:is(.members-list li.enemy:has(>.tt-stats-estimate),.members-list li.your:has(>.tt-stats-estimate),.members-list li.enemy:has(>div.clear~*),.members-list li.your:has(>div.clear~*)){padding-bottom:22px!important;position:relative!important}.members-list li.enemy>.tt-stats-estimate,.members-list li.your>.tt-stats-estimate,.members-list li.enemy>div.clear~*,.members-list li.your>div.clear~*{white-space:nowrap;text-overflow:ellipsis;overflow:hidden;width:calc(100% - 20px)!important;height:18px!important;font-size:11px!important;line-height:18px!important;display:block!important;position:absolute!important;bottom:2px!important;left:10px!important}body[data-ff-status-attack-enabled=true] [class*=userStatusWrap__],body[data-ff-status-attack-enabled=true] li[id^=icon][id*=-profile-].user-status-16-Online,body[data-ff-status-attack-enabled=true] li[id^=icon][id*=-profile-].user-status-16-Away,body[data-ff-status-attack-enabled=true] li[id^=icon][id*=-profile-].user-status-16-Offline,body[data-ff-status-attack-enabled=true] #profile-mini-root li[id^=icon][id*=-mini-profile-].user-status-16-Online,body[data-ff-status-attack-enabled=true] #profile-mini-root li[id^=icon][id*=-mini-profile-].user-status-16-Away,body[data-ff-status-attack-enabled=true] #profile-mini-root li[id^=icon][id*=-mini-profile-].user-status-16-Offline,body[data-ff-status-attack-enabled=true] li[id^=icon][id*=___].iconShow.ffscouter-forum-status,body[data-ff-status-attack-enabled=true] .status>[class$=-status],body[data-ff-status-attack-enabled=true] .left-side ul.singleicon li[id^=icon][id*=___].iconShow,body[data-ff-status-attack-enabled=true] .user-info-list-wrap ul.singleicon li[id^=icon][id*=___].iconShow,body[data-ff-status-attack-enabled=true] [class*=dataGridRow__] [class*=status__]>span{cursor:crosshair!important}body[data-ff-status-attack-enabled=true] [class*=dataGridRow__] ul#iconTray li[id^=icon][id*=___].iconShow:has(>a[aria-label=Online]){cursor:crosshair!important}body[data-ff-status-attack-enabled=true] [class*=dataGridRow__] ul#iconTray li[id^=icon][id*=___].iconShow:has(>a[aria-label=Idle]){cursor:crosshair!important}body[data-ff-status-attack-enabled=true] [class*=dataGridRow__] ul#iconTray li[id^=icon][id*=___].iconShow:has(>a[aria-label=Offline]){cursor:crosshair!important}body[data-ff-status-attack-enabled=true] [class*=userStatusWrap__]{position:relative}body[data-ff-status-attack-enabled=true] [class*=userStatusWrap__]:after{content:\"\";position:absolute;inset:-3px}.d .job-lists-wrap .item>li.company,.d .job-lists-wrap .item>li.director,.d .job-lists-wrap .item>li.salary,.d .job-lists-wrap .item>li.ranks{margin-bottom:0!important;padding-bottom:0!important}.d .users-list.links .user-wrap.ffscouter-gauge{margin-top:0!important;margin-bottom:0!important;padding-top:0!important;padding-bottom:0!important}");
+	init_logger();
 	var log = logger_default.child("boot");
 	var INJECTION_KEY = "__FF_SCOUTER_V2_INJECTED__";
 	async function safeShouldRun(feat) {
@@ -9662,7 +11137,7 @@
 			return;
 		}
 		document.documentElement.setAttribute(INJECTION_KEY, "1");
-		log.info("Initializing", "3.5-beta2");
+		log.info("Initializing", "3.5-beta3");
 		run_migration();
 		if (ffscouter.analytics_enabled) {
 			if (typeof unsafeWindow !== "undefined") unsafeWindow.ffscouter = ffscouter;
