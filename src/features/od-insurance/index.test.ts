@@ -1,7 +1,11 @@
 // @vitest-environment jsdom
 
-import { PLANS_RESPONSE } from "@utils/__fixtures__/od_insurance";
-import { query_od_insurance_plans } from "@utils/api";
+import {
+  ECSTASY_PLAN,
+  PLANS_RESPONSE,
+  UNPAYABLE_PLAN,
+} from "@utils/__fixtures__/od_insurance";
+import { OD_INSURANCE_GUIDE_URL, query_od_insurance_plans } from "@utils/api";
 import { ffconfig } from "@utils/ffconfig";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import feature from "./index";
@@ -101,5 +105,45 @@ describe("OD Insurance feature", () => {
     window.dispatchEvent(new CustomEvent("ff-config-updated"));
     expect(document.querySelectorAll(".ff-od-row-btn").length).toBe(0);
     expect(document.getElementById("ffscouter-od-insurance")).toBeNull();
+  });
+});
+
+describe("OD Insurance plans without a recipient", () => {
+  test("are hidden from the modal", async () => {
+    vi.mocked(query_od_insurance_plans).mockResolvedValue({
+      result: { ...PLANS_RESPONSE, plans: [UNPAYABLE_PLAN, ECSTASY_PLAN] },
+      blank: false,
+    });
+    await feature.run();
+    (document.querySelector(".ff-od-row-btn") as HTMLElement).click();
+    await sleep(100);
+    const plans = document.querySelectorAll(
+      "#ffscouter-od-insurance .ff-od-plan",
+    );
+    expect(plans.length).toBe(1);
+    expect(plans[0]?.textContent).toContain(ECSTASY_PLAN.name);
+  });
+
+  test("leave a not-taking-policies message and a guide link", async () => {
+    vi.mocked(query_od_insurance_plans).mockResolvedValue({
+      result: {
+        manager_player_id: null,
+        manager_name: null,
+        plans: [UNPAYABLE_PLAN],
+      },
+      blank: false,
+    });
+    await feature.run();
+    (document.querySelector(".ff-od-row-btn") as HTMLElement).click();
+    await sleep(100);
+    const modal = document.getElementById("ffscouter-od-insurance");
+    expect(modal?.querySelectorAll(".ff-od-plan").length).toBe(0);
+    expect(modal?.textContent).toContain(
+      "OD Insurance is not taking new policies right now",
+    );
+    const guide = modal?.querySelector<HTMLAnchorElement>(
+      `a[href="${OD_INSURANCE_GUIDE_URL}"]`,
+    );
+    expect(guide).not.toBeNull();
   });
 });
