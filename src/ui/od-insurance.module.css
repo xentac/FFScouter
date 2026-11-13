@@ -2,19 +2,18 @@
    with the ffscouter.com plans. Colors come from the --ffscouter-* theme
    variables. */
 
+/* Inline in Torn's .name-wrap, after the item name and quantity. */
 .ff-od-insurance__row-btn {
-  position: absolute;
-  right: 8px;
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 5;
-  padding: 5px 10px;
+  margin-left: 8px;
+  padding: 1px 6px;
+  vertical-align: middle;
+  line-height: 16px;
   background: var(--ffscouter-alt-bg-color);
   color: var(--ffscouter-text-color);
   border: 1px solid var(--ffscouter-glow-color);
   border-radius: 4px;
   font-family: Arial, sans-serif;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
   white-space: nowrap;
   cursor: pointer;
