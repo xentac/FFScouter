@@ -1,5 +1,5 @@
 import { OdInsurance } from "@ui/od-insurance";
-import { torn_page } from "@utils/dom";
+import { torn_page, wait_for_element } from "@utils/dom";
 import { ffconfig } from "@utils/ffconfig";
 import logger from "@utils/logger";
 import { od_insurance_plans } from "@utils/od_insurance";
@@ -14,11 +14,28 @@ import { add_row_slots, remove_row_slots } from "./rows";
 
 const log = logger.child("feature:od-insurance");
 
+// Torn renders every item panel (each category tab and the search panel)
+// inside #category-wrap, and replaces a panel's rows on a tab change or a new
+// search.
+const CATEGORY_WRAP = "#category-wrap";
+// Torn renders #category-wrap with the page; if it never shows up, the
+// markup changed and there is nothing to attach to.
+export const CATEGORY_WRAP_TIMEOUT_MS = 30 * 1000;
+
 // Single tracked root (ADR 0010) on document.body, outside Torn's swapped
 // content. It renders the modal and, through portals, a button in each row
 // slot.
 let mounted: { root: Root; container: HTMLElement } | null = null;
 const slots: HTMLElement[] = [];
+
+// One observer, on #category-wrap only. Disconnected when the feature turns
+// off. It watches the subtree, unlike the bounties feature's childList-only
+// observers: Torn fills the panel <ul>s inside #category-wrap and swaps their
+// rows, so direct children are not enough. The callback runs one selector
+// query and renders only when the slots changed, so the busy item page stays
+// cheap.
+let page_observer: MutationObserver | null = null;
+let wrap_wait: AbortController | null = null;
 
 const load_plans = () => od_insurance_plans.get();
 
@@ -34,18 +51,52 @@ function render() {
   );
 }
 
-// Adds slots for new insured rows and forgets slots whose row Torn removed
-// (a tab change or a new search replaces the panel's rows).
-function od_scan_rows(): void {
-  if (!ffconfig.od_insurance_enabled) return;
-  const added = add_row_slots(document);
+// Adds slots for new insured rows and forgets slots whose row Torn removed.
+// Only re-renders when the slots changed, so the button render it causes
+// does not loop back through the observer.
+function scan_rows(wrap: Element): void {
+  const added = add_row_slots(wrap);
   const kept = slots.filter((slot) => slot.isConnected);
   if (added.length === 0 && kept.length === slots.length) return;
   slots.splice(0, slots.length, ...kept, ...added);
   render();
 }
 
-function od_remove_all(): void {
+function watch(wrap: Element): void {
+  page_observer ??= new MutationObserver(() => {
+    const current = document.querySelector(CATEGORY_WRAP);
+    if (current) scan_rows(current);
+  });
+  page_observer.disconnect();
+  page_observer.observe(wrap, { childList: true, subtree: true });
+  scan_rows(wrap);
+}
+
+function start(): void {
+  // Mounting the root fetches the plans unless the stored list is fresh, so
+  // the buttons can go away when no plan is payable.
+  if (!mounted) render();
+  if (page_observer || wrap_wait) return;
+  const wait = new AbortController();
+  wrap_wait = wait;
+  void wait_for_element(CATEGORY_WRAP, CATEGORY_WRAP_TIMEOUT_MS, undefined, {
+    signal: wait.signal,
+  }).then((wrap) => {
+    if (wait.signal.aborted) return;
+    wrap_wait = null;
+    if (!wrap) {
+      log.warn("Torn's #category-wrap did not render; no OD Insurance rows");
+      return;
+    }
+    watch(wrap);
+  });
+}
+
+export function stop_od_insurance(): void {
+  wrap_wait?.abort();
+  wrap_wait = null;
+  page_observer?.disconnect();
+  page_observer = null;
   mounted?.root.unmount();
   mounted?.container.remove();
   mounted = null;
@@ -53,43 +104,27 @@ function od_remove_all(): void {
   slots.length = 0;
 }
 
-const feature: Feature = {
+// Idempotent: reads the toggle each time, so a settings save can turn the
+// feature on or off without a reload.
+function sync(): void {
+  if (ffconfig.od_insurance_enabled) start();
+  else stop_od_insurance();
+}
+
+export default {
   name: "OD Insurance",
   description:
     "OD Insurance buttons on Xanax/Ecstasy item rows (item.php only) opening a plans modal",
   executionTime: StartTime.DocumentBody,
-  async shouldRun() {
-    return !!ffconfig.od_insurance_enabled && torn_page("item");
-  },
-  async run() {
-    let scanTimer: ReturnType<typeof setTimeout> | null = null;
-    const scan = () => {
-      if (!ffconfig.od_insurance_enabled) return;
-      od_scan_rows();
-    };
-    const scheduleScan = () => {
-      if (scanTimer) return;
-      scanTimer = setTimeout(() => {
-        scanTimer = null;
-        scan();
-      }, 150);
-    };
-    window.addEventListener("ff-config-updated", () => {
-      if (!ffconfig.od_insurance_enabled) od_remove_all();
-      else scheduleScan();
-    });
-    if (typeof MutationObserver !== "undefined" && document.body) {
-      new MutationObserver(scheduleScan).observe(document.body, {
-        childList: true,
-        subtree: true,
-      });
-    }
-    // Mounting the root fetches the plans unless the stored list is fresh,
-    // so the buttons can go away when no plan is payable.
-    render();
-    scan();
-    log.debug("OD Insurance feature installed");
-  },
-};
 
-export default feature;
+  // Only the page is checked here: shouldRun() runs once at boot, so the
+  // toggle is read in sync() on every settings save instead.
+  async shouldRun() {
+    return torn_page("item");
+  },
+
+  async run() {
+    window.addEventListener("ff-config-updated", sync);
+    sync();
+  },
+} satisfies Feature;
