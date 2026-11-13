@@ -22,6 +22,9 @@ const cls = {
   body: styles["ff-od-insurance__body"],
   intro: styles["ff-od-insurance__intro"],
   plan: styles["ff-od-insurance__plan"],
+  planOpen: styles["ff-od-insurance__plan-open"],
+  pick: styles["ff-od-insurance__pick"],
+  multiplier: styles["ff-od-insurance__multiplier"],
   planName: styles["ff-od-insurance__plan-name"],
   planMeta: styles["ff-od-insurance__plan-meta"],
   button: styles["ff-od-insurance__button"],
@@ -145,29 +148,83 @@ function PlanDetail({
   );
 }
 
+/** Picks a plan for the Send Helper, with a multiplier. */
+export type OnPick = (plan: PayablePlan, multiplier: number) => void;
+
+// A whole number from 1 to the plan's cap, or null.
+function parse_multiplier(value: string, max: number): number | null {
+  if (!/^\d+$/.test(value)) return null;
+  const n = Number(value);
+  return n >= 1 && n <= max ? n : null;
+}
+
+function HelperPick({ plan, onPick }: { plan: PayablePlan; onPick: OnPick }) {
+  const [value, setValue] = useState("1");
+  const multiplier = parse_multiplier(value, plan.max_multiplier);
+  return (
+    <div className={cls.pick}>
+      <label>
+        Multiplier{" "}
+        <input
+          type="number"
+          className={cls.multiplier}
+          min={1}
+          max={plan.max_multiplier}
+          step={1}
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+        />
+      </label>
+      <span>
+        {multiplier === null
+          ? `1 to ${plan.max_multiplier}`
+          : `${plan.payment.xanax_quantity * multiplier} Xanax total`}
+      </span>
+      <button
+        type="button"
+        className={cls.button}
+        disabled={multiplier === null}
+        onClick={() => {
+          if (multiplier !== null) onPick(plan, multiplier);
+        }}
+      >
+        Buy with helper
+      </button>
+    </div>
+  );
+}
+
 function PlanList({
   plans,
   onSelect,
+  onPick,
 }: {
   plans: PayablePlan[];
   onSelect: (plan: PayablePlan) => void;
+  onPick: OnPick;
 }) {
   return (
     <>
       {plans.map((plan) => (
-        <button
+        <fieldset
           key={plan.plan_key}
-          type="button"
           className={cls.plan}
-          onClick={() => onSelect(plan)}
+          aria-label={plan.name}
         >
-          <span className={cls.planName}>{plan.name}</span>
-          <span className={cls.planMeta}>
-            {plan.xanax_quantity}x Xanax · {plan.duration_label} · Standard
-            payout {plan.standard_payout_xanax} Xanax · Overdose X payout{" "}
-            {plan.overdose_payout_xanax} Xanax · Up to {plan.max_multiplier}x
-          </span>
-        </button>
+          <button
+            type="button"
+            className={cls.planOpen}
+            onClick={() => onSelect(plan)}
+          >
+            <span className={cls.planName}>{plan.name}</span>
+            <span className={cls.planMeta}>
+              {plan.xanax_quantity}x Xanax · {plan.duration_label} · Standard
+              payout {plan.standard_payout_xanax} Xanax · Overdose X payout{" "}
+              {plan.overdose_payout_xanax} Xanax · Up to {plan.max_multiplier}x
+            </span>
+          </button>
+          <HelperPick plan={plan} onPick={onPick} />
+        </fieldset>
       ))}
     </>
   );
@@ -176,9 +233,11 @@ function PlanList({
 function ModalBody({
   plans,
   onRetry,
+  onPick,
 }: {
   plans: ModalPlans;
   onRetry: () => void;
+  onPick: OnPick;
 }) {
   const [selected, setSelected] = useState<string | null>(null);
 
@@ -212,8 +271,15 @@ function ModalBody({
       )}
       {payable.length > 0 ? (
         <>
-          <p className={cls.intro}>Tap a plan to see how to buy it.</p>
-          <PlanList plans={payable} onSelect={(p) => setSelected(p.plan_key)} />
+          <p className={cls.intro}>
+            Tap a plan to see how to buy it, or buy it with the helper. The
+            helper walks you through the Xanax send, one tap for each change.
+          </p>
+          <PlanList
+            plans={payable}
+            onSelect={(p) => setSelected(p.plan_key)}
+            onPick={onPick}
+          />
         </>
       ) : (
         <p className={cls.intro}>
@@ -230,12 +296,14 @@ export function OdInsuranceModal({
   onClose,
   onRetry,
   onHide,
+  onPick,
 }: {
   plans: ModalPlans;
   onClose: () => void;
   onRetry: () => void;
   // Turns the whole feature off, the same as the Settings toggle.
   onHide: () => void;
+  onPick: OnPick;
 }) {
   // Mounted only while open, so the Escape listener exists only then.
   useEffect(() => {
@@ -277,7 +345,7 @@ export function OdInsuranceModal({
           </button>
         </div>
         <div className={cls.body}>
-          <ModalBody plans={plans} onRetry={onRetry} />
+          <ModalBody plans={plans} onRetry={onRetry} onPick={onPick} />
           <div className={cls.footer}>
             OD Insurance is a paid ffscouter.com service.{" "}
             <GuideLink>How it works</GuideLink>.
@@ -325,10 +393,16 @@ export function OdInsurance({
   slots,
   load,
   onHide,
+  onPick = () => {},
+  helper = null,
 }: {
   slots: HTMLElement[];
   load: () => Promise<PlansState>;
   onHide: () => void;
+  // A pick closes the modal first, then creates the Selected Plan.
+  onPick?: OnPick;
+  // The Send Helper while a Selected Plan exists.
+  helper?: ReactNode;
 }) {
   const [plans, setPlans] = useState<ModalPlans>(null);
   const [open, setOpen] = useState(false);
@@ -379,8 +453,13 @@ export function OdInsurance({
             refresh();
           }}
           onHide={onHide}
+          onPick={(plan, multiplier) => {
+            setOpen(false);
+            onPick(plan, multiplier);
+          }}
         />
       )}
+      {helper}
     </>
   );
 }

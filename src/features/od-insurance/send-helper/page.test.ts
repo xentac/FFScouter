@@ -14,6 +14,8 @@ import {
   open_send_form,
   press,
   type SelectedPlan,
+  type StepId,
+  step_list,
 } from "./page";
 
 // 7 Day plan, multiplier 1: 20 Xanax to InsuranceManager [700001] with
@@ -449,5 +451,42 @@ describe("a new pick while a send form is open", () => {
     close_send_panel(); // Torn answers the Close
     show_send_panel(sendForm); // and later opens a fresh form
     expect(do_press(state).state.shown.step).toBe("fill_recipient");
+  });
+});
+
+describe("step_list", () => {
+  const shown = (step: StepId) => ({ key: step, step, label: "" });
+
+  test("checks the steps before the current one", () => {
+    expect(step_list(shown("fill_amount"))).toEqual([
+      { label: "Open send", done: true, current: false },
+      { label: "Fill recipient", done: true, current: false },
+      { label: "Fill amount", done: false, current: true },
+      { label: "Add message", done: false, current: false },
+      { label: "Fill message", done: false, current: false },
+      { label: "Send", done: false, current: false },
+      { label: "Yes", done: false, current: false },
+    ]);
+  });
+
+  test("lists Open Drugs only while it is the step", () => {
+    const list = step_list(shown("open_drugs"));
+    expect(list[0]).toEqual({
+      label: "Open Drugs",
+      done: false,
+      current: true,
+    });
+    expect(list).toHaveLength(8);
+    expect(step_list(shown("open_send"))[0]?.label).toBe("Open send");
+  });
+
+  test("checks every step after a success", () => {
+    const list = step_list(shown("close_result"));
+    expect(list.slice(0, -1).every((s) => s.done)).toBe(true);
+    expect(list.at(-1)).toEqual({
+      label: "Sent! Close",
+      done: false,
+      current: true,
+    });
   });
 });

@@ -1,18 +1,34 @@
 import { OdInsurance } from "@ui/od-insurance";
+import { SendHelper } from "@ui/od-send-helper";
 import { toast } from "@ui/toast";
 import { torn_page, wait_for_element } from "@utils/dom";
 import { ffconfig } from "@utils/ffconfig";
 import logger from "@utils/logger";
-import { covered_item_ids, od_insurance_plans } from "@utils/od_insurance";
+import {
+  covered_item_ids,
+  od_insurance_plans,
+  type PayablePlan,
+} from "@utils/od_insurance";
 import { createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { type Feature, StartTime } from "../feature";
 import { add_row_slots, remove_row_slots } from "./rows";
+import {
+  apply,
+  first_shown,
+  type HelperState,
+  open_send_form,
+  press,
+  type SelectedPlan,
+  step_list,
+} from "./send-helper/page";
 
 // OD Insurance: an "OD Insurance" button on the item.php rows of the items
 // that the payable plans cover (each plan's covered_item) opens a modal with
-// the ffscouter.com plans and how to buy one. Default on; the
-// od_insurance_enabled toggle in Settings turns it off.
+// the ffscouter.com plans and how to buy one. A plan picked "with helper"
+// shows the Send Helper, which walks the player through the Xanax send, one
+// press for each change (ADR 0014). Default on; the od_insurance_enabled
+// toggle in Settings turns both off.
 
 const log = logger.child("feature:od-insurance");
 
@@ -43,6 +59,36 @@ let wrap_wait: AbortController | null = null;
 // Empty until the first load. A failed load keeps the IDs it had: a failed
 // Retry in the modal must not take the buttons away.
 let covered: number[] = [];
+
+// The Selected Plan and where the Send Helper is (ADR 0014). Page memory
+// only: a reload, the helper's X, the end of a successful send, or turning
+// the feature off clears it. A new pick replaces it.
+let helper: { selected: SelectedPlan; state: HelperState } | null = null;
+
+function pick(plan: PayablePlan, multiplier: number): void {
+  const selected = { plan, multiplier };
+  // A send form that is already open is from before this pick, so the next
+  // press closes it.
+  helper = {
+    selected,
+    state: first_shown(document, selected, open_send_form(document)),
+  };
+  render();
+}
+
+// One press: at most one change on the page.
+function press_helper(): void {
+  if (!helper) return;
+  const result = press(document, helper.selected, helper.state);
+  apply(result.action);
+  helper = result.finished ? null : { ...helper, state: result.state };
+  render();
+}
+
+function cancel_helper(): void {
+  helper = null;
+  render();
+}
 
 // The modal's "Hide OD Insurance" button. It saves the toggle the same way
 // the Settings Panel does, and the event runs sync(), which removes the
@@ -93,6 +139,16 @@ function render() {
       slots: [...slots],
       load: load_plans,
       onHide: hide_feature,
+      onPick: pick,
+      helper: helper
+        ? createElement(SendHelper, {
+            label: helper.state.shown.label,
+            problem: helper.state.shown.problem !== undefined,
+            steps: step_list(helper.state.shown),
+            onPress: press_helper,
+            onCancel: cancel_helper,
+          })
+        : null,
     }),
   );
 }
@@ -149,6 +205,7 @@ export function stop_od_insurance(): void {
   remove_row_slots(document);
   slots.length = 0;
   covered = [];
+  helper = null;
 }
 
 // Idempotent: reads the toggle each time, so a settings save can turn the
