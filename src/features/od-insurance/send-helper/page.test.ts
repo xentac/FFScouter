@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { WEEKLY_PLAN } from "@utils/__fixtures__/od_insurance";
+import { ECSTASY_PLAN, WEEKLY_PLAN } from "@utils/__fixtures__/od_insurance";
 import type { PayablePlan } from "@utils/od_insurance";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import skeleton from "../__fixtures__/torn-markup/2026-11-12/item-category-wrap-skeleton.html?raw";
@@ -8,6 +8,7 @@ import drugsNarrow from "../__fixtures__/torn-markup/2026-11-13/item-drugs-narro
 import sendConfirm from "../__fixtures__/torn-markup/2026-11-13/send-confirm.html?raw";
 import sendForm from "../__fixtures__/torn-markup/2026-11-13/send-form.html?raw";
 import sendResult from "../__fixtures__/torn-markup/2026-11-13/send-result.html?raw";
+import sendResultOne from "../__fixtures__/torn-markup/2026-11-13/send-result-one.html?raw";
 import {
   apply,
   first_shown,
@@ -310,6 +311,30 @@ describe("press", () => {
     const result = do_press(state);
     expect(result.changes).toEqual(["click a.close-act.t-gray3.h.refresh-act"]);
     expect(result.finished).toBe(true);
+  });
+
+  test('counts Torn\'s "some Xanax" as a send of one', () => {
+    open_drugs_panel();
+    show_send_panel(sendResultOne);
+    const one: SelectedPlan = {
+      plan: ECSTASY_PLAN as PayablePlan,
+      multiplier: 1,
+    };
+    const state = first_shown(document, one);
+    expect(state.shown.step).toBe("close_result");
+    const result = do_press(state, one);
+    expect(result.changes).toEqual(["click a.close-act.t-gray3.h.refresh-act"]);
+    expect(result.finished).toBe(true);
+  });
+
+  test('"some Xanax" is not a send of two', () => {
+    open_drugs_panel();
+    show_send_panel(sendResultOne);
+    const two: SelectedPlan = {
+      plan: ECSTASY_PLAN as PayablePlan,
+      multiplier: 2,
+    };
+    expect(first_shown(document, two).shown.key).toBe("close_other_result");
   });
 
   test("closes a result that does not match the plan", () => {
