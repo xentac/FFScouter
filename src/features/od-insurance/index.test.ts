@@ -1,15 +1,15 @@
 // @vitest-environment jsdom
 
-import { gmRequest } from "@utils/api";
+import { PLANS_RESPONSE } from "@utils/__fixtures__/od_insurance";
+import { query_od_insurance_plans } from "@utils/api";
 import { ffconfig } from "@utils/ffconfig";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import feature from "./index";
 
-vi.mock("@utils/api", () => {
-  return {
-    gmRequest: vi.fn(),
-  };
-});
+vi.mock("@utils/api", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@utils/api")>()),
+  query_od_insurance_plans: vi.fn(),
+}));
 
 vi.mock("@utils/dom", async (importOriginal) => {
   const original = await importOriginal<typeof import("@utils/dom")>();
@@ -18,17 +18,6 @@ vi.mock("@utils/dom", async (importOriginal) => {
     torn_page: (page: string) => page === "item",
   };
 });
-
-const PLANS_RESPONSE = {
-  manager_player_id: 3281931,
-  manager_name: "WTV1",
-  plans: [
-    { name: "2 Hour Ecstasy Insurance", xanax_quantity: 1, max_multiplier: 50, duration_label: "2 hours", standard_payout_xanax: 22, overdose_payout_xanax: 26, payment: { recipient_player_id: 3281931, recipient_name: "WTV1", xanax_quantity: 1, message: "insurance:ecstasy" } },
-    { name: "2 Hour Xanax Insurance", xanax_quantity: 1, max_multiplier: 50, duration_label: "2 hours", standard_payout_xanax: 33, overdose_payout_xanax: 39, payment: { recipient_player_id: 3281931, recipient_name: "WTV1", xanax_quantity: 1, message: "insurance:xanax" } },
-    { name: "7 Day Xanax Insurance / Multiple Xanax OD's Payout", xanax_quantity: 20, max_multiplier: 10, duration_label: "7 days", standard_payout_xanax: 31, overdose_payout_xanax: 37, payment: { recipient_player_id: 3281931, recipient_name: "WTV1", xanax_quantity: 20, message: "insurance:7days" } },
-    { name: "30 Day Xanax Insurance / Multiple Xanax OD's Payout", xanax_quantity: 80, max_multiplier: 5, duration_label: "30 days", standard_payout_xanax: 31, overdose_payout_xanax: 37, payment: { recipient_player_id: 3281931, recipient_name: "WTV1", xanax_quantity: 80, message: "insurance:30days" } },
-  ],
-};
 
 const ITEMS_HTML = `
 <div class="content-wrapper"><ul>
@@ -51,14 +40,10 @@ beforeEach(() => {
   ffconfig.od_insurance_enabled = false;
   window.dispatchEvent(new CustomEvent("ff-config-updated"));
   ffconfig.od_insurance_enabled = true;
-  vi.mocked(gmRequest).mockResolvedValue({
-    status: 200,
-    responseText: JSON.stringify(PLANS_RESPONSE),
-  } as any);
-  vi.stubGlobal(
-    "fetch",
-    vi.fn().mockRejectedValue(new Error("offline")),
-  );
+  vi.mocked(query_od_insurance_plans).mockResolvedValue({
+    result: PLANS_RESPONSE,
+    blank: false,
+  });
 });
 
 describe("OD Insurance feature", () => {
@@ -82,10 +67,10 @@ describe("OD Insurance feature", () => {
     expect(overlay).not.toBeNull();
     expect(overlay?.style.display).not.toBe("none");
     const plans = overlay?.querySelectorAll(".ff-od-plan");
-    expect(plans?.length).toBe(4);
+    expect(plans?.length).toBe(2);
     expect(plans?.[0]?.textContent).toContain("Standard payout 22 Xanax");
     expect(plans?.[0]?.textContent).toContain("Overdose X payout 26 Xanax");
-    (plans?.[2] as HTMLElement).click();
+    (plans?.[1] as HTMLElement | undefined)?.click();
     const detail = overlay?.querySelectorAll(".ff-od-view")[1] as HTMLElement;
     expect(detail.style.display).toBe("block");
     expect(detail.textContent).toContain("20x Xanax");
@@ -96,7 +81,7 @@ describe("OD Insurance feature", () => {
   });
 
   test("falls back to the built-in plans when the API is unreachable", async () => {
-    vi.mocked(gmRequest).mockRejectedValue(new Error("offline"));
+    vi.mocked(query_od_insurance_plans).mockRejectedValue(new Error("offline"));
     await feature.run();
     (document.querySelector(".ff-od-row-btn") as HTMLElement).click();
     await sleep(100);
