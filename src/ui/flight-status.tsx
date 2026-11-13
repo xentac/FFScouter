@@ -42,6 +42,117 @@ type Props = {
   compact?: boolean;
 };
 
+function PremiumUpgradeNotice() {
+  return (
+    <div className="ff-scouter-profile-flight-info">
+      <a
+        href={PREMIUM_UPGRADE_URL}
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{ fontWeight: "bold", textDecoration: "underline" }}
+      >
+        Upgrade to FFScouter Flight Tracking
+      </a>
+    </div>
+  );
+}
+
+function landing_content(
+  data: PlayerFlightsResponse | null,
+  currentTimeSeconds: number,
+  compact: boolean,
+): React.ReactNode {
+  const current = data?.current;
+  if (data?.rechecking) {
+    const next = data.next_retry_at ?? 0;
+    const seconds = Math.max(0, Math.ceil((next - Date.now()) / 1000));
+    return compact ? (
+      <>
+        No data.
+        <br />
+        Rechecking...
+      </>
+    ) : (
+      `No data. Rechecking in ${seconds} seconds.`
+    );
+  }
+
+  if (
+    !current ||
+    (!current.earliest_arrival_time && !current.latest_arrival_time)
+  ) {
+    return compact ? "Unavailable" : "Landing: unavailable for current route";
+  }
+
+  const earliest = Number(current.earliest_arrival_time);
+  const latest = Number(current.latest_arrival_time);
+  if (!Number.isFinite(earliest) || !Number.isFinite(latest)) {
+    return compact ? "Unavailable" : "Landing: unavailable for current route";
+  }
+
+  const earliestRemaining = earliest - currentTimeSeconds;
+  const latestRemaining = latest - currentTimeSeconds;
+  const earliestTct = format_tct_time(earliest);
+  const latestTct = format_tct_time(latest);
+
+  if (latestRemaining <= -5 * 60) {
+    return compact ? (
+      "Late"
+    ) : (
+      <>
+        Landing: Late, probably flight delayed.
+        <br />({latestTct} TCT latest)
+      </>
+    );
+  }
+
+  if (latestRemaining <= 0) {
+    return compact ? (
+      <>
+        Just landed
+        <br />
+        (Latest: {latestTct} TCT)
+      </>
+    ) : (
+      <>
+        Landing: just landed
+        <br />({latestTct} TCT latest)
+      </>
+    );
+  }
+
+  if (earliestRemaining <= 0) {
+    return compact ? (
+      <>
+        Imminent
+        <br />
+        {format_duration_human(latestRemaining, compact)}
+        <br />
+      </>
+    ) : (
+      <>
+        Landing: imminent - {format_duration_human(latestRemaining, compact)}
+        <br />
+        (Latest: {latestTct} TCT)
+      </>
+    );
+  }
+
+  return compact ? (
+    <>
+      {format_duration_human(earliestRemaining, compact)}
+      <br />
+      {format_duration_human(latestRemaining, compact)}
+    </>
+  ) : (
+    <>
+      Landing: {format_duration_human(earliestRemaining, compact)} -{" "}
+      {format_duration_human(latestRemaining, compact)}
+      <br />({earliestTct} - {latestTct} TCT)
+    </>
+  );
+}
+
 export function FFFlightProfileStatus({ playerId, compact = false }: Props) {
   const [data, setData] = useState<PlayerFlightsResponse | null>(null);
   const [isPremium, setIsPremium] = useState<boolean | null>(null);
@@ -157,18 +268,7 @@ export function FFFlightProfileStatus({ playerId, compact = false }: Props) {
   if (!playerId) return null;
 
   if (isPremium === false) {
-    return (
-      <div className="ff-scouter-profile-flight-info">
-        <a
-          href={PREMIUM_UPGRADE_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{ fontWeight: "bold", textDecoration: "underline" }}
-        >
-          Upgrade to FFScouter Flight Tracking
-        </a>
-      </div>
-    );
+    return <PremiumUpgradeNotice />;
   }
 
   let content: React.ReactNode;
@@ -178,94 +278,7 @@ export function FFFlightProfileStatus({ playerId, compact = false }: Props) {
   } else if (loading && !data) {
     content = compact ? "Estimating..." : "Landing: estimating...";
   } else {
-    const current = data?.current;
-    if (data?.rechecking) {
-      const next = data.next_retry_at ?? 0;
-      const seconds = Math.max(0, Math.ceil((next - Date.now()) / 1000));
-      content = compact ? (
-        <>
-          No data.
-          <br />
-          Rechecking...
-        </>
-      ) : (
-        `No data. Rechecking in ${seconds} seconds.`
-      );
-    } else if (
-      !current ||
-      (!current.earliest_arrival_time && !current.latest_arrival_time)
-    ) {
-      content = compact
-        ? "Unavailable"
-        : "Landing: unavailable for current route";
-    } else {
-      const earliest = Number(current.earliest_arrival_time);
-      const latest = Number(current.latest_arrival_time);
-      if (!Number.isFinite(earliest) || !Number.isFinite(latest)) {
-        content = compact
-          ? "Unavailable"
-          : "Landing: unavailable for current route";
-      } else {
-        const earliestRemaining = earliest - currentTimeSeconds;
-        const latestRemaining = latest - currentTimeSeconds;
-        const earliestTct = format_tct_time(earliest);
-        const latestTct = format_tct_time(latest);
-
-        if (latestRemaining <= -5 * 60) {
-          content = compact ? (
-            "Late"
-          ) : (
-            <>
-              Landing: Late, probably flight delayed.
-              <br />({latestTct} TCT latest)
-            </>
-          );
-        } else if (latestRemaining <= 0) {
-          content = compact ? (
-            <>
-              Just landed
-              <br />
-              (Latest: {latestTct} TCT)
-            </>
-          ) : (
-            <>
-              Landing: just landed
-              <br />({latestTct} TCT latest)
-            </>
-          );
-        } else if (earliestRemaining <= 0) {
-          content = compact ? (
-            <>
-              Imminent
-              <br />
-              {format_duration_human(latestRemaining, compact)}
-              <br />
-            </>
-          ) : (
-            <>
-              Landing: imminent -{" "}
-              {format_duration_human(latestRemaining, compact)}
-              <br />
-              (Latest: {latestTct} TCT)
-            </>
-          );
-        } else {
-          content = compact ? (
-            <>
-              {format_duration_human(earliestRemaining, compact)}
-              <br />
-              {format_duration_human(latestRemaining, compact)}
-            </>
-          ) : (
-            <>
-              Landing: {format_duration_human(earliestRemaining, compact)} -{" "}
-              {format_duration_human(latestRemaining, compact)}
-              <br />({earliestTct} - {latestTct} TCT)
-            </>
-          );
-        }
-      }
-    }
+    content = landing_content(data, currentTimeSeconds, compact);
   }
 
   return <div className="ff-scouter-profile-flight-info">{content}</div>;

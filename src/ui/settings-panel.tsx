@@ -96,6 +96,87 @@ const DEFAULT_VALUES = {
   isKeyRegistered: null as boolean | null,
 };
 
+type SettingsDrafts = {
+  apiKey: string;
+  lowRange: number;
+  highRange: number;
+  maxRange: number;
+  chainButtonEnabled: boolean;
+  chainLinkType: ChainLinkType;
+  chainTabType: ChainTabType;
+  chainFFTarget: number;
+  chainMinLevel: number | null;
+  chainMaxLevel: number | null;
+  chainInactive: boolean;
+  chainMinFF: number | null;
+  chainMaxFF: number;
+  chainFactionless: boolean;
+  ffHistoryEnabled: boolean;
+  factionsColDisplay: FactionsColDisplay;
+  warColDisplay: FactionsColDisplay;
+  miniProfileDisplay: MiniProfileDisplay;
+  debugLogs: boolean;
+  analyticsEnabled: boolean;
+  networkInterceptionEnabled: boolean;
+  gaugeMarkerType: GaugeMarkerType;
+  gaugeMarkerScale: number;
+  gaugeMarkerBorderWidth: number;
+  gaugeMarkerJustify: GaugeMarkerJustify;
+  colorScheme: ColorScheme;
+  warQuickAttackAction: WarQuickAttackAction;
+  statusAttackLinksEnabled: boolean;
+  debugDisablePdaHttp: boolean;
+  debugForceReactFallback: boolean;
+  settingsPanelOwnProfileOnly: boolean;
+  factionFilterEnabled: boolean;
+  warFilterEnabled: boolean;
+  statDistributionBadgeEnabled: boolean;
+  bountyBoardEnabled: boolean;
+  bountyAttackAction: WarQuickAttackAction;
+};
+
+type SettingsChangeHandler = (
+  e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+) => void;
+
+type SettingsSectionProps = {
+  drafts: SettingsDrafts;
+  onChange: SettingsChangeHandler;
+};
+
+type ApiKeySectionProps = SettingsSectionProps & {
+  apiKey: string;
+  isPremium: boolean | null;
+  onApiKeyBlur: (e: React.FocusEvent<HTMLInputElement>) => void;
+  onVerify: () => void;
+};
+
+type GaugeMarkerSectionProps = SettingsSectionProps & {
+  rangeError: string;
+};
+
+type MarkerPreviewProps = {
+  scale: number;
+  borderWidth: number;
+  color: string;
+  sourceMarker: ReturnType<typeof get_source_marker>;
+};
+
+type FfRangesCellProps = {
+  lowRange: number;
+  highRange: number;
+  maxRange: number;
+  rangeError: string;
+  onChange: SettingsChangeHandler;
+};
+
+type SettingsActionsProps = {
+  showSavedMessage: boolean;
+  onSave: () => void;
+  onReset: () => void;
+  onClearCache: () => void;
+};
+
 type SettingsPanelComponentProps = {
   props: any;
   drafts: any;
@@ -103,9 +184,7 @@ type SettingsPanelComponentProps = {
   isKeyRegistered: boolean | null;
   rangeError: string;
   showSavedMessage: boolean;
-  onChange: (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
-  ) => void;
+  onChange: SettingsChangeHandler;
   onApiKeyBlur: (e: React.FocusEvent<HTMLInputElement>) => void;
   onVerify: () => void;
   onSave: () => void;
@@ -113,6 +192,731 @@ type SettingsPanelComponentProps = {
   onClearCache: () => void;
   onRendered: () => void;
 };
+
+function ApiKeySection({
+  apiKey,
+  drafts,
+  isPremium,
+  onChange,
+  onApiKeyBlur,
+  onVerify,
+}: ApiKeySectionProps) {
+  return (
+    <div className={cls.group}>
+      <h4>API Key &amp; Premium</h4>
+      <div className={cls.section}>
+        <div className={`${cls.apiExplanation} ${cls.span}`}>
+          <strong>Important:</strong> You must use the SAME exact API key that
+          you use on{" "}
+          <a href="https://ffscouter.com/" target="_blank" rel="noreferrer">
+            ffscouter.com
+          </a>
+          . <br />
+          <br />
+          If you're not sure which API key you used, go to{" "}
+          <a
+            href="https://www.torn.com/preferences.php#tab=api"
+            target="_blank"
+            rel="noreferrer"
+          >
+            your API preferences
+          </a>{" "}
+          and look for "FFScouter3" in your API key history comments.
+        </div>
+
+        <div className={`${cls.span} ${cls.apiBlock}`}>
+          <div className={cls.cell}>
+            <label htmlFor="ff-scouter-api-key">API Key:</label>
+            <input
+              id="ff-scouter-api-key"
+              type="text"
+              className={apiKey ? cls.blur : ""}
+              placeholder="Paste your key here..."
+              value={drafts.apiKey}
+              onChange={onChange}
+              onBlur={onApiKeyBlur}
+            />
+          </div>
+          <div className={cls.apiStatusRow}>
+            <label htmlFor="ff-premium-badge">FF Scouter Premium:</label>
+            <span
+              id="ff-premium-badge"
+              className={`${cls.premiumBadge} ${
+                isPremium === null
+                  ? cls.premiumBadgeUnknown
+                  : isPremium
+                    ? cls.premiumBadgeEnabled
+                    : cls.premiumBadgeDisabled
+              }`}
+            >
+              {isPremium === null
+                ? "Unknown"
+                : isPremium
+                  ? "Enabled"
+                  : "Disabled"}
+            </span>
+            <button
+              type="button"
+              className="torn-btn btn-save"
+              onClick={onVerify}
+            >
+              Verify
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MarkerPreview({
+  scale,
+  borderWidth,
+  color,
+  sourceMarker,
+}: MarkerPreviewProps) {
+  return (
+    <div
+      className="ffscouter-marker-preview"
+      style={
+        {
+          "--ffscouter-marker-scale": scale / 100,
+        } as React.CSSProperties
+      }
+    >
+      <span className="ffscouter-preview-marker-slot">
+        <svg className="ffscouter-preview-arrow" viewBox={FF_ARROW_VIEWBOX}>
+          <title>Preview Gauge Marker</title>
+          <path
+            fillRule="evenodd"
+            fill={color}
+            stroke="#000000"
+            strokeWidth={borderWidth}
+            d={FF_ARROW_PATH_D}
+          />
+        </svg>
+        {sourceMarker && (
+          <SourceMarkerIcon
+            marker={sourceMarker}
+            className="ffscouter-source-marker"
+          />
+        )}
+      </span>
+      <span className="ffscouter-preview-marker-slot">
+        <div
+          className="ffscouter-preview-bubble"
+          style={{
+            backgroundColor: color,
+            color: get_contrast_color(color),
+            borderWidth: `${borderWidth * (scale / 100)}px`,
+          }}
+        >
+          2.34
+        </div>
+        {sourceMarker && (
+          <SourceMarkerIcon
+            marker={sourceMarker}
+            className="ffscouter-source-marker"
+          />
+        )}
+      </span>
+    </div>
+  );
+}
+
+function FfRangesCell({
+  lowRange,
+  highRange,
+  maxRange,
+  rangeError,
+  onChange,
+}: FfRangesCellProps) {
+  return (
+    <div className={`${cls.inputRow} ${cls.span}`}>
+      <label htmlFor="ff-range-low">FF Ranges (Low, High, Max):</label>
+      <div className={cls.rangeRow}>
+        <input
+          id="ff-range-low"
+          type="number"
+          step="0.1"
+          className={cls.number}
+          value={lowRange}
+          onChange={onChange}
+        />
+        <span>&lt;</span>
+        <input
+          id="ff-range-high"
+          type="number"
+          step="0.1"
+          className={cls.number}
+          aria-label="High fair fight range"
+          value={highRange}
+          onChange={onChange}
+        />
+        <span>&lt;</span>
+        <input
+          id="ff-range-max"
+          type="number"
+          step="0.1"
+          className={cls.number}
+          aria-label="Maximum fair fight range"
+          value={maxRange}
+          onChange={onChange}
+        />
+      </div>
+      {rangeError && <div className={cls.errorMsg}>{rangeError}</div>}
+    </div>
+  );
+}
+
+function GaugeMarkerSection({
+  drafts,
+  onChange,
+  rangeError,
+}: GaugeMarkerSectionProps) {
+  const previewColor =
+    get_palette_for_scheme(drafts.colorScheme)[5] ?? "#888888";
+  // Always shown as "spy" in the preview purely to demonstrate how the badge
+  // scales with Marker Scale — not meant to reflect real per-target data.
+  const previewSourceMarker = get_source_marker("spies");
+
+  return (
+    <div className={cls.group}>
+      <h4>Gauge Marker Settings</h4>
+      <div className={cls.section}>
+        <div className={cls.cell}>
+          <label htmlFor="gauge-marker-type">Gauge Marker Style:</label>
+          <select
+            id="gauge-marker-type"
+            value={drafts.gaugeMarkerType}
+            onChange={onChange}
+          >
+            <option value="arrow">Arrow (Default)</option>
+            <option value="bubble_ff">Bubble (FF Score)</option>
+            <option value="bubble_estimate">Bubble (BS Estimate)</option>
+          </select>
+        </div>
+
+        {(drafts.gaugeMarkerType === "bubble_ff" ||
+          drafts.gaugeMarkerType === "bubble_estimate") && (
+          <div className={cls.cell}>
+            <label htmlFor="gauge-marker-justify">Bubble Position:</label>
+            <select
+              id="gauge-marker-justify"
+              value={drafts.gaugeMarkerJustify}
+              onChange={onChange}
+            >
+              <option value="gauge">Gauge (Default)</option>
+              <option value="left">Always Left</option>
+              <option value="right">Always Right</option>
+            </select>
+          </div>
+        )}
+
+        <div className={`${cls.span} ${cls.markerSize}`}>
+          <label htmlFor="gauge-marker-scale">Marker Size:</label>
+          <div className={cls.markerSizeControls}>
+            <input
+              id="gauge-marker-scale"
+              type="range"
+              min="50"
+              max="200"
+              step="5"
+              value={drafts.gaugeMarkerScale}
+              onChange={onChange}
+            />
+            <input
+              id="gauge-marker-scale-number"
+              type="number"
+              min="50"
+              max="200"
+              step="5"
+              className={cls.number}
+              aria-label="Marker size percent"
+              value={drafts.gaugeMarkerScale}
+              onChange={onChange}
+            />
+            <span>%</span>
+          </div>
+        </div>
+
+        <div className={`${cls.span} ${cls.markerBorderWidth}`}>
+          <label htmlFor="gauge-marker-border-width">Border Thickness:</label>
+          <div className={cls.markerSizeControls}>
+            <input
+              id="gauge-marker-border-width"
+              type="range"
+              min="0"
+              max="3"
+              step="0.5"
+              value={drafts.gaugeMarkerBorderWidth}
+              onChange={onChange}
+            />
+            <input
+              id="gauge-marker-border-width-number"
+              type="number"
+              min="0"
+              max="3"
+              step="0.5"
+              className={cls.number}
+              aria-label="Border width pixels"
+              value={drafts.gaugeMarkerBorderWidth}
+              onChange={onChange}
+            />
+            <span>px</span>
+            <MarkerPreview
+              scale={drafts.gaugeMarkerScale}
+              borderWidth={drafts.gaugeMarkerBorderWidth}
+              color={previewColor}
+              sourceMarker={previewSourceMarker}
+            />
+          </div>
+        </div>
+
+        <div className={`${cls.span} ${cls.colorScheme}`}>
+          <label htmlFor="color-scheme">Color Scheme:</label>
+          <div className={cls.colorSchemeControls}>
+            <select
+              id="color-scheme"
+              value={drafts.colorScheme}
+              onChange={onChange}
+            >
+              <option value="classic">Classic (Default)</option>
+              <option value="cool_diverging">Cool Diverging</option>
+              <option value="neon">Neon</option>
+              <option value="colorblind_safe">Colorblind-Safe</option>
+              <option value="grayscale">Grayscale</option>
+              <option value="green_yellow_red">Green-Yellow-Red</option>
+              <option value="blue_yellow_red">Blue-Yellow-Red</option>
+              <option value="plasma">Plasma</option>
+            </select>
+            <div className="ffscouter-swatch-row">
+              {get_palette_for_scheme(drafts.colorScheme).map((color) => (
+                <svg
+                  key={color}
+                  className="ffscouter-swatch"
+                  viewBox={FF_ARROW_VIEWBOX}
+                >
+                  <title>{color} swatch</title>
+                  <path
+                    fillRule="evenodd"
+                    fill={color}
+                    stroke="#000000"
+                    strokeWidth="1.5"
+                    d={FF_ARROW_PATH_D}
+                  />
+                </svg>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <FfRangesCell
+          lowRange={drafts.lowRange}
+          highRange={drafts.highRange}
+          maxRange={drafts.maxRange}
+          rangeError={rangeError}
+          onChange={onChange}
+        />
+      </div>
+    </div>
+  );
+}
+
+function ChainButtonSection({ drafts, onChange }: SettingsSectionProps) {
+  return (
+    <div className={`${cls.span} ff-chain-block`}>
+      <div className={`${cls.cell} ${cls.cellCheckbox}`}>
+        <input
+          id="chain-button-toggle"
+          type="checkbox"
+          checked={drafts.chainButtonEnabled}
+          onChange={onChange}
+        />
+        <label htmlFor="chain-button-toggle">
+          Enable Chain Button (Green FF Button)
+        </label>
+      </div>
+
+      {drafts.chainButtonEnabled && (
+        <div className={`${cls.section} ${cls.chainSuboptions}`}>
+          <div className={`${cls.cell} ${cls.chainWide}`}>
+            <label htmlFor="chain-link-type">Chain button opens:</label>
+            <select
+              id="chain-link-type"
+              value={drafts.chainLinkType}
+              onChange={onChange}
+            >
+              <option value="attack">Attack page</option>
+              <option value="profile">Profile page</option>
+            </select>
+          </div>
+
+          <div className={`${cls.cell} ${cls.chainWide}`}>
+            <label htmlFor="chain-tab-type">Open in:</label>
+            <select
+              id="chain-tab-type"
+              value={drafts.chainTabType}
+              onChange={onChange}
+            >
+              <option value="newtab">New tab</option>
+              <option value="sametab">Same tab</option>
+            </select>
+          </div>
+
+          <div className={cls.cell}>
+            <label htmlFor="chain-min-level">Min Level:</label>
+            <input
+              id="chain-min-level"
+              type="number"
+              className={cls.number}
+              placeholder="No min"
+              value={drafts.chainMinLevel === null ? "" : drafts.chainMinLevel}
+              onChange={onChange}
+            />
+          </div>
+
+          <div className={cls.cell}>
+            <label htmlFor="chain-max-level">Max Level:</label>
+            <input
+              id="chain-max-level"
+              type="number"
+              className={cls.number}
+              placeholder="No max"
+              value={drafts.chainMaxLevel === null ? "" : drafts.chainMaxLevel}
+              onChange={onChange}
+            />
+          </div>
+
+          <div className={cls.cell}>
+            <label htmlFor="chain-min-ff">Min FF:</label>
+            <input
+              id="chain-min-ff"
+              type="number"
+              step="0.1"
+              className={cls.number}
+              placeholder="No min"
+              value={drafts.chainMinFF === null ? "" : drafts.chainMinFF}
+              onChange={onChange}
+            />
+          </div>
+
+          <div className={cls.cell}>
+            <label htmlFor="chain-max-ff">Max FF:</label>
+            <input
+              id="chain-max-ff"
+              type="number"
+              step="0.1"
+              className={cls.number}
+              placeholder="No max"
+              value={drafts.chainMaxFF}
+              onChange={onChange}
+            />
+          </div>
+
+          <div className={`${cls.cell} ${cls.cellCheckbox} ${cls.chainWide}`}>
+            <input
+              id="chain-inactive"
+              type="checkbox"
+              checked={drafts.chainInactive}
+              onChange={onChange}
+            />
+            <label htmlFor="chain-inactive">
+              Inactive Only (14+ days offline)
+            </label>
+          </div>
+
+          <div className={`${cls.cell} ${cls.cellCheckbox} ${cls.chainWide}`}>
+            <input
+              id="chain-factionless"
+              type="checkbox"
+              checked={drafts.chainFactionless}
+              onChange={onChange}
+            />
+            <label htmlFor="chain-factionless">Factionless Only</label>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function DisplayOptionsSection({ drafts, onChange }: SettingsSectionProps) {
+  return (
+    <>
+      <div className={cls.cell}>
+        <label htmlFor="factions-col-display">Faction Page Shows:</label>
+        <select
+          id="factions-col-display"
+          value={drafts.factionsColDisplay}
+          onChange={onChange}
+        >
+          <option value="fair_fight">FF Score</option>
+          <option value="battle_stats">BS Estimate</option>
+          <option value="none">None (Hide Column)</option>
+        </select>
+      </div>
+
+      <div className={`${cls.cell} ${cls.cellCheckbox}`}>
+        <input
+          id="faction-filter-toggle"
+          type="checkbox"
+          checked={drafts.factionFilterEnabled}
+          onChange={onChange}
+        />
+        <label htmlFor="faction-filter-toggle">Show faction filter box</label>
+      </div>
+
+      <div className={cls.cell}>
+        <label htmlFor="war-col-display">War Page Shows:</label>
+        <select
+          id="war-col-display"
+          value={drafts.warColDisplay}
+          onChange={onChange}
+        >
+          <option value="fair_fight">FF Score</option>
+          <option value="battle_stats">BS Estimate</option>
+          <option value="none">None (Hide Column)</option>
+        </select>
+      </div>
+
+      <div className={`${cls.cell} ${cls.cellCheckbox}`}>
+        <input
+          id="war-filter-toggle"
+          type="checkbox"
+          checked={drafts.warFilterEnabled}
+          onChange={onChange}
+        />
+        <label htmlFor="war-filter-toggle">Show war filter box</label>
+      </div>
+
+      <div className={cls.cell}>
+        <label htmlFor="mini-profile-display">Mini Profile Shows:</label>
+        <select
+          id="mini-profile-display"
+          value={drafts.miniProfileDisplay}
+          onChange={onChange}
+        >
+          <option value="fair_fight">FF Score</option>
+          <option value="battle_stats">BS Estimate</option>
+        </select>
+      </div>
+
+      <div className={`${cls.cell} ${cls.cellCheckbox}`}>
+        <input
+          id="status-attack-links-toggle"
+          type="checkbox"
+          checked={drafts.statusAttackLinksEnabled}
+          onChange={onChange}
+        />
+        <label htmlFor="status-attack-links-toggle">
+          Enable online status indicator quick attack links
+        </label>
+      </div>
+
+      <div className={cls.cell}>
+        <label htmlFor="war-quick-attack-action">Quick Attack Action:</label>
+        <select
+          id="war-quick-attack-action"
+          value={drafts.warQuickAttackAction}
+          onChange={onChange}
+        >
+          <option value="new_tab">New Tab</option>
+          <option value="current">Same Tab</option>
+        </select>
+      </div>
+    </>
+  );
+}
+
+function AdditionalFeaturesSection({ drafts, onChange }: SettingsSectionProps) {
+  return (
+    <>
+      <div className={`${cls.cell} ${cls.cellCheckbox}`}>
+        <input
+          id="ff-history-toggle"
+          type="checkbox"
+          checked={drafts.ffHistoryEnabled}
+          onChange={onChange}
+        />
+        <label htmlFor="ff-history-toggle">
+          Enable FF History button on profile pages
+        </label>
+      </div>
+
+      <div className={`${cls.cell} ${cls.cellCheckbox}`}>
+        <input
+          id="stat-distribution-badge-toggle"
+          type="checkbox"
+          checked={drafts.statDistributionBadgeEnabled}
+          onChange={onChange}
+        />
+        <label htmlFor="stat-distribution-badge-toggle">
+          Show dominant stat badge on faction/war FF cells
+        </label>
+      </div>
+
+      <div className={`${cls.cell} ${cls.cellCheckbox}`}>
+        <input
+          id="bounty-board-toggle"
+          type="checkbox"
+          checked={drafts.bountyBoardEnabled}
+          onChange={onChange}
+        />
+        <label htmlFor="bounty-board-toggle">Enable FF Scouter Bounties</label>
+      </div>
+
+      <div className={cls.cell}>
+        <label htmlFor="bounty-attack-action">Bounty Attack Opens:</label>
+        <select
+          id="bounty-attack-action"
+          value={drafts.bountyAttackAction}
+          onChange={onChange}
+        >
+          <option value="new_tab">New Tab</option>
+          <option value="current">Same Tab</option>
+        </select>
+      </div>
+
+      <div className={`${cls.cell} ${cls.cellCheckbox}`}>
+        <input
+          id="settings-panel-own-profile-only-toggle"
+          type="checkbox"
+          checked={drafts.settingsPanelOwnProfileOnly}
+          onChange={onChange}
+        />
+        <label htmlFor="settings-panel-own-profile-only-toggle">
+          Only show FF Scouter Settings on my own profile
+        </label>
+      </div>
+
+      <div className={`${cls.span} ff-deprecation-note`}>
+        <span>
+          War Monitor is no longer supported. Use{" "}
+          <a
+            target="_blank"
+            href="https://greasyfork.org/en/scripts/529238-torn-war-stuff-enhanced"
+            rel="noreferrer"
+          >
+            Torn War Stuff Enhanced
+          </a>{" "}
+          instead.
+        </span>
+      </div>
+    </>
+  );
+}
+
+function FeatureTogglesSection({ drafts, onChange }: SettingsSectionProps) {
+  return (
+    <div className={cls.group}>
+      <h4>Feature Toggles</h4>
+      <div className={cls.section}>
+        <ChainButtonSection drafts={drafts} onChange={onChange} />
+        <DisplayOptionsSection drafts={drafts} onChange={onChange} />
+        <AdditionalFeaturesSection drafts={drafts} onChange={onChange} />
+      </div>
+    </div>
+  );
+}
+
+function DebugSection({ drafts, onChange }: SettingsSectionProps) {
+  return (
+    <div className={cls.group}>
+      <h4>Debug Settings</h4>
+      <div className={cls.section}>
+        <div className={`${cls.cell} ${cls.cellCheckbox}`}>
+          <input
+            id="debug-logs"
+            type="checkbox"
+            checked={drafts.debugLogs}
+            onChange={onChange}
+          />
+          <label htmlFor="debug-logs">Enable debug logging</label>
+        </div>
+
+        <div className={`${cls.cell} ${cls.cellCheckbox}`}>
+          <input
+            id="analytics-toggle"
+            type="checkbox"
+            checked={drafts.analyticsEnabled}
+            onChange={onChange}
+          />
+          <label htmlFor="analytics-toggle">
+            Enable local analytics logging (last 30 days)
+          </label>
+        </div>
+
+        <div className={`${cls.cell} ${cls.cellCheckbox}`}>
+          <input
+            id="network-interception-toggle"
+            type="checkbox"
+            checked={drafts.networkInterceptionEnabled}
+            onChange={onChange}
+          />
+          <label htmlFor="network-interception-toggle">
+            Enable network request interception (Fetch/XHR/WS)
+          </label>
+        </div>
+
+        <div className={`${cls.cell} ${cls.cellCheckbox}`}>
+          <input
+            id="debug-disable-pda-http"
+            type="checkbox"
+            checked={drafts.debugDisablePdaHttp}
+            onChange={onChange}
+          />
+          <label htmlFor="debug-disable-pda-http">
+            Disable PDA native HTTP (use GM_xmlhttpRequest instead)
+          </label>
+        </div>
+
+        <div className={`${cls.cell} ${cls.cellCheckbox}`}>
+          <input
+            id="debug-force-react-fallback"
+            type="checkbox"
+            checked={drafts.debugForceReactFallback}
+            onChange={onChange}
+          />
+          <label htmlFor="debug-force-react-fallback">
+            Force React fallback (fetch/evaluate Torn's own react-dom bundle
+            instead of using unsafeWindow.React/ReactDOM)
+          </label>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SettingsActions({
+  showSavedMessage,
+  onSave,
+  onReset,
+  onClearCache,
+}: SettingsActionsProps) {
+  return (
+    <div className={cls.actions}>
+      <button type="button" className="torn-btn btn-save" onClick={onSave}>
+        Save Settings
+      </button>
+      <button
+        type="button"
+        className="torn-btn btn-secondary"
+        onClick={onReset}
+      >
+        Reset to Defaults
+      </button>
+      <button
+        type="button"
+        className="torn-btn btn-secondary"
+        onClick={onClearCache}
+      >
+        Clear FF Cache
+      </button>
+      {showSavedMessage && <span className={cls.savedMsg}>✓ Saved!</span>}
+    </div>
+  );
+}
 
 export function SettingsPanelComponent({
   props,
@@ -133,12 +937,6 @@ export function SettingsPanelComponent({
     onRendered();
   });
 
-  const previewColor =
-    get_palette_for_scheme(drafts.colorScheme)[5] ?? "#888888";
-  // Always shown as "spy" in the preview purely to demonstrate how the badge
-  // scales with Marker Scale — not meant to reflect real per-target data.
-  const previewSourceMarker = get_source_marker("spies");
-
   return (
     <details
       className={`${cls.accordion}${!props.apiKey || isKeyRegistered === false ? ` ${cls.accordionGlow}` : ""} cont-gray border-round`}
@@ -146,663 +944,27 @@ export function SettingsPanelComponent({
       <summary>FF Scouter Settings</summary>
 
       <div className={cls.body}>
-        {/* API Key & Premium */}
-        <div className={cls.group}>
-          <h4>API Key &amp; Premium</h4>
-          <div className={cls.section}>
-            <div className={`${cls.apiExplanation} ${cls.span}`}>
-              <strong>Important:</strong> You must use the SAME exact API key
-              that you use on{" "}
-              <a href="https://ffscouter.com/" target="_blank" rel="noreferrer">
-                ffscouter.com
-              </a>
-              . <br />
-              <br />
-              If you're not sure which API key you used, go to{" "}
-              <a
-                href="https://www.torn.com/preferences.php#tab=api"
-                target="_blank"
-                rel="noreferrer"
-              >
-                your API preferences
-              </a>{" "}
-              and look for "FFScouter3" in your API key history comments.
-            </div>
-
-            <div className={`${cls.span} ${cls.apiBlock}`}>
-              <div className={cls.cell}>
-                <label htmlFor="ff-scouter-api-key">API Key:</label>
-                <input
-                  id="ff-scouter-api-key"
-                  type="text"
-                  className={props.apiKey ? cls.blur : ""}
-                  placeholder="Paste your key here..."
-                  value={drafts.apiKey}
-                  onChange={onChange}
-                  onBlur={onApiKeyBlur}
-                />
-              </div>
-              <div className={cls.apiStatusRow}>
-                <label htmlFor="ff-premium-badge">FF Scouter Premium:</label>
-                <span
-                  id="ff-premium-badge"
-                  className={`${cls.premiumBadge} ${
-                    isPremium === null
-                      ? cls.premiumBadgeUnknown
-                      : isPremium
-                        ? cls.premiumBadgeEnabled
-                        : cls.premiumBadgeDisabled
-                  }`}
-                >
-                  {isPremium === null
-                    ? "Unknown"
-                    : isPremium
-                      ? "Enabled"
-                      : "Disabled"}
-                </span>
-                <button
-                  type="button"
-                  className="torn-btn btn-save"
-                  onClick={onVerify}
-                >
-                  Verify
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Gauge Marker Settings */}
-        <div className={cls.group}>
-          <h4>Gauge Marker Settings</h4>
-          <div className={cls.section}>
-            <div className={cls.cell}>
-              <label htmlFor="gauge-marker-type">Gauge Marker Style:</label>
-              <select
-                id="gauge-marker-type"
-                value={drafts.gaugeMarkerType}
-                onChange={onChange}
-              >
-                <option value="arrow">Arrow (Default)</option>
-                <option value="bubble_ff">Bubble (FF Score)</option>
-                <option value="bubble_estimate">Bubble (BS Estimate)</option>
-              </select>
-            </div>
-
-            {(drafts.gaugeMarkerType === "bubble_ff" ||
-              drafts.gaugeMarkerType === "bubble_estimate") && (
-              <div className={cls.cell}>
-                <label htmlFor="gauge-marker-justify">Bubble Position:</label>
-                <select
-                  id="gauge-marker-justify"
-                  value={drafts.gaugeMarkerJustify}
-                  onChange={onChange}
-                >
-                  <option value="gauge">Gauge (Default)</option>
-                  <option value="left">Always Left</option>
-                  <option value="right">Always Right</option>
-                </select>
-              </div>
-            )}
-
-            <div className={`${cls.span} ${cls.markerSize}`}>
-              <label htmlFor="gauge-marker-scale">Marker Size:</label>
-              <div className={cls.markerSizeControls}>
-                <input
-                  id="gauge-marker-scale"
-                  type="range"
-                  min="50"
-                  max="200"
-                  step="5"
-                  value={drafts.gaugeMarkerScale}
-                  onChange={onChange}
-                />
-                <input
-                  id="gauge-marker-scale-number"
-                  type="number"
-                  min="50"
-                  max="200"
-                  step="5"
-                  className={cls.number}
-                  value={drafts.gaugeMarkerScale}
-                  onChange={onChange}
-                />
-                <span>%</span>
-              </div>
-            </div>
-
-            <div className={`${cls.span} ${cls.markerBorderWidth}`}>
-              <label htmlFor="gauge-marker-border-width">
-                Border Thickness:
-              </label>
-              <div className={cls.markerSizeControls}>
-                <input
-                  id="gauge-marker-border-width"
-                  type="range"
-                  min="0"
-                  max="3"
-                  step="0.5"
-                  value={drafts.gaugeMarkerBorderWidth}
-                  onChange={onChange}
-                />
-                <input
-                  id="gauge-marker-border-width-number"
-                  type="number"
-                  min="0"
-                  max="3"
-                  step="0.5"
-                  className={cls.number}
-                  value={drafts.gaugeMarkerBorderWidth}
-                  onChange={onChange}
-                />
-                <span>px</span>
-                <div
-                  className="ffscouter-marker-preview"
-                  style={
-                    {
-                      "--ffscouter-marker-scale": drafts.gaugeMarkerScale / 100,
-                    } as React.CSSProperties
-                  }
-                >
-                  <span className="ffscouter-preview-marker-slot">
-                    <svg
-                      className="ffscouter-preview-arrow"
-                      viewBox={FF_ARROW_VIEWBOX}
-                    >
-                      <title>Preview Gauge Marker</title>
-                      <path
-                        fillRule="evenodd"
-                        fill={previewColor}
-                        stroke="#000000"
-                        strokeWidth={drafts.gaugeMarkerBorderWidth}
-                        d={FF_ARROW_PATH_D}
-                      />
-                    </svg>
-                    {previewSourceMarker && (
-                      <SourceMarkerIcon
-                        marker={previewSourceMarker}
-                        className="ffscouter-source-marker"
-                      />
-                    )}
-                  </span>
-                  <span className="ffscouter-preview-marker-slot">
-                    <div
-                      className="ffscouter-preview-bubble"
-                      style={{
-                        backgroundColor: previewColor,
-                        color: get_contrast_color(previewColor),
-                        borderWidth: `${
-                          drafts.gaugeMarkerBorderWidth *
-                          (drafts.gaugeMarkerScale / 100)
-                        }px`,
-                      }}
-                    >
-                      2.34
-                    </div>
-                    {previewSourceMarker && (
-                      <SourceMarkerIcon
-                        marker={previewSourceMarker}
-                        className="ffscouter-source-marker"
-                      />
-                    )}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div className={`${cls.span} ${cls.colorScheme}`}>
-              <label htmlFor="color-scheme">Color Scheme:</label>
-              <div className={cls.colorSchemeControls}>
-                <select
-                  id="color-scheme"
-                  value={drafts.colorScheme}
-                  onChange={onChange}
-                >
-                  <option value="classic">Classic (Default)</option>
-                  <option value="cool_diverging">Cool Diverging</option>
-                  <option value="neon">Neon</option>
-                  <option value="colorblind_safe">Colorblind-Safe</option>
-                  <option value="grayscale">Grayscale</option>
-                  <option value="green_yellow_red">Green-Yellow-Red</option>
-                  <option value="blue_yellow_red">Blue-Yellow-Red</option>
-                  <option value="plasma">Plasma</option>
-                </select>
-                <div className="ffscouter-swatch-row">
-                  {get_palette_for_scheme(drafts.colorScheme).map((color) => (
-                    <svg
-                      key={color}
-                      className="ffscouter-swatch"
-                      viewBox={FF_ARROW_VIEWBOX}
-                    >
-                      <title>{color} swatch</title>
-                      <path
-                        fillRule="evenodd"
-                        fill={color}
-                        stroke="#000000"
-                        strokeWidth="1.5"
-                        d={FF_ARROW_PATH_D}
-                      />
-                    </svg>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            <div className={`${cls.inputRow} ${cls.span}`}>
-              <label htmlFor="ff-range-low">FF Ranges (Low, High, Max):</label>
-              <div className={cls.rangeRow}>
-                <input
-                  id="ff-range-low"
-                  type="number"
-                  step="0.1"
-                  className={cls.number}
-                  value={drafts.lowRange}
-                  onChange={onChange}
-                />
-                <span>&lt;</span>
-                <input
-                  id="ff-range-high"
-                  type="number"
-                  step="0.1"
-                  className={cls.number}
-                  value={drafts.highRange}
-                  onChange={onChange}
-                />
-                <span>&lt;</span>
-                <input
-                  id="ff-range-max"
-                  type="number"
-                  step="0.1"
-                  className={cls.number}
-                  value={drafts.maxRange}
-                  onChange={onChange}
-                />
-              </div>
-              {rangeError && <div className={cls.errorMsg}>{rangeError}</div>}
-            </div>
-          </div>
-        </div>
-
-        {/* Feature Toggles */}
-        <div className={cls.group}>
-          <h4>Feature Toggles</h4>
-          <div className={cls.section}>
-            <div className={`${cls.span} ff-chain-block`}>
-              <div className={`${cls.cell} ${cls.cellCheckbox}`}>
-                <input
-                  id="chain-button-toggle"
-                  type="checkbox"
-                  checked={drafts.chainButtonEnabled}
-                  onChange={onChange}
-                />
-                <label htmlFor="chain-button-toggle">
-                  Enable Chain Button (Green FF Button)
-                </label>
-              </div>
-
-              {drafts.chainButtonEnabled && (
-                <div className={`${cls.section} ${cls.chainSuboptions}`}>
-                  <div className={`${cls.cell} ${cls.chainWide}`}>
-                    <label htmlFor="chain-link-type">Chain button opens:</label>
-                    <select
-                      id="chain-link-type"
-                      value={drafts.chainLinkType}
-                      onChange={onChange}
-                    >
-                      <option value="attack">Attack page</option>
-                      <option value="profile">Profile page</option>
-                    </select>
-                  </div>
-
-                  <div className={`${cls.cell} ${cls.chainWide}`}>
-                    <label htmlFor="chain-tab-type">Open in:</label>
-                    <select
-                      id="chain-tab-type"
-                      value={drafts.chainTabType}
-                      onChange={onChange}
-                    >
-                      <option value="newtab">New tab</option>
-                      <option value="sametab">Same tab</option>
-                    </select>
-                  </div>
-
-                  <div className={cls.cell}>
-                    <label htmlFor="chain-min-level">Min Level:</label>
-                    <input
-                      id="chain-min-level"
-                      type="number"
-                      className={cls.number}
-                      placeholder="No min"
-                      value={
-                        drafts.chainMinLevel === null
-                          ? ""
-                          : drafts.chainMinLevel
-                      }
-                      onChange={onChange}
-                    />
-                  </div>
-
-                  <div className={cls.cell}>
-                    <label htmlFor="chain-max-level">Max Level:</label>
-                    <input
-                      id="chain-max-level"
-                      type="number"
-                      className={cls.number}
-                      placeholder="No max"
-                      value={
-                        drafts.chainMaxLevel === null
-                          ? ""
-                          : drafts.chainMaxLevel
-                      }
-                      onChange={onChange}
-                    />
-                  </div>
-
-                  <div className={cls.cell}>
-                    <label htmlFor="chain-min-ff">Min FF:</label>
-                    <input
-                      id="chain-min-ff"
-                      type="number"
-                      step="0.1"
-                      className={cls.number}
-                      placeholder="No min"
-                      value={
-                        drafts.chainMinFF === null ? "" : drafts.chainMinFF
-                      }
-                      onChange={onChange}
-                    />
-                  </div>
-
-                  <div className={cls.cell}>
-                    <label htmlFor="chain-max-ff">Max FF:</label>
-                    <input
-                      id="chain-max-ff"
-                      type="number"
-                      step="0.1"
-                      className={cls.number}
-                      placeholder="No max"
-                      value={drafts.chainMaxFF}
-                      onChange={onChange}
-                    />
-                  </div>
-
-                  <div
-                    className={`${cls.cell} ${cls.cellCheckbox} ${cls.chainWide}`}
-                  >
-                    <input
-                      id="chain-inactive"
-                      type="checkbox"
-                      checked={drafts.chainInactive}
-                      onChange={onChange}
-                    />
-                    <label htmlFor="chain-inactive">
-                      Inactive Only (14+ days offline)
-                    </label>
-                  </div>
-
-                  <div
-                    className={`${cls.cell} ${cls.cellCheckbox} ${cls.chainWide}`}
-                  >
-                    <input
-                      id="chain-factionless"
-                      type="checkbox"
-                      checked={drafts.chainFactionless}
-                      onChange={onChange}
-                    />
-                    <label htmlFor="chain-factionless">Factionless Only</label>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div className={cls.cell}>
-              <label htmlFor="factions-col-display">Faction Page Shows:</label>
-              <select
-                id="factions-col-display"
-                value={drafts.factionsColDisplay}
-                onChange={onChange}
-              >
-                <option value="fair_fight">FF Score</option>
-                <option value="battle_stats">BS Estimate</option>
-                <option value="none">None (Hide Column)</option>
-              </select>
-            </div>
-
-            <div className={`${cls.cell} ${cls.cellCheckbox}`}>
-              <input
-                id="faction-filter-toggle"
-                type="checkbox"
-                checked={drafts.factionFilterEnabled}
-                onChange={onChange}
-              />
-              <label htmlFor="faction-filter-toggle">
-                Show faction filter box
-              </label>
-            </div>
-
-            <div className={cls.cell}>
-              <label htmlFor="war-col-display">War Page Shows:</label>
-              <select
-                id="war-col-display"
-                value={drafts.warColDisplay}
-                onChange={onChange}
-              >
-                <option value="fair_fight">FF Score</option>
-                <option value="battle_stats">BS Estimate</option>
-                <option value="none">None (Hide Column)</option>
-              </select>
-            </div>
-
-            <div className={`${cls.cell} ${cls.cellCheckbox}`}>
-              <input
-                id="war-filter-toggle"
-                type="checkbox"
-                checked={drafts.warFilterEnabled}
-                onChange={onChange}
-              />
-              <label htmlFor="war-filter-toggle">Show war filter box</label>
-            </div>
-
-            <div className={cls.cell}>
-              <label htmlFor="mini-profile-display">Mini Profile Shows:</label>
-              <select
-                id="mini-profile-display"
-                value={drafts.miniProfileDisplay}
-                onChange={onChange}
-              >
-                <option value="fair_fight">FF Score</option>
-                <option value="battle_stats">BS Estimate</option>
-              </select>
-            </div>
-
-            <div className={`${cls.cell} ${cls.cellCheckbox}`}>
-              <input
-                id="status-attack-links-toggle"
-                type="checkbox"
-                checked={drafts.statusAttackLinksEnabled}
-                onChange={onChange}
-              />
-              <label htmlFor="status-attack-links-toggle">
-                Enable online status indicator quick attack links
-              </label>
-            </div>
-
-            <div className={cls.cell}>
-              <label htmlFor="war-quick-attack-action">
-                Quick Attack Action:
-              </label>
-              <select
-                id="war-quick-attack-action"
-                value={drafts.warQuickAttackAction}
-                onChange={onChange}
-              >
-                <option value="new_tab">New Tab</option>
-                <option value="current">Same Tab</option>
-              </select>
-            </div>
-
-            <div className={`${cls.cell} ${cls.cellCheckbox}`}>
-              <input
-                id="ff-history-toggle"
-                type="checkbox"
-                checked={drafts.ffHistoryEnabled}
-                onChange={onChange}
-              />
-              <label htmlFor="ff-history-toggle">
-                Enable FF History button on profile pages
-              </label>
-            </div>
-
-            <div className={`${cls.cell} ${cls.cellCheckbox}`}>
-              <input
-                id="stat-distribution-badge-toggle"
-                type="checkbox"
-                checked={drafts.statDistributionBadgeEnabled}
-                onChange={onChange}
-              />
-              <label htmlFor="stat-distribution-badge-toggle">
-                Show dominant stat badge on faction/war FF cells
-              </label>
-            </div>
-
-            <div className={`${cls.cell} ${cls.cellCheckbox}`}>
-              <input
-                id="bounty-board-toggle"
-                type="checkbox"
-                checked={drafts.bountyBoardEnabled}
-                onChange={onChange}
-              />
-              <label htmlFor="bounty-board-toggle">
-                Enable FF Scouter Bounties
-              </label>
-            </div>
-
-            <div className={cls.cell}>
-              <label htmlFor="bounty-attack-action">Bounty Attack Opens:</label>
-              <select
-                id="bounty-attack-action"
-                value={drafts.bountyAttackAction}
-                onChange={onChange}
-              >
-                <option value="new_tab">New Tab</option>
-                <option value="current">Same Tab</option>
-              </select>
-            </div>
-
-            <div className={`${cls.cell} ${cls.cellCheckbox}`}>
-              <input
-                id="settings-panel-own-profile-only-toggle"
-                type="checkbox"
-                checked={drafts.settingsPanelOwnProfileOnly}
-                onChange={onChange}
-              />
-              <label htmlFor="settings-panel-own-profile-only-toggle">
-                Only show FF Scouter Settings on my own profile
-              </label>
-            </div>
-
-            <div className={`${cls.span} ff-deprecation-note`}>
-              <span>
-                War Monitor is no longer supported. Use{" "}
-                <a
-                  target="_blank"
-                  href="https://greasyfork.org/en/scripts/529238-torn-war-stuff-enhanced"
-                  rel="noreferrer"
-                >
-                  Torn War Stuff Enhanced
-                </a>{" "}
-                instead.
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Debug Settings */}
-        <div className={cls.group}>
-          <h4>Debug Settings</h4>
-          <div className={cls.section}>
-            <div className={`${cls.cell} ${cls.cellCheckbox}`}>
-              <input
-                id="debug-logs"
-                type="checkbox"
-                checked={drafts.debugLogs}
-                onChange={onChange}
-              />
-              <label htmlFor="debug-logs">Enable debug logging</label>
-            </div>
-
-            <div className={`${cls.cell} ${cls.cellCheckbox}`}>
-              <input
-                id="analytics-toggle"
-                type="checkbox"
-                checked={drafts.analyticsEnabled}
-                onChange={onChange}
-              />
-              <label htmlFor="analytics-toggle">
-                Enable local analytics logging (last 30 days)
-              </label>
-            </div>
-
-            <div className={`${cls.cell} ${cls.cellCheckbox}`}>
-              <input
-                id="network-interception-toggle"
-                type="checkbox"
-                checked={drafts.networkInterceptionEnabled}
-                onChange={onChange}
-              />
-              <label htmlFor="network-interception-toggle">
-                Enable network request interception (Fetch/XHR/WS)
-              </label>
-            </div>
-
-            <div className={`${cls.cell} ${cls.cellCheckbox}`}>
-              <input
-                id="debug-disable-pda-http"
-                type="checkbox"
-                checked={drafts.debugDisablePdaHttp}
-                onChange={onChange}
-              />
-              <label htmlFor="debug-disable-pda-http">
-                Disable PDA native HTTP (use GM_xmlhttpRequest instead)
-              </label>
-            </div>
-
-            <div className={`${cls.cell} ${cls.cellCheckbox}`}>
-              <input
-                id="debug-force-react-fallback"
-                type="checkbox"
-                checked={drafts.debugForceReactFallback}
-                onChange={onChange}
-              />
-              <label htmlFor="debug-force-react-fallback">
-                Force React fallback (fetch/evaluate Torn's own react-dom bundle
-                instead of using unsafeWindow.React/ReactDOM)
-              </label>
-            </div>
-          </div>
-        </div>
-
-        {/* Action Buttons Area */}
-        <div className={cls.actions}>
-          <button type="button" className="torn-btn btn-save" onClick={onSave}>
-            Save Settings
-          </button>
-          <button
-            type="button"
-            className="torn-btn btn-secondary"
-            onClick={onReset}
-          >
-            Reset to Defaults
-          </button>
-          <button
-            type="button"
-            className="torn-btn btn-secondary"
-            onClick={onClearCache}
-          >
-            Clear FF Cache
-          </button>
-          {showSavedMessage && <span className={cls.savedMsg}>✓ Saved!</span>}
-        </div>
+        <ApiKeySection
+          apiKey={props.apiKey}
+          drafts={drafts}
+          isPremium={isPremium}
+          onChange={onChange}
+          onApiKeyBlur={onApiKeyBlur}
+          onVerify={onVerify}
+        />
+        <GaugeMarkerSection
+          drafts={drafts}
+          onChange={onChange}
+          rangeError={rangeError}
+        />
+        <FeatureTogglesSection drafts={drafts} onChange={onChange} />
+        <DebugSection drafts={drafts} onChange={onChange} />
+        <SettingsActions
+          showSavedMessage={showSavedMessage}
+          onSave={onSave}
+          onReset={onReset}
+          onClearCache={onClearCache}
+        />
       </div>
     </details>
   );

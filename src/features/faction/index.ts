@@ -643,6 +643,10 @@ const process_page = () => {
                   "Observed mutation that included adding descriptions",
                   node,
                 );
+                // Set up war features serially: keeps each mutation's wait
+                // ordered and avoids spawning redundant waiters/setup work for
+                // one mutation batch.
+                // react-doctor-disable-next-line react-doctor/async-await-in-loop
                 const faction_war = await wait_for_element(
                   ".faction-war",
                   10_000,
