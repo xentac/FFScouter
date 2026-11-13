@@ -1,13 +1,14 @@
-import {
-  OD_INSURANCE_GUIDE_URL,
-  type OdInsurancePlansResponse as OdPlansData,
-  query_od_insurance_plans,
-} from "@utils/api";
+import { OD_INSURANCE_GUIDE_URL } from "@utils/api";
 import { torn_page } from "@utils/dom";
 import { ffconfig } from "@utils/ffconfig";
 import logger from "@utils/logger";
 import { type Feature, StartTime } from "../feature";
-import { type PayablePlan, payable_plans } from "./plans";
+import {
+  od_insurance_plans,
+  type PayablePlan,
+  type PlansState,
+  payable_plans,
+} from "./plans";
 
 // OD Insurance
 // - Only runs on https://www.torn.com/item.php (see shouldRun below)
@@ -26,80 +27,6 @@ import { type PayablePlan, payable_plans } from "./plans";
 
 const log = logger.child("feature:od-insurance");
 
-const OD_CACHE_KEY = "ffscouter-od-insurance-plans-v1";
-const OD_CACHE_MS = 10 * 60 * 1000;
-
-const OD_FALLBACK: OdPlansData = {
-  manager_player_id: 3281931,
-  manager_name: "WTV1",
-  plans: [
-    {
-      name: "2 Hour Ecstasy Insurance",
-      xanax_quantity: 1,
-      plan_key: "ecstasy",
-      max_multiplier: 50,
-      duration_seconds: 7200,
-      duration_label: "2 hours",
-      standard_payout_xanax: 22,
-      overdose_payout_xanax: 26,
-      payment: {
-        recipient_player_id: 3281931,
-        recipient_name: "WTV1",
-        xanax_quantity: 1,
-        message: "insurance:ecstasy",
-      },
-    },
-    {
-      name: "2 Hour Xanax Insurance",
-      xanax_quantity: 1,
-      plan_key: "xanax",
-      max_multiplier: 50,
-      duration_seconds: 7200,
-      duration_label: "2 hours",
-      standard_payout_xanax: 33,
-      overdose_payout_xanax: 39,
-      payment: {
-        recipient_player_id: 3281931,
-        recipient_name: "WTV1",
-        xanax_quantity: 1,
-        message: "insurance:xanax",
-      },
-    },
-    {
-      name: "7 Day Xanax Insurance / Multiple Xanax OD's Payout",
-      xanax_quantity: 20,
-      plan_key: "7days",
-      max_multiplier: 10,
-      duration_seconds: 604800,
-      duration_label: "7 days",
-      standard_payout_xanax: 31,
-      overdose_payout_xanax: 37,
-      payment: {
-        recipient_player_id: 3281931,
-        recipient_name: "WTV1",
-        xanax_quantity: 20,
-        message: "insurance:7days",
-      },
-    },
-    {
-      name: "30 Day Xanax Insurance / Multiple Xanax OD's Payout",
-      xanax_quantity: 80,
-      plan_key: "30days",
-      max_multiplier: 5,
-      duration_seconds: 2592000,
-      duration_label: "30 days",
-      standard_payout_xanax: 31,
-      overdose_payout_xanax: 37,
-      payment: {
-        recipient_player_id: 3281931,
-        recipient_name: "WTV1",
-        xanax_quantity: 80,
-        message: "insurance:30days",
-      },
-    },
-  ],
-};
-
 function od_el<K extends keyof HTMLElementTagNameMap>(
   tag: K,
   className?: string | null,
@@ -109,54 +36,6 @@ function od_el<K extends keyof HTMLElementTagNameMap>(
   if (className) el.className = className;
   if (text != null) el.textContent = text;
   return el;
-}
-
-interface OdCache {
-  at: number;
-  data: OdPlansData;
-}
-
-function od_read_cache(): OdCache | null {
-  try {
-    const raw = localStorage.getItem(OD_CACHE_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as OdCache | null;
-    if (!parsed?.data || !Array.isArray(parsed.data.plans)) return null;
-    return parsed;
-  } catch {
-    return null;
-  }
-}
-
-function od_write_cache(data: OdPlansData): void {
-  try {
-    localStorage.setItem(
-      OD_CACHE_KEY,
-      JSON.stringify({ at: Date.now(), data }),
-    );
-  } catch {
-    // storage full/blocked - the feature still works uncached
-  }
-}
-
-async function od_fetch_plans(): Promise<{
-  data: OdPlansData;
-  stale: boolean;
-}> {
-  const cached = od_read_cache();
-  if (cached && Date.now() - cached.at < OD_CACHE_MS) {
-    return { data: cached.data, stale: false };
-  }
-  try {
-    const resp = await query_od_insurance_plans();
-    if (resp.blank) throw new Error("OD plans response was blank");
-    od_write_cache(resp.result);
-    return { data: resp.result, stale: false };
-  } catch (err) {
-    log.warn("OD plans request failed", err);
-  }
-  if (cached) return { data: cached.data, stale: true };
-  return { data: OD_FALLBACK, stale: true };
 }
 
 function od_copy_fallback(text: string): void {
@@ -228,6 +107,8 @@ function od_add_styles(): void {
 
 interface OdModal {
   overlay: HTMLElement;
+  state: PlansState;
+  destroy: () => void;
   open: () => void;
   close: () => void;
   isOpen: () => boolean;
@@ -235,8 +116,7 @@ interface OdModal {
 
 let od_modal: OdModal | null = null;
 
-function od_build_modal(data: OdPlansData, stale: boolean): OdModal {
-  if (od_modal) return od_modal;
+function od_build_modal(state: PlansState): OdModal {
   const overlay = od_el("div", "ff-od-overlay");
   overlay.id = "ffscouter-od-insurance";
   overlay.style.display = "none";
@@ -248,6 +128,10 @@ function od_build_modal(data: OdPlansData, stale: boolean): OdModal {
   const header = od_el("div", "ff-od-header");
   const titleWrap = od_el("div");
   titleWrap.appendChild(od_el("div", "ff-od-title", "OD Insurance"));
+  const data =
+    state.status === "failed"
+      ? { manager_player_id: null, manager_name: null, plans: [] }
+      : state.response;
   if (data.manager_player_id !== null) {
     const managerName = data.manager_name ?? "";
     titleWrap.appendChild(
@@ -273,11 +157,20 @@ function od_build_modal(data: OdPlansData, stale: boolean): OdModal {
     plans.length > 0
       ? "Tap a plan to see how to buy it."
       : "OD Insurance is not taking new policies right now.";
-  if (stale)
-    introText += " Showing saved plans - the live list could not be refreshed.";
+  if (state.status === "failed") introText = "Plans did not load.";
+  if (state.status === "stale")
+    introText += ` Showing plans saved ${new Date(state.fetched_at).toLocaleString()}. The live list did not load.`;
   listView.appendChild(od_el("p", "ff-od-intro", introText));
+  if (state.status === "failed") {
+    const retry = od_el("button", "ff-od-back", "Retry");
+    retry.type = "button";
+    retry.addEventListener("click", () => {
+      od_open_modal();
+    });
+    listView.appendChild(retry);
+  }
   if (plans.length === 0) {
-    const guide = od_el("a", null, "Read the OD Insurance guide");
+    const guide = od_el("a", null, "Open the OD Insurance page");
     guide.href = OD_INSURANCE_GUIDE_URL;
     guide.target = "_blank";
     guide.rel = "noreferrer";
@@ -382,8 +275,16 @@ function od_build_modal(data: OdPlansData, stale: boolean): OdModal {
       "You can turn this off in FF Scouter Settings (on your profile page).",
     ),
   );
+  const onKeydown = (e: KeyboardEvent) => {
+    if (e.key === "Escape" && api.isOpen()) api.close();
+  };
   const api: OdModal = {
     overlay,
+    state,
+    destroy: () => {
+      document.removeEventListener("keydown", onKeydown);
+      overlay.remove();
+    },
     open: () => {
       detailView.style.display = "none";
       listView.style.display = "block";
@@ -402,33 +303,43 @@ function od_build_modal(data: OdPlansData, stale: boolean): OdModal {
   overlay.addEventListener("click", (e) => {
     if (e.target === overlay) api.close();
   });
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && api.isOpen()) api.close();
-  });
+  document.addEventListener("keydown", onKeydown);
   document.body.appendChild(overlay);
-  od_modal = api;
   return api;
 }
 
-async function od_ensure_modal(): Promise<OdModal> {
-  if (od_modal) return od_modal;
-  try {
-    const res = await od_fetch_plans();
-    return od_build_modal(res.data, res.stale);
-  } catch (err) {
-    log.error("OD Insurance failed to load", err);
-    return od_build_modal(OD_FALLBACK, true);
-  }
-}
-
+// Each open asks the cache: a fresh list costs no request, an expired one is
+// fetched again, and a failed load can be retried. The modal is rebuilt only
+// when the answer changed.
 function od_open_modal(): void {
-  od_ensure_modal()
-    .then((m) => {
-      m.open();
+  od_insurance_plans
+    .get()
+    .then((state) => {
+      od_apply_plans(state);
+      if (!ffconfig.od_insurance_enabled) return;
+      if (od_modal?.state !== state) {
+        od_modal?.destroy();
+        od_modal = od_build_modal(state);
+      }
+      od_modal.open();
     })
     .catch((err) => {
       log.error("OD Insurance modal failed", err);
     });
+}
+
+// A list with no payable plan means nothing can be bought: the row buttons
+// go away. A failed load keeps them, so the modal can offer Retry.
+let od_no_plans = false;
+
+function od_apply_plans(state: PlansState): void {
+  od_no_plans =
+    state.status !== "failed" && payable_plans(state.response).length === 0;
+  if (od_no_plans) {
+    document.querySelectorAll(".ff-od-row-btn").forEach((b) => {
+      b.remove();
+    });
+  }
 }
 
 // ---------------------------------------------------------------------
@@ -461,7 +372,7 @@ function od_row_for(leaf: Element): HTMLElement | null {
 }
 
 function od_scan_rows(): number {
-  if (!ffconfig.od_insurance_enabled) return 0;
+  if (!ffconfig.od_insurance_enabled || od_no_plans) return 0;
   const scope =
     document.querySelector(".content-wrapper") ||
     document.querySelector(".page-template-cont") ||
@@ -504,10 +415,9 @@ function od_remove_all(): void {
   document.querySelectorAll(".ff-od-row-btn, .ff-od-chip").forEach((b) => {
     b.remove();
   });
-  if (od_modal) {
-    od_modal.overlay.remove();
-    od_modal = null;
-  }
+  od_modal?.destroy();
+  od_modal = null;
+  od_no_plans = false;
 }
 
 const feature: Feature = {
@@ -520,6 +430,11 @@ const feature: Feature = {
   },
   async run() {
     od_add_styles();
+    // Fetch on every item.php load unless the stored list is fresh, so the
+    // buttons can go away when no plan is payable.
+    if (!od_insurance_plans.is_fresh()) {
+      void od_insurance_plans.get().then(od_apply_plans);
+    }
     let scanTimer: ReturnType<typeof setTimeout> | null = null;
     const scan = () => {
       if (!ffconfig.od_insurance_enabled) return;
