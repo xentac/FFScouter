@@ -16,7 +16,11 @@ import { OD_INSURANCE_GUIDE_URL } from "@utils/api";
 import { copy_text } from "@utils/clipboard";
 import type { PlansState } from "@utils/od_insurance";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
-import { OdInsurance, OdInsuranceModal } from "./od-insurance";
+import {
+  OdInsurance,
+  OdInsuranceButton,
+  OdInsuranceModal,
+} from "./od-insurance";
 
 vi.mock("@utils/clipboard", () => ({ copy_text: vi.fn() }));
 
@@ -179,6 +183,16 @@ describe("OdInsuranceModal", () => {
   });
 });
 
+describe("OdInsuranceButton", () => {
+  test("has a full and a short label, and the full accessible name", () => {
+    render(<OdInsuranceButton onOpen={vi.fn()} />);
+    const button = screen.getByRole("button", { name: "OD Insurance" });
+    expect(
+      [...button.querySelectorAll("span")].map((s) => s.textContent),
+    ).toEqual(["OD Insurance", "OD Ins"]);
+  });
+});
+
 describe("OdInsurance", () => {
   let slots: HTMLElement[];
 
@@ -197,7 +211,8 @@ describe("OdInsurance", () => {
     render(<OdInsurance slots={slots} load={load} />);
     await waitFor(() => expect(load).toHaveBeenCalledOnce());
     for (const slot of slots) {
-      expect(slot.querySelector("button")?.textContent).toBe("OD Insurance");
+      const button = slot.querySelector("button");
+      expect(button?.getAttribute("aria-label")).toBe("OD Insurance");
     }
 
     await act(async () => {
