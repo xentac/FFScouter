@@ -647,3 +647,14 @@ body[data-ff-status-attack-enabled="true"] [class*="userStatusWrap__"]::after {
   padding-top: 0 !important;
   padding-bottom: 0 !important;
 }
+
+/* Give every faction tag image its own compositor layer. Factions can upload
+   animated tags. Torn paints them into the same layer as the row's honor bar,
+   so every animation frame made the GPU raster that whole column again, with
+   all its honor bars. On a hospital Advanced Search page with many animated
+   tags, this kept the Edge GPU thread at 96% busy and scrolling fell to about
+   8 fps. In its own layer, an animation frame rasters only the tag. The rule
+   applies to every page, because the same tags appear on every list. */
+a.user.faction img {
+  will-change: transform;
+}
