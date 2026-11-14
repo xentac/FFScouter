@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FF Scouter V2 beta
 // @namespace    xentac-beta
-// @version      3.5-beta3
+// @version      3.5-beta4
 // @author       xentac [3354782], MAVRI [2402357], rDacted [2670953], Weav3r [1853324], Glasnost [1844049]
 // @description  Shows the expected Fair Fight score against targets and faction war status
 // @license      GPLv3
@@ -26,7 +26,7 @@
 			(document.head || document.documentElement).appendChild(style);
 		})(t);
 	};
-	_css(" ._ffscouter-attack-bounty-row_60dre_2{flex-wrap:wrap;align-items:center;gap:6px;margin-top:4px;font-size:12px;display:flex}._ffscouter-attack-bounty-row__label_60dre_11{font-weight:700}._ffscouter-attack-bounty-row__claim_60dre_15{background-color:var(--ffscouter-alt-bg-color);color:var(--ffscouter-text-color);border:1px solid var(--ffscouter-border-color);cursor:pointer;border-radius:3px;padding:2px 8px;font-size:12px}._ffscouter-attack-bounty-row__claim_60dre_15:disabled{opacity:.6;cursor:default}._ffscouter-info-line__label_aofgj_1{margin-right:6px;font-weight:700}._ffscouter-info-line__badge_aofgj_8{border-radius:4px;padding:2px 6px;font-weight:700;display:inline-block}._ffscouter-info-line__premium-upgrade_aofgj_15{white-space:nowrap;margin-top:4px;font-size:12px;font-style:normal;line-height:1.3;display:block}@media (width<=768px){._ffscouter-info-line__premium-upgrade_aofgj_15{white-space:normal;overflow-wrap:anywhere;margin-top:6px;line-height:1.35}}._ffscouter-info-line__freshness-trigger_aofgj_44{appearance:none!important;box-shadow:none!important;width:auto!important;min-width:0!important;min-height:0!important;font:inherit!important;color:inherit!important;text-transform:none!important;cursor:pointer!important;vertical-align:baseline!important;text-underline-offset:2px!important;background:0 0!important;border:none!important;margin:0!important;padding:0!important;-webkit-text-decoration:underline dotted!important;text-decoration:underline dotted!important;display:inline!important}._ffscouter-explainer-glyph_aofgj_64{appearance:none!important;box-shadow:none!important;vertical-align:middle!important;cursor:pointer!important;background:0 0!important;border:none!important;width:auto!important;min-width:0!important;min-height:0!important;margin:0 0 0 6px!important;padding:0!important;line-height:1!important;display:inline-flex!important}._ffscouter-explainer-glyph_aofgj_64 svg{width:14px!important;height:14px!important}._ffscouter-explainer-card_aofgj_90{background:var(--ffscouter-alt-bg-color)!important;border:1px solid var(--ffscouter-border-color)!important;color:var(--ffscouter-text-color)!important;text-align:left!important;border-radius:6px!important;margin:6px 0 0!important;padding:10px 30px 10px 12px!important;font-size:12px!important;font-style:normal!important;font-weight:400!important;line-height:1.5!important;display:block!important;position:relative!important}._ffscouter-explainer-card_aofgj_90 p{float:none!important;margin:0 0 8px!important;padding:0!important;display:block!important}._ffscouter-explainer-card_aofgj_90 p:last-child{margin-bottom:0!important}._ffscouter-explainer-card_aofgj_90 p:before,._ffscouter-explainer-card_aofgj_90 p:after{content:none!important}._ffscouter-explainer-card_aofgj_90 a{font:inherit!important;color:inherit!important;background:0 0!important;margin:0!important;padding:0!important;text-decoration:underline!important;display:inline!important;position:static!important}._ffscouter-explainer-card__close_aofgj_140{appearance:none!important;box-shadow:none!important;cursor:pointer!important;width:auto!important;min-width:0!important;min-height:0!important;color:inherit!important;background:0 0!important;border:none!important;margin:0!important;padding:4px!important;font-size:14px!important;line-height:1!important;position:absolute!important;top:2px!important;right:4px!important}@media (width<=784px){._ffscouter-explainer-card_aofgj_90{font-size:13px!important;line-height:1.55!important}}._ff-bounty-modal_1r3gd_5,._ff-bounty-modal_1r3gd_5 *,._ff-bounty-modal_1r3gd_5 :before,._ff-bounty-modal_1r3gd_5 :after{box-sizing:border-box}._ff-bounty-modal_1r3gd_5{z-index:9999;background-color:var(--ffscouter-bg-color);width:420px;max-width:calc(100vw - 32px);max-height:70vh;color:var(--ffscouter-text-color);border:1px solid var(--ffscouter-border-color);border-radius:8px;flex-direction:column;font-family:Arial,sans-serif;font-size:13px;display:flex;position:fixed;box-shadow:0 4px 16px #0000004d}._ff-bounty-modal__header_1r3gd_30{background-color:var(--ffscouter-alt-bg-color);border-bottom:1px solid var(--ffscouter-border-color);border-radius:7px 7px 0 0;justify-content:space-between;align-items:center;gap:8px;padding:8px 12px;display:flex}._ff-bounty-modal__header--drag_1r3gd_43{cursor:move;touch-action:none;-webkit-user-select:none;user-select:none}._ff-bounty-modal--minimized_1r3gd_49 ._ff-bounty-modal__header_1r3gd_30{border-bottom:none;border-radius:7px}._ff-bounty-modal--in-flow_1r3gd_57{z-index:auto;width:auto;max-width:100%;box-shadow:none;margin-bottom:10px;position:static}._ff-bounty-modal__header_1r3gd_30 ._ff-bounty-modal__title_1r3gd_67{margin:0;font-size:14px;font-weight:700}._ff-bounty-modal__header-btn_1r3gd_73{color:inherit;cursor:pointer;background:0 0;border:none;padding:0 4px;font-size:16px;font-weight:700;line-height:1}._ff-bounty-modal__body_1r3gd_84{padding:8px 12px 12px;overflow-y:auto}._ff-bounty-modal__notice_1r3gd_89{margin:4px 0;line-height:1.4}._ff-bounty-modal__notice_1r3gd_89 a{color:inherit;font-weight:700;text-decoration:underline}._ff-bounty-modal__primary-btn_1r3gd_100{background-color:var(--ffscouter-alt-bg-color);color:var(--ffscouter-text-color);border:1px solid var(--ffscouter-border-color);cursor:pointer;border-radius:4px;margin-top:8px;padding:6px 10px;font-size:13px;font-weight:700}._ff-bounty-modal__primary-btn_1r3gd_100:disabled{opacity:.6;cursor:default}._ff-bounty-modal__filters_1r3gd_117{flex-wrap:wrap;gap:8px;margin-bottom:8px;display:flex}._ff-bounty-modal__filter_1r3gd_117{align-items:center;gap:4px;display:flex}._ff-bounty-modal__filter_1r3gd_117 input{background-color:var(--ffscouter-alt-bg-color);width:70px;color:var(--ffscouter-text-color);border:1px solid var(--ffscouter-input-color);border-radius:3px;padding:2px 4px;font-size:13px}._ff-bounty-modal__filter_1r3gd_117 input[type=checkbox]{width:auto;padding:0}._ff-bounty-modal__list_1r3gd_145,._ff-bounty-modal__member-list_1r3gd_146,._ff-bounty-modal__tier-ladder_1r3gd_147{margin:0;padding:0;list-style:none}._ff-bounty-modal__row_1r3gd_153,._ff-bounty-modal__faction-card_1r3gd_154{border-top:1px solid var(--ffscouter-border-color);padding:4px 0}._ff-bounty-modal__row-main_1r3gd_159,._ff-bounty-modal__faction-header_1r3gd_160{align-items:center;gap:6px;display:flex}._ff-bounty-modal__faction-header_1r3gd_160{width:100%;color:inherit;text-align:left;cursor:pointer;background:0 0;border:none;padding:2px 0;font-size:13px}._ff-bounty-modal__member-list_1r3gd_146{margin-left:12px}._ff-bounty-modal__name_1r3gd_181{text-overflow:ellipsis;white-space:nowrap;min-width:0;color:inherit;flex:auto;font-weight:700;overflow:hidden}._ff-bounty-modal__status_1r3gd_192{white-space:nowrap;flex:none;font-size:12px}._ff-bounty-modal__status--okay_1r3gd_198{color:var(--ffscouter-status-okay-color)}._ff-bounty-modal__status--out_1r3gd_202{color:var(--ffscouter-status-out-color)}._ff-bounty-modal__status--away_1r3gd_206{color:var(--ffscouter-status-away-color)}._ff-bounty-modal__estimate_1r3gd_210{text-align:center;background-color:var(--ffscouter-alt-bg-color);border-radius:4px;flex:none;min-width:44px;padding:1px 6px;font-weight:700}._ff-bounty-modal__tier-label_1r3gd_220,._ff-bounty-modal__tier-toggle_1r3gd_221,._ff-bounty-modal__pool_1r3gd_222{white-space:nowrap;flex:none}._ff-bounty-modal__tier-toggle_1r3gd_221{color:inherit;cursor:pointer;background:0 0;border:none;padding:0;font-size:13px}._ff-bounty-modal__tier-ladder_1r3gd_147{margin:2px 0 2px 12px;font-size:12px}._ff-bounty-modal__action_1r3gd_241{background-color:var(--ffscouter-alt-bg-color);color:var(--ffscouter-text-color);border:1px solid var(--ffscouter-border-color);cursor:pointer;border-radius:3px;flex:none;padding:2px 6px;font-size:12px}._ff-bounty-modal--own_1r3gd_252{opacity:.6}._ff-bounty-modal--own_1r3gd_252 ._ff-bounty-modal--own_1r3gd_252{opacity:1}._ff-bounty-modal__own-label_1r3gd_262{margin-top:2px;font-size:12px;font-style:italic;font-weight:700}._ff-bounty-modal__action_1r3gd_241:disabled{opacity:.6;cursor:default}._ff-bounty-launcher_1r3gd_276{z-index:9999;box-sizing:border-box;background-color:var(--ffscouter-alt-bg-color);width:40px;height:40px;color:var(--ffscouter-text-color);border:1px solid var(--ffscouter-border-color);cursor:pointer;touch-action:none;-webkit-user-select:none;user-select:none;border-radius:8px;padding:0;font-family:Arial,sans-serif;font-size:11px;font-weight:700;position:fixed;box-shadow:0 4px 16px #0000004d}._ff-filter-box_j1w9b_1,._ff-filter-box_j1w9b_1 *,._ff-filter-box_j1w9b_1 :before,._ff-filter-box_j1w9b_1 :after{box-sizing:border-box!important}._ff-filter-box_j1w9b_1{background-color:var(--ffscouter-bg-color);border:1px solid var(--ffscouter-border-color);color:var(--ffscouter-text-color);border-radius:8px;margin-bottom:16px;padding:12px 16px;font-family:Arial,sans-serif;box-shadow:0 2px 5px #0000000d}._ff-filter-box_j1w9b_1._ff-filter-box--no-borders_j1w9b_19{background-color:var(--default-bg-panel-color);border-top:1px solid var(--ffscouter-border-color);border-bottom:1px solid var(--ffscouter-border-color);box-shadow:none;border-left:none;border-right:none;border-radius:0;margin:0;padding:12px 10px}._ff-filter-box_j1w9b_1 summary{cursor:pointer;-webkit-user-select:none;user-select:none;outline:none;font-size:14px;font-weight:700}._ff-filter-box_j1w9b_1[open] summary{border-bottom:1px solid var(--ffscouter-border-color);margin-bottom:12px;padding-bottom:6px}._ff-filter-box_j1w9b_1 summary:focus-visible{outline:2px solid var(--ffscouter-glow-color);outline-offset:2px}._ff-filter-box__header_j1w9b_52{vertical-align:middle;justify-content:space-between;align-items:center;width:calc(100% - 24px);display:inline-flex}._ff-filter-box__header-actions_j1w9b_60{align-items:center;gap:6px;display:flex}._ff-filter-box_j1w9b_1 ._ff-filter-box__action-btn_j1w9b_66{background:var(--ffscouter-alt-bg-color);border:1px solid var(--ffscouter-border-color);color:var(--ffscouter-text-color);cursor:pointer;border-radius:4px;justify-content:center;align-items:center;width:24px;height:24px;padding:0;transition:background-color .2s,color .2s,opacity .2s;display:inline-flex}._ff-filter-box_j1w9b_1 ._ff-filter-box__action-btn_j1w9b_66:hover{background-color:var(--ffscouter-hover-color)}._ff-filter-box_j1w9b_1 ._ff-filter-box__action-btn_j1w9b_66._ff-filter-box__action-btn--active_j1w9b_88{color:var(--ffscouter-text-color);opacity:1}._ff-filter-box_j1w9b_1 ._ff-filter-box__action-btn_j1w9b_66._ff-filter-box__action-btn--inactive_j1w9b_93{color:var(--ffscouter-text-color);opacity:.4}._ff-filter-box_j1w9b_1 ._ff-filter-box__action-btn_j1w9b_66 svg{fill:currentColor;width:14px;height:14px}._ff-filter-box_j1w9b_1 ._ff-filter-box__action-btn_j1w9b_66._ff-filter-box__action-btn--reset_j1w9b_104 svg{transition:transform .25s ease-in-out}._ff-filter-box_j1w9b_1 ._ff-filter-box__action-btn_j1w9b_66._ff-filter-box__action-btn--reset_j1w9b_104:hover svg{transform:rotate(-180deg)}._ff-filter-box__grid_j1w9b_114{grid-template-columns:repeat(2,1fr);gap:12px;margin-top:12px;display:grid}._ff-filter-box__group--sort_j1w9b_121{order:1}._ff-filter-box__group--level_j1w9b_125{order:2}._ff-filter-box__group--activity_j1w9b_129{order:3}._ff-filter-box__group--status_j1w9b_133{order:4}._ff-filter-box__group--ff_j1w9b_137{order:5}._ff-filter-box__group--stats_j1w9b_141{order:6}._ff-filter-box__group--last-action_j1w9b_145{order:7}._ff-filter-box__group--columns_j1w9b_149{order:8}@media (width>=784px){._ff-filter-box__grid_j1w9b_114{grid-template-columns:repeat(3,1fr)}._ff-filter-box__grid_j1w9b_114>*{order:0}}._ff-filter-box__group_j1w9b_121{flex-direction:column;gap:2px;display:flex}._ff-filter-box__sort-controls_j1w9b_171{flex-direction:column;gap:8px;display:flex}._ff-filter-box__sort-controls_j1w9b_171 ._ff-filter-box__sort-btn_j1w9b_177{width:100%}._ff-filter-box__sort-controls_j1w9b_171 ._ff-filter-box__compare-btn_j1w9b_181{width:100%;height:32px}._ff-filter-box__display-select_j1w9b_186{border:1px solid var(--ffscouter-border-color);background:var(--ffscouter-alt-bg-color);color:var(--ffscouter-text-color);cursor:pointer;border-radius:4px;height:32px;padding:4px;font-size:11px}._ff-filter-box__options_j1w9b_197{flex-direction:column;display:flex}._ff-filter-box__options_j1w9b_197 label{cursor:pointer;align-items:center;gap:6px;font-size:12px;display:flex}._ff-filter-box__option--out-soon_j1w9b_212{margin-left:16px}._ff-filter-box__range-inputs_j1w9b_216{align-items:center;gap:4px;display:flex}._ff-filter-box__range-inputs_j1w9b_216 input{border:1px solid var(--ffscouter-border-color);background:var(--ffscouter-alt-bg-color);width:0;min-width:30px;max-width:80px;color:var(--ffscouter-text-color);text-align:center;border-radius:4px;flex:1;padding:4px;font-size:11px}._ff-filter-box_j1w9b_1 button{border:1px solid var(--ffscouter-border-color);background:var(--ffscouter-alt-bg-color);color:var(--ffscouter-text-color);cursor:pointer;border-radius:4px;justify-content:center;align-items:center;gap:6px;padding:6px 10px;font-size:12px;transition:background-color .2s;display:inline-flex}._ff-filter-box_j1w9b_1 button:hover{background-color:var(--ffscouter-hover-color)}._ff-od-insurance__row-btn_1yru3_6{vertical-align:middle;background:var(--ffscouter-alt-bg-color);color:var(--ffscouter-text-color);border:1px solid var(--ffscouter-glow-color);white-space:nowrap;cursor:pointer;border-radius:4px;margin-left:8px;padding:1px 6px;font-family:Arial,sans-serif;font-size:11px;font-weight:700;line-height:16px}._ff-od-insurance__row-btn_1yru3_6:hover{background:var(--ffscouter-hover-color)}._ff-od-insurance__row-btn-full_1yru3_29{display:none}@media (width>=784px){._ff-od-insurance__row-btn-full_1yru3_29{display:inline}._ff-od-insurance__row-btn-short_1yru3_38{display:none}}._ff-od-insurance__overlay_1yru3_43{z-index:10000;box-sizing:border-box;background:#0000008c;justify-content:center;align-items:center;padding:16px 10px 48px;display:flex;position:fixed;inset:0}._ff-od-insurance_1yru3_6,._ff-od-insurance_1yru3_6 *,._ff-od-insurance_1yru3_6 :before,._ff-od-insurance_1yru3_6 :after{box-sizing:border-box}._ff-od-insurance_1yru3_6{background:var(--ffscouter-bg-color);width:420px;max-width:calc(100vw - 20px);height:480px;max-height:100%;color:var(--ffscouter-text-color);border:1px solid var(--ffscouter-border-color);border-radius:8px;flex-direction:column;margin:0;padding:0;font-family:Arial,sans-serif;font-size:13px;display:flex;position:static;box-shadow:0 4px 16px #0006}._ff-od-insurance_1yru3_6 a{color:inherit;font-weight:700}._ff-od-insurance__header_1yru3_90{background:var(--ffscouter-alt-bg-color);border-bottom:1px solid var(--ffscouter-border-color);border-radius:7px 7px 0 0;justify-content:space-between;align-items:center;gap:8px;padding:8px 12px;display:flex}._ff-od-insurance__title_1yru3_101{margin:0;font-size:14px;font-weight:700;line-height:1.2}._ff-od-insurance__sub_1yru3_108{opacity:.75;margin-top:1px;font-size:11px}._ff-od-insurance__close_1yru3_114{color:inherit;cursor:pointer;background:0 0;border:none;flex:none;padding:2px 6px;font-size:18px;font-weight:700;line-height:1}._ff-od-insurance__body_1yru3_126{flex:1;padding:8px 12px 12px;overflow-y:auto}._ff-od-insurance__intro_1yru3_132{margin:4px 0 8px;line-height:1.4}._ff-od-insurance__plan_1yru3_138{background:var(--ffscouter-alt-bg-color);min-width:0;color:var(--ffscouter-text-color);border:1px solid var(--ffscouter-border-color);border-radius:6px;margin:0 0 8px;padding:0}._ff-od-insurance__plan-open_1yru3_148{text-align:left;width:100%;color:inherit;font:inherit;cursor:pointer;background:0 0;border:none;border-radius:6px 6px 0 0;margin:0;padding:8px 10px;display:block}._ff-od-insurance__plan-open_1yru3_148:hover{background:var(--ffscouter-hover-color)}._ff-od-insurance__pick_1yru3_166{border-top:1px solid var(--ffscouter-border-color);flex-wrap:wrap;align-items:center;gap:6px 10px;padding:6px 10px 4px;font-size:12px;display:flex}._ff-od-insurance__multiplier_1yru3_176{background:var(--ffscouter-bg-color);width:4em;color:var(--ffscouter-text-color);border:1px solid var(--ffscouter-border-color);font:inherit;border-radius:3px;padding:2px 4px}._ff-od-insurance__button_1yru3_186:disabled{cursor:not-allowed;opacity:.5}._ff-od-insurance__plan-name_1yru3_191{font-weight:700;line-height:1.3;display:block}._ff-od-insurance__plan-meta_1yru3_197{margin-top:2px;font-size:12px;line-height:1.4;display:block}._ff-od-insurance__button_1yru3_186{background:var(--ffscouter-alt-bg-color);color:var(--ffscouter-text-color);border:1px solid var(--ffscouter-border-color);cursor:pointer;border-radius:4px;margin:0 0 4px;padding:3px 10px;font-size:12px;font-weight:700}._ff-od-insurance__row_1yru3_6{flex-wrap:wrap;align-items:baseline;gap:6px;margin:4px 0;line-height:1.4;display:flex}._ff-od-insurance__row-label_1yru3_225{flex:none;font-weight:700}._ff-od-insurance__code_1yru3_231{background:var(--ffscouter-alt-bg-color);border:1px solid var(--ffscouter-border-color);overflow-wrap:anywhere;-webkit-user-select:all;user-select:all;border-radius:3px;padding:1px 5px;font-family:monospace}._ff-od-insurance__copy-status_1yru3_242{-webkit-user-select:text;user-select:text;font-size:12px}._ff-od-insurance__note_1yru3_248{margin:8px 0 0;font-size:12px;line-height:1.4}._ff-od-insurance__footer_1yru3_254{opacity:.75;margin-top:10px;font-size:11px;line-height:1.4}._ff-od-insurance__hide_1yru3_261{background:var(--ffscouter-alt-bg-color);color:var(--ffscouter-text-color);border:1px solid var(--ffscouter-glow-color);cursor:pointer;border-radius:4px;margin-top:6px;padding:2px 8px;font-size:11px}._ff-od-insurance__hide_1yru3_261:hover{background:var(--ffscouter-hover-color)}._ff-od-helper_1yru3_278{z-index:9999;max-width:calc(100vw - 16px);color:var(--ffscouter-text-color);font-family:Arial,sans-serif;font-size:12px;position:fixed}._ff-od-helper__bar_1yru3_287{background:var(--ffscouter-bg-color);border:1px solid var(--ffscouter-glow-color);border-radius:6px;align-items:stretch;display:flex;overflow:hidden;box-shadow:0 2px 8px #0006}._ff-od-helper_1yru3_278[data-problem=true] ._ff-od-helper__bar_1yru3_287{border-color:#c0392b}._ff-od-helper__grip_1yru3_301,._ff-od-helper__press_1yru3_302,._ff-od-helper__icon_1yru3_303{color:inherit;font:inherit;cursor:pointer;background:0 0;border:none;margin:0;padding:6px 8px}._ff-od-helper__grip_1yru3_301{cursor:grab;touch-action:none;opacity:.7}._ff-od-helper__press_1yru3_302{text-align:left;overflow-wrap:anywhere;background:var(--ffscouter-alt-bg-color);flex:1;min-width:0;font-weight:700}._ff-od-helper__press_1yru3_302:hover,._ff-od-helper__icon_1yru3_303:hover{background:var(--ffscouter-hover-color)}._ff-od-helper__icon_1yru3_303{font-weight:700}._ff-od-helper__steps_1yru3_338{background:var(--ffscouter-bg-color);border:1px solid var(--ffscouter-border-color);border-radius:6px;margin:0 0 4px;padding:6px 10px;line-height:1.6;list-style:none}._ff-od-helper__current_1yru3_348{font-weight:700}._ff-settings-panel__accordion_6bhvd_1{background-color:var(--ffscouter-bg-color);border:1px solid var(--ffscouter-border-color);color:var(--ffscouter-text-color);border-radius:5px;margin:10px 0;padding:15px}._ff-settings-panel__accordion_6bhvd_1._ff-settings-panel__accordion--glow_6bhvd_10{border-color:var(--ffscouter-glow-color);box-shadow:0 0 8px #4caf5080}._ff-settings-panel__accordion_6bhvd_1 summary{cursor:pointer;font-weight:700}._ff-settings-panel__body_6bhvd_20{margin-top:15px}._ff-settings-panel__input-row_6bhvd_24{flex-direction:column;gap:5px;margin-bottom:15px;display:flex}._ff-settings-panel__range-row_6bhvd_32{align-items:center;gap:10px;display:flex}._ff-settings-panel__blur_6bhvd_38{filter:blur(4px);transition:filter .2s}._ff-settings-panel__blur_6bhvd_38:hover,._ff-settings-panel__blur_6bhvd_38:focus{filter:blur()}._ff-settings-panel__error-msg_6bhvd_48{color:#f33;margin-top:5px;font-size:13px}._ff-settings-panel__accordion_6bhvd_1 input[type=text],._ff-settings-panel__accordion_6bhvd_1 input[type=number]{text-align:left;vertical-align:top;width:178px;margin-right:8px;padding:9px 10px;line-height:14px;display:inline-block;box-sizing:border-box!important;height:34px!important}._ff-settings-panel__accordion_6bhvd_1 input[type=number]._ff-settings-panel__number_6bhvd_67{width:80px}._ff-settings-panel__accordion_6bhvd_1 select{box-sizing:border-box;text-align:left;vertical-align:top;border:var(--input-border-color,1px solid var(--ffscouter-border-color));width:178px;height:34px;color:var(--input-color,var(--ffscouter-text-color));background:var(--input-background-color,var(--ffscouter-alt-bg-color));border-radius:5px;margin-right:8px;padding:8px 10px;font-family:Arial,serif;line-height:14px;display:inline-block}.dark-mode ._ff-settings-panel__accordion_6bhvd_1 select option{color:var(--input-color);background-color:#000}._ff-settings-panel__api-explanation_6bhvd_94{color:var(--ffscouter-text-color);margin-bottom:20px;font-size:13px;line-height:1.5}._ff-settings-panel__accordion_6bhvd_1 a{color:var(--ffscouter-success-color);text-decoration:underline}._ff-settings-panel__premium-badge_6bhvd_107{color:#fff;vertical-align:middle;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:700;display:inline-block}._ff-settings-panel__premium-badge--enabled_6bhvd_117{background:#4caf50}._ff-settings-panel__premium-badge--disabled_6bhvd_121{background:#c62828}._ff-settings-panel__premium-badge--unknown_6bhvd_125{background:#f39c12}._ff-settings-panel__section_6bhvd_138{grid-template-columns:1fr;gap:12px;margin-bottom:15px;display:grid}@media (width>=784px){._ff-settings-panel__section_6bhvd_138{grid-template-columns:repeat(3,1fr)}}._ff-settings-panel__span_6bhvd_152{grid-column:1/-1;margin-bottom:0}._ff-settings-panel__cell_6bhvd_160{flex-direction:column;gap:5px;min-width:0;margin-bottom:0;display:flex}._ff-settings-panel__cell_6bhvd_160._ff-settings-panel__cell--checkbox_6bhvd_169{flex-direction:row;align-items:flex-start;gap:10px}._ff-settings-panel__cell_6bhvd_160 input[type=text]{width:100%;margin-right:0}._ff-settings-panel__cell_6bhvd_160 select{width:auto;max-width:100%;margin-right:0}._ff-settings-panel__api-block_6bhvd_193{flex-direction:column;gap:10px;display:flex}._ff-settings-panel__api-block_6bhvd_193 ._ff-settings-panel__cell_6bhvd_160 input[type=text]{max-width:360px}._ff-settings-panel__api-status-row_6bhvd_203{flex-wrap:wrap;align-items:center;gap:10px;display:flex}._ff-settings-panel__chain-suboptions_6bhvd_213{border-left:2px solid var(--ffscouter-border-color);grid-template-columns:repeat(2,1fr);margin-top:10px;padding-left:8px}._ff-settings-panel__chain-suboptions_6bhvd_213 ._ff-settings-panel__chain-wide_6bhvd_218{grid-column:1/-1}@media (width>=784px){._ff-settings-panel__chain-suboptions_6bhvd_213{grid-template-columns:repeat(3,1fr);padding-left:16px}._ff-settings-panel__chain-suboptions_6bhvd_213 ._ff-settings-panel__chain-wide_6bhvd_218{grid-column:auto}}._ff-settings-panel__group_6bhvd_242{background-color:var(--ffscouter-alt-bg-color);border:1px solid var(--ffscouter-border-color);border-radius:5px;margin-bottom:15px;padding:12px}._ff-settings-panel__group_6bhvd_242 h4{margin:0 0 12px}._ff-settings-panel__marker-size_6bhvd_256,._ff-settings-panel__marker-border-width_6bhvd_257{flex-direction:column;gap:5px;display:flex}._ff-settings-panel__marker-size-controls_6bhvd_263{flex-wrap:wrap;align-items:center;gap:10px;display:flex}._ff-settings-panel__marker-size-controls_6bhvd_263 input[type=range]{flex:120px;min-width:120px}._ff-settings-panel__color-scheme_6bhvd_276{flex-direction:column;gap:5px;display:flex}._ff-settings-panel__color-scheme-controls_6bhvd_282{flex-wrap:wrap;align-items:center;gap:10px;display:flex}._ff-settings-panel__accordion_6bhvd_1 .ffscouter-swatch-row{flex-wrap:wrap}._ff-settings-panel__actions_6bhvd_295{flex-wrap:wrap;justify-content:center;align-items:center;gap:10px;margin-top:20px;display:flex}._ff-settings-panel__saved-msg_6bhvd_304{color:#4caf50}\n/*$vite$:1*/ ");
+	_css(" ._ffscouter-attack-bounty-row_60dre_2{flex-wrap:wrap;align-items:center;gap:6px;margin-top:4px;font-size:12px;display:flex}._ffscouter-attack-bounty-row__label_60dre_11{font-weight:700}._ffscouter-attack-bounty-row__claim_60dre_15{background-color:var(--ffscouter-alt-bg-color);color:var(--ffscouter-text-color);border:1px solid var(--ffscouter-border-color);cursor:pointer;border-radius:3px;padding:2px 8px;font-size:12px}._ffscouter-attack-bounty-row__claim_60dre_15:disabled{opacity:.6;cursor:default}._ffscouter-info-line__label_aofgj_1{margin-right:6px;font-weight:700}._ffscouter-info-line__badge_aofgj_8{border-radius:4px;padding:2px 6px;font-weight:700;display:inline-block}._ffscouter-info-line__premium-upgrade_aofgj_15{white-space:nowrap;margin-top:4px;font-size:12px;font-style:normal;line-height:1.3;display:block}@media (width<=768px){._ffscouter-info-line__premium-upgrade_aofgj_15{white-space:normal;overflow-wrap:anywhere;margin-top:6px;line-height:1.35}}._ffscouter-info-line__freshness-trigger_aofgj_44{appearance:none!important;box-shadow:none!important;width:auto!important;min-width:0!important;min-height:0!important;font:inherit!important;color:inherit!important;text-transform:none!important;cursor:pointer!important;vertical-align:baseline!important;text-underline-offset:2px!important;background:0 0!important;border:none!important;margin:0!important;padding:0!important;-webkit-text-decoration:underline dotted!important;text-decoration:underline dotted!important;display:inline!important}._ffscouter-explainer-glyph_aofgj_64{appearance:none!important;box-shadow:none!important;vertical-align:middle!important;cursor:pointer!important;background:0 0!important;border:none!important;width:auto!important;min-width:0!important;min-height:0!important;margin:0 0 0 6px!important;padding:0!important;line-height:1!important;display:inline-flex!important}._ffscouter-explainer-glyph_aofgj_64 svg{width:14px!important;height:14px!important}._ffscouter-explainer-card_aofgj_90{background:var(--ffscouter-alt-bg-color)!important;border:1px solid var(--ffscouter-border-color)!important;color:var(--ffscouter-text-color)!important;text-align:left!important;border-radius:6px!important;margin:6px 0 0!important;padding:10px 30px 10px 12px!important;font-size:12px!important;font-style:normal!important;font-weight:400!important;line-height:1.5!important;display:block!important;position:relative!important}._ffscouter-explainer-card_aofgj_90 p{float:none!important;margin:0 0 8px!important;padding:0!important;display:block!important}._ffscouter-explainer-card_aofgj_90 p:last-child{margin-bottom:0!important}._ffscouter-explainer-card_aofgj_90 p:before,._ffscouter-explainer-card_aofgj_90 p:after{content:none!important}._ffscouter-explainer-card_aofgj_90 a{font:inherit!important;color:inherit!important;background:0 0!important;margin:0!important;padding:0!important;text-decoration:underline!important;display:inline!important;position:static!important}._ffscouter-explainer-card__close_aofgj_140{appearance:none!important;box-shadow:none!important;cursor:pointer!important;width:auto!important;min-width:0!important;min-height:0!important;color:inherit!important;background:0 0!important;border:none!important;margin:0!important;padding:4px!important;font-size:14px!important;line-height:1!important;position:absolute!important;top:2px!important;right:4px!important}@media (width<=784px){._ffscouter-explainer-card_aofgj_90{font-size:13px!important;line-height:1.55!important}}._ff-bounty-modal_1r3gd_5,._ff-bounty-modal_1r3gd_5 *,._ff-bounty-modal_1r3gd_5 :before,._ff-bounty-modal_1r3gd_5 :after{box-sizing:border-box}._ff-bounty-modal_1r3gd_5{z-index:9999;background-color:var(--ffscouter-bg-color);width:420px;max-width:calc(100vw - 32px);max-height:70vh;color:var(--ffscouter-text-color);border:1px solid var(--ffscouter-border-color);border-radius:8px;flex-direction:column;font-family:Arial,sans-serif;font-size:13px;display:flex;position:fixed;box-shadow:0 4px 16px #0000004d}._ff-bounty-modal__header_1r3gd_30{background-color:var(--ffscouter-alt-bg-color);border-bottom:1px solid var(--ffscouter-border-color);border-radius:7px 7px 0 0;justify-content:space-between;align-items:center;gap:8px;padding:8px 12px;display:flex}._ff-bounty-modal__header--drag_1r3gd_43{cursor:move;touch-action:none;-webkit-user-select:none;user-select:none}._ff-bounty-modal--minimized_1r3gd_49 ._ff-bounty-modal__header_1r3gd_30{border-bottom:none;border-radius:7px}._ff-bounty-modal--in-flow_1r3gd_57{z-index:auto;width:auto;max-width:100%;box-shadow:none;margin-bottom:10px;position:static}._ff-bounty-modal__header_1r3gd_30 ._ff-bounty-modal__title_1r3gd_67{margin:0;font-size:14px;font-weight:700}._ff-bounty-modal__header-btn_1r3gd_73{color:inherit;cursor:pointer;background:0 0;border:none;padding:0 4px;font-size:16px;font-weight:700;line-height:1}._ff-bounty-modal__body_1r3gd_84{padding:8px 12px 12px;overflow-y:auto}._ff-bounty-modal__notice_1r3gd_89{margin:4px 0;line-height:1.4}._ff-bounty-modal__notice_1r3gd_89 a{color:inherit;font-weight:700;text-decoration:underline}._ff-bounty-modal__primary-btn_1r3gd_100{background-color:var(--ffscouter-alt-bg-color);color:var(--ffscouter-text-color);border:1px solid var(--ffscouter-border-color);cursor:pointer;border-radius:4px;margin-top:8px;padding:6px 10px;font-size:13px;font-weight:700}._ff-bounty-modal__primary-btn_1r3gd_100:disabled{opacity:.6;cursor:default}._ff-bounty-modal__filters_1r3gd_117{flex-wrap:wrap;gap:8px;margin-bottom:8px;display:flex}._ff-bounty-modal__filter_1r3gd_117{align-items:center;gap:4px;display:flex}._ff-bounty-modal__filter_1r3gd_117 input{background-color:var(--ffscouter-alt-bg-color);width:70px;color:var(--ffscouter-text-color);border:1px solid var(--ffscouter-input-color);border-radius:3px;padding:2px 4px;font-size:13px}._ff-bounty-modal__filter_1r3gd_117 input[type=checkbox]{width:auto;padding:0}._ff-bounty-modal__list_1r3gd_145,._ff-bounty-modal__member-list_1r3gd_146,._ff-bounty-modal__tier-ladder_1r3gd_147{margin:0;padding:0;list-style:none}._ff-bounty-modal__row_1r3gd_153,._ff-bounty-modal__faction-card_1r3gd_154{border-top:1px solid var(--ffscouter-border-color);padding:4px 0}._ff-bounty-modal__row-main_1r3gd_159,._ff-bounty-modal__faction-header_1r3gd_160{align-items:center;gap:6px;display:flex}._ff-bounty-modal__faction-header_1r3gd_160{width:100%;color:inherit;text-align:left;cursor:pointer;background:0 0;border:none;padding:2px 0;font-size:13px}._ff-bounty-modal__member-list_1r3gd_146{margin-left:12px}._ff-bounty-modal__name_1r3gd_181{text-overflow:ellipsis;white-space:nowrap;min-width:0;color:inherit;flex:auto;font-weight:700;overflow:hidden}._ff-bounty-modal__status_1r3gd_192{white-space:nowrap;flex:none;font-size:12px}._ff-bounty-modal__status--okay_1r3gd_198{color:var(--ffscouter-status-okay-color)}._ff-bounty-modal__status--out_1r3gd_202{color:var(--ffscouter-status-out-color)}._ff-bounty-modal__status--away_1r3gd_206{color:var(--ffscouter-status-away-color)}._ff-bounty-modal__estimate_1r3gd_210{text-align:center;background-color:var(--ffscouter-alt-bg-color);border-radius:4px;flex:none;min-width:44px;padding:1px 6px;font-weight:700}._ff-bounty-modal__tier-label_1r3gd_220,._ff-bounty-modal__tier-toggle_1r3gd_221,._ff-bounty-modal__pool_1r3gd_222{white-space:nowrap;flex:none}._ff-bounty-modal__tier-toggle_1r3gd_221{color:inherit;cursor:pointer;background:0 0;border:none;padding:0;font-size:13px}._ff-bounty-modal__tier-ladder_1r3gd_147{margin:2px 0 2px 12px;font-size:12px}._ff-bounty-modal__action_1r3gd_241{background-color:var(--ffscouter-alt-bg-color);color:var(--ffscouter-text-color);border:1px solid var(--ffscouter-border-color);cursor:pointer;border-radius:3px;flex:none;padding:2px 6px;font-size:12px}._ff-bounty-modal--own_1r3gd_252{opacity:.6}._ff-bounty-modal--own_1r3gd_252 ._ff-bounty-modal--own_1r3gd_252{opacity:1}._ff-bounty-modal__own-label_1r3gd_262{margin-top:2px;font-size:12px;font-style:italic;font-weight:700}._ff-bounty-modal__action_1r3gd_241:disabled{opacity:.6;cursor:default}._ff-bounty-launcher_1r3gd_276{z-index:9999;box-sizing:border-box;background-color:var(--ffscouter-alt-bg-color);width:40px;height:40px;color:var(--ffscouter-text-color);border:1px solid var(--ffscouter-border-color);cursor:pointer;touch-action:none;-webkit-user-select:none;user-select:none;border-radius:8px;padding:0;font-family:Arial,sans-serif;font-size:11px;font-weight:700;position:fixed;box-shadow:0 4px 16px #0000004d}._ff-filter-box_zoxj6_1,._ff-filter-box_zoxj6_1 *,._ff-filter-box_zoxj6_1 :before,._ff-filter-box_zoxj6_1 :after{box-sizing:border-box!important}._ff-filter-box_zoxj6_1{background-color:var(--ffscouter-bg-color);border:1px solid var(--ffscouter-border-color);color:var(--ffscouter-text-color);border-radius:8px;margin-bottom:16px;padding:12px 16px;font-family:Arial,sans-serif;box-shadow:0 2px 5px #0000000d}._ff-filter-box_zoxj6_1._ff-filter-box--no-borders_zoxj6_19{background-color:var(--default-bg-panel-color);border-top:1px solid var(--ffscouter-border-color);border-bottom:1px solid var(--ffscouter-border-color);box-shadow:none;border-left:none;border-right:none;border-radius:0;margin:0;padding:12px 10px}._ff-filter-box_zoxj6_1 summary{cursor:pointer;-webkit-user-select:none;user-select:none;outline:none;font-size:14px;font-weight:700}._ff-filter-box_zoxj6_1[open] summary{border-bottom:1px solid var(--ffscouter-border-color);margin-bottom:12px;padding-bottom:6px}._ff-filter-box_zoxj6_1 summary:focus-visible{outline:2px solid var(--ffscouter-glow-color);outline-offset:2px}._ff-filter-box__header_zoxj6_52{vertical-align:middle;justify-content:space-between;align-items:center;width:calc(100% - 24px);display:inline-flex}._ff-filter-box__header-actions_zoxj6_60{align-items:center;gap:6px;display:flex}._ff-filter-box_zoxj6_1 ._ff-filter-box__action-btn_zoxj6_66{background:var(--ffscouter-alt-bg-color);border:1px solid var(--ffscouter-border-color);color:var(--ffscouter-text-color);cursor:pointer;border-radius:4px;justify-content:center;align-items:center;width:24px;height:24px;padding:0;transition:background-color .2s,color .2s,opacity .2s;display:inline-flex}._ff-filter-box_zoxj6_1 ._ff-filter-box__action-btn_zoxj6_66:hover{background-color:var(--ffscouter-hover-color)}._ff-filter-box_zoxj6_1 ._ff-filter-box__action-btn_zoxj6_66._ff-filter-box__action-btn--active_zoxj6_88{color:var(--ffscouter-text-color);opacity:1}._ff-filter-box_zoxj6_1 ._ff-filter-box__action-btn_zoxj6_66._ff-filter-box__action-btn--inactive_zoxj6_93{color:var(--ffscouter-text-color);opacity:.4}._ff-filter-box_zoxj6_1 ._ff-filter-box__action-btn_zoxj6_66 svg{fill:currentColor;width:14px;height:14px}._ff-filter-box_zoxj6_1 ._ff-filter-box__action-btn_zoxj6_66._ff-filter-box__action-btn--reset_zoxj6_104 svg{transition:transform .25s ease-in-out}._ff-filter-box_zoxj6_1 ._ff-filter-box__action-btn_zoxj6_66._ff-filter-box__action-btn--reset_zoxj6_104:hover svg{transform:rotate(-180deg)}._ff-filter-box__grid_zoxj6_114{grid-template-columns:repeat(2,1fr);gap:12px;margin-top:12px;display:grid}._ff-filter-box__group--sort_zoxj6_121{order:1}._ff-filter-box__group--level_zoxj6_125{order:2}._ff-filter-box__group--activity_zoxj6_129{order:3}._ff-filter-box__group--status_zoxj6_133{order:4}._ff-filter-box__group--ff_zoxj6_137{order:5}._ff-filter-box__group--stats_zoxj6_141{order:6}._ff-filter-box__group--last-action_zoxj6_145{order:7}._ff-filter-box__group--columns_zoxj6_149{order:8}@media (width>=784px){._ff-filter-box__grid_zoxj6_114{grid-template-columns:repeat(3,1fr)}._ff-filter-box__grid_zoxj6_114>*{order:0}}._ff-filter-box__group_zoxj6_121{flex-direction:column;gap:2px;display:flex}._ff-filter-box__sort-controls_zoxj6_171{flex-direction:column;gap:8px;display:flex}._ff-filter-box__sort-controls_zoxj6_171 ._ff-filter-box__sort-btn_zoxj6_177{width:100%}._ff-filter-box__sort-controls_zoxj6_171 ._ff-filter-box__compare-btn_zoxj6_181{width:100%;height:32px}._ff-filter-box__display-select_zoxj6_186{border:1px solid var(--ffscouter-border-color);background:var(--ffscouter-alt-bg-color);color:var(--ffscouter-text-color);cursor:pointer;border-radius:4px;height:32px;padding:4px;font-size:11px}._ff-filter-box__options_zoxj6_197{flex-direction:column;display:flex}._ff-filter-box__options_zoxj6_197 label{cursor:pointer;align-items:center;gap:6px;font-size:12px;display:flex}._ff-filter-box__option--out-soon_zoxj6_212{margin-left:16px}._ff-filter-box__sr-only_zoxj6_218{clip:rect(0, 0, 0, 0);white-space:nowrap;border:0;width:1px;height:1px;margin:-1px;padding:0;position:absolute;overflow:hidden}._ff-filter-box__range-inputs_zoxj6_230{align-items:center;gap:4px;display:flex}._ff-filter-box__range-inputs_zoxj6_230 input{border:1px solid var(--ffscouter-border-color);background:var(--ffscouter-alt-bg-color);width:0;min-width:30px;max-width:80px;color:var(--ffscouter-text-color);text-align:center;border-radius:4px;flex:1;padding:4px;font-size:11px}._ff-filter-box_zoxj6_1 button{border:1px solid var(--ffscouter-border-color);background:var(--ffscouter-alt-bg-color);color:var(--ffscouter-text-color);cursor:pointer;border-radius:4px;justify-content:center;align-items:center;gap:6px;padding:6px 10px;font-size:12px;transition:background-color .2s;display:inline-flex}._ff-filter-box_zoxj6_1 button:hover{background-color:var(--ffscouter-hover-color)}._ff-od-insurance__row-btn_1yru3_6{vertical-align:middle;background:var(--ffscouter-alt-bg-color);color:var(--ffscouter-text-color);border:1px solid var(--ffscouter-glow-color);white-space:nowrap;cursor:pointer;border-radius:4px;margin-left:8px;padding:1px 6px;font-family:Arial,sans-serif;font-size:11px;font-weight:700;line-height:16px}._ff-od-insurance__row-btn_1yru3_6:hover{background:var(--ffscouter-hover-color)}._ff-od-insurance__row-btn-full_1yru3_29{display:none}@media (width>=784px){._ff-od-insurance__row-btn-full_1yru3_29{display:inline}._ff-od-insurance__row-btn-short_1yru3_38{display:none}}._ff-od-insurance__overlay_1yru3_43{z-index:10000;box-sizing:border-box;background:#0000008c;justify-content:center;align-items:center;padding:16px 10px 48px;display:flex;position:fixed;inset:0}._ff-od-insurance_1yru3_6,._ff-od-insurance_1yru3_6 *,._ff-od-insurance_1yru3_6 :before,._ff-od-insurance_1yru3_6 :after{box-sizing:border-box}._ff-od-insurance_1yru3_6{background:var(--ffscouter-bg-color);width:420px;max-width:calc(100vw - 20px);height:480px;max-height:100%;color:var(--ffscouter-text-color);border:1px solid var(--ffscouter-border-color);border-radius:8px;flex-direction:column;margin:0;padding:0;font-family:Arial,sans-serif;font-size:13px;display:flex;position:static;box-shadow:0 4px 16px #0006}._ff-od-insurance_1yru3_6 a{color:inherit;font-weight:700}._ff-od-insurance__header_1yru3_90{background:var(--ffscouter-alt-bg-color);border-bottom:1px solid var(--ffscouter-border-color);border-radius:7px 7px 0 0;justify-content:space-between;align-items:center;gap:8px;padding:8px 12px;display:flex}._ff-od-insurance__title_1yru3_101{margin:0;font-size:14px;font-weight:700;line-height:1.2}._ff-od-insurance__sub_1yru3_108{opacity:.75;margin-top:1px;font-size:11px}._ff-od-insurance__close_1yru3_114{color:inherit;cursor:pointer;background:0 0;border:none;flex:none;padding:2px 6px;font-size:18px;font-weight:700;line-height:1}._ff-od-insurance__body_1yru3_126{flex:1;padding:8px 12px 12px;overflow-y:auto}._ff-od-insurance__intro_1yru3_132{margin:4px 0 8px;line-height:1.4}._ff-od-insurance__plan_1yru3_138{background:var(--ffscouter-alt-bg-color);min-width:0;color:var(--ffscouter-text-color);border:1px solid var(--ffscouter-border-color);border-radius:6px;margin:0 0 8px;padding:0}._ff-od-insurance__plan-open_1yru3_148{text-align:left;width:100%;color:inherit;font:inherit;cursor:pointer;background:0 0;border:none;border-radius:6px 6px 0 0;margin:0;padding:8px 10px;display:block}._ff-od-insurance__plan-open_1yru3_148:hover{background:var(--ffscouter-hover-color)}._ff-od-insurance__pick_1yru3_166{border-top:1px solid var(--ffscouter-border-color);flex-wrap:wrap;align-items:center;gap:6px 10px;padding:6px 10px 4px;font-size:12px;display:flex}._ff-od-insurance__multiplier_1yru3_176{background:var(--ffscouter-bg-color);width:4em;color:var(--ffscouter-text-color);border:1px solid var(--ffscouter-border-color);font:inherit;border-radius:3px;padding:2px 4px}._ff-od-insurance__button_1yru3_186:disabled{cursor:not-allowed;opacity:.5}._ff-od-insurance__plan-name_1yru3_191{font-weight:700;line-height:1.3;display:block}._ff-od-insurance__plan-meta_1yru3_197{margin-top:2px;font-size:12px;line-height:1.4;display:block}._ff-od-insurance__button_1yru3_186{background:var(--ffscouter-alt-bg-color);color:var(--ffscouter-text-color);border:1px solid var(--ffscouter-border-color);cursor:pointer;border-radius:4px;margin:0 0 4px;padding:3px 10px;font-size:12px;font-weight:700}._ff-od-insurance__row_1yru3_6{flex-wrap:wrap;align-items:baseline;gap:6px;margin:4px 0;line-height:1.4;display:flex}._ff-od-insurance__row-label_1yru3_225{flex:none;font-weight:700}._ff-od-insurance__code_1yru3_231{background:var(--ffscouter-alt-bg-color);border:1px solid var(--ffscouter-border-color);overflow-wrap:anywhere;-webkit-user-select:all;user-select:all;border-radius:3px;padding:1px 5px;font-family:monospace}._ff-od-insurance__copy-status_1yru3_242{-webkit-user-select:text;user-select:text;font-size:12px}._ff-od-insurance__note_1yru3_248{margin:8px 0 0;font-size:12px;line-height:1.4}._ff-od-insurance__footer_1yru3_254{opacity:.75;margin-top:10px;font-size:11px;line-height:1.4}._ff-od-insurance__hide_1yru3_261{background:var(--ffscouter-alt-bg-color);color:var(--ffscouter-text-color);border:1px solid var(--ffscouter-glow-color);cursor:pointer;border-radius:4px;margin-top:6px;padding:2px 8px;font-size:11px}._ff-od-insurance__hide_1yru3_261:hover{background:var(--ffscouter-hover-color)}._ff-od-helper_1yru3_278{z-index:9999;max-width:calc(100vw - 16px);color:var(--ffscouter-text-color);font-family:Arial,sans-serif;font-size:12px;position:fixed}._ff-od-helper__bar_1yru3_287{background:var(--ffscouter-bg-color);border:1px solid var(--ffscouter-glow-color);border-radius:6px;align-items:stretch;display:flex;overflow:hidden;box-shadow:0 2px 8px #0006}._ff-od-helper_1yru3_278[data-problem=true] ._ff-od-helper__bar_1yru3_287{border-color:#c0392b}._ff-od-helper__grip_1yru3_301,._ff-od-helper__press_1yru3_302,._ff-od-helper__icon_1yru3_303{color:inherit;font:inherit;cursor:pointer;background:0 0;border:none;margin:0;padding:6px 8px}._ff-od-helper__grip_1yru3_301{cursor:grab;touch-action:none;opacity:.7}._ff-od-helper__press_1yru3_302{text-align:left;overflow-wrap:anywhere;background:var(--ffscouter-alt-bg-color);flex:1;min-width:0;font-weight:700}._ff-od-helper__press_1yru3_302:hover,._ff-od-helper__icon_1yru3_303:hover{background:var(--ffscouter-hover-color)}._ff-od-helper__icon_1yru3_303{font-weight:700}._ff-od-helper__steps_1yru3_338{background:var(--ffscouter-bg-color);border:1px solid var(--ffscouter-border-color);border-radius:6px;margin:0 0 4px;padding:6px 10px;line-height:1.6;list-style:none}._ff-od-helper__current_1yru3_348{font-weight:700}._ff-settings-panel__accordion_6bhvd_1{background-color:var(--ffscouter-bg-color);border:1px solid var(--ffscouter-border-color);color:var(--ffscouter-text-color);border-radius:5px;margin:10px 0;padding:15px}._ff-settings-panel__accordion_6bhvd_1._ff-settings-panel__accordion--glow_6bhvd_10{border-color:var(--ffscouter-glow-color);box-shadow:0 0 8px #4caf5080}._ff-settings-panel__accordion_6bhvd_1 summary{cursor:pointer;font-weight:700}._ff-settings-panel__body_6bhvd_20{margin-top:15px}._ff-settings-panel__input-row_6bhvd_24{flex-direction:column;gap:5px;margin-bottom:15px;display:flex}._ff-settings-panel__range-row_6bhvd_32{align-items:center;gap:10px;display:flex}._ff-settings-panel__blur_6bhvd_38{filter:blur(4px);transition:filter .2s}._ff-settings-panel__blur_6bhvd_38:hover,._ff-settings-panel__blur_6bhvd_38:focus{filter:blur()}._ff-settings-panel__error-msg_6bhvd_48{color:#f33;margin-top:5px;font-size:13px}._ff-settings-panel__accordion_6bhvd_1 input[type=text],._ff-settings-panel__accordion_6bhvd_1 input[type=number]{text-align:left;vertical-align:top;width:178px;margin-right:8px;padding:9px 10px;line-height:14px;display:inline-block;box-sizing:border-box!important;height:34px!important}._ff-settings-panel__accordion_6bhvd_1 input[type=number]._ff-settings-panel__number_6bhvd_67{width:80px}._ff-settings-panel__accordion_6bhvd_1 select{box-sizing:border-box;text-align:left;vertical-align:top;border:var(--input-border-color,1px solid var(--ffscouter-border-color));width:178px;height:34px;color:var(--input-color,var(--ffscouter-text-color));background:var(--input-background-color,var(--ffscouter-alt-bg-color));border-radius:5px;margin-right:8px;padding:8px 10px;font-family:Arial,serif;line-height:14px;display:inline-block}.dark-mode ._ff-settings-panel__accordion_6bhvd_1 select option{color:var(--input-color);background-color:#000}._ff-settings-panel__api-explanation_6bhvd_94{color:var(--ffscouter-text-color);margin-bottom:20px;font-size:13px;line-height:1.5}._ff-settings-panel__accordion_6bhvd_1 a{color:var(--ffscouter-success-color);text-decoration:underline}._ff-settings-panel__premium-badge_6bhvd_107{color:#fff;vertical-align:middle;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:700;display:inline-block}._ff-settings-panel__premium-badge--enabled_6bhvd_117{background:#4caf50}._ff-settings-panel__premium-badge--disabled_6bhvd_121{background:#c62828}._ff-settings-panel__premium-badge--unknown_6bhvd_125{background:#f39c12}._ff-settings-panel__section_6bhvd_138{grid-template-columns:1fr;gap:12px;margin-bottom:15px;display:grid}@media (width>=784px){._ff-settings-panel__section_6bhvd_138{grid-template-columns:repeat(3,1fr)}}._ff-settings-panel__span_6bhvd_152{grid-column:1/-1;margin-bottom:0}._ff-settings-panel__cell_6bhvd_160{flex-direction:column;gap:5px;min-width:0;margin-bottom:0;display:flex}._ff-settings-panel__cell_6bhvd_160._ff-settings-panel__cell--checkbox_6bhvd_169{flex-direction:row;align-items:flex-start;gap:10px}._ff-settings-panel__cell_6bhvd_160 input[type=text]{width:100%;margin-right:0}._ff-settings-panel__cell_6bhvd_160 select{width:auto;max-width:100%;margin-right:0}._ff-settings-panel__api-block_6bhvd_193{flex-direction:column;gap:10px;display:flex}._ff-settings-panel__api-block_6bhvd_193 ._ff-settings-panel__cell_6bhvd_160 input[type=text]{max-width:360px}._ff-settings-panel__api-status-row_6bhvd_203{flex-wrap:wrap;align-items:center;gap:10px;display:flex}._ff-settings-panel__chain-suboptions_6bhvd_213{border-left:2px solid var(--ffscouter-border-color);grid-template-columns:repeat(2,1fr);margin-top:10px;padding-left:8px}._ff-settings-panel__chain-suboptions_6bhvd_213 ._ff-settings-panel__chain-wide_6bhvd_218{grid-column:1/-1}@media (width>=784px){._ff-settings-panel__chain-suboptions_6bhvd_213{grid-template-columns:repeat(3,1fr);padding-left:16px}._ff-settings-panel__chain-suboptions_6bhvd_213 ._ff-settings-panel__chain-wide_6bhvd_218{grid-column:auto}}._ff-settings-panel__group_6bhvd_242{background-color:var(--ffscouter-alt-bg-color);border:1px solid var(--ffscouter-border-color);border-radius:5px;margin-bottom:15px;padding:12px}._ff-settings-panel__group_6bhvd_242 h4{margin:0 0 12px}._ff-settings-panel__marker-size_6bhvd_256,._ff-settings-panel__marker-border-width_6bhvd_257{flex-direction:column;gap:5px;display:flex}._ff-settings-panel__marker-size-controls_6bhvd_263{flex-wrap:wrap;align-items:center;gap:10px;display:flex}._ff-settings-panel__marker-size-controls_6bhvd_263 input[type=range]{flex:120px;min-width:120px}._ff-settings-panel__color-scheme_6bhvd_276{flex-direction:column;gap:5px;display:flex}._ff-settings-panel__color-scheme-controls_6bhvd_282{flex-wrap:wrap;align-items:center;gap:10px;display:flex}._ff-settings-panel__accordion_6bhvd_1 .ffscouter-swatch-row{flex-wrap:wrap}._ff-settings-panel__actions_6bhvd_295{flex-wrap:wrap;justify-content:center;align-items:center;gap:10px;margin-top:20px;display:flex}._ff-settings-panel__saved-msg_6bhvd_304{color:#4caf50}\n/*$vite$:1*/ ");
 	var __defProp = Object.defineProperty;
 	var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 	var __getOwnPropNames = Object.getOwnPropertyNames;
@@ -1224,7 +1224,7 @@
 	init_pda();
 	var FF_SCOUTER_BASE_URL = "https://ffscouter.com/api/v1";
 	new TornApiClient({
-		defaultComment: `FFScouterV2-3.5-beta3`,
+		defaultComment: `FFScouterV2-3.5-beta4`,
 		defaultTimeout: 30
 	});
 	async function gmRequest(options) {
@@ -4739,15 +4739,14 @@
 	function useViewState() {
 		const [view, setView] = useState(load_view_state);
 		const update = (patch) => {
-			setView((prev) => {
-				const next = {
-					...prev,
-					...patch
-				};
-				storage_default.set(VIEW_STATE_KEY, next);
-				return next;
-			});
+			setView((prev) => ({
+				...prev,
+				...patch
+			}));
 		};
+		useEffect(() => {
+			storage_default.set(VIEW_STATE_KEY, view);
+		}, [view]);
 		return [view, update];
 	}
 	function toggle_in(list, item) {
@@ -4822,6 +4821,7 @@
 				onAccepted();
 			} catch (err) {
 				toast(api_error_message(err), TOAST_LEVEL.ERROR);
+			} finally {
 				setSubmitting(false);
 			}
 		};
@@ -4882,14 +4882,20 @@
 			};
 		}, [state.phase]);
 		const targets = state.phase === "ready" ? state.response.board.targets : null;
+		const mounted = useRef(false);
 		useEffect(() => {
-			if (!targets) return;
+			mounted.current = true;
+			const cleanup = () => {
+				mounted.current = false;
+			};
+			if (!targets) return cleanup;
 			const ids = ff_ids_to_load(targets, view.expanded_factions).filter((id) => !ffRequested.has(id));
-			if (ids.length === 0) return;
+			if (ids.length === 0) return cleanup;
 			for (const id of ids) ffRequested.add(id);
 			const lookups = ids.map((id) => ffscouter.get(id));
 			ffscouter.complete();
 			Promise.all(lookups).then((results) => {
+				if (!mounted.current) return;
 				setFfMap((prev) => {
 					const next = new Map(prev);
 					for (const data of results) next.set(data.player_id, data);
@@ -4898,6 +4904,7 @@
 			}).catch((err) => {
 				log$16.error(err);
 			});
+			return cleanup;
 		}, [
 			targets,
 			view.expanded_factions,
@@ -4919,6 +4926,8 @@
 			filters,
 			now
 		]);
+		const expandedFactions = useMemo(() => new Set(view.expanded_factions), [view.expanded_factions]);
+		const expandedTiers = useMemo(() => new Set(view.expanded_tiers), [view.expanded_tiers]);
 		const handleClaim = (row) => {
 			setClaimPending((prev) => new Set(prev).add(row.row_key));
 			submit_claim_with_toast(row.claim_target, `Bounty claim submitted for ${row.name}.`).finally(() => {
@@ -4933,7 +4942,7 @@
 			row,
 			ff: ffMap.get(row.player_id),
 			now,
-			expanded: view.expanded_tiers.includes(row.row_key),
+			expanded: expandedTiers.has(row.row_key),
 			onToggleExpanded: (key) => updateView({ expanded_tiers: toggle_in(view.expanded_tiers, key) }),
 			onAttack: handleAttack,
 			onClaim: handleClaim,
@@ -4994,7 +5003,7 @@
 			className: cls$4.list,
 			children: rows.map((row) => row.kind === "faction" ? jsx(FactionBountyCard, {
 				card: row,
-				expanded: view.expanded_factions.includes(row.faction_id),
+				expanded: expandedFactions.has(row.faction_id),
 				onToggleExpanded: (id) => updateView({ expanded_factions: toggle_in(view.expanded_factions, id) }),
 				renderMember: renderRow
 			}, row.row_key) : renderRow(row))
@@ -5194,31 +5203,32 @@
 	};
 	var _deprecated_stub_exports = __exportAll({ default: () => null });
 	var faction_filter_box_module_default = {
-		"ff-filter-box": "_ff-filter-box_j1w9b_1",
-		"ff-filter-box--no-borders": "_ff-filter-box--no-borders_j1w9b_19",
-		"ff-filter-box__header": "_ff-filter-box__header_j1w9b_52",
-		"ff-filter-box__header-actions": "_ff-filter-box__header-actions_j1w9b_60",
-		"ff-filter-box__action-btn": "_ff-filter-box__action-btn_j1w9b_66",
-		"ff-filter-box__action-btn--active": "_ff-filter-box__action-btn--active_j1w9b_88",
-		"ff-filter-box__action-btn--inactive": "_ff-filter-box__action-btn--inactive_j1w9b_93",
-		"ff-filter-box__action-btn--reset": "_ff-filter-box__action-btn--reset_j1w9b_104",
-		"ff-filter-box__grid": "_ff-filter-box__grid_j1w9b_114",
-		"ff-filter-box__group--sort": "_ff-filter-box__group--sort_j1w9b_121",
-		"ff-filter-box__group--level": "_ff-filter-box__group--level_j1w9b_125",
-		"ff-filter-box__group--activity": "_ff-filter-box__group--activity_j1w9b_129",
-		"ff-filter-box__group--status": "_ff-filter-box__group--status_j1w9b_133",
-		"ff-filter-box__group--ff": "_ff-filter-box__group--ff_j1w9b_137",
-		"ff-filter-box__group--stats": "_ff-filter-box__group--stats_j1w9b_141",
-		"ff-filter-box__group--last-action": "_ff-filter-box__group--last-action_j1w9b_145",
-		"ff-filter-box__group--columns": "_ff-filter-box__group--columns_j1w9b_149",
-		"ff-filter-box__group": "_ff-filter-box__group_j1w9b_121",
-		"ff-filter-box__sort-controls": "_ff-filter-box__sort-controls_j1w9b_171",
-		"ff-filter-box__sort-btn": "_ff-filter-box__sort-btn_j1w9b_177",
-		"ff-filter-box__compare-btn": "_ff-filter-box__compare-btn_j1w9b_181",
-		"ff-filter-box__display-select": "_ff-filter-box__display-select_j1w9b_186",
-		"ff-filter-box__options": "_ff-filter-box__options_j1w9b_197",
-		"ff-filter-box__option--out-soon": "_ff-filter-box__option--out-soon_j1w9b_212",
-		"ff-filter-box__range-inputs": "_ff-filter-box__range-inputs_j1w9b_216"
+		"ff-filter-box": "_ff-filter-box_zoxj6_1",
+		"ff-filter-box--no-borders": "_ff-filter-box--no-borders_zoxj6_19",
+		"ff-filter-box__header": "_ff-filter-box__header_zoxj6_52",
+		"ff-filter-box__header-actions": "_ff-filter-box__header-actions_zoxj6_60",
+		"ff-filter-box__action-btn": "_ff-filter-box__action-btn_zoxj6_66",
+		"ff-filter-box__action-btn--active": "_ff-filter-box__action-btn--active_zoxj6_88",
+		"ff-filter-box__action-btn--inactive": "_ff-filter-box__action-btn--inactive_zoxj6_93",
+		"ff-filter-box__action-btn--reset": "_ff-filter-box__action-btn--reset_zoxj6_104",
+		"ff-filter-box__grid": "_ff-filter-box__grid_zoxj6_114",
+		"ff-filter-box__group--sort": "_ff-filter-box__group--sort_zoxj6_121",
+		"ff-filter-box__group--level": "_ff-filter-box__group--level_zoxj6_125",
+		"ff-filter-box__group--activity": "_ff-filter-box__group--activity_zoxj6_129",
+		"ff-filter-box__group--status": "_ff-filter-box__group--status_zoxj6_133",
+		"ff-filter-box__group--ff": "_ff-filter-box__group--ff_zoxj6_137",
+		"ff-filter-box__group--stats": "_ff-filter-box__group--stats_zoxj6_141",
+		"ff-filter-box__group--last-action": "_ff-filter-box__group--last-action_zoxj6_145",
+		"ff-filter-box__group--columns": "_ff-filter-box__group--columns_zoxj6_149",
+		"ff-filter-box__group": "_ff-filter-box__group_zoxj6_121",
+		"ff-filter-box__sort-controls": "_ff-filter-box__sort-controls_zoxj6_171",
+		"ff-filter-box__sort-btn": "_ff-filter-box__sort-btn_zoxj6_177",
+		"ff-filter-box__compare-btn": "_ff-filter-box__compare-btn_zoxj6_181",
+		"ff-filter-box__display-select": "_ff-filter-box__display-select_zoxj6_186",
+		"ff-filter-box__options": "_ff-filter-box__options_zoxj6_197",
+		"ff-filter-box__option--out-soon": "_ff-filter-box__option--out-soon_zoxj6_212",
+		"ff-filter-box__sr-only": "_ff-filter-box__sr-only_zoxj6_218",
+		"ff-filter-box__range-inputs": "_ff-filter-box__range-inputs_zoxj6_230"
 	};
 	init_ffconfig();
 	init_react();
@@ -5247,7 +5257,8 @@
 		displaySelect: faction_filter_box_module_default["ff-filter-box__display-select"],
 		options: faction_filter_box_module_default["ff-filter-box__options"],
 		optionOutSoon: faction_filter_box_module_default["ff-filter-box__option--out-soon"],
-		rangeInputs: faction_filter_box_module_default["ff-filter-box__range-inputs"]
+		rangeInputs: faction_filter_box_module_default["ff-filter-box__range-inputs"],
+		srOnly: faction_filter_box_module_default["ff-filter-box__sr-only"]
 	};
 	var DEFAULT_HIDDEN_COLUMNS = {
 		level: false,
@@ -5282,187 +5293,188 @@
 		lastActionMax: null,
 		hiddenColumns: DEFAULT_HIDDEN_COLUMNS
 	};
+	var DEFAULT_FILTER_RESET = {
+		activity: { ...DEFAULT_STATE.activity },
+		status: { ...DEFAULT_STATE.status },
+		outSoon: DEFAULT_STATE.outSoon,
+		levelMin: null,
+		levelMax: null,
+		ffMin: null,
+		ffMax: null,
+		statsMin: null,
+		statsMax: null,
+		lastActionMin: null,
+		lastActionMax: null
+	};
 	function getFilterBoxHandle(el) {
 		if (!el) return null;
 		return el.__ffHandle ?? null;
 	}
-	function FFFactionFilterBox({ mode, onFilterChange, ref, initialHasLastActionData = false, initialHasUntilData = false, filteringDisabled = false, onReady }) {
-		const [filterState, setFilterState] = useState(() => DEFAULT_STATE);
-		const [collapsed, setCollapsed] = useState(() => mode === "war" ? ffconfig.war_filter_collapsed : ffconfig.faction_filter_collapsed);
-		const [colDisplay, setColDisplay] = useState(FactionsColDisplay.FAIR_FIGHT);
-		const [hasLastActionData, setHasLastActionData] = useState(initialHasLastActionData);
-		const [hasUntilData, setHasUntilData] = useState(initialHasUntilData);
-		const filterStateRef = useRef(filterState);
-		const collapsedRef = useRef(collapsed);
-		const hasLastActionDataRef = useRef(hasLastActionData);
-		const hasUntilDataRef = useRef(hasUntilData);
-		const modeRef = useRef(mode);
-		const filteringDisabledRef = useRef(filteringDisabled);
-		const onFilterChangeRef = useRef(onFilterChange);
-		useEffect(() => {
-			modeRef.current = mode;
-			filteringDisabledRef.current = filteringDisabled;
-			onFilterChangeRef.current = onFilterChange;
-		}, [
-			mode,
-			filteringDisabled,
-			onFilterChange
-		]);
-		const debounceTimerRef = useRef(null);
-		const wasMobileRef = useRef(is_narrow_layout());
-		const rootRef = useRef(null);
-		const applyStatePatch = (patch) => {
-			const next = {
-				...filterStateRef.current,
-				...patch
-			};
-			filterStateRef.current = next;
-			setFilterState(next);
+	function buildFilterSnapshot(s, filteringDisabled, isWar, hasUntilData) {
+		return {
+			sortBy: s.sortBy,
+			filterEnabled: filteringDisabled ? false : s.filterEnabled,
+			activity: s.activity,
+			status: isWar ? {
+				...s.status,
+				fallen: false
+			} : s.status,
+			outSoon: isWar && hasUntilData ? s.outSoon : false,
+			levelMin: s.levelMin,
+			levelMax: s.levelMax,
+			ffMin: s.ffMin,
+			ffMax: s.ffMax,
+			statsMin: s.statsMin ? parse_suffix_number(s.statsMin) : null,
+			statsMax: s.statsMax ? parse_suffix_number(s.statsMax) : null,
+			lastActionMinSec: s.lastActionMin ? parse_duration_to_seconds(s.lastActionMin) : null,
+			lastActionMaxSec: s.lastActionMax ? parse_duration_to_seconds(s.lastActionMax) : null
 		};
-		const getFilterSnapshot = () => {
-			const s = filterStateRef.current;
-			return {
-				sortBy: s.sortBy,
-				filterEnabled: filteringDisabledRef.current ? false : s.filterEnabled,
-				activity: s.activity,
-				status: modeRef.current === "war" ? {
-					...s.status,
-					fallen: false
-				} : s.status,
-				outSoon: modeRef.current === "war" && hasUntilDataRef.current ? s.outSoon : false,
-				levelMin: s.levelMin,
-				levelMax: s.levelMax,
-				ffMin: s.ffMin,
-				ffMax: s.ffMax,
-				statsMin: s.statsMin ? parse_suffix_number(s.statsMin) : null,
-				statsMax: s.statsMax ? parse_suffix_number(s.statsMax) : null,
-				lastActionMinSec: s.lastActionMin ? parse_duration_to_seconds(s.lastActionMin) : null,
-				lastActionMaxSec: s.lastActionMax ? parse_duration_to_seconds(s.lastActionMax) : null
-			};
-		};
-		const dispatchChange = () => {
-			onFilterChangeRef.current(getFilterSnapshot());
-		};
-		const saveState = (state) => {
-			const isWar = modeRef.current === "war";
-			const isMobile = is_narrow_layout();
-			const existing = isWar ? ffconfig.war_filter_state : ffconfig.faction_filter_state;
-			const savedHiddenColumns = existing?.hiddenColumns;
-			const savedHiddenColumnsMobile = existing?.hiddenColumnsMobile;
-			const hiddenColumnsToSave = isMobile ? savedHiddenColumns ?? DEFAULT_HIDDEN_COLUMNS : state.hiddenColumns ?? DEFAULT_HIDDEN_COLUMNS;
-			const hiddenColumnsMobileToSave = isMobile ? state.hiddenColumns ?? DEFAULT_HIDDEN_COLUMNS : savedHiddenColumnsMobile ?? {
-				level: true,
-				status: false,
-				score: false
-			};
-			const toSave = {
-				...state,
-				hiddenColumns: hiddenColumnsToSave,
-				hiddenColumnsMobile: hiddenColumnsMobileToSave
-			};
-			if (isWar) ffconfig.war_filter_state = toSave;
-			else ffconfig.faction_filter_state = toSave;
-		};
-		const executeChangeImmediately = () => {
-			if (debounceTimerRef.current) {
-				clearTimeout(debounceTimerRef.current);
-				debounceTimerRef.current = null;
+	}
+	function normalizeLoadedState(parsed, isMobile) {
+		if (!parsed) return {
+			...DEFAULT_STATE,
+			hiddenColumns: {
+				level: isMobile,
+				status: DEFAULT_HIDDEN_COLUMNS.status,
+				score: DEFAULT_HIDDEN_COLUMNS.score
 			}
-			saveState(filterStateRef.current);
-			dispatchChange();
 		};
-		const queueChange = () => {
-			if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
-			debounceTimerRef.current = setTimeout(() => {
-				saveState(filterStateRef.current);
-				dispatchChange();
-				debounceTimerRef.current = null;
-			}, 250);
+		const savedSortBy = parsed.sortBy ?? "none";
+		const hiddenColumns = isMobile ? {
+			level: parsed.hiddenColumnsMobile?.level ?? true,
+			status: parsed.hiddenColumnsMobile?.status ?? DEFAULT_HIDDEN_COLUMNS.status,
+			score: parsed.hiddenColumnsMobile?.score ?? DEFAULT_HIDDEN_COLUMNS.score
+		} : {
+			level: parsed.hiddenColumns?.level ?? DEFAULT_HIDDEN_COLUMNS.level,
+			status: parsed.hiddenColumns?.status ?? DEFAULT_HIDDEN_COLUMNS.status,
+			score: parsed.hiddenColumns?.score ?? DEFAULT_HIDDEN_COLUMNS.score
 		};
-		const loadState = () => {
-			const isWar = modeRef.current === "war";
+		return {
+			sortBy: savedSortBy === "ff-asc" || savedSortBy === "ff-desc" ? savedSortBy : "none",
+			filterEnabled: parsed.filterEnabled ?? true,
+			activity: {
+				...DEFAULT_STATE.activity,
+				...parsed.activity
+			},
+			status: {
+				...DEFAULT_STATE.status,
+				...parsed.status
+			},
+			outSoon: parsed.outSoon ?? DEFAULT_STATE.outSoon,
+			levelMin: parsed.levelMin ?? null,
+			levelMax: parsed.levelMax ?? null,
+			ffMin: parsed.ffMin ?? null,
+			ffMax: parsed.ffMax ?? null,
+			statsMin: parsed.statsMin ?? null,
+			statsMax: parsed.statsMax ?? null,
+			lastActionMin: parsed.lastActionMin ?? null,
+			lastActionMax: parsed.lastActionMax ?? null,
+			hiddenColumns
+		};
+	}
+	function getSavedCollapsed(isWar) {
+		return isWar ? ffconfig.war_filter_collapsed : ffconfig.faction_filter_collapsed;
+	}
+	function getSavedColDisplay(isWar) {
+		return isWar ? ffconfig.war_col_display : ffconfig.factions_col_display;
+	}
+	function getSavedFilterState(isWar) {
+		return isWar ? ffconfig.war_filter_state : ffconfig.faction_filter_state;
+	}
+	function persistCollapsed(mode, collapsed) {
+		if (mode === "war") ffconfig.war_filter_collapsed = collapsed;
+		else ffconfig.faction_filter_collapsed = collapsed;
+	}
+	function persistColDisplay(mode, display) {
+		if (mode === "war") ffconfig.war_col_display = display;
+		else ffconfig.factions_col_display = display;
+	}
+	function persistFilterState(state, isWar, isMobile) {
+		const toSave = buildStateToSave(state, getSavedFilterState(isWar), isMobile);
+		if (isWar) ffconfig.war_filter_state = toSave;
+		else ffconfig.faction_filter_state = toSave;
+	}
+	function buildStateToSave(state, existing, isMobile) {
+		const savedHiddenColumns = existing?.hiddenColumns;
+		const savedHiddenColumnsMobile = existing?.hiddenColumnsMobile;
+		const hiddenColumnsToSave = isMobile ? savedHiddenColumns ?? DEFAULT_HIDDEN_COLUMNS : state.hiddenColumns ?? DEFAULT_HIDDEN_COLUMNS;
+		const hiddenColumnsMobileToSave = isMobile ? state.hiddenColumns ?? DEFAULT_HIDDEN_COLUMNS : savedHiddenColumnsMobile ?? {
+			level: true,
+			status: false,
+			score: false
+		};
+		return {
+			...state,
+			hiddenColumns: hiddenColumnsToSave,
+			hiddenColumnsMobile: hiddenColumnsMobileToSave
+		};
+	}
+	function applyHiddenColumnAttributes(root, hiddenColumns) {
+		const target = root?.closest(".faction-war");
+		if (!(target instanceof HTMLElement)) return;
+		for (const [col, isHidden] of Object.entries(hiddenColumns)) if (isHidden) target.setAttribute(`data-ffscouter-hide-${col}`, "true");
+		else target.removeAttribute(`data-ffscouter-hide-${col}`);
+	}
+	function watchFilterBoxEvents(modeRef, wasMobileRef, reload, onColDisplayChange) {
+		const onConfigUpdated = () => {
+			onColDisplayChange(modeRef.current === "war" ? ffconfig.war_col_display : ffconfig.factions_col_display);
+		};
+		const onResize = () => {
 			const isMobile = is_narrow_layout();
-			const newCollapsed = isWar ? ffconfig.war_filter_collapsed : ffconfig.faction_filter_collapsed;
-			collapsedRef.current = newCollapsed;
-			setCollapsed(newCollapsed);
-			setColDisplay(isWar ? ffconfig.war_col_display : ffconfig.factions_col_display);
-			const parsed = isWar ? ffconfig.war_filter_state : ffconfig.faction_filter_state;
-			let next;
-			if (parsed) {
-				const savedSortBy = parsed.sortBy ?? "none";
-				const hiddenColumns = isMobile ? {
-					level: parsed.hiddenColumnsMobile?.level ?? true,
-					status: parsed.hiddenColumnsMobile?.status ?? DEFAULT_HIDDEN_COLUMNS.status,
-					score: parsed.hiddenColumnsMobile?.score ?? DEFAULT_HIDDEN_COLUMNS.score
-				} : {
-					level: parsed.hiddenColumns?.level ?? DEFAULT_HIDDEN_COLUMNS.level,
-					status: parsed.hiddenColumns?.status ?? DEFAULT_HIDDEN_COLUMNS.status,
-					score: parsed.hiddenColumns?.score ?? DEFAULT_HIDDEN_COLUMNS.score
-				};
-				next = {
-					sortBy: savedSortBy === "ff-asc" || savedSortBy === "ff-desc" ? savedSortBy : "none",
-					filterEnabled: parsed.filterEnabled ?? true,
-					activity: {
-						...DEFAULT_STATE.activity,
-						...parsed.activity
-					},
-					status: {
-						...DEFAULT_STATE.status,
-						...parsed.status
-					},
-					outSoon: parsed.outSoon ?? DEFAULT_STATE.outSoon,
-					levelMin: parsed.levelMin ?? null,
-					levelMax: parsed.levelMax ?? null,
-					ffMin: parsed.ffMin ?? null,
-					ffMax: parsed.ffMax ?? null,
-					statsMin: parsed.statsMin ?? null,
-					statsMax: parsed.statsMax ?? null,
-					lastActionMin: parsed.lastActionMin ?? null,
-					lastActionMax: parsed.lastActionMax ?? null,
-					hiddenColumns
-				};
-			} else next = {
-				...DEFAULT_STATE,
-				hiddenColumns: {
-					level: isMobile,
-					status: DEFAULT_HIDDEN_COLUMNS.status,
-					score: DEFAULT_HIDDEN_COLUMNS.score
-				}
-			};
-			filterStateRef.current = next;
-			setFilterState(next);
-			onFilterChangeRef.current(getFilterSnapshot());
+			if (isMobile !== wasMobileRef.current) {
+				wasMobileRef.current = isMobile;
+				reload();
+			}
 		};
-		useEffect(() => {
-			loadState();
-			const onConfigUpdated = () => {
-				setColDisplay(modeRef.current === "war" ? ffconfig.war_col_display : ffconfig.factions_col_display);
-			};
-			const onResize = () => {
-				const isMobile = is_narrow_layout();
-				if (isMobile !== wasMobileRef.current) {
-					wasMobileRef.current = isMobile;
-					loadState();
+		window.addEventListener("ff-config-updated", onConfigUpdated);
+		window.addEventListener("resize", onResize);
+		return () => {
+			window.removeEventListener("ff-config-updated", onConfigUpdated);
+			window.removeEventListener("resize", onResize);
+		};
+	}
+	function openActivityComparison(root) {
+		const container = root?.closest(".faction-war");
+		const links = container ? Array.from(container.querySelectorAll("a[href*=\"step=profile\"]")) : [];
+		const seen = new Set();
+		const ids = [];
+		const tryExtract = (link) => {
+			try {
+				const id = new URL(link.href, window.location.origin).searchParams.get("ID");
+				if (id && !seen.has(id)) {
+					seen.add(id);
+					ids.push(id);
 				}
-			};
-			window.addEventListener("ff-config-updated", onConfigUpdated);
-			window.addEventListener("resize", onResize);
-			onReady?.();
-			return () => {
-				if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
-				window.removeEventListener("ff-config-updated", onConfigUpdated);
-				window.removeEventListener("resize", onResize);
-			};
-		}, []);
-		useEffect(() => {
-			if (mode !== "war") return;
-			const target = rootRef.current?.closest(".faction-war");
-			if (!(target instanceof HTMLElement)) return;
-			const cols = filterState.hiddenColumns ?? DEFAULT_HIDDEN_COLUMNS;
-			for (const [col, isHidden] of Object.entries(cols)) if (isHidden) target.setAttribute(`data-ffscouter-hide-${col}`, "true");
-			else target.removeAttribute(`data-ffscouter-hide-${col}`);
-		}, [filterState.hiddenColumns, mode]);
-		useImperativeHandle(ref, () => ({
+			} catch {
+				const match = (link.getAttribute("href") || "").match(/[?&]ID=(\d+)/i);
+				if (match?.[1]) {
+					const id = match[1];
+					if (!seen.has(id)) {
+						seen.add(id);
+						ids.push(id);
+					}
+				}
+			}
+		};
+		for (const link of links) tryExtract(link);
+		if (ids.length < 2) {
+			const docLinks = Array.from(document.querySelectorAll("a[href*=\"step=profile\"]"));
+			for (const link of docLinks) tryExtract(link);
+		}
+		if (ids.length < 2) {
+			console.warn("Could not find faction IDs to compare activity.");
+			return;
+		}
+		const now = new Date();
+		const start = new Date(now.getTime() - 6048e5);
+		const formatUTC = (d) => {
+			return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}T${String(d.getUTCHours()).padStart(2, "0")}:${String(d.getUTCMinutes()).padStart(2, "0")}`;
+		};
+		const scouterUrl = `https://ffscouter.com/faction-activity-comparison?faction_id_1=${ids[0]}&faction_id_2=${ids[1]}&start_at=${encodeURIComponent(formatUTC(start))}&end_at=${encodeURIComponent(formatUTC(now))}&bucket_minutes=60`;
+		window.open(scouterUrl, "_blank");
+	}
+	function createFilterBoxHandle({ applyStatePatch, getFilterSnapshot, dispatchChange, executeChangeImmediately, filterStateRef, hasLastActionDataRef, hasUntilDataRef, setHasLastActionData, setHasUntilData }) {
+		return {
 			setSortBy(val) {
 				applyStatePatch({ sortBy: val });
 				executeChangeImmediately();
@@ -5496,14 +5508,399 @@
 			get ready() {
 				return true;
 			}
+		};
+	}
+	function FilterHeaderActions({ filterEnabled, onToggleFilter, onResetFilters }) {
+		return jsxs("div", {
+			className: cls$3.headerActions,
+			onClick: (e) => {
+				e.preventDefault();
+				e.stopPropagation();
+			},
+			children: [jsx("button", {
+				type: "button",
+				className: `${cls$3.actionBtn} ${filterEnabled ? cls$3.actionBtnActive : cls$3.actionBtnInactive}`,
+				title: filterEnabled ? "Turn off filtering" : "Turn on filtering",
+				onClick: onToggleFilter,
+				children: filterEnabled ? jsx("svg", {
+					viewBox: "0 0 16 16",
+					"aria-hidden": "true",
+					children: jsx("path", { d: "M1.5 1.5A.5.5 0 0 1 2 1h12a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.124.318l-4.5 5.5v4.682a.5.5 0 0 1-.168.373l-2.5 2a.5.5 0 0 1-.832-.373v-6.682l-4.5-5.5A.5.5 0 0 1 1.5 3.5v-2z" })
+				}) : jsxs("svg", {
+					viewBox: "0 0 16 16",
+					"aria-hidden": "true",
+					children: [jsx("path", { d: "M1.5 1.5A.5.5 0 0 1 2 1h12a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.124.318l-4.5 5.5v4.682a.5.5 0 0 1-.168.373l-2.5 2a.5.5 0 0 1-.832-.373v-6.682l-4.5-5.5A.5.5 0 0 1 1.5 3.5v-2z" }), jsx("line", {
+						x1: "1.5",
+						y1: "14.5",
+						x2: "14.5",
+						y2: "1.5",
+						stroke: "currentColor",
+						strokeWidth: "1.5"
+					})]
+				})
+			}), jsx("button", {
+				type: "button",
+				className: `${cls$3.actionBtn} ${cls$3.actionBtnReset}`,
+				title: "Reset filters to default",
+				onClick: onResetFilters,
+				children: jsxs("svg", {
+					viewBox: "0 0 16 16",
+					"aria-hidden": "true",
+					children: [jsx("path", {
+						fillRule: "evenodd",
+						d: "M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"
+					}), jsx("path", { d: "M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z" })]
+				})
+			})]
+		});
+	}
+	function SortDisplayGroup({ mode, sortBy, colDisplay, onSortToggle, onDisplayChange, onCompareActivity }) {
+		const sortText = colDisplay === FactionsColDisplay.BATTLE_STATS ? "Stats" : "FF";
+		return jsxs("div", {
+			className: `${cls$3.group} ${cls$3.groupSort}`,
+			children: [jsx("strong", { children: "Sort & Display" }), jsxs("div", {
+				className: cls$3.sortControls,
+				children: [
+					jsx("button", {
+						type: "button",
+						id: "sort-toggle-btn",
+						className: cls$3.sortBtn,
+						onClick: onSortToggle,
+						children: sortBy === "none" ? "Sort: Default" : sortBy === "ff-asc" ? `Sort: ${sortText} ▲` : `Sort: ${sortText} ▼`
+					}),
+					jsxs("select", {
+						id: mode === "war" ? "war-col-display-filter" : "factions-col-display-filter",
+						value: colDisplay,
+						onChange: onDisplayChange,
+						className: cls$3.displaySelect,
+						"aria-label": "Column to display",
+						children: [
+							jsx("option", {
+								value: "fair_fight",
+								children: "Show: FF Score"
+							}),
+							jsx("option", {
+								value: "battle_stats",
+								children: "Show: BS Estimate"
+							}),
+							jsx("option", {
+								value: "none",
+								children: "Show: None (Hide)"
+							})
+						]
+					}),
+					mode === "war" && jsx("button", {
+						type: "button",
+						id: "compare-faction-activity-btn",
+						className: cls$3.compareBtn,
+						onClick: onCompareActivity,
+						children: "Compare Activity"
+					})
+				]
+			})]
+		});
+	}
+	function ActivityGroup({ activity, onActivityChange }) {
+		return jsxs("div", {
+			className: `${cls$3.group} ${cls$3.groupActivity}`,
+			children: [jsx("strong", { children: "Activity" }), jsx("div", {
+				className: cls$3.options,
+				children: [
+					["online", "Online"],
+					["idle", "Idle"],
+					["offline", "Offline"]
+				].map(([key, label]) => jsxs("label", { children: [jsx("input", {
+					type: "checkbox",
+					checked: activity[key],
+					onChange: (e) => onActivityChange(key, e.target.checked)
+				}), label] }, key))
+			})]
+		});
+	}
+	function StatusGroup({ mode, status, outSoon, hasUntilData, onStatusChange, onOutSoonChange }) {
+		return jsxs("div", {
+			className: `${cls$3.group} ${cls$3.groupStatus}`,
+			children: [jsx("strong", { children: "Status" }), jsx("div", {
+				className: cls$3.options,
+				children: [
+					["okay", "Okay"],
+					["hospital", "Hospital"],
+					["jail", "Jail"],
+					["abroad", "Abroad"],
+					["traveling", "Traveling"],
+					["federal", "Fedded"],
+					["fallen", "Fallen"]
+				].filter(([key]) => mode !== "war" || key !== "fallen").flatMap(([key, label]) => {
+					const items = [jsxs("label", { children: [jsx("input", {
+						type: "checkbox",
+						checked: status[key],
+						onChange: (e) => onStatusChange(key, e.target.checked)
+					}), label] }, key)];
+					if (key === "hospital" && mode === "war" && hasUntilData) items.push(jsxs("label", {
+						className: cls$3.optionOutSoon,
+						children: [jsx("input", {
+							type: "checkbox",
+							checked: outSoon,
+							onChange: (e) => onOutSoonChange(e.target.checked)
+						}), "Out soon"]
+					}, "out-soon"));
+					return items;
+				})
+			})]
+		});
+	}
+	function RangeGroup({ className, title, inputType, step, inputTitle, minLabel, maxLabel, minValue, maxValue, onMinChange, onMaxChange }) {
+		const id = useId();
+		const minId = `${id}-min`;
+		const maxId = `${id}-max`;
+		return jsxs("div", {
+			className: `${cls$3.group} ${className}`,
+			children: [jsx("strong", { children: title }), jsxs("div", {
+				className: cls$3.rangeInputs,
+				children: [
+					jsx("label", {
+						htmlFor: minId,
+						className: cls$3.srOnly,
+						children: minLabel
+					}),
+					jsx("input", {
+						id: minId,
+						type: inputType,
+						step,
+						placeholder: "Min",
+						title: inputTitle,
+						value: minValue,
+						onChange: (e) => onMinChange(e.target.value)
+					}),
+					jsx("span", { children: "to" }),
+					jsx("label", {
+						htmlFor: maxId,
+						className: cls$3.srOnly,
+						children: maxLabel
+					}),
+					jsx("input", {
+						id: maxId,
+						type: inputType,
+						step,
+						placeholder: "Max",
+						title: inputTitle,
+						value: maxValue,
+						onChange: (e) => onMaxChange(e.target.value)
+					})
+				]
+			})]
+		});
+	}
+	function ColumnsGroup({ hiddenColumns, onColumnVisibilityChange }) {
+		const cols = hiddenColumns ?? DEFAULT_HIDDEN_COLUMNS;
+		return jsxs("div", {
+			className: `${cls$3.group} ${cls$3.groupColumns}`,
+			children: [jsx("strong", { children: "Visible Columns" }), jsx("div", {
+				className: cls$3.options,
+				children: [
+					["level", "Level"],
+					["status", "Status"],
+					["score", "Score"]
+				].map(([key, label]) => jsxs("label", { children: [jsx("input", {
+					type: "checkbox",
+					checked: !cols[key],
+					onChange: (e) => onColumnVisibilityChange(key, !e.target.checked)
+				}), label] }, key))
+			})]
+		});
+	}
+	function FilterBoxLayout({ rootRef, mode, collapsed, filterState, colDisplay, hasUntilData, hasLastActionData, onToggle, onToggleFilter, onResetFilters, onSortToggle, onDisplayChange, onCompareActivity, onActivityChange, onStatusChange, onOutSoonChange, onLevelChange, onFFChange, onStatsChange, onLastActionChange, onColumnVisibilityChange }) {
+		const s = filterState;
+		return jsxs("details", {
+			ref: rootRef,
+			className: `${cls$3.box}${mode === "war" ? ` ${cls$3.boxNoBorders}` : ""}`,
+			open: !collapsed,
+			onToggle,
+			children: [jsx("summary", { children: jsxs("div", {
+				className: cls$3.header,
+				children: [jsx("span", { children: "FFScouter Filter & Sort Controls" }), jsx(FilterHeaderActions, {
+					filterEnabled: s.filterEnabled,
+					onToggleFilter,
+					onResetFilters
+				})]
+			}) }), jsxs("div", {
+				className: cls$3.grid,
+				children: [
+					jsx(SortDisplayGroup, {
+						mode,
+						sortBy: s.sortBy,
+						colDisplay,
+						onSortToggle,
+						onDisplayChange,
+						onCompareActivity
+					}),
+					jsx(ActivityGroup, {
+						activity: s.activity,
+						onActivityChange
+					}),
+					jsx(StatusGroup, {
+						mode,
+						status: s.status,
+						outSoon: s.outSoon,
+						hasUntilData,
+						onStatusChange,
+						onOutSoonChange
+					}),
+					jsx(RangeGroup, {
+						className: cls$3.groupLevel,
+						title: "Level Range",
+						inputType: "number",
+						minLabel: "Minimum level",
+						maxLabel: "Maximum level",
+						minValue: s.levelMin !== null ? String(s.levelMin) : "",
+						maxValue: s.levelMax !== null ? String(s.levelMax) : "",
+						onMinChange: (val) => onLevelChange("min", val),
+						onMaxChange: (val) => onLevelChange("max", val)
+					}),
+					jsx(RangeGroup, {
+						className: cls$3.groupFf,
+						title: "FF Range",
+						inputType: "number",
+						step: "0.1",
+						minLabel: "Minimum fair fight score",
+						maxLabel: "Maximum fair fight score",
+						minValue: s.ffMin !== null ? String(s.ffMin) : "",
+						maxValue: s.ffMax !== null ? String(s.ffMax) : "",
+						onMinChange: (val) => onFFChange("min", val),
+						onMaxChange: (val) => onFFChange("max", val)
+					}),
+					jsx(RangeGroup, {
+						className: cls$3.groupStats,
+						title: "Stats Range",
+						inputType: "text",
+						minLabel: "Minimum battle stats",
+						maxLabel: "Maximum battle stats",
+						minValue: s.statsMin !== null ? s.statsMin : "",
+						maxValue: s.statsMax !== null ? s.statsMax : "",
+						onMinChange: (val) => onStatsChange("min", val),
+						onMaxChange: (val) => onStatsChange("max", val)
+					}),
+					mode === "war" && hasLastActionData && jsx(RangeGroup, {
+						className: cls$3.groupLastAction,
+						title: "Last Action Range",
+						inputType: "text",
+						inputTitle: "e.g. \"10m\", \"1h\", \"4h2m15s\"",
+						minLabel: "Minimum last action",
+						maxLabel: "Maximum last action",
+						minValue: s.lastActionMin !== null ? s.lastActionMin : "",
+						maxValue: s.lastActionMax !== null ? s.lastActionMax : "",
+						onMinChange: (val) => onLastActionChange("min", val),
+						onMaxChange: (val) => onLastActionChange("max", val)
+					}),
+					mode === "war" && jsx(ColumnsGroup, {
+						hiddenColumns: s.hiddenColumns,
+						onColumnVisibilityChange
+					})
+				]
+			})]
+		});
+	}
+	function FFFactionFilterBox({ mode, onFilterChange, ref, initialHasLastActionData = false, initialHasUntilData = false, filteringDisabled = false, onReady }) {
+		const [filterState, setFilterState] = useState(DEFAULT_STATE);
+		const [collapsed, setCollapsed] = useState(() => getSavedCollapsed(mode === "war"));
+		const [colDisplay, setColDisplay] = useState(FactionsColDisplay.FAIR_FIGHT);
+		const [hasLastActionData, setHasLastActionData] = useState(initialHasLastActionData);
+		const [hasUntilData, setHasUntilData] = useState(initialHasUntilData);
+		const filterStateRef = useRef(filterState);
+		const collapsedRef = useRef(collapsed);
+		const hasLastActionDataRef = useRef(hasLastActionData);
+		const hasUntilDataRef = useRef(hasUntilData);
+		const modeRef = useRef(mode);
+		const filteringDisabledRef = useRef(filteringDisabled);
+		const onFilterChangeRef = useRef(onFilterChange);
+		const onReadyRef = useRef(onReady);
+		useEffect(() => {
+			modeRef.current = mode;
+			filteringDisabledRef.current = filteringDisabled;
+			onFilterChangeRef.current = onFilterChange;
+			onReadyRef.current = onReady;
+		}, [
+			mode,
+			filteringDisabled,
+			onFilterChange,
+			onReady
+		]);
+		const debounceTimerRef = useRef(null);
+		const [initialWasMobile] = useState(() => is_narrow_layout());
+		const wasMobileRef = useRef(initialWasMobile);
+		const rootRef = useRef(null);
+		const applyStatePatch = (patch) => {
+			const next = {
+				...filterStateRef.current,
+				...patch
+			};
+			filterStateRef.current = next;
+			setFilterState(next);
+		};
+		const getFilterSnapshot = () => buildFilterSnapshot(filterStateRef.current, filteringDisabledRef.current, modeRef.current === "war", hasUntilDataRef.current);
+		const dispatchChange = () => {
+			onFilterChangeRef.current(getFilterSnapshot());
+		};
+		const saveState = (state) => {
+			persistFilterState(state, modeRef.current === "war", is_narrow_layout());
+		};
+		const executeChangeImmediately = () => {
+			if (debounceTimerRef.current) {
+				clearTimeout(debounceTimerRef.current);
+				debounceTimerRef.current = null;
+			}
+			saveState(filterStateRef.current);
+			dispatchChange();
+		};
+		const queueChange = () => {
+			if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+			debounceTimerRef.current = setTimeout(() => {
+				saveState(filterStateRef.current);
+				dispatchChange();
+				debounceTimerRef.current = null;
+			}, 250);
+		};
+		const loadState = () => {
+			const isWar = modeRef.current === "war";
+			const newCollapsed = getSavedCollapsed(isWar);
+			collapsedRef.current = newCollapsed;
+			setCollapsed(newCollapsed);
+			setColDisplay(getSavedColDisplay(isWar));
+			const next = normalizeLoadedState(getSavedFilterState(isWar), is_narrow_layout());
+			filterStateRef.current = next;
+			setFilterState(next);
+			onFilterChangeRef.current(getFilterSnapshot());
+		};
+		useEffect(() => {
+			loadState();
+			const cleanupEvents = watchFilterBoxEvents(modeRef, wasMobileRef, loadState, setColDisplay);
+			onReadyRef.current?.();
+			return () => {
+				if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+				cleanupEvents();
+			};
+		}, []);
+		useEffect(() => {
+			if (mode !== "war") return;
+			applyHiddenColumnAttributes(rootRef.current, filterState.hiddenColumns ?? DEFAULT_HIDDEN_COLUMNS);
+		}, [filterState.hiddenColumns, mode]);
+		useImperativeHandle(ref, () => createFilterBoxHandle({
+			applyStatePatch,
+			getFilterSnapshot,
+			dispatchChange,
+			executeChangeImmediately,
+			filterStateRef,
+			hasLastActionDataRef,
+			hasUntilDataRef,
+			setHasLastActionData,
+			setHasUntilData
 		}), []);
 		const onToggle = (e) => {
 			const newCollapsed = !e.currentTarget.open;
 			if (newCollapsed === collapsedRef.current) return;
 			collapsedRef.current = newCollapsed;
 			setCollapsed(newCollapsed);
-			if (mode === "war") ffconfig.war_filter_collapsed = newCollapsed;
-			else ffconfig.faction_filter_collapsed = newCollapsed;
+			persistCollapsed(mode, newCollapsed);
 		};
 		const onSortToggle = () => {
 			const next = filterStateRef.current.sortBy === "none" ? "ff-desc" : filterStateRef.current.sortBy === "ff-desc" ? "ff-asc" : "none";
@@ -5513,8 +5910,7 @@
 		const onDisplayChange = (e) => {
 			const val = e.target.value;
 			setColDisplay(val);
-			if (mode === "war") ffconfig.war_col_display = val;
-			else ffconfig.factions_col_display = val;
+			persistColDisplay(mode, val);
 			window.dispatchEvent(new CustomEvent("ff-config-updated"));
 			executeChangeImmediately();
 		};
@@ -5527,31 +5923,7 @@
 		const onResetFilters = (e) => {
 			e.preventDefault();
 			e.stopPropagation();
-			applyStatePatch({
-				activity: {
-					online: true,
-					idle: true,
-					offline: true
-				},
-				status: {
-					okay: true,
-					traveling: true,
-					hospital: true,
-					jail: true,
-					abroad: true,
-					federal: true,
-					fallen: true
-				},
-				outSoon: true,
-				levelMin: null,
-				levelMax: null,
-				ffMin: null,
-				ffMax: null,
-				statsMin: null,
-				statsMax: null,
-				lastActionMin: null,
-				lastActionMax: null
-			});
+			applyStatePatch(DEFAULT_FILTER_RESET);
 			executeChangeImmediately();
 		};
 		const onActivityChange = (key, val) => {
@@ -5600,292 +5972,30 @@
 			executeChangeImmediately();
 		};
 		const onCompareActivity = () => {
-			const container = rootRef.current?.closest(".faction-war");
-			const links = container ? Array.from(container.querySelectorAll("a[href*=\"step=profile\"]")) : [];
-			const seen = new Set();
-			const ids = [];
-			const tryExtract = (link) => {
-				try {
-					const id = new URL(link.href, window.location.origin).searchParams.get("ID");
-					if (id && !seen.has(id)) {
-						seen.add(id);
-						ids.push(id);
-					}
-				} catch {
-					const match = (link.getAttribute("href") || "").match(/[?&]ID=(\d+)/i);
-					if (match?.[1]) {
-						const id = match[1];
-						if (!seen.has(id)) {
-							seen.add(id);
-							ids.push(id);
-						}
-					}
-				}
-			};
-			for (const link of links) tryExtract(link);
-			if (ids.length < 2) {
-				const docLinks = Array.from(document.querySelectorAll("a[href*=\"step=profile\"]"));
-				for (const link of docLinks) tryExtract(link);
-			}
-			if (ids.length < 2) {
-				console.warn("Could not find faction IDs to compare activity.");
-				return;
-			}
-			const now = new Date();
-			const start = new Date(now.getTime() - 6048e5);
-			const formatUTC = (d) => {
-				return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}T${String(d.getUTCHours()).padStart(2, "0")}:${String(d.getUTCMinutes()).padStart(2, "0")}`;
-			};
-			const scouterUrl = `https://ffscouter.com/faction-activity-comparison?faction_id_1=${ids[0]}&faction_id_2=${ids[1]}&start_at=${encodeURIComponent(formatUTC(start))}&end_at=${encodeURIComponent(formatUTC(now))}&bucket_minutes=60`;
-			window.open(scouterUrl, "_blank");
+			openActivityComparison(rootRef.current);
 		};
-		const s = filterState;
-		const hiddenColumns = s.hiddenColumns ?? DEFAULT_HIDDEN_COLUMNS;
-		const sortText = colDisplay === FactionsColDisplay.BATTLE_STATS ? "Stats" : "FF";
-		return jsxs("details", {
-			ref: rootRef,
-			className: `${cls$3.box}${mode === "war" ? ` ${cls$3.boxNoBorders}` : ""}`,
-			open: !collapsed,
+		return jsx(FilterBoxLayout, {
+			rootRef,
+			mode,
+			collapsed,
+			filterState,
+			colDisplay,
+			hasUntilData,
+			hasLastActionData,
 			onToggle,
-			children: [jsx("summary", { children: jsxs("div", {
-				className: cls$3.header,
-				children: [jsx("span", { children: "FFScouter Filter & Sort Controls" }), jsxs("div", {
-					className: cls$3.headerActions,
-					onClick: (e) => {
-						e.preventDefault();
-						e.stopPropagation();
-					},
-					children: [jsx("button", {
-						type: "button",
-						className: `${cls$3.actionBtn} ${s.filterEnabled ? cls$3.actionBtnActive : cls$3.actionBtnInactive}`,
-						title: s.filterEnabled ? "Turn off filtering" : "Turn on filtering",
-						onClick: onToggleFilter,
-						children: s.filterEnabled ? jsx("svg", {
-							viewBox: "0 0 16 16",
-							"aria-hidden": "true",
-							children: jsx("path", { d: "M1.5 1.5A.5.5 0 0 1 2 1h12a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.124.318l-4.5 5.5v4.682a.5.5 0 0 1-.168.373l-2.5 2a.5.5 0 0 1-.832-.373v-6.682l-4.5-5.5A.5.5 0 0 1 1.5 3.5v-2z" })
-						}) : jsxs("svg", {
-							viewBox: "0 0 16 16",
-							"aria-hidden": "true",
-							children: [jsx("path", { d: "M1.5 1.5A.5.5 0 0 1 2 1h12a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.124.318l-4.5 5.5v4.682a.5.5 0 0 1-.168.373l-2.5 2a.5.5 0 0 1-.832-.373v-6.682l-4.5-5.5A.5.5 0 0 1 1.5 3.5v-2z" }), jsx("line", {
-								x1: "1.5",
-								y1: "14.5",
-								x2: "14.5",
-								y2: "1.5",
-								stroke: "currentColor",
-								strokeWidth: "1.5"
-							})]
-						})
-					}), jsx("button", {
-						type: "button",
-						className: `${cls$3.actionBtn} ${cls$3.actionBtnReset}`,
-						title: "Reset filters to default",
-						onClick: onResetFilters,
-						children: jsxs("svg", {
-							viewBox: "0 0 16 16",
-							"aria-hidden": "true",
-							children: [jsx("path", {
-								fillRule: "evenodd",
-								d: "M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"
-							}), jsx("path", { d: "M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z" })]
-						})
-					})]
-				})]
-			}) }), jsxs("div", {
-				className: cls$3.grid,
-				children: [
-					jsxs("div", {
-						className: `${cls$3.group} ${cls$3.groupSort}`,
-						children: [jsx("strong", { children: "Sort & Display" }), jsxs("div", {
-							className: cls$3.sortControls,
-							children: [
-								jsx("button", {
-									type: "button",
-									id: "sort-toggle-btn",
-									className: cls$3.sortBtn,
-									onClick: onSortToggle,
-									children: s.sortBy === "none" ? "Sort: Default" : s.sortBy === "ff-asc" ? `Sort: ${sortText} ▲` : `Sort: ${sortText} ▼`
-								}),
-								jsxs("select", {
-									id: mode === "war" ? "war-col-display-filter" : "factions-col-display-filter",
-									value: colDisplay,
-									onChange: onDisplayChange,
-									className: cls$3.displaySelect,
-									children: [
-										jsx("option", {
-											value: "fair_fight",
-											children: "Show: FF Score"
-										}),
-										jsx("option", {
-											value: "battle_stats",
-											children: "Show: BS Estimate"
-										}),
-										jsx("option", {
-											value: "none",
-											children: "Show: None (Hide)"
-										})
-									]
-								}),
-								mode === "war" && jsx("button", {
-									type: "button",
-									id: "compare-faction-activity-btn",
-									className: cls$3.compareBtn,
-									onClick: onCompareActivity,
-									children: "Compare Activity"
-								})
-							]
-						})]
-					}),
-					jsxs("div", {
-						className: `${cls$3.group} ${cls$3.groupActivity}`,
-						children: [jsx("strong", { children: "Activity" }), jsx("div", {
-							className: cls$3.options,
-							children: [
-								["online", "Online"],
-								["idle", "Idle"],
-								["offline", "Offline"]
-							].map(([key, label]) => jsxs("label", { children: [jsx("input", {
-								type: "checkbox",
-								checked: s.activity[key],
-								onChange: (e) => onActivityChange(key, e.target.checked)
-							}), label] }, key))
-						})]
-					}),
-					jsxs("div", {
-						className: `${cls$3.group} ${cls$3.groupStatus}`,
-						children: [jsx("strong", { children: "Status" }), jsx("div", {
-							className: cls$3.options,
-							children: [
-								["okay", "Okay"],
-								["hospital", "Hospital"],
-								["jail", "Jail"],
-								["abroad", "Abroad"],
-								["traveling", "Traveling"],
-								["federal", "Fedded"],
-								["fallen", "Fallen"]
-							].filter(([key]) => mode !== "war" || key !== "fallen").flatMap(([key, label]) => {
-								const items = [jsxs("label", { children: [jsx("input", {
-									type: "checkbox",
-									checked: s.status[key],
-									onChange: (e) => onStatusChange(key, e.target.checked)
-								}), label] }, key)];
-								if (key === "hospital" && mode === "war" && hasUntilData) items.push(jsxs("label", {
-									className: cls$3.optionOutSoon,
-									children: [jsx("input", {
-										type: "checkbox",
-										checked: s.outSoon,
-										onChange: (e) => onOutSoonChange(e.target.checked)
-									}), "Out soon"]
-								}, "out-soon"));
-								return items;
-							})
-						})]
-					}),
-					jsxs("div", {
-						className: `${cls$3.group} ${cls$3.groupLevel}`,
-						children: [jsx("strong", { children: "Level Range" }), jsxs("div", {
-							className: cls$3.rangeInputs,
-							children: [
-								jsx("input", {
-									type: "number",
-									placeholder: "Min",
-									value: s.levelMin !== null ? String(s.levelMin) : "",
-									onChange: (e) => onLevelChange("min", e.target.value)
-								}),
-								jsx("span", { children: "to" }),
-								jsx("input", {
-									type: "number",
-									placeholder: "Max",
-									value: s.levelMax !== null ? String(s.levelMax) : "",
-									onChange: (e) => onLevelChange("max", e.target.value)
-								})
-							]
-						})]
-					}),
-					jsxs("div", {
-						className: `${cls$3.group} ${cls$3.groupFf}`,
-						children: [jsx("strong", { children: "FF Range" }), jsxs("div", {
-							className: cls$3.rangeInputs,
-							children: [
-								jsx("input", {
-									type: "number",
-									step: "0.1",
-									placeholder: "Min",
-									value: s.ffMin !== null ? String(s.ffMin) : "",
-									onChange: (e) => onFFChange("min", e.target.value)
-								}),
-								jsx("span", { children: "to" }),
-								jsx("input", {
-									type: "number",
-									step: "0.1",
-									placeholder: "Max",
-									value: s.ffMax !== null ? String(s.ffMax) : "",
-									onChange: (e) => onFFChange("max", e.target.value)
-								})
-							]
-						})]
-					}),
-					jsxs("div", {
-						className: `${cls$3.group} ${cls$3.groupStats}`,
-						children: [jsx("strong", { children: "Stats Range" }), jsxs("div", {
-							className: cls$3.rangeInputs,
-							children: [
-								jsx("input", {
-									type: "text",
-									placeholder: "Min",
-									value: s.statsMin !== null ? s.statsMin : "",
-									onChange: (e) => onStatsChange("min", e.target.value)
-								}),
-								jsx("span", { children: "to" }),
-								jsx("input", {
-									type: "text",
-									placeholder: "Max",
-									value: s.statsMax !== null ? s.statsMax : "",
-									onChange: (e) => onStatsChange("max", e.target.value)
-								})
-							]
-						})]
-					}),
-					mode === "war" && hasLastActionData && jsxs("div", {
-						className: `${cls$3.group} ${cls$3.groupLastAction}`,
-						children: [jsx("strong", { children: "Last Action Range" }), jsxs("div", {
-							className: cls$3.rangeInputs,
-							children: [
-								jsx("input", {
-									type: "text",
-									placeholder: "Min",
-									title: "e.g. \"10m\", \"1h\", \"4h2m15s\"",
-									value: s.lastActionMin !== null ? s.lastActionMin : "",
-									onChange: (e) => onLastActionChange("min", e.target.value)
-								}),
-								jsx("span", { children: "to" }),
-								jsx("input", {
-									type: "text",
-									placeholder: "Max",
-									title: "e.g. \"10m\", \"1h\", \"4h2m15s\"",
-									value: s.lastActionMax !== null ? s.lastActionMax : "",
-									onChange: (e) => onLastActionChange("max", e.target.value)
-								})
-							]
-						})]
-					}),
-					mode === "war" && jsxs("div", {
-						className: `${cls$3.group} ${cls$3.groupColumns}`,
-						children: [jsx("strong", { children: "Visible Columns" }), jsx("div", {
-							className: cls$3.options,
-							children: [
-								["level", "Level"],
-								["status", "Status"],
-								["score", "Score"]
-							].map(([key, label]) => jsxs("label", { children: [jsx("input", {
-								type: "checkbox",
-								checked: !hiddenColumns[key],
-								onChange: (e) => onColumnVisibilityChange(key, !e.target.checked)
-							}), label] }, key))
-						})]
-					})
-				]
-			})]
+			onToggleFilter,
+			onResetFilters,
+			onSortToggle,
+			onDisplayChange,
+			onCompareActivity,
+			onActivityChange,
+			onStatusChange,
+			onOutSoonChange,
+			onLevelChange,
+			onFFChange,
+			onStatsChange,
+			onLastActionChange,
+			onColumnVisibilityChange
 		});
 	}
 	init_ffconfig();
@@ -7245,6 +7355,91 @@
 		const d = new Date(unixSeconds * 1e3);
 		return `${String(d.getUTCHours()).padStart(2, "0")}:${String(d.getUTCMinutes()).padStart(2, "0")}`;
 	}
+	function PremiumUpgradeNotice() {
+		return jsx("div", {
+			className: "ff-scouter-profile-flight-info",
+			children: jsx("a", {
+				href: PREMIUM_UPGRADE_URL,
+				target: "_blank",
+				rel: "noopener noreferrer",
+				style: {
+					fontWeight: "bold",
+					textDecoration: "underline"
+				},
+				children: "Upgrade to FFScouter Flight Tracking"
+			})
+		});
+	}
+	function landing_content(data, currentTimeSeconds, compact) {
+		const current = data?.current;
+		if (data?.rechecking) {
+			const next = data.next_retry_at ?? 0;
+			const seconds = Math.max(0, Math.ceil((next - Date.now()) / 1e3));
+			return compact ? jsxs(Fragment$1, { children: [
+				"No data.",
+				jsx("br", {}),
+				"Rechecking..."
+			] }) : `No data. Rechecking in ${seconds} seconds.`;
+		}
+		if (!current || !current.earliest_arrival_time && !current.latest_arrival_time) return compact ? "Unavailable" : "Landing: unavailable for current route";
+		const earliest = Number(current.earliest_arrival_time);
+		const latest = Number(current.latest_arrival_time);
+		if (!Number.isFinite(earliest) || !Number.isFinite(latest)) return compact ? "Unavailable" : "Landing: unavailable for current route";
+		const earliestRemaining = earliest - currentTimeSeconds;
+		const latestRemaining = latest - currentTimeSeconds;
+		const earliestTct = format_tct_time(earliest);
+		const latestTct = format_tct_time(latest);
+		if (latestRemaining <= -300) return compact ? "Late" : jsxs(Fragment$1, { children: [
+			"Landing: Late, probably flight delayed.",
+			jsx("br", {}),
+			"(",
+			latestTct,
+			" TCT latest)"
+		] });
+		if (latestRemaining <= 0) return compact ? jsxs(Fragment$1, { children: [
+			"Just landed",
+			jsx("br", {}),
+			"(Latest: ",
+			latestTct,
+			" TCT)"
+		] }) : jsxs(Fragment$1, { children: [
+			"Landing: just landed",
+			jsx("br", {}),
+			"(",
+			latestTct,
+			" TCT latest)"
+		] });
+		if (earliestRemaining <= 0) return compact ? jsxs(Fragment$1, { children: [
+			"Imminent",
+			jsx("br", {}),
+			format_duration_human(latestRemaining, compact),
+			jsx("br", {})
+		] }) : jsxs(Fragment$1, { children: [
+			"Landing: imminent - ",
+			format_duration_human(latestRemaining, compact),
+			jsx("br", {}),
+			"(Latest: ",
+			latestTct,
+			" TCT)"
+		] });
+		return compact ? jsxs(Fragment$1, { children: [
+			format_duration_human(earliestRemaining, compact),
+			jsx("br", {}),
+			format_duration_human(latestRemaining, compact)
+		] }) : jsxs(Fragment$1, { children: [
+			"Landing: ",
+			format_duration_human(earliestRemaining, compact),
+			" -",
+			" ",
+			format_duration_human(latestRemaining, compact),
+			jsx("br", {}),
+			"(",
+			earliestTct,
+			" - ",
+			latestTct,
+			" TCT)"
+		] });
+	}
 	function FFFlightProfileStatus({ playerId, compact = false }) {
 		const [data, setData] = useState(null);
 		const [isPremium, setIsPremium] = useState(null);
@@ -7317,99 +7512,14 @@
 			};
 		}, [playerId]);
 		if (!playerId) return null;
-		if (isPremium === false) return jsx("div", {
-			className: "ff-scouter-profile-flight-info",
-			children: jsx("a", {
-				href: PREMIUM_UPGRADE_URL,
-				target: "_blank",
-				rel: "noopener noreferrer",
-				style: {
-					fontWeight: "bold",
-					textDecoration: "underline"
-				},
-				children: "Upgrade to FFScouter Flight Tracking"
-			})
-		});
+		if (isPremium === false) return jsx(PremiumUpgradeNotice, {});
 		let content;
 		if (error) content = jsxs("span", {
 			style: { color: "#ff6b6b" },
 			children: ["Error: ", error]
 		});
 		else if (loading && !data) content = compact ? "Estimating..." : "Landing: estimating...";
-		else {
-			const current = data?.current;
-			if (data?.rechecking) {
-				const next = data.next_retry_at ?? 0;
-				const seconds = Math.max(0, Math.ceil((next - Date.now()) / 1e3));
-				content = compact ? jsxs(Fragment$1, { children: [
-					"No data.",
-					jsx("br", {}),
-					"Rechecking..."
-				] }) : `No data. Rechecking in ${seconds} seconds.`;
-			} else if (!current || !current.earliest_arrival_time && !current.latest_arrival_time) content = compact ? "Unavailable" : "Landing: unavailable for current route";
-			else {
-				const earliest = Number(current.earliest_arrival_time);
-				const latest = Number(current.latest_arrival_time);
-				if (!Number.isFinite(earliest) || !Number.isFinite(latest)) content = compact ? "Unavailable" : "Landing: unavailable for current route";
-				else {
-					const earliestRemaining = earliest - currentTimeSeconds;
-					const latestRemaining = latest - currentTimeSeconds;
-					const earliestTct = format_tct_time(earliest);
-					const latestTct = format_tct_time(latest);
-					if (latestRemaining <= -300) content = compact ? "Late" : jsxs(Fragment$1, { children: [
-						"Landing: Late, probably flight delayed.",
-						jsx("br", {}),
-						"(",
-						latestTct,
-						" TCT latest)"
-					] });
-					else if (latestRemaining <= 0) content = compact ? jsxs(Fragment$1, { children: [
-						"Just landed",
-						jsx("br", {}),
-						"(Latest: ",
-						latestTct,
-						" TCT)"
-					] }) : jsxs(Fragment$1, { children: [
-						"Landing: just landed",
-						jsx("br", {}),
-						"(",
-						latestTct,
-						" TCT latest)"
-					] });
-					else if (earliestRemaining <= 0) content = compact ? jsxs(Fragment$1, { children: [
-						"Imminent",
-						jsx("br", {}),
-						format_duration_human(latestRemaining, compact),
-						jsx("br", {})
-					] }) : jsxs(Fragment$1, { children: [
-						"Landing: imminent -",
-						" ",
-						format_duration_human(latestRemaining, compact),
-						jsx("br", {}),
-						"(Latest: ",
-						latestTct,
-						" TCT)"
-					] });
-					else content = compact ? jsxs(Fragment$1, { children: [
-						format_duration_human(earliestRemaining, compact),
-						jsx("br", {}),
-						format_duration_human(latestRemaining, compact)
-					] }) : jsxs(Fragment$1, { children: [
-						"Landing: ",
-						format_duration_human(earliestRemaining, compact),
-						" -",
-						" ",
-						format_duration_human(latestRemaining, compact),
-						jsx("br", {}),
-						"(",
-						earliestTct,
-						" - ",
-						latestTct,
-						" TCT)"
-					] });
-				}
-			}
-		}
+		else content = landing_content(data, currentTimeSeconds, compact);
 		return jsx("div", {
 			className: "ff-scouter-profile-flight-info",
 			children: content
@@ -8967,800 +9077,880 @@
 		isPremium: null,
 		isKeyRegistered: null
 	};
+	function ApiKeySection({ apiKey, drafts, isPremium, onChange, onApiKeyBlur, onVerify }) {
+		return jsxs("div", {
+			className: cls.group,
+			children: [jsx("h4", { children: "API Key & Premium" }), jsxs("div", {
+				className: cls.section,
+				children: [jsxs("div", {
+					className: `${cls.apiExplanation} ${cls.span}`,
+					children: [
+						jsx("strong", { children: "Important:" }),
+						" You must use the SAME exact API key that you use on",
+						" ",
+						jsx("a", {
+							href: "https://ffscouter.com/",
+							target: "_blank",
+							rel: "noreferrer",
+							children: "ffscouter.com"
+						}),
+						". ",
+						jsx("br", {}),
+						jsx("br", {}),
+						"If you're not sure which API key you used, go to",
+						" ",
+						jsx("a", {
+							href: "https://www.torn.com/preferences.php#tab=api",
+							target: "_blank",
+							rel: "noreferrer",
+							children: "your API preferences"
+						}),
+						" ",
+						"and look for \"FFScouter3\" in your API key history comments."
+					]
+				}), jsxs("div", {
+					className: `${cls.span} ${cls.apiBlock}`,
+					children: [jsxs("div", {
+						className: cls.cell,
+						children: [jsx("label", {
+							htmlFor: "ff-scouter-api-key",
+							children: "API Key:"
+						}), jsx("input", {
+							id: "ff-scouter-api-key",
+							type: "text",
+							className: apiKey ? cls.blur : "",
+							placeholder: "Paste your key here...",
+							value: drafts.apiKey,
+							onChange,
+							onBlur: onApiKeyBlur
+						})]
+					}), jsxs("div", {
+						className: cls.apiStatusRow,
+						children: [
+							jsx("label", {
+								htmlFor: "ff-premium-badge",
+								children: "FF Scouter Premium:"
+							}),
+							jsx("span", {
+								id: "ff-premium-badge",
+								className: `${cls.premiumBadge} ${isPremium === null ? cls.premiumBadgeUnknown : isPremium ? cls.premiumBadgeEnabled : cls.premiumBadgeDisabled}`,
+								children: isPremium === null ? "Unknown" : isPremium ? "Enabled" : "Disabled"
+							}),
+							jsx("button", {
+								type: "button",
+								className: "torn-btn btn-save",
+								onClick: onVerify,
+								children: "Verify"
+							})
+						]
+					})]
+				})]
+			})]
+		});
+	}
+	function MarkerPreview({ scale, borderWidth, color, sourceMarker }) {
+		return jsxs("div", {
+			className: "ffscouter-marker-preview",
+			style: { "--ffscouter-marker-scale": scale / 100 },
+			children: [jsxs("span", {
+				className: "ffscouter-preview-marker-slot",
+				children: [jsxs("svg", {
+					className: "ffscouter-preview-arrow",
+					viewBox: FF_ARROW_VIEWBOX,
+					children: [jsx("title", { children: "Preview Gauge Marker" }), jsx("path", {
+						fillRule: "evenodd",
+						fill: color,
+						stroke: "#000000",
+						strokeWidth: borderWidth,
+						d: FF_ARROW_PATH_D
+					})]
+				}), sourceMarker && jsx(SourceMarkerIcon, {
+					marker: sourceMarker,
+					className: "ffscouter-source-marker"
+				})]
+			}), jsxs("span", {
+				className: "ffscouter-preview-marker-slot",
+				children: [jsx("div", {
+					className: "ffscouter-preview-bubble",
+					style: {
+						backgroundColor: color,
+						color: get_contrast_color(color),
+						borderWidth: `${borderWidth * (scale / 100)}px`
+					},
+					children: "2.34"
+				}), sourceMarker && jsx(SourceMarkerIcon, {
+					marker: sourceMarker,
+					className: "ffscouter-source-marker"
+				})]
+			})]
+		});
+	}
+	function FfRangesCell({ lowRange, highRange, maxRange, rangeError, onChange }) {
+		return jsxs("div", {
+			className: `${cls.inputRow} ${cls.span}`,
+			children: [
+				jsx("label", {
+					htmlFor: "ff-range-low",
+					children: "FF Ranges (Low, High, Max):"
+				}),
+				jsxs("div", {
+					className: cls.rangeRow,
+					children: [
+						jsx("input", {
+							id: "ff-range-low",
+							type: "number",
+							step: "0.1",
+							className: cls.number,
+							value: lowRange,
+							onChange
+						}),
+						jsx("span", { children: "<" }),
+						jsx("input", {
+							id: "ff-range-high",
+							type: "number",
+							step: "0.1",
+							className: cls.number,
+							"aria-label": "High fair fight range",
+							value: highRange,
+							onChange
+						}),
+						jsx("span", { children: "<" }),
+						jsx("input", {
+							id: "ff-range-max",
+							type: "number",
+							step: "0.1",
+							className: cls.number,
+							"aria-label": "Maximum fair fight range",
+							value: maxRange,
+							onChange
+						})
+					]
+				}),
+				rangeError && jsx("div", {
+					className: cls.errorMsg,
+					children: rangeError
+				})
+			]
+		});
+	}
+	function GaugeMarkerSection({ drafts, onChange, rangeError }) {
+		const previewColor = get_palette_for_scheme(drafts.colorScheme)[5] ?? "#888888";
+		const previewSourceMarker = get_source_marker("spies");
+		return jsxs("div", {
+			className: cls.group,
+			children: [jsx("h4", { children: "Gauge Marker Settings" }), jsxs("div", {
+				className: cls.section,
+				children: [
+					jsxs("div", {
+						className: cls.cell,
+						children: [jsx("label", {
+							htmlFor: "gauge-marker-type",
+							children: "Gauge Marker Style:"
+						}), jsxs("select", {
+							id: "gauge-marker-type",
+							value: drafts.gaugeMarkerType,
+							onChange,
+							children: [
+								jsx("option", {
+									value: "arrow",
+									children: "Arrow (Default)"
+								}),
+								jsx("option", {
+									value: "bubble_ff",
+									children: "Bubble (FF Score)"
+								}),
+								jsx("option", {
+									value: "bubble_estimate",
+									children: "Bubble (BS Estimate)"
+								})
+							]
+						})]
+					}),
+					(drafts.gaugeMarkerType === "bubble_ff" || drafts.gaugeMarkerType === "bubble_estimate") && jsxs("div", {
+						className: cls.cell,
+						children: [jsx("label", {
+							htmlFor: "gauge-marker-justify",
+							children: "Bubble Position:"
+						}), jsxs("select", {
+							id: "gauge-marker-justify",
+							value: drafts.gaugeMarkerJustify,
+							onChange,
+							children: [
+								jsx("option", {
+									value: "gauge",
+									children: "Gauge (Default)"
+								}),
+								jsx("option", {
+									value: "left",
+									children: "Always Left"
+								}),
+								jsx("option", {
+									value: "right",
+									children: "Always Right"
+								})
+							]
+						})]
+					}),
+					jsxs("div", {
+						className: `${cls.span} ${cls.markerSize}`,
+						children: [jsx("label", {
+							htmlFor: "gauge-marker-scale",
+							children: "Marker Size:"
+						}), jsxs("div", {
+							className: cls.markerSizeControls,
+							children: [
+								jsx("input", {
+									id: "gauge-marker-scale",
+									type: "range",
+									min: "50",
+									max: "200",
+									step: "5",
+									value: drafts.gaugeMarkerScale,
+									onChange
+								}),
+								jsx("input", {
+									id: "gauge-marker-scale-number",
+									type: "number",
+									min: "50",
+									max: "200",
+									step: "5",
+									className: cls.number,
+									"aria-label": "Marker size percent",
+									value: drafts.gaugeMarkerScale,
+									onChange
+								}),
+								jsx("span", { children: "%" })
+							]
+						})]
+					}),
+					jsxs("div", {
+						className: `${cls.span} ${cls.markerBorderWidth}`,
+						children: [jsx("label", {
+							htmlFor: "gauge-marker-border-width",
+							children: "Border Thickness:"
+						}), jsxs("div", {
+							className: cls.markerSizeControls,
+							children: [
+								jsx("input", {
+									id: "gauge-marker-border-width",
+									type: "range",
+									min: "0",
+									max: "3",
+									step: "0.5",
+									value: drafts.gaugeMarkerBorderWidth,
+									onChange
+								}),
+								jsx("input", {
+									id: "gauge-marker-border-width-number",
+									type: "number",
+									min: "0",
+									max: "3",
+									step: "0.5",
+									className: cls.number,
+									"aria-label": "Border width pixels",
+									value: drafts.gaugeMarkerBorderWidth,
+									onChange
+								}),
+								jsx("span", { children: "px" }),
+								jsx(MarkerPreview, {
+									scale: drafts.gaugeMarkerScale,
+									borderWidth: drafts.gaugeMarkerBorderWidth,
+									color: previewColor,
+									sourceMarker: previewSourceMarker
+								})
+							]
+						})]
+					}),
+					jsxs("div", {
+						className: `${cls.span} ${cls.colorScheme}`,
+						children: [jsx("label", {
+							htmlFor: "color-scheme",
+							children: "Color Scheme:"
+						}), jsxs("div", {
+							className: cls.colorSchemeControls,
+							children: [jsxs("select", {
+								id: "color-scheme",
+								value: drafts.colorScheme,
+								onChange,
+								children: [
+									jsx("option", {
+										value: "classic",
+										children: "Classic (Default)"
+									}),
+									jsx("option", {
+										value: "cool_diverging",
+										children: "Cool Diverging"
+									}),
+									jsx("option", {
+										value: "neon",
+										children: "Neon"
+									}),
+									jsx("option", {
+										value: "colorblind_safe",
+										children: "Colorblind-Safe"
+									}),
+									jsx("option", {
+										value: "grayscale",
+										children: "Grayscale"
+									}),
+									jsx("option", {
+										value: "green_yellow_red",
+										children: "Green-Yellow-Red"
+									}),
+									jsx("option", {
+										value: "blue_yellow_red",
+										children: "Blue-Yellow-Red"
+									}),
+									jsx("option", {
+										value: "plasma",
+										children: "Plasma"
+									})
+								]
+							}), jsx("div", {
+								className: "ffscouter-swatch-row",
+								children: get_palette_for_scheme(drafts.colorScheme).map((color) => jsxs("svg", {
+									className: "ffscouter-swatch",
+									viewBox: FF_ARROW_VIEWBOX,
+									children: [jsxs("title", { children: [color, " swatch"] }), jsx("path", {
+										fillRule: "evenodd",
+										fill: color,
+										stroke: "#000000",
+										strokeWidth: "1.5",
+										d: FF_ARROW_PATH_D
+									})]
+								}, color))
+							})]
+						})]
+					}),
+					jsx(FfRangesCell, {
+						lowRange: drafts.lowRange,
+						highRange: drafts.highRange,
+						maxRange: drafts.maxRange,
+						rangeError,
+						onChange
+					})
+				]
+			})]
+		});
+	}
+	function ChainButtonSection({ drafts, onChange }) {
+		return jsxs("div", {
+			className: `${cls.span} ff-chain-block`,
+			children: [jsxs("div", {
+				className: `${cls.cell} ${cls.cellCheckbox}`,
+				children: [jsx("input", {
+					id: "chain-button-toggle",
+					type: "checkbox",
+					checked: drafts.chainButtonEnabled,
+					onChange
+				}), jsx("label", {
+					htmlFor: "chain-button-toggle",
+					children: "Enable Chain Button (Green FF Button)"
+				})]
+			}), drafts.chainButtonEnabled && jsxs("div", {
+				className: `${cls.section} ${cls.chainSuboptions}`,
+				children: [
+					jsxs("div", {
+						className: `${cls.cell} ${cls.chainWide}`,
+						children: [jsx("label", {
+							htmlFor: "chain-link-type",
+							children: "Chain button opens:"
+						}), jsxs("select", {
+							id: "chain-link-type",
+							value: drafts.chainLinkType,
+							onChange,
+							children: [jsx("option", {
+								value: "attack",
+								children: "Attack page"
+							}), jsx("option", {
+								value: "profile",
+								children: "Profile page"
+							})]
+						})]
+					}),
+					jsxs("div", {
+						className: `${cls.cell} ${cls.chainWide}`,
+						children: [jsx("label", {
+							htmlFor: "chain-tab-type",
+							children: "Open in:"
+						}), jsxs("select", {
+							id: "chain-tab-type",
+							value: drafts.chainTabType,
+							onChange,
+							children: [jsx("option", {
+								value: "newtab",
+								children: "New tab"
+							}), jsx("option", {
+								value: "sametab",
+								children: "Same tab"
+							})]
+						})]
+					}),
+					jsxs("div", {
+						className: cls.cell,
+						children: [jsx("label", {
+							htmlFor: "chain-min-level",
+							children: "Min Level:"
+						}), jsx("input", {
+							id: "chain-min-level",
+							type: "number",
+							className: cls.number,
+							placeholder: "No min",
+							value: drafts.chainMinLevel === null ? "" : drafts.chainMinLevel,
+							onChange
+						})]
+					}),
+					jsxs("div", {
+						className: cls.cell,
+						children: [jsx("label", {
+							htmlFor: "chain-max-level",
+							children: "Max Level:"
+						}), jsx("input", {
+							id: "chain-max-level",
+							type: "number",
+							className: cls.number,
+							placeholder: "No max",
+							value: drafts.chainMaxLevel === null ? "" : drafts.chainMaxLevel,
+							onChange
+						})]
+					}),
+					jsxs("div", {
+						className: cls.cell,
+						children: [jsx("label", {
+							htmlFor: "chain-min-ff",
+							children: "Min FF:"
+						}), jsx("input", {
+							id: "chain-min-ff",
+							type: "number",
+							step: "0.1",
+							className: cls.number,
+							placeholder: "No min",
+							value: drafts.chainMinFF === null ? "" : drafts.chainMinFF,
+							onChange
+						})]
+					}),
+					jsxs("div", {
+						className: cls.cell,
+						children: [jsx("label", {
+							htmlFor: "chain-max-ff",
+							children: "Max FF:"
+						}), jsx("input", {
+							id: "chain-max-ff",
+							type: "number",
+							step: "0.1",
+							className: cls.number,
+							placeholder: "No max",
+							value: drafts.chainMaxFF,
+							onChange
+						})]
+					}),
+					jsxs("div", {
+						className: `${cls.cell} ${cls.cellCheckbox} ${cls.chainWide}`,
+						children: [jsx("input", {
+							id: "chain-inactive",
+							type: "checkbox",
+							checked: drafts.chainInactive,
+							onChange
+						}), jsx("label", {
+							htmlFor: "chain-inactive",
+							children: "Inactive Only (14+ days offline)"
+						})]
+					}),
+					jsxs("div", {
+						className: `${cls.cell} ${cls.cellCheckbox} ${cls.chainWide}`,
+						children: [jsx("input", {
+							id: "chain-factionless",
+							type: "checkbox",
+							checked: drafts.chainFactionless,
+							onChange
+						}), jsx("label", {
+							htmlFor: "chain-factionless",
+							children: "Factionless Only"
+						})]
+					})
+				]
+			})]
+		});
+	}
+	function DisplayOptionsSection({ drafts, onChange }) {
+		return jsxs(Fragment$1, { children: [
+			jsxs("div", {
+				className: cls.cell,
+				children: [jsx("label", {
+					htmlFor: "factions-col-display",
+					children: "Faction Page Shows:"
+				}), jsxs("select", {
+					id: "factions-col-display",
+					value: drafts.factionsColDisplay,
+					onChange,
+					children: [
+						jsx("option", {
+							value: "fair_fight",
+							children: "FF Score"
+						}),
+						jsx("option", {
+							value: "battle_stats",
+							children: "BS Estimate"
+						}),
+						jsx("option", {
+							value: "none",
+							children: "None (Hide Column)"
+						})
+					]
+				})]
+			}),
+			jsxs("div", {
+				className: `${cls.cell} ${cls.cellCheckbox}`,
+				children: [jsx("input", {
+					id: "faction-filter-toggle",
+					type: "checkbox",
+					checked: drafts.factionFilterEnabled,
+					onChange
+				}), jsx("label", {
+					htmlFor: "faction-filter-toggle",
+					children: "Show faction filter box"
+				})]
+			}),
+			jsxs("div", {
+				className: cls.cell,
+				children: [jsx("label", {
+					htmlFor: "war-col-display",
+					children: "War Page Shows:"
+				}), jsxs("select", {
+					id: "war-col-display",
+					value: drafts.warColDisplay,
+					onChange,
+					children: [
+						jsx("option", {
+							value: "fair_fight",
+							children: "FF Score"
+						}),
+						jsx("option", {
+							value: "battle_stats",
+							children: "BS Estimate"
+						}),
+						jsx("option", {
+							value: "none",
+							children: "None (Hide Column)"
+						})
+					]
+				})]
+			}),
+			jsxs("div", {
+				className: `${cls.cell} ${cls.cellCheckbox}`,
+				children: [jsx("input", {
+					id: "war-filter-toggle",
+					type: "checkbox",
+					checked: drafts.warFilterEnabled,
+					onChange
+				}), jsx("label", {
+					htmlFor: "war-filter-toggle",
+					children: "Show war filter box"
+				})]
+			}),
+			jsxs("div", {
+				className: cls.cell,
+				children: [jsx("label", {
+					htmlFor: "mini-profile-display",
+					children: "Mini Profile Shows:"
+				}), jsxs("select", {
+					id: "mini-profile-display",
+					value: drafts.miniProfileDisplay,
+					onChange,
+					children: [jsx("option", {
+						value: "fair_fight",
+						children: "FF Score"
+					}), jsx("option", {
+						value: "battle_stats",
+						children: "BS Estimate"
+					})]
+				})]
+			}),
+			jsxs("div", {
+				className: `${cls.cell} ${cls.cellCheckbox}`,
+				children: [jsx("input", {
+					id: "status-attack-links-toggle",
+					type: "checkbox",
+					checked: drafts.statusAttackLinksEnabled,
+					onChange
+				}), jsx("label", {
+					htmlFor: "status-attack-links-toggle",
+					children: "Enable online status indicator quick attack links"
+				})]
+			}),
+			jsxs("div", {
+				className: cls.cell,
+				children: [jsx("label", {
+					htmlFor: "war-quick-attack-action",
+					children: "Quick Attack Action:"
+				}), jsxs("select", {
+					id: "war-quick-attack-action",
+					value: drafts.warQuickAttackAction,
+					onChange,
+					children: [jsx("option", {
+						value: "new_tab",
+						children: "New Tab"
+					}), jsx("option", {
+						value: "current",
+						children: "Same Tab"
+					})]
+				})]
+			})
+		] });
+	}
+	function AdditionalFeaturesSection({ drafts, onChange }) {
+		return jsxs(Fragment$1, { children: [
+			jsxs("div", {
+				className: `${cls.cell} ${cls.cellCheckbox}`,
+				children: [jsx("input", {
+					id: "ff-history-toggle",
+					type: "checkbox",
+					checked: drafts.ffHistoryEnabled,
+					onChange
+				}), jsx("label", {
+					htmlFor: "ff-history-toggle",
+					children: "Enable FF History button on profile pages"
+				})]
+			}),
+			jsxs("div", {
+				className: `${cls.cell} ${cls.cellCheckbox}`,
+				children: [jsx("input", {
+					id: "stat-distribution-badge-toggle",
+					type: "checkbox",
+					checked: drafts.statDistributionBadgeEnabled,
+					onChange
+				}), jsx("label", {
+					htmlFor: "stat-distribution-badge-toggle",
+					children: "Show dominant stat badge on faction/war FF cells"
+				})]
+			}),
+			jsxs("div", {
+				className: `${cls.cell} ${cls.cellCheckbox}`,
+				children: [jsx("input", {
+					id: "bounty-board-toggle",
+					type: "checkbox",
+					checked: drafts.bountyBoardEnabled,
+					onChange
+				}), jsx("label", {
+					htmlFor: "bounty-board-toggle",
+					children: "Enable FF Scouter Bounties"
+				})]
+			}),
+			jsxs("div", {
+				className: `${cls.cell} ${cls.cellCheckbox}`,
+				children: [jsx("input", {
+					id: "od-insurance-toggle",
+					type: "checkbox",
+					checked: drafts.odInsuranceEnabled,
+					onChange
+				}), jsx("label", {
+					htmlFor: "od-insurance-toggle",
+					children: "Show OD Insurance on the Items page"
+				})]
+			}),
+			jsxs("div", {
+				className: cls.cell,
+				children: [jsx("label", {
+					htmlFor: "bounty-attack-action",
+					children: "Bounty Attack Opens:"
+				}), jsxs("select", {
+					id: "bounty-attack-action",
+					value: drafts.bountyAttackAction,
+					onChange,
+					children: [jsx("option", {
+						value: "new_tab",
+						children: "New Tab"
+					}), jsx("option", {
+						value: "current",
+						children: "Same Tab"
+					})]
+				})]
+			}),
+			jsxs("div", {
+				className: `${cls.cell} ${cls.cellCheckbox}`,
+				children: [jsx("input", {
+					id: "settings-panel-own-profile-only-toggle",
+					type: "checkbox",
+					checked: drafts.settingsPanelOwnProfileOnly,
+					onChange
+				}), jsx("label", {
+					htmlFor: "settings-panel-own-profile-only-toggle",
+					children: "Only show FF Scouter Settings on my own profile"
+				})]
+			}),
+			jsx("div", {
+				className: `${cls.span} ff-deprecation-note`,
+				children: jsxs("span", { children: [
+					"War Monitor is no longer supported. Use",
+					" ",
+					jsx("a", {
+						target: "_blank",
+						href: "https://greasyfork.org/en/scripts/529238-torn-war-stuff-enhanced",
+						rel: "noreferrer",
+						children: "Torn War Stuff Enhanced"
+					}),
+					" ",
+					"instead."
+				] })
+			})
+		] });
+	}
+	function FeatureTogglesSection({ drafts, onChange }) {
+		return jsxs("div", {
+			className: cls.group,
+			children: [jsx("h4", { children: "Feature Toggles" }), jsxs("div", {
+				className: cls.section,
+				children: [
+					jsx(ChainButtonSection, {
+						drafts,
+						onChange
+					}),
+					jsx(DisplayOptionsSection, {
+						drafts,
+						onChange
+					}),
+					jsx(AdditionalFeaturesSection, {
+						drafts,
+						onChange
+					})
+				]
+			})]
+		});
+	}
+	function DebugSection({ drafts, onChange }) {
+		return jsxs("div", {
+			className: cls.group,
+			children: [jsx("h4", { children: "Debug Settings" }), jsxs("div", {
+				className: cls.section,
+				children: [
+					jsxs("div", {
+						className: `${cls.cell} ${cls.cellCheckbox}`,
+						children: [jsx("input", {
+							id: "debug-logs",
+							type: "checkbox",
+							checked: drafts.debugLogs,
+							onChange
+						}), jsx("label", {
+							htmlFor: "debug-logs",
+							children: "Enable debug logging"
+						})]
+					}),
+					jsxs("div", {
+						className: `${cls.cell} ${cls.cellCheckbox}`,
+						children: [jsx("input", {
+							id: "analytics-toggle",
+							type: "checkbox",
+							checked: drafts.analyticsEnabled,
+							onChange
+						}), jsx("label", {
+							htmlFor: "analytics-toggle",
+							children: "Enable local analytics logging (last 30 days)"
+						})]
+					}),
+					jsxs("div", {
+						className: `${cls.cell} ${cls.cellCheckbox}`,
+						children: [jsx("input", {
+							id: "network-interception-toggle",
+							type: "checkbox",
+							checked: drafts.networkInterceptionEnabled,
+							onChange
+						}), jsx("label", {
+							htmlFor: "network-interception-toggle",
+							children: "Enable network request interception (Fetch/XHR/WS)"
+						})]
+					}),
+					jsxs("div", {
+						className: `${cls.cell} ${cls.cellCheckbox}`,
+						children: [jsx("input", {
+							id: "debug-disable-pda-http",
+							type: "checkbox",
+							checked: drafts.debugDisablePdaHttp,
+							onChange
+						}), jsx("label", {
+							htmlFor: "debug-disable-pda-http",
+							children: "Disable PDA native HTTP (use GM_xmlhttpRequest instead)"
+						})]
+					}),
+					jsxs("div", {
+						className: `${cls.cell} ${cls.cellCheckbox}`,
+						children: [jsx("input", {
+							id: "debug-force-react-fallback",
+							type: "checkbox",
+							checked: drafts.debugForceReactFallback,
+							onChange
+						}), jsx("label", {
+							htmlFor: "debug-force-react-fallback",
+							children: "Force React fallback (fetch/evaluate Torn's own react-dom bundle instead of using unsafeWindow.React/ReactDOM)"
+						})]
+					})
+				]
+			})]
+		});
+	}
+	function SettingsActions({ showSavedMessage, onSave, onReset, onClearCache }) {
+		return jsxs("div", {
+			className: cls.actions,
+			children: [
+				jsx("button", {
+					type: "button",
+					className: "torn-btn btn-save",
+					onClick: onSave,
+					children: "Save Settings"
+				}),
+				jsx("button", {
+					type: "button",
+					className: "torn-btn btn-secondary",
+					onClick: onReset,
+					children: "Reset to Defaults"
+				}),
+				jsx("button", {
+					type: "button",
+					className: "torn-btn btn-secondary",
+					onClick: onClearCache,
+					children: "Clear FF Cache"
+				}),
+				showSavedMessage && jsx("span", {
+					className: cls.savedMsg,
+					children: "✓ Saved!"
+				})
+			]
+		});
+	}
 	function SettingsPanelComponent({ props, drafts, isPremium, isKeyRegistered, rangeError, showSavedMessage, onChange, onApiKeyBlur, onVerify, onSave, onReset, onClearCache, onRendered }) {
 		useEffect(() => {
 			onRendered();
 		});
-		const previewColor = get_palette_for_scheme(drafts.colorScheme)[5] ?? "#888888";
-		const previewSourceMarker = get_source_marker("spies");
 		return jsxs("details", {
 			className: `${cls.accordion}${!props.apiKey || isKeyRegistered === false ? ` ${cls.accordionGlow}` : ""} cont-gray border-round`,
 			children: [jsx("summary", { children: "FF Scouter Settings" }), jsxs("div", {
 				className: cls.body,
 				children: [
-					jsxs("div", {
-						className: cls.group,
-						children: [jsx("h4", { children: "API Key & Premium" }), jsxs("div", {
-							className: cls.section,
-							children: [jsxs("div", {
-								className: `${cls.apiExplanation} ${cls.span}`,
-								children: [
-									jsx("strong", { children: "Important:" }),
-									" You must use the SAME exact API key that you use on",
-									" ",
-									jsx("a", {
-										href: "https://ffscouter.com/",
-										target: "_blank",
-										rel: "noreferrer",
-										children: "ffscouter.com"
-									}),
-									". ",
-									jsx("br", {}),
-									jsx("br", {}),
-									"If you're not sure which API key you used, go to",
-									" ",
-									jsx("a", {
-										href: "https://www.torn.com/preferences.php#tab=api",
-										target: "_blank",
-										rel: "noreferrer",
-										children: "your API preferences"
-									}),
-									" ",
-									"and look for \"FFScouter3\" in your API key history comments."
-								]
-							}), jsxs("div", {
-								className: `${cls.span} ${cls.apiBlock}`,
-								children: [jsxs("div", {
-									className: cls.cell,
-									children: [jsx("label", {
-										htmlFor: "ff-scouter-api-key",
-										children: "API Key:"
-									}), jsx("input", {
-										id: "ff-scouter-api-key",
-										type: "text",
-										className: props.apiKey ? cls.blur : "",
-										placeholder: "Paste your key here...",
-										value: drafts.apiKey,
-										onChange,
-										onBlur: onApiKeyBlur
-									})]
-								}), jsxs("div", {
-									className: cls.apiStatusRow,
-									children: [
-										jsx("label", {
-											htmlFor: "ff-premium-badge",
-											children: "FF Scouter Premium:"
-										}),
-										jsx("span", {
-											id: "ff-premium-badge",
-											className: `${cls.premiumBadge} ${isPremium === null ? cls.premiumBadgeUnknown : isPremium ? cls.premiumBadgeEnabled : cls.premiumBadgeDisabled}`,
-											children: isPremium === null ? "Unknown" : isPremium ? "Enabled" : "Disabled"
-										}),
-										jsx("button", {
-											type: "button",
-											className: "torn-btn btn-save",
-											onClick: onVerify,
-											children: "Verify"
-										})
-									]
-								})]
-							})]
-						})]
+					jsx(ApiKeySection, {
+						apiKey: props.apiKey,
+						drafts,
+						isPremium,
+						onChange,
+						onApiKeyBlur,
+						onVerify
 					}),
-					jsxs("div", {
-						className: cls.group,
-						children: [jsx("h4", { children: "Gauge Marker Settings" }), jsxs("div", {
-							className: cls.section,
-							children: [
-								jsxs("div", {
-									className: cls.cell,
-									children: [jsx("label", {
-										htmlFor: "gauge-marker-type",
-										children: "Gauge Marker Style:"
-									}), jsxs("select", {
-										id: "gauge-marker-type",
-										value: drafts.gaugeMarkerType,
-										onChange,
-										children: [
-											jsx("option", {
-												value: "arrow",
-												children: "Arrow (Default)"
-											}),
-											jsx("option", {
-												value: "bubble_ff",
-												children: "Bubble (FF Score)"
-											}),
-											jsx("option", {
-												value: "bubble_estimate",
-												children: "Bubble (BS Estimate)"
-											})
-										]
-									})]
-								}),
-								(drafts.gaugeMarkerType === "bubble_ff" || drafts.gaugeMarkerType === "bubble_estimate") && jsxs("div", {
-									className: cls.cell,
-									children: [jsx("label", {
-										htmlFor: "gauge-marker-justify",
-										children: "Bubble Position:"
-									}), jsxs("select", {
-										id: "gauge-marker-justify",
-										value: drafts.gaugeMarkerJustify,
-										onChange,
-										children: [
-											jsx("option", {
-												value: "gauge",
-												children: "Gauge (Default)"
-											}),
-											jsx("option", {
-												value: "left",
-												children: "Always Left"
-											}),
-											jsx("option", {
-												value: "right",
-												children: "Always Right"
-											})
-										]
-									})]
-								}),
-								jsxs("div", {
-									className: `${cls.span} ${cls.markerSize}`,
-									children: [jsx("label", {
-										htmlFor: "gauge-marker-scale",
-										children: "Marker Size:"
-									}), jsxs("div", {
-										className: cls.markerSizeControls,
-										children: [
-											jsx("input", {
-												id: "gauge-marker-scale",
-												type: "range",
-												min: "50",
-												max: "200",
-												step: "5",
-												value: drafts.gaugeMarkerScale,
-												onChange
-											}),
-											jsx("input", {
-												id: "gauge-marker-scale-number",
-												type: "number",
-												min: "50",
-												max: "200",
-												step: "5",
-												className: cls.number,
-												value: drafts.gaugeMarkerScale,
-												onChange
-											}),
-											jsx("span", { children: "%" })
-										]
-									})]
-								}),
-								jsxs("div", {
-									className: `${cls.span} ${cls.markerBorderWidth}`,
-									children: [jsx("label", {
-										htmlFor: "gauge-marker-border-width",
-										children: "Border Thickness:"
-									}), jsxs("div", {
-										className: cls.markerSizeControls,
-										children: [
-											jsx("input", {
-												id: "gauge-marker-border-width",
-												type: "range",
-												min: "0",
-												max: "3",
-												step: "0.5",
-												value: drafts.gaugeMarkerBorderWidth,
-												onChange
-											}),
-											jsx("input", {
-												id: "gauge-marker-border-width-number",
-												type: "number",
-												min: "0",
-												max: "3",
-												step: "0.5",
-												className: cls.number,
-												value: drafts.gaugeMarkerBorderWidth,
-												onChange
-											}),
-											jsx("span", { children: "px" }),
-											jsxs("div", {
-												className: "ffscouter-marker-preview",
-												style: { "--ffscouter-marker-scale": drafts.gaugeMarkerScale / 100 },
-												children: [jsxs("span", {
-													className: "ffscouter-preview-marker-slot",
-													children: [jsxs("svg", {
-														className: "ffscouter-preview-arrow",
-														viewBox: FF_ARROW_VIEWBOX,
-														children: [jsx("title", { children: "Preview Gauge Marker" }), jsx("path", {
-															fillRule: "evenodd",
-															fill: previewColor,
-															stroke: "#000000",
-															strokeWidth: drafts.gaugeMarkerBorderWidth,
-															d: FF_ARROW_PATH_D
-														})]
-													}), previewSourceMarker && jsx(SourceMarkerIcon, {
-														marker: previewSourceMarker,
-														className: "ffscouter-source-marker"
-													})]
-												}), jsxs("span", {
-													className: "ffscouter-preview-marker-slot",
-													children: [jsx("div", {
-														className: "ffscouter-preview-bubble",
-														style: {
-															backgroundColor: previewColor,
-															color: get_contrast_color(previewColor),
-															borderWidth: `${drafts.gaugeMarkerBorderWidth * (drafts.gaugeMarkerScale / 100)}px`
-														},
-														children: "2.34"
-													}), previewSourceMarker && jsx(SourceMarkerIcon, {
-														marker: previewSourceMarker,
-														className: "ffscouter-source-marker"
-													})]
-												})]
-											})
-										]
-									})]
-								}),
-								jsxs("div", {
-									className: `${cls.span} ${cls.colorScheme}`,
-									children: [jsx("label", {
-										htmlFor: "color-scheme",
-										children: "Color Scheme:"
-									}), jsxs("div", {
-										className: cls.colorSchemeControls,
-										children: [jsxs("select", {
-											id: "color-scheme",
-											value: drafts.colorScheme,
-											onChange,
-											children: [
-												jsx("option", {
-													value: "classic",
-													children: "Classic (Default)"
-												}),
-												jsx("option", {
-													value: "cool_diverging",
-													children: "Cool Diverging"
-												}),
-												jsx("option", {
-													value: "neon",
-													children: "Neon"
-												}),
-												jsx("option", {
-													value: "colorblind_safe",
-													children: "Colorblind-Safe"
-												}),
-												jsx("option", {
-													value: "grayscale",
-													children: "Grayscale"
-												}),
-												jsx("option", {
-													value: "green_yellow_red",
-													children: "Green-Yellow-Red"
-												}),
-												jsx("option", {
-													value: "blue_yellow_red",
-													children: "Blue-Yellow-Red"
-												}),
-												jsx("option", {
-													value: "plasma",
-													children: "Plasma"
-												})
-											]
-										}), jsx("div", {
-											className: "ffscouter-swatch-row",
-											children: get_palette_for_scheme(drafts.colorScheme).map((color) => jsxs("svg", {
-												className: "ffscouter-swatch",
-												viewBox: FF_ARROW_VIEWBOX,
-												children: [jsxs("title", { children: [color, " swatch"] }), jsx("path", {
-													fillRule: "evenodd",
-													fill: color,
-													stroke: "#000000",
-													strokeWidth: "1.5",
-													d: FF_ARROW_PATH_D
-												})]
-											}, color))
-										})]
-									})]
-								}),
-								jsxs("div", {
-									className: `${cls.inputRow} ${cls.span}`,
-									children: [
-										jsx("label", {
-											htmlFor: "ff-range-low",
-											children: "FF Ranges (Low, High, Max):"
-										}),
-										jsxs("div", {
-											className: cls.rangeRow,
-											children: [
-												jsx("input", {
-													id: "ff-range-low",
-													type: "number",
-													step: "0.1",
-													className: cls.number,
-													value: drafts.lowRange,
-													onChange
-												}),
-												jsx("span", { children: "<" }),
-												jsx("input", {
-													id: "ff-range-high",
-													type: "number",
-													step: "0.1",
-													className: cls.number,
-													value: drafts.highRange,
-													onChange
-												}),
-												jsx("span", { children: "<" }),
-												jsx("input", {
-													id: "ff-range-max",
-													type: "number",
-													step: "0.1",
-													className: cls.number,
-													value: drafts.maxRange,
-													onChange
-												})
-											]
-										}),
-										rangeError && jsx("div", {
-											className: cls.errorMsg,
-											children: rangeError
-										})
-									]
-								})
-							]
-						})]
+					jsx(GaugeMarkerSection, {
+						drafts,
+						onChange,
+						rangeError
 					}),
-					jsxs("div", {
-						className: cls.group,
-						children: [jsx("h4", { children: "Feature Toggles" }), jsxs("div", {
-							className: cls.section,
-							children: [
-								jsxs("div", {
-									className: `${cls.span} ff-chain-block`,
-									children: [jsxs("div", {
-										className: `${cls.cell} ${cls.cellCheckbox}`,
-										children: [jsx("input", {
-											id: "chain-button-toggle",
-											type: "checkbox",
-											checked: drafts.chainButtonEnabled,
-											onChange
-										}), jsx("label", {
-											htmlFor: "chain-button-toggle",
-											children: "Enable Chain Button (Green FF Button)"
-										})]
-									}), drafts.chainButtonEnabled && jsxs("div", {
-										className: `${cls.section} ${cls.chainSuboptions}`,
-										children: [
-											jsxs("div", {
-												className: `${cls.cell} ${cls.chainWide}`,
-												children: [jsx("label", {
-													htmlFor: "chain-link-type",
-													children: "Chain button opens:"
-												}), jsxs("select", {
-													id: "chain-link-type",
-													value: drafts.chainLinkType,
-													onChange,
-													children: [jsx("option", {
-														value: "attack",
-														children: "Attack page"
-													}), jsx("option", {
-														value: "profile",
-														children: "Profile page"
-													})]
-												})]
-											}),
-											jsxs("div", {
-												className: `${cls.cell} ${cls.chainWide}`,
-												children: [jsx("label", {
-													htmlFor: "chain-tab-type",
-													children: "Open in:"
-												}), jsxs("select", {
-													id: "chain-tab-type",
-													value: drafts.chainTabType,
-													onChange,
-													children: [jsx("option", {
-														value: "newtab",
-														children: "New tab"
-													}), jsx("option", {
-														value: "sametab",
-														children: "Same tab"
-													})]
-												})]
-											}),
-											jsxs("div", {
-												className: cls.cell,
-												children: [jsx("label", {
-													htmlFor: "chain-min-level",
-													children: "Min Level:"
-												}), jsx("input", {
-													id: "chain-min-level",
-													type: "number",
-													className: cls.number,
-													placeholder: "No min",
-													value: drafts.chainMinLevel === null ? "" : drafts.chainMinLevel,
-													onChange
-												})]
-											}),
-											jsxs("div", {
-												className: cls.cell,
-												children: [jsx("label", {
-													htmlFor: "chain-max-level",
-													children: "Max Level:"
-												}), jsx("input", {
-													id: "chain-max-level",
-													type: "number",
-													className: cls.number,
-													placeholder: "No max",
-													value: drafts.chainMaxLevel === null ? "" : drafts.chainMaxLevel,
-													onChange
-												})]
-											}),
-											jsxs("div", {
-												className: cls.cell,
-												children: [jsx("label", {
-													htmlFor: "chain-min-ff",
-													children: "Min FF:"
-												}), jsx("input", {
-													id: "chain-min-ff",
-													type: "number",
-													step: "0.1",
-													className: cls.number,
-													placeholder: "No min",
-													value: drafts.chainMinFF === null ? "" : drafts.chainMinFF,
-													onChange
-												})]
-											}),
-											jsxs("div", {
-												className: cls.cell,
-												children: [jsx("label", {
-													htmlFor: "chain-max-ff",
-													children: "Max FF:"
-												}), jsx("input", {
-													id: "chain-max-ff",
-													type: "number",
-													step: "0.1",
-													className: cls.number,
-													placeholder: "No max",
-													value: drafts.chainMaxFF,
-													onChange
-												})]
-											}),
-											jsxs("div", {
-												className: `${cls.cell} ${cls.cellCheckbox} ${cls.chainWide}`,
-												children: [jsx("input", {
-													id: "chain-inactive",
-													type: "checkbox",
-													checked: drafts.chainInactive,
-													onChange
-												}), jsx("label", {
-													htmlFor: "chain-inactive",
-													children: "Inactive Only (14+ days offline)"
-												})]
-											}),
-											jsxs("div", {
-												className: `${cls.cell} ${cls.cellCheckbox} ${cls.chainWide}`,
-												children: [jsx("input", {
-													id: "chain-factionless",
-													type: "checkbox",
-													checked: drafts.chainFactionless,
-													onChange
-												}), jsx("label", {
-													htmlFor: "chain-factionless",
-													children: "Factionless Only"
-												})]
-											})
-										]
-									})]
-								}),
-								jsxs("div", {
-									className: cls.cell,
-									children: [jsx("label", {
-										htmlFor: "factions-col-display",
-										children: "Faction Page Shows:"
-									}), jsxs("select", {
-										id: "factions-col-display",
-										value: drafts.factionsColDisplay,
-										onChange,
-										children: [
-											jsx("option", {
-												value: "fair_fight",
-												children: "FF Score"
-											}),
-											jsx("option", {
-												value: "battle_stats",
-												children: "BS Estimate"
-											}),
-											jsx("option", {
-												value: "none",
-												children: "None (Hide Column)"
-											})
-										]
-									})]
-								}),
-								jsxs("div", {
-									className: `${cls.cell} ${cls.cellCheckbox}`,
-									children: [jsx("input", {
-										id: "faction-filter-toggle",
-										type: "checkbox",
-										checked: drafts.factionFilterEnabled,
-										onChange
-									}), jsx("label", {
-										htmlFor: "faction-filter-toggle",
-										children: "Show faction filter box"
-									})]
-								}),
-								jsxs("div", {
-									className: cls.cell,
-									children: [jsx("label", {
-										htmlFor: "war-col-display",
-										children: "War Page Shows:"
-									}), jsxs("select", {
-										id: "war-col-display",
-										value: drafts.warColDisplay,
-										onChange,
-										children: [
-											jsx("option", {
-												value: "fair_fight",
-												children: "FF Score"
-											}),
-											jsx("option", {
-												value: "battle_stats",
-												children: "BS Estimate"
-											}),
-											jsx("option", {
-												value: "none",
-												children: "None (Hide Column)"
-											})
-										]
-									})]
-								}),
-								jsxs("div", {
-									className: `${cls.cell} ${cls.cellCheckbox}`,
-									children: [jsx("input", {
-										id: "war-filter-toggle",
-										type: "checkbox",
-										checked: drafts.warFilterEnabled,
-										onChange
-									}), jsx("label", {
-										htmlFor: "war-filter-toggle",
-										children: "Show war filter box"
-									})]
-								}),
-								jsxs("div", {
-									className: cls.cell,
-									children: [jsx("label", {
-										htmlFor: "mini-profile-display",
-										children: "Mini Profile Shows:"
-									}), jsxs("select", {
-										id: "mini-profile-display",
-										value: drafts.miniProfileDisplay,
-										onChange,
-										children: [jsx("option", {
-											value: "fair_fight",
-											children: "FF Score"
-										}), jsx("option", {
-											value: "battle_stats",
-											children: "BS Estimate"
-										})]
-									})]
-								}),
-								jsxs("div", {
-									className: `${cls.cell} ${cls.cellCheckbox}`,
-									children: [jsx("input", {
-										id: "status-attack-links-toggle",
-										type: "checkbox",
-										checked: drafts.statusAttackLinksEnabled,
-										onChange
-									}), jsx("label", {
-										htmlFor: "status-attack-links-toggle",
-										children: "Enable online status indicator quick attack links"
-									})]
-								}),
-								jsxs("div", {
-									className: cls.cell,
-									children: [jsx("label", {
-										htmlFor: "war-quick-attack-action",
-										children: "Quick Attack Action:"
-									}), jsxs("select", {
-										id: "war-quick-attack-action",
-										value: drafts.warQuickAttackAction,
-										onChange,
-										children: [jsx("option", {
-											value: "new_tab",
-											children: "New Tab"
-										}), jsx("option", {
-											value: "current",
-											children: "Same Tab"
-										})]
-									})]
-								}),
-								jsxs("div", {
-									className: `${cls.cell} ${cls.cellCheckbox}`,
-									children: [jsx("input", {
-										id: "ff-history-toggle",
-										type: "checkbox",
-										checked: drafts.ffHistoryEnabled,
-										onChange
-									}), jsx("label", {
-										htmlFor: "ff-history-toggle",
-										children: "Enable FF History button on profile pages"
-									})]
-								}),
-								jsxs("div", {
-									className: `${cls.cell} ${cls.cellCheckbox}`,
-									children: [jsx("input", {
-										id: "stat-distribution-badge-toggle",
-										type: "checkbox",
-										checked: drafts.statDistributionBadgeEnabled,
-										onChange
-									}), jsx("label", {
-										htmlFor: "stat-distribution-badge-toggle",
-										children: "Show dominant stat badge on faction/war FF cells"
-									})]
-								}),
-								jsxs("div", {
-									className: `${cls.cell} ${cls.cellCheckbox}`,
-									children: [jsx("input", {
-										id: "bounty-board-toggle",
-										type: "checkbox",
-										checked: drafts.bountyBoardEnabled,
-										onChange
-									}), jsx("label", {
-										htmlFor: "bounty-board-toggle",
-										children: "Enable FF Scouter Bounties"
-									})]
-								}),
-								jsxs("div", {
-									className: `${cls.cell} ${cls.cellCheckbox}`,
-									children: [jsx("input", {
-										id: "od-insurance-toggle",
-										type: "checkbox",
-										checked: drafts.odInsuranceEnabled,
-										onChange
-									}), jsx("label", {
-										htmlFor: "od-insurance-toggle",
-										children: "Show OD Insurance on the Items page"
-									})]
-								}),
-								jsxs("div", {
-									className: cls.cell,
-									children: [jsx("label", {
-										htmlFor: "bounty-attack-action",
-										children: "Bounty Attack Opens:"
-									}), jsxs("select", {
-										id: "bounty-attack-action",
-										value: drafts.bountyAttackAction,
-										onChange,
-										children: [jsx("option", {
-											value: "new_tab",
-											children: "New Tab"
-										}), jsx("option", {
-											value: "current",
-											children: "Same Tab"
-										})]
-									})]
-								}),
-								jsxs("div", {
-									className: `${cls.cell} ${cls.cellCheckbox}`,
-									children: [jsx("input", {
-										id: "settings-panel-own-profile-only-toggle",
-										type: "checkbox",
-										checked: drafts.settingsPanelOwnProfileOnly,
-										onChange
-									}), jsx("label", {
-										htmlFor: "settings-panel-own-profile-only-toggle",
-										children: "Only show FF Scouter Settings on my own profile"
-									})]
-								}),
-								jsx("div", {
-									className: `${cls.span} ff-deprecation-note`,
-									children: jsxs("span", { children: [
-										"War Monitor is no longer supported. Use",
-										" ",
-										jsx("a", {
-											target: "_blank",
-											href: "https://greasyfork.org/en/scripts/529238-torn-war-stuff-enhanced",
-											rel: "noreferrer",
-											children: "Torn War Stuff Enhanced"
-										}),
-										" ",
-										"instead."
-									] })
-								})
-							]
-						})]
+					jsx(FeatureTogglesSection, {
+						drafts,
+						onChange
 					}),
-					jsxs("div", {
-						className: cls.group,
-						children: [jsx("h4", { children: "Debug Settings" }), jsxs("div", {
-							className: cls.section,
-							children: [
-								jsxs("div", {
-									className: `${cls.cell} ${cls.cellCheckbox}`,
-									children: [jsx("input", {
-										id: "debug-logs",
-										type: "checkbox",
-										checked: drafts.debugLogs,
-										onChange
-									}), jsx("label", {
-										htmlFor: "debug-logs",
-										children: "Enable debug logging"
-									})]
-								}),
-								jsxs("div", {
-									className: `${cls.cell} ${cls.cellCheckbox}`,
-									children: [jsx("input", {
-										id: "analytics-toggle",
-										type: "checkbox",
-										checked: drafts.analyticsEnabled,
-										onChange
-									}), jsx("label", {
-										htmlFor: "analytics-toggle",
-										children: "Enable local analytics logging (last 30 days)"
-									})]
-								}),
-								jsxs("div", {
-									className: `${cls.cell} ${cls.cellCheckbox}`,
-									children: [jsx("input", {
-										id: "network-interception-toggle",
-										type: "checkbox",
-										checked: drafts.networkInterceptionEnabled,
-										onChange
-									}), jsx("label", {
-										htmlFor: "network-interception-toggle",
-										children: "Enable network request interception (Fetch/XHR/WS)"
-									})]
-								}),
-								jsxs("div", {
-									className: `${cls.cell} ${cls.cellCheckbox}`,
-									children: [jsx("input", {
-										id: "debug-disable-pda-http",
-										type: "checkbox",
-										checked: drafts.debugDisablePdaHttp,
-										onChange
-									}), jsx("label", {
-										htmlFor: "debug-disable-pda-http",
-										children: "Disable PDA native HTTP (use GM_xmlhttpRequest instead)"
-									})]
-								}),
-								jsxs("div", {
-									className: `${cls.cell} ${cls.cellCheckbox}`,
-									children: [jsx("input", {
-										id: "debug-force-react-fallback",
-										type: "checkbox",
-										checked: drafts.debugForceReactFallback,
-										onChange
-									}), jsx("label", {
-										htmlFor: "debug-force-react-fallback",
-										children: "Force React fallback (fetch/evaluate Torn's own react-dom bundle instead of using unsafeWindow.React/ReactDOM)"
-									})]
-								})
-							]
-						})]
+					jsx(DebugSection, {
+						drafts,
+						onChange
 					}),
-					jsxs("div", {
-						className: cls.actions,
-						children: [
-							jsx("button", {
-								type: "button",
-								className: "torn-btn btn-save",
-								onClick: onSave,
-								children: "Save Settings"
-							}),
-							jsx("button", {
-								type: "button",
-								className: "torn-btn btn-secondary",
-								onClick: onReset,
-								children: "Reset to Defaults"
-							}),
-							jsx("button", {
-								type: "button",
-								className: "torn-btn btn-secondary",
-								onClick: onClearCache,
-								children: "Clear FF Cache"
-							}),
-							showSavedMessage && jsx("span", {
-								className: cls.savedMsg,
-								children: "✓ Saved!"
-							})
-						]
+					jsx(SettingsActions, {
+						showSavedMessage,
+						onSave,
+						onReset,
+						onClearCache
 					})
 				]
 			})]
@@ -11114,7 +11304,7 @@
 		httpInterceptors.push(interceptor);
 		httpInterceptors.sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0));
 	}
-	_css(".ffscouter-gauge{padding:0;display:block;position:relative}.ffscouter-arrow,.ffscouter-preview-arrow{width:var(--ffscouter-arrow-width);object-fit:cover;pointer-events:none}.ffscouter-arrow{padding:0;display:block}.ffscouter-preview-arrow{vertical-align:middle;display:inline-block}.ffscouter-marker-wrapper{pointer-events:none;transform:translate(var(--ffscouter-marker-tx,-50%), var(--ffscouter-marker-ty,-30%));z-index:10;line-height:0;display:inline-block;position:absolute}.ffscouter-gauge[data-ffscouter-band-side=left]>.ffscouter-marker-wrapper{left:calc(var(--ffscouter-marker-actual-width,var(--ffscouter-arrow-width)) / 2 + var(--band-percent) * ( 100% - var(--ffscouter-marker-actual-width,var(--ffscouter-arrow-width)) ) / 100);--ffscouter-marker-tx:-50%}.ffscouter-gauge[data-ffscouter-band-side=right]>.ffscouter-marker-wrapper{right:calc(var(--ffscouter-marker-actual-width,var(--ffscouter-arrow-width)) / 2 + (100 - var(--band-percent)) * ( 100% - var(--ffscouter-marker-actual-width,var(--ffscouter-arrow-width)) ) / 100 + .35 * var(--ffscouter-source-marker-size));--ffscouter-marker-tx:50%}.ffscouter-gauge[data-ffscouter-attach-mode=honor-bar]>.ffscouter-marker-wrapper{--ffscouter-marker-ty:-30%;top:0}.ffscouter-gauge[data-ffscouter-attach-mode=fallback]>.ffscouter-marker-wrapper{--ffscouter-marker-ty:0%;margin:auto 0;top:0;bottom:0}.ffscouter-bubble,.ffscouter-preview-bubble{min-width:2.5882em;height:1.6471em;line-height:1.4118;font-size:var(--ffscouter-bubble-font-size);text-align:center;box-sizing:border-box;white-space:nowrap;text-shadow:0 1px 1px #00000080;border:1px solid #0006;border-radius:999px;justify-content:center;align-items:center;padding:0 .4706em;font-family:Geneva,Arial,sans-serif;font-weight:700;display:inline-flex;box-shadow:0 1px 2px #0000004d}.ffscouter-bubble{pointer-events:none}.ffscouter-preview-bubble{vertical-align:middle}.ffscouter-source-marker{top:calc(-.35 * var(--ffscouter-source-marker-size));right:calc(-.35 * var(--ffscouter-source-marker-size));width:var(--ffscouter-source-marker-size);height:var(--ffscouter-source-marker-size);pointer-events:auto;position:absolute;overflow:visible}.ffscouter-preview-marker-slot{display:inline-block;position:relative}.ffscouter-inline-source-marker{float:none!important;vertical-align:middle!important;width:16px!important;height:16px!important;margin:0 0 0 4px!important;display:inline-block!important;position:static!important}.ffscouter-marker-preview{--ffscouter-arrow-width:calc(20px * var(--ffscouter-marker-scale));--ffscouter-bubble-font-size:calc(8.5px * var(--ffscouter-marker-scale));--ffscouter-source-marker-size:calc(12px * var(--ffscouter-marker-scale));align-items:center;gap:10px;display:inline-flex}.ffscouter-mini-desc{padding:0 5px}.ffscouter-swatch-row{gap:3px;display:inline-flex}.ffscouter-swatch{width:20px;height:13px;display:inline-block}body{--ffscouter-bg-color:#f0f0f0;--ffscouter-alt-bg-color:#fff;--ffscouter-border-color:#ccc;--ffscouter-input-color:#ccc;--ffscouter-text-color:#000;--ffscouter-hover-color:#ddd;--ffscouter-glow-color:#4caf50;--ffscouter-success-color:#4caf50;--ffscouter-status-okay-color:#2e7d32;--ffscouter-status-out-color:#c62828;--ffscouter-status-away-color:#1565c0;--ffscouter-marker-scale:1;--ffscouter-arrow-width:calc(20px * var(--ffscouter-marker-scale));--ffscouter-bubble-font-size:calc(8.5px * var(--ffscouter-marker-scale));--ffscouter-source-marker-size:calc(12px * var(--ffscouter-marker-scale));--ffscouter-stat-badge-outline-color:#fff}body.dark-mode{--ffscouter-bg-color:#333;--ffscouter-alt-bg-color:#383838;--ffscouter-border-color:#444;--ffscouter-input-color:#504f4f;--ffscouter-text-color:#ccc;--ffscouter-hover-color:#555;--ffscouter-glow-color:#4caf50;--ffscouter-success-color:#4caf50;--ffscouter-status-okay-color:#81c784;--ffscouter-status-out-color:#ef7070;--ffscouter-status-away-color:#64b5f6;--ffscouter-stat-badge-outline-color:#000}ff-settings-panel{display:block}.profile-status{position:relative}.ff-flight-element{z-index:2;position:absolute;bottom:2px;right:10px}.ff-scouter-profile-flight-info{text-align:right;color:#fff;text-shadow:0 1px 2px #000000d9;font-size:11px;line-height:1.25;display:inline-block}.profile-status .ff-scouter-profile-flight-info a{color:#fff;text-decoration:underline}.ffscouter-cell{cursor:pointer!important;position:relative!important;overflow:visible!important}.faction-war .ffscouter-cell{float:left!important;box-sizing:border-box!important;text-align:center!important;z-index:10!important;border-radius:3px!important;width:32px!important;height:20px!important;margin:7px 4px!important;padding:0!important;font-size:11px!important;font-weight:700!important;line-height:20px!important}.ffscouter-stat-badge{width:12px!important;height:12px!important;color:var(--ffscouter-text-color)!important;pointer-events:none!important;z-index:11!important;position:absolute!important;top:6px!important;overflow:visible!important}.faction-war .ffscouter-stat-badge{top:0!important}.ffscouter-stat-badge path{stroke:var(--ffscouter-stat-badge-outline-color)!important;stroke-width:1px!important;stroke-linejoin:round!important;paint-order:stroke fill!important}.ffscouter-stat-badge--left{left:0!important;transform:translate(-50%,-50%)!important}.ffscouter-stat-badge--right{right:0!important;transform:translate(50%,-50%)!important}.faction-war .ffscouter-header,.table-header .ffscouter-header{float:left!important;text-align:center!important;cursor:pointer!important;background-color:#0000!important;width:38px!important;padding:0!important;font-size:12px!important;font-weight:700!important}:is(.faction-war:has(.ffscouter-header[data-ffscouter-sort]) [class*=sortIcon___]:not(.ffscouter-sort-icon),.members-list:has(.ffscouter-header[data-ffscouter-sort]) [class*=sortIcon___]:not(.ffscouter-sort-icon)){visibility:hidden!important}[data-ffscouter-hidden],.faction-war[data-ffscouter-hide-level=true] .level:not(.ffscouter-cell):not(.ffscouter-header),.faction-war[data-ffscouter-hide-status=true] .status,.faction-war[data-ffscouter-hide-score=true] .points{display:none!important}.faction-war[data-ffscouter-col-display=fair_fight]:not([data-ffscouter-hide-level=true]) .level:not(.ffscouter-cell):not(.ffscouter-header),.faction-war[data-ffscouter-col-display=battle_stats]:not([data-ffscouter-hide-level=true]) .level:not(.ffscouter-cell):not(.ffscouter-header){width:29px!important}.faction-war[data-ffscouter-col-display=fair_fight]:not([data-ffscouter-hide-level=true]) .status,.faction-war[data-ffscouter-col-display=battle_stats]:not([data-ffscouter-hide-level=true]) .status{width:50px!important}.faction-war[data-ffscouter-col-display=fair_fight]:not([data-ffscouter-hide-level=true]) .points,.faction-war[data-ffscouter-col-display=battle_stats]:not([data-ffscouter-hide-level=true]) .points{width:38px!important}.members-list[data-ffscouter-col-display=fair_fight] .table-cell.position,.members-list[data-ffscouter-col-display=battle_stats] .table-cell.position{width:15%!important}@media (width>=784px){.members-list[data-ffscouter-col-display=fair_fight] .table-cell.position,.members-list[data-ffscouter-col-display=battle_stats] .table-cell.position{width:10%!important}}:is(.members-list li.enemy:has(>.tt-stats-estimate),.members-list li.your:has(>.tt-stats-estimate),.members-list li.enemy:has(>div.clear~*),.members-list li.your:has(>div.clear~*)){padding-bottom:22px!important;position:relative!important}.members-list li.enemy>.tt-stats-estimate,.members-list li.your>.tt-stats-estimate,.members-list li.enemy>div.clear~*,.members-list li.your>div.clear~*{white-space:nowrap;text-overflow:ellipsis;overflow:hidden;width:calc(100% - 20px)!important;height:18px!important;font-size:11px!important;line-height:18px!important;display:block!important;position:absolute!important;bottom:2px!important;left:10px!important}body[data-ff-status-attack-enabled=true] [class*=userStatusWrap__],body[data-ff-status-attack-enabled=true] li[id^=icon][id*=-profile-].user-status-16-Online,body[data-ff-status-attack-enabled=true] li[id^=icon][id*=-profile-].user-status-16-Away,body[data-ff-status-attack-enabled=true] li[id^=icon][id*=-profile-].user-status-16-Offline,body[data-ff-status-attack-enabled=true] #profile-mini-root li[id^=icon][id*=-mini-profile-].user-status-16-Online,body[data-ff-status-attack-enabled=true] #profile-mini-root li[id^=icon][id*=-mini-profile-].user-status-16-Away,body[data-ff-status-attack-enabled=true] #profile-mini-root li[id^=icon][id*=-mini-profile-].user-status-16-Offline,body[data-ff-status-attack-enabled=true] li[id^=icon][id*=___].iconShow.ffscouter-forum-status,body[data-ff-status-attack-enabled=true] .status>[class$=-status],body[data-ff-status-attack-enabled=true] .left-side ul.singleicon li[id^=icon][id*=___].iconShow,body[data-ff-status-attack-enabled=true] .user-info-list-wrap ul.singleicon li[id^=icon][id*=___].iconShow,body[data-ff-status-attack-enabled=true] [class*=dataGridRow__] [class*=status__]>span{cursor:crosshair!important}body[data-ff-status-attack-enabled=true] [class*=dataGridRow__] ul#iconTray li[id^=icon][id*=___].iconShow:has(>a[aria-label=Online]){cursor:crosshair!important}body[data-ff-status-attack-enabled=true] [class*=dataGridRow__] ul#iconTray li[id^=icon][id*=___].iconShow:has(>a[aria-label=Idle]){cursor:crosshair!important}body[data-ff-status-attack-enabled=true] [class*=dataGridRow__] ul#iconTray li[id^=icon][id*=___].iconShow:has(>a[aria-label=Offline]){cursor:crosshair!important}body[data-ff-status-attack-enabled=true] [class*=userStatusWrap__]{position:relative}body[data-ff-status-attack-enabled=true] [class*=userStatusWrap__]:after{content:\"\";position:absolute;inset:-3px}.d .job-lists-wrap .item>li.company,.d .job-lists-wrap .item>li.director,.d .job-lists-wrap .item>li.salary,.d .job-lists-wrap .item>li.ranks{margin-bottom:0!important;padding-bottom:0!important}.d .users-list.links .user-wrap.ffscouter-gauge{margin-top:0!important;margin-bottom:0!important;padding-top:0!important;padding-bottom:0!important}");
+	_css(".ffscouter-gauge{padding:0;display:block;position:relative}.ffscouter-arrow,.ffscouter-preview-arrow{width:var(--ffscouter-arrow-width);object-fit:cover;pointer-events:none}.ffscouter-arrow{padding:0;display:block}.ffscouter-preview-arrow{vertical-align:middle;display:inline-block}.ffscouter-marker-wrapper{pointer-events:none;transform:translate(var(--ffscouter-marker-tx,-50%), var(--ffscouter-marker-ty,-30%));z-index:10;line-height:0;display:inline-block;position:absolute}.ffscouter-gauge[data-ffscouter-band-side=left]>.ffscouter-marker-wrapper{left:calc(var(--ffscouter-marker-actual-width,var(--ffscouter-arrow-width)) / 2 + var(--band-percent) * ( 100% - var(--ffscouter-marker-actual-width,var(--ffscouter-arrow-width)) ) / 100);--ffscouter-marker-tx:-50%}.ffscouter-gauge[data-ffscouter-band-side=right]>.ffscouter-marker-wrapper{right:calc(var(--ffscouter-marker-actual-width,var(--ffscouter-arrow-width)) / 2 + (100 - var(--band-percent)) * ( 100% - var(--ffscouter-marker-actual-width,var(--ffscouter-arrow-width)) ) / 100 + .35 * var(--ffscouter-source-marker-size));--ffscouter-marker-tx:50%}.ffscouter-gauge[data-ffscouter-attach-mode=honor-bar]>.ffscouter-marker-wrapper{--ffscouter-marker-ty:-30%;top:0}.ffscouter-gauge[data-ffscouter-attach-mode=fallback]>.ffscouter-marker-wrapper{--ffscouter-marker-ty:0%;margin:auto 0;top:0;bottom:0}.ffscouter-bubble,.ffscouter-preview-bubble{min-width:2.5882em;height:1.6471em;line-height:1.4118;font-size:var(--ffscouter-bubble-font-size);text-align:center;box-sizing:border-box;white-space:nowrap;text-shadow:0 1px 1px #00000080;border:1px solid #0006;border-radius:999px;justify-content:center;align-items:center;padding:0 .4706em;font-family:Geneva,Arial,sans-serif;font-weight:700;display:inline-flex;box-shadow:0 1px 2px #0000004d}.ffscouter-bubble{pointer-events:none}.ffscouter-preview-bubble{vertical-align:middle}.ffscouter-source-marker{top:calc(-.35 * var(--ffscouter-source-marker-size));right:calc(-.35 * var(--ffscouter-source-marker-size));width:var(--ffscouter-source-marker-size);height:var(--ffscouter-source-marker-size);pointer-events:auto;position:absolute;overflow:visible}.ffscouter-preview-marker-slot{display:inline-block;position:relative}.ffscouter-inline-source-marker{float:none!important;vertical-align:middle!important;width:16px!important;height:16px!important;margin:0 0 0 4px!important;display:inline-block!important;position:static!important}.ffscouter-marker-preview{--ffscouter-arrow-width:calc(20px * var(--ffscouter-marker-scale));--ffscouter-bubble-font-size:calc(8.5px * var(--ffscouter-marker-scale));--ffscouter-source-marker-size:calc(12px * var(--ffscouter-marker-scale));align-items:center;gap:10px;display:inline-flex}.ffscouter-mini-desc{padding:0 5px}.ffscouter-swatch-row{gap:3px;display:inline-flex}.ffscouter-swatch{width:20px;height:13px;display:inline-block}body{--ffscouter-bg-color:#f0f0f0;--ffscouter-alt-bg-color:#fff;--ffscouter-border-color:#ccc;--ffscouter-input-color:#ccc;--ffscouter-text-color:#000;--ffscouter-hover-color:#ddd;--ffscouter-glow-color:#4caf50;--ffscouter-success-color:#4caf50;--ffscouter-status-okay-color:#2e7d32;--ffscouter-status-out-color:#c62828;--ffscouter-status-away-color:#1565c0;--ffscouter-marker-scale:1;--ffscouter-arrow-width:calc(20px * var(--ffscouter-marker-scale));--ffscouter-bubble-font-size:calc(8.5px * var(--ffscouter-marker-scale));--ffscouter-source-marker-size:calc(12px * var(--ffscouter-marker-scale));--ffscouter-stat-badge-outline-color:#fff}body.dark-mode{--ffscouter-bg-color:#333;--ffscouter-alt-bg-color:#383838;--ffscouter-border-color:#444;--ffscouter-input-color:#504f4f;--ffscouter-text-color:#ccc;--ffscouter-hover-color:#555;--ffscouter-glow-color:#4caf50;--ffscouter-success-color:#4caf50;--ffscouter-status-okay-color:#81c784;--ffscouter-status-out-color:#ef7070;--ffscouter-status-away-color:#64b5f6;--ffscouter-stat-badge-outline-color:#000}ff-settings-panel{display:block}.profile-status{position:relative}.ff-flight-element{z-index:2;position:absolute;bottom:2px;right:10px}.ff-scouter-profile-flight-info{text-align:right;color:#fff;text-shadow:0 1px 2px #000000d9;font-size:11px;line-height:1.25;display:inline-block}.profile-status .ff-scouter-profile-flight-info a{color:#fff;text-decoration:underline}.ffscouter-cell{cursor:pointer!important;position:relative!important;overflow:visible!important}.faction-war .ffscouter-cell{float:left!important;box-sizing:border-box!important;text-align:center!important;z-index:10!important;border-radius:3px!important;width:32px!important;height:20px!important;margin:7px 4px!important;padding:0!important;font-size:11px!important;font-weight:700!important;line-height:20px!important}.ffscouter-stat-badge{width:12px!important;height:12px!important;color:var(--ffscouter-text-color)!important;pointer-events:none!important;z-index:11!important;position:absolute!important;top:6px!important;overflow:visible!important}.faction-war .ffscouter-stat-badge{top:0!important}.ffscouter-stat-badge path{stroke:var(--ffscouter-stat-badge-outline-color)!important;stroke-width:1px!important;stroke-linejoin:round!important;paint-order:stroke fill!important}.ffscouter-stat-badge--left{left:0!important;transform:translate(-50%,-50%)!important}.ffscouter-stat-badge--right{right:0!important;transform:translate(50%,-50%)!important}.faction-war .ffscouter-header,.table-header .ffscouter-header{float:left!important;text-align:center!important;cursor:pointer!important;background-color:#0000!important;width:38px!important;padding:0!important;font-size:12px!important;font-weight:700!important}:is(.faction-war:has(.ffscouter-header[data-ffscouter-sort]) [class*=sortIcon___]:not(.ffscouter-sort-icon),.members-list:has(.ffscouter-header[data-ffscouter-sort]) [class*=sortIcon___]:not(.ffscouter-sort-icon)){visibility:hidden!important}[data-ffscouter-hidden],.faction-war[data-ffscouter-hide-level=true] .level:not(.ffscouter-cell):not(.ffscouter-header),.faction-war[data-ffscouter-hide-status=true] .status,.faction-war[data-ffscouter-hide-score=true] .points{display:none!important}.faction-war[data-ffscouter-col-display=fair_fight]:not([data-ffscouter-hide-level=true]) .level:not(.ffscouter-cell):not(.ffscouter-header),.faction-war[data-ffscouter-col-display=battle_stats]:not([data-ffscouter-hide-level=true]) .level:not(.ffscouter-cell):not(.ffscouter-header){width:29px!important}.faction-war[data-ffscouter-col-display=fair_fight]:not([data-ffscouter-hide-level=true]) .status,.faction-war[data-ffscouter-col-display=battle_stats]:not([data-ffscouter-hide-level=true]) .status{width:50px!important}.faction-war[data-ffscouter-col-display=fair_fight]:not([data-ffscouter-hide-level=true]) .points,.faction-war[data-ffscouter-col-display=battle_stats]:not([data-ffscouter-hide-level=true]) .points{width:38px!important}.members-list[data-ffscouter-col-display=fair_fight] .table-cell.position,.members-list[data-ffscouter-col-display=battle_stats] .table-cell.position{width:15%!important}@media (width>=784px){.members-list[data-ffscouter-col-display=fair_fight] .table-cell.position,.members-list[data-ffscouter-col-display=battle_stats] .table-cell.position{width:10%!important}}:is(.members-list li.enemy:has(>.tt-stats-estimate),.members-list li.your:has(>.tt-stats-estimate),.members-list li.enemy:has(>div.clear~*),.members-list li.your:has(>div.clear~*)){padding-bottom:22px!important;position:relative!important}.members-list li.enemy>.tt-stats-estimate,.members-list li.your>.tt-stats-estimate,.members-list li.enemy>div.clear~*,.members-list li.your>div.clear~*{white-space:nowrap;text-overflow:ellipsis;overflow:hidden;width:calc(100% - 20px)!important;height:18px!important;font-size:11px!important;line-height:18px!important;display:block!important;position:absolute!important;bottom:2px!important;left:10px!important}body[data-ff-status-attack-enabled=true] [class*=userStatusWrap__],body[data-ff-status-attack-enabled=true] li[id^=icon][id*=-profile-].user-status-16-Online,body[data-ff-status-attack-enabled=true] li[id^=icon][id*=-profile-].user-status-16-Away,body[data-ff-status-attack-enabled=true] li[id^=icon][id*=-profile-].user-status-16-Offline,body[data-ff-status-attack-enabled=true] #profile-mini-root li[id^=icon][id*=-mini-profile-].user-status-16-Online,body[data-ff-status-attack-enabled=true] #profile-mini-root li[id^=icon][id*=-mini-profile-].user-status-16-Away,body[data-ff-status-attack-enabled=true] #profile-mini-root li[id^=icon][id*=-mini-profile-].user-status-16-Offline,body[data-ff-status-attack-enabled=true] li[id^=icon][id*=___].iconShow.ffscouter-forum-status,body[data-ff-status-attack-enabled=true] .status>[class$=-status],body[data-ff-status-attack-enabled=true] .left-side ul.singleicon li[id^=icon][id*=___].iconShow,body[data-ff-status-attack-enabled=true] .user-info-list-wrap ul.singleicon li[id^=icon][id*=___].iconShow,body[data-ff-status-attack-enabled=true] [class*=dataGridRow__] [class*=status__]>span{cursor:crosshair!important}body[data-ff-status-attack-enabled=true] [class*=dataGridRow__] ul#iconTray li[id^=icon][id*=___].iconShow:has(>a[aria-label=Online]){cursor:crosshair!important}body[data-ff-status-attack-enabled=true] [class*=dataGridRow__] ul#iconTray li[id^=icon][id*=___].iconShow:has(>a[aria-label=Idle]){cursor:crosshair!important}body[data-ff-status-attack-enabled=true] [class*=dataGridRow__] ul#iconTray li[id^=icon][id*=___].iconShow:has(>a[aria-label=Offline]){cursor:crosshair!important}body[data-ff-status-attack-enabled=true] [class*=userStatusWrap__]{position:relative}body[data-ff-status-attack-enabled=true] [class*=userStatusWrap__]:after{content:\"\";position:absolute;inset:-3px}.d .job-lists-wrap .item>li.company,.d .job-lists-wrap .item>li.director,.d .job-lists-wrap .item>li.salary,.d .job-lists-wrap .item>li.ranks{margin-bottom:0!important;padding-bottom:0!important}.d .users-list.links .user-wrap.ffscouter-gauge{margin-top:0!important;margin-bottom:0!important;padding-top:0!important;padding-bottom:0!important}a.user.faction img{will-change:transform}");
 	init_logger();
 	var log = logger_default.child("boot");
 	var INJECTION_KEY = "__FF_SCOUTER_V2_INJECTED__";
@@ -11137,7 +11327,7 @@
 			return;
 		}
 		document.documentElement.setAttribute(INJECTION_KEY, "1");
-		log.info("Initializing", "3.5-beta3");
+		log.info("Initializing", "3.5-beta4");
 		run_migration();
 		if (ffscouter.analytics_enabled) {
 			if (typeof unsafeWindow !== "undefined") unsafeWindow.ffscouter = ffscouter;
