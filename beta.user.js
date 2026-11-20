@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FF Scouter V2 beta
 // @namespace    xentac-beta
-// @version      3.5-beta4
+// @version      3.6-beta1
 // @author       xentac [3354782], MAVRI [2402357], rDacted [2670953], Weav3r [1853324], Glasnost [1844049]
 // @description  Shows the expected Fair Fight score against targets and faction war status
 // @license      GPLv3
@@ -26,7 +26,7 @@
 			(document.head || document.documentElement).appendChild(style);
 		})(t);
 	};
-	_css(" ._ffscouter-attack-bounty-row_60dre_2{flex-wrap:wrap;align-items:center;gap:6px;margin-top:4px;font-size:12px;display:flex}._ffscouter-attack-bounty-row__label_60dre_11{font-weight:700}._ffscouter-attack-bounty-row__claim_60dre_15{background-color:var(--ffscouter-alt-bg-color);color:var(--ffscouter-text-color);border:1px solid var(--ffscouter-border-color);cursor:pointer;border-radius:3px;padding:2px 8px;font-size:12px}._ffscouter-attack-bounty-row__claim_60dre_15:disabled{opacity:.6;cursor:default}._ffscouter-info-line__label_aofgj_1{margin-right:6px;font-weight:700}._ffscouter-info-line__badge_aofgj_8{border-radius:4px;padding:2px 6px;font-weight:700;display:inline-block}._ffscouter-info-line__premium-upgrade_aofgj_15{white-space:nowrap;margin-top:4px;font-size:12px;font-style:normal;line-height:1.3;display:block}@media (width<=768px){._ffscouter-info-line__premium-upgrade_aofgj_15{white-space:normal;overflow-wrap:anywhere;margin-top:6px;line-height:1.35}}._ffscouter-info-line__freshness-trigger_aofgj_44{appearance:none!important;box-shadow:none!important;width:auto!important;min-width:0!important;min-height:0!important;font:inherit!important;color:inherit!important;text-transform:none!important;cursor:pointer!important;vertical-align:baseline!important;text-underline-offset:2px!important;background:0 0!important;border:none!important;margin:0!important;padding:0!important;-webkit-text-decoration:underline dotted!important;text-decoration:underline dotted!important;display:inline!important}._ffscouter-explainer-glyph_aofgj_64{appearance:none!important;box-shadow:none!important;vertical-align:middle!important;cursor:pointer!important;background:0 0!important;border:none!important;width:auto!important;min-width:0!important;min-height:0!important;margin:0 0 0 6px!important;padding:0!important;line-height:1!important;display:inline-flex!important}._ffscouter-explainer-glyph_aofgj_64 svg{width:14px!important;height:14px!important}._ffscouter-explainer-card_aofgj_90{background:var(--ffscouter-alt-bg-color)!important;border:1px solid var(--ffscouter-border-color)!important;color:var(--ffscouter-text-color)!important;text-align:left!important;border-radius:6px!important;margin:6px 0 0!important;padding:10px 30px 10px 12px!important;font-size:12px!important;font-style:normal!important;font-weight:400!important;line-height:1.5!important;display:block!important;position:relative!important}._ffscouter-explainer-card_aofgj_90 p{float:none!important;margin:0 0 8px!important;padding:0!important;display:block!important}._ffscouter-explainer-card_aofgj_90 p:last-child{margin-bottom:0!important}._ffscouter-explainer-card_aofgj_90 p:before,._ffscouter-explainer-card_aofgj_90 p:after{content:none!important}._ffscouter-explainer-card_aofgj_90 a{font:inherit!important;color:inherit!important;background:0 0!important;margin:0!important;padding:0!important;text-decoration:underline!important;display:inline!important;position:static!important}._ffscouter-explainer-card__close_aofgj_140{appearance:none!important;box-shadow:none!important;cursor:pointer!important;width:auto!important;min-width:0!important;min-height:0!important;color:inherit!important;background:0 0!important;border:none!important;margin:0!important;padding:4px!important;font-size:14px!important;line-height:1!important;position:absolute!important;top:2px!important;right:4px!important}@media (width<=784px){._ffscouter-explainer-card_aofgj_90{font-size:13px!important;line-height:1.55!important}}._ff-bounty-modal_1r3gd_5,._ff-bounty-modal_1r3gd_5 *,._ff-bounty-modal_1r3gd_5 :before,._ff-bounty-modal_1r3gd_5 :after{box-sizing:border-box}._ff-bounty-modal_1r3gd_5{z-index:9999;background-color:var(--ffscouter-bg-color);width:420px;max-width:calc(100vw - 32px);max-height:70vh;color:var(--ffscouter-text-color);border:1px solid var(--ffscouter-border-color);border-radius:8px;flex-direction:column;font-family:Arial,sans-serif;font-size:13px;display:flex;position:fixed;box-shadow:0 4px 16px #0000004d}._ff-bounty-modal__header_1r3gd_30{background-color:var(--ffscouter-alt-bg-color);border-bottom:1px solid var(--ffscouter-border-color);border-radius:7px 7px 0 0;justify-content:space-between;align-items:center;gap:8px;padding:8px 12px;display:flex}._ff-bounty-modal__header--drag_1r3gd_43{cursor:move;touch-action:none;-webkit-user-select:none;user-select:none}._ff-bounty-modal--minimized_1r3gd_49 ._ff-bounty-modal__header_1r3gd_30{border-bottom:none;border-radius:7px}._ff-bounty-modal--in-flow_1r3gd_57{z-index:auto;width:auto;max-width:100%;box-shadow:none;margin-bottom:10px;position:static}._ff-bounty-modal__header_1r3gd_30 ._ff-bounty-modal__title_1r3gd_67{margin:0;font-size:14px;font-weight:700}._ff-bounty-modal__header-btn_1r3gd_73{color:inherit;cursor:pointer;background:0 0;border:none;padding:0 4px;font-size:16px;font-weight:700;line-height:1}._ff-bounty-modal__body_1r3gd_84{padding:8px 12px 12px;overflow-y:auto}._ff-bounty-modal__notice_1r3gd_89{margin:4px 0;line-height:1.4}._ff-bounty-modal__notice_1r3gd_89 a{color:inherit;font-weight:700;text-decoration:underline}._ff-bounty-modal__primary-btn_1r3gd_100{background-color:var(--ffscouter-alt-bg-color);color:var(--ffscouter-text-color);border:1px solid var(--ffscouter-border-color);cursor:pointer;border-radius:4px;margin-top:8px;padding:6px 10px;font-size:13px;font-weight:700}._ff-bounty-modal__primary-btn_1r3gd_100:disabled{opacity:.6;cursor:default}._ff-bounty-modal__filters_1r3gd_117{flex-wrap:wrap;gap:8px;margin-bottom:8px;display:flex}._ff-bounty-modal__filter_1r3gd_117{align-items:center;gap:4px;display:flex}._ff-bounty-modal__filter_1r3gd_117 input{background-color:var(--ffscouter-alt-bg-color);width:70px;color:var(--ffscouter-text-color);border:1px solid var(--ffscouter-input-color);border-radius:3px;padding:2px 4px;font-size:13px}._ff-bounty-modal__filter_1r3gd_117 input[type=checkbox]{width:auto;padding:0}._ff-bounty-modal__list_1r3gd_145,._ff-bounty-modal__member-list_1r3gd_146,._ff-bounty-modal__tier-ladder_1r3gd_147{margin:0;padding:0;list-style:none}._ff-bounty-modal__row_1r3gd_153,._ff-bounty-modal__faction-card_1r3gd_154{border-top:1px solid var(--ffscouter-border-color);padding:4px 0}._ff-bounty-modal__row-main_1r3gd_159,._ff-bounty-modal__faction-header_1r3gd_160{align-items:center;gap:6px;display:flex}._ff-bounty-modal__faction-header_1r3gd_160{width:100%;color:inherit;text-align:left;cursor:pointer;background:0 0;border:none;padding:2px 0;font-size:13px}._ff-bounty-modal__member-list_1r3gd_146{margin-left:12px}._ff-bounty-modal__name_1r3gd_181{text-overflow:ellipsis;white-space:nowrap;min-width:0;color:inherit;flex:auto;font-weight:700;overflow:hidden}._ff-bounty-modal__status_1r3gd_192{white-space:nowrap;flex:none;font-size:12px}._ff-bounty-modal__status--okay_1r3gd_198{color:var(--ffscouter-status-okay-color)}._ff-bounty-modal__status--out_1r3gd_202{color:var(--ffscouter-status-out-color)}._ff-bounty-modal__status--away_1r3gd_206{color:var(--ffscouter-status-away-color)}._ff-bounty-modal__estimate_1r3gd_210{text-align:center;background-color:var(--ffscouter-alt-bg-color);border-radius:4px;flex:none;min-width:44px;padding:1px 6px;font-weight:700}._ff-bounty-modal__tier-label_1r3gd_220,._ff-bounty-modal__tier-toggle_1r3gd_221,._ff-bounty-modal__pool_1r3gd_222{white-space:nowrap;flex:none}._ff-bounty-modal__tier-toggle_1r3gd_221{color:inherit;cursor:pointer;background:0 0;border:none;padding:0;font-size:13px}._ff-bounty-modal__tier-ladder_1r3gd_147{margin:2px 0 2px 12px;font-size:12px}._ff-bounty-modal__action_1r3gd_241{background-color:var(--ffscouter-alt-bg-color);color:var(--ffscouter-text-color);border:1px solid var(--ffscouter-border-color);cursor:pointer;border-radius:3px;flex:none;padding:2px 6px;font-size:12px}._ff-bounty-modal--own_1r3gd_252{opacity:.6}._ff-bounty-modal--own_1r3gd_252 ._ff-bounty-modal--own_1r3gd_252{opacity:1}._ff-bounty-modal__own-label_1r3gd_262{margin-top:2px;font-size:12px;font-style:italic;font-weight:700}._ff-bounty-modal__action_1r3gd_241:disabled{opacity:.6;cursor:default}._ff-bounty-launcher_1r3gd_276{z-index:9999;box-sizing:border-box;background-color:var(--ffscouter-alt-bg-color);width:40px;height:40px;color:var(--ffscouter-text-color);border:1px solid var(--ffscouter-border-color);cursor:pointer;touch-action:none;-webkit-user-select:none;user-select:none;border-radius:8px;padding:0;font-family:Arial,sans-serif;font-size:11px;font-weight:700;position:fixed;box-shadow:0 4px 16px #0000004d}._ff-filter-box_zoxj6_1,._ff-filter-box_zoxj6_1 *,._ff-filter-box_zoxj6_1 :before,._ff-filter-box_zoxj6_1 :after{box-sizing:border-box!important}._ff-filter-box_zoxj6_1{background-color:var(--ffscouter-bg-color);border:1px solid var(--ffscouter-border-color);color:var(--ffscouter-text-color);border-radius:8px;margin-bottom:16px;padding:12px 16px;font-family:Arial,sans-serif;box-shadow:0 2px 5px #0000000d}._ff-filter-box_zoxj6_1._ff-filter-box--no-borders_zoxj6_19{background-color:var(--default-bg-panel-color);border-top:1px solid var(--ffscouter-border-color);border-bottom:1px solid var(--ffscouter-border-color);box-shadow:none;border-left:none;border-right:none;border-radius:0;margin:0;padding:12px 10px}._ff-filter-box_zoxj6_1 summary{cursor:pointer;-webkit-user-select:none;user-select:none;outline:none;font-size:14px;font-weight:700}._ff-filter-box_zoxj6_1[open] summary{border-bottom:1px solid var(--ffscouter-border-color);margin-bottom:12px;padding-bottom:6px}._ff-filter-box_zoxj6_1 summary:focus-visible{outline:2px solid var(--ffscouter-glow-color);outline-offset:2px}._ff-filter-box__header_zoxj6_52{vertical-align:middle;justify-content:space-between;align-items:center;width:calc(100% - 24px);display:inline-flex}._ff-filter-box__header-actions_zoxj6_60{align-items:center;gap:6px;display:flex}._ff-filter-box_zoxj6_1 ._ff-filter-box__action-btn_zoxj6_66{background:var(--ffscouter-alt-bg-color);border:1px solid var(--ffscouter-border-color);color:var(--ffscouter-text-color);cursor:pointer;border-radius:4px;justify-content:center;align-items:center;width:24px;height:24px;padding:0;transition:background-color .2s,color .2s,opacity .2s;display:inline-flex}._ff-filter-box_zoxj6_1 ._ff-filter-box__action-btn_zoxj6_66:hover{background-color:var(--ffscouter-hover-color)}._ff-filter-box_zoxj6_1 ._ff-filter-box__action-btn_zoxj6_66._ff-filter-box__action-btn--active_zoxj6_88{color:var(--ffscouter-text-color);opacity:1}._ff-filter-box_zoxj6_1 ._ff-filter-box__action-btn_zoxj6_66._ff-filter-box__action-btn--inactive_zoxj6_93{color:var(--ffscouter-text-color);opacity:.4}._ff-filter-box_zoxj6_1 ._ff-filter-box__action-btn_zoxj6_66 svg{fill:currentColor;width:14px;height:14px}._ff-filter-box_zoxj6_1 ._ff-filter-box__action-btn_zoxj6_66._ff-filter-box__action-btn--reset_zoxj6_104 svg{transition:transform .25s ease-in-out}._ff-filter-box_zoxj6_1 ._ff-filter-box__action-btn_zoxj6_66._ff-filter-box__action-btn--reset_zoxj6_104:hover svg{transform:rotate(-180deg)}._ff-filter-box__grid_zoxj6_114{grid-template-columns:repeat(2,1fr);gap:12px;margin-top:12px;display:grid}._ff-filter-box__group--sort_zoxj6_121{order:1}._ff-filter-box__group--level_zoxj6_125{order:2}._ff-filter-box__group--activity_zoxj6_129{order:3}._ff-filter-box__group--status_zoxj6_133{order:4}._ff-filter-box__group--ff_zoxj6_137{order:5}._ff-filter-box__group--stats_zoxj6_141{order:6}._ff-filter-box__group--last-action_zoxj6_145{order:7}._ff-filter-box__group--columns_zoxj6_149{order:8}@media (width>=784px){._ff-filter-box__grid_zoxj6_114{grid-template-columns:repeat(3,1fr)}._ff-filter-box__grid_zoxj6_114>*{order:0}}._ff-filter-box__group_zoxj6_121{flex-direction:column;gap:2px;display:flex}._ff-filter-box__sort-controls_zoxj6_171{flex-direction:column;gap:8px;display:flex}._ff-filter-box__sort-controls_zoxj6_171 ._ff-filter-box__sort-btn_zoxj6_177{width:100%}._ff-filter-box__sort-controls_zoxj6_171 ._ff-filter-box__compare-btn_zoxj6_181{width:100%;height:32px}._ff-filter-box__display-select_zoxj6_186{border:1px solid var(--ffscouter-border-color);background:var(--ffscouter-alt-bg-color);color:var(--ffscouter-text-color);cursor:pointer;border-radius:4px;height:32px;padding:4px;font-size:11px}._ff-filter-box__options_zoxj6_197{flex-direction:column;display:flex}._ff-filter-box__options_zoxj6_197 label{cursor:pointer;align-items:center;gap:6px;font-size:12px;display:flex}._ff-filter-box__option--out-soon_zoxj6_212{margin-left:16px}._ff-filter-box__sr-only_zoxj6_218{clip:rect(0, 0, 0, 0);white-space:nowrap;border:0;width:1px;height:1px;margin:-1px;padding:0;position:absolute;overflow:hidden}._ff-filter-box__range-inputs_zoxj6_230{align-items:center;gap:4px;display:flex}._ff-filter-box__range-inputs_zoxj6_230 input{border:1px solid var(--ffscouter-border-color);background:var(--ffscouter-alt-bg-color);width:0;min-width:30px;max-width:80px;color:var(--ffscouter-text-color);text-align:center;border-radius:4px;flex:1;padding:4px;font-size:11px}._ff-filter-box_zoxj6_1 button{border:1px solid var(--ffscouter-border-color);background:var(--ffscouter-alt-bg-color);color:var(--ffscouter-text-color);cursor:pointer;border-radius:4px;justify-content:center;align-items:center;gap:6px;padding:6px 10px;font-size:12px;transition:background-color .2s;display:inline-flex}._ff-filter-box_zoxj6_1 button:hover{background-color:var(--ffscouter-hover-color)}._ff-od-insurance__row-btn_1yru3_6{vertical-align:middle;background:var(--ffscouter-alt-bg-color);color:var(--ffscouter-text-color);border:1px solid var(--ffscouter-glow-color);white-space:nowrap;cursor:pointer;border-radius:4px;margin-left:8px;padding:1px 6px;font-family:Arial,sans-serif;font-size:11px;font-weight:700;line-height:16px}._ff-od-insurance__row-btn_1yru3_6:hover{background:var(--ffscouter-hover-color)}._ff-od-insurance__row-btn-full_1yru3_29{display:none}@media (width>=784px){._ff-od-insurance__row-btn-full_1yru3_29{display:inline}._ff-od-insurance__row-btn-short_1yru3_38{display:none}}._ff-od-insurance__overlay_1yru3_43{z-index:10000;box-sizing:border-box;background:#0000008c;justify-content:center;align-items:center;padding:16px 10px 48px;display:flex;position:fixed;inset:0}._ff-od-insurance_1yru3_6,._ff-od-insurance_1yru3_6 *,._ff-od-insurance_1yru3_6 :before,._ff-od-insurance_1yru3_6 :after{box-sizing:border-box}._ff-od-insurance_1yru3_6{background:var(--ffscouter-bg-color);width:420px;max-width:calc(100vw - 20px);height:480px;max-height:100%;color:var(--ffscouter-text-color);border:1px solid var(--ffscouter-border-color);border-radius:8px;flex-direction:column;margin:0;padding:0;font-family:Arial,sans-serif;font-size:13px;display:flex;position:static;box-shadow:0 4px 16px #0006}._ff-od-insurance_1yru3_6 a{color:inherit;font-weight:700}._ff-od-insurance__header_1yru3_90{background:var(--ffscouter-alt-bg-color);border-bottom:1px solid var(--ffscouter-border-color);border-radius:7px 7px 0 0;justify-content:space-between;align-items:center;gap:8px;padding:8px 12px;display:flex}._ff-od-insurance__title_1yru3_101{margin:0;font-size:14px;font-weight:700;line-height:1.2}._ff-od-insurance__sub_1yru3_108{opacity:.75;margin-top:1px;font-size:11px}._ff-od-insurance__close_1yru3_114{color:inherit;cursor:pointer;background:0 0;border:none;flex:none;padding:2px 6px;font-size:18px;font-weight:700;line-height:1}._ff-od-insurance__body_1yru3_126{flex:1;padding:8px 12px 12px;overflow-y:auto}._ff-od-insurance__intro_1yru3_132{margin:4px 0 8px;line-height:1.4}._ff-od-insurance__plan_1yru3_138{background:var(--ffscouter-alt-bg-color);min-width:0;color:var(--ffscouter-text-color);border:1px solid var(--ffscouter-border-color);border-radius:6px;margin:0 0 8px;padding:0}._ff-od-insurance__plan-open_1yru3_148{text-align:left;width:100%;color:inherit;font:inherit;cursor:pointer;background:0 0;border:none;border-radius:6px 6px 0 0;margin:0;padding:8px 10px;display:block}._ff-od-insurance__plan-open_1yru3_148:hover{background:var(--ffscouter-hover-color)}._ff-od-insurance__pick_1yru3_166{border-top:1px solid var(--ffscouter-border-color);flex-wrap:wrap;align-items:center;gap:6px 10px;padding:6px 10px 4px;font-size:12px;display:flex}._ff-od-insurance__multiplier_1yru3_176{background:var(--ffscouter-bg-color);width:4em;color:var(--ffscouter-text-color);border:1px solid var(--ffscouter-border-color);font:inherit;border-radius:3px;padding:2px 4px}._ff-od-insurance__button_1yru3_186:disabled{cursor:not-allowed;opacity:.5}._ff-od-insurance__plan-name_1yru3_191{font-weight:700;line-height:1.3;display:block}._ff-od-insurance__plan-meta_1yru3_197{margin-top:2px;font-size:12px;line-height:1.4;display:block}._ff-od-insurance__button_1yru3_186{background:var(--ffscouter-alt-bg-color);color:var(--ffscouter-text-color);border:1px solid var(--ffscouter-border-color);cursor:pointer;border-radius:4px;margin:0 0 4px;padding:3px 10px;font-size:12px;font-weight:700}._ff-od-insurance__row_1yru3_6{flex-wrap:wrap;align-items:baseline;gap:6px;margin:4px 0;line-height:1.4;display:flex}._ff-od-insurance__row-label_1yru3_225{flex:none;font-weight:700}._ff-od-insurance__code_1yru3_231{background:var(--ffscouter-alt-bg-color);border:1px solid var(--ffscouter-border-color);overflow-wrap:anywhere;-webkit-user-select:all;user-select:all;border-radius:3px;padding:1px 5px;font-family:monospace}._ff-od-insurance__copy-status_1yru3_242{-webkit-user-select:text;user-select:text;font-size:12px}._ff-od-insurance__note_1yru3_248{margin:8px 0 0;font-size:12px;line-height:1.4}._ff-od-insurance__footer_1yru3_254{opacity:.75;margin-top:10px;font-size:11px;line-height:1.4}._ff-od-insurance__hide_1yru3_261{background:var(--ffscouter-alt-bg-color);color:var(--ffscouter-text-color);border:1px solid var(--ffscouter-glow-color);cursor:pointer;border-radius:4px;margin-top:6px;padding:2px 8px;font-size:11px}._ff-od-insurance__hide_1yru3_261:hover{background:var(--ffscouter-hover-color)}._ff-od-helper_1yru3_278{z-index:9999;max-width:calc(100vw - 16px);color:var(--ffscouter-text-color);font-family:Arial,sans-serif;font-size:12px;position:fixed}._ff-od-helper__bar_1yru3_287{background:var(--ffscouter-bg-color);border:1px solid var(--ffscouter-glow-color);border-radius:6px;align-items:stretch;display:flex;overflow:hidden;box-shadow:0 2px 8px #0006}._ff-od-helper_1yru3_278[data-problem=true] ._ff-od-helper__bar_1yru3_287{border-color:#c0392b}._ff-od-helper__grip_1yru3_301,._ff-od-helper__press_1yru3_302,._ff-od-helper__icon_1yru3_303{color:inherit;font:inherit;cursor:pointer;background:0 0;border:none;margin:0;padding:6px 8px}._ff-od-helper__grip_1yru3_301{cursor:grab;touch-action:none;opacity:.7}._ff-od-helper__press_1yru3_302{text-align:left;overflow-wrap:anywhere;background:var(--ffscouter-alt-bg-color);flex:1;min-width:0;font-weight:700}._ff-od-helper__press_1yru3_302:hover,._ff-od-helper__icon_1yru3_303:hover{background:var(--ffscouter-hover-color)}._ff-od-helper__icon_1yru3_303{font-weight:700}._ff-od-helper__steps_1yru3_338{background:var(--ffscouter-bg-color);border:1px solid var(--ffscouter-border-color);border-radius:6px;margin:0 0 4px;padding:6px 10px;line-height:1.6;list-style:none}._ff-od-helper__current_1yru3_348{font-weight:700}._ff-settings-panel__accordion_6bhvd_1{background-color:var(--ffscouter-bg-color);border:1px solid var(--ffscouter-border-color);color:var(--ffscouter-text-color);border-radius:5px;margin:10px 0;padding:15px}._ff-settings-panel__accordion_6bhvd_1._ff-settings-panel__accordion--glow_6bhvd_10{border-color:var(--ffscouter-glow-color);box-shadow:0 0 8px #4caf5080}._ff-settings-panel__accordion_6bhvd_1 summary{cursor:pointer;font-weight:700}._ff-settings-panel__body_6bhvd_20{margin-top:15px}._ff-settings-panel__input-row_6bhvd_24{flex-direction:column;gap:5px;margin-bottom:15px;display:flex}._ff-settings-panel__range-row_6bhvd_32{align-items:center;gap:10px;display:flex}._ff-settings-panel__blur_6bhvd_38{filter:blur(4px);transition:filter .2s}._ff-settings-panel__blur_6bhvd_38:hover,._ff-settings-panel__blur_6bhvd_38:focus{filter:blur()}._ff-settings-panel__error-msg_6bhvd_48{color:#f33;margin-top:5px;font-size:13px}._ff-settings-panel__accordion_6bhvd_1 input[type=text],._ff-settings-panel__accordion_6bhvd_1 input[type=number]{text-align:left;vertical-align:top;width:178px;margin-right:8px;padding:9px 10px;line-height:14px;display:inline-block;box-sizing:border-box!important;height:34px!important}._ff-settings-panel__accordion_6bhvd_1 input[type=number]._ff-settings-panel__number_6bhvd_67{width:80px}._ff-settings-panel__accordion_6bhvd_1 select{box-sizing:border-box;text-align:left;vertical-align:top;border:var(--input-border-color,1px solid var(--ffscouter-border-color));width:178px;height:34px;color:var(--input-color,var(--ffscouter-text-color));background:var(--input-background-color,var(--ffscouter-alt-bg-color));border-radius:5px;margin-right:8px;padding:8px 10px;font-family:Arial,serif;line-height:14px;display:inline-block}.dark-mode ._ff-settings-panel__accordion_6bhvd_1 select option{color:var(--input-color);background-color:#000}._ff-settings-panel__api-explanation_6bhvd_94{color:var(--ffscouter-text-color);margin-bottom:20px;font-size:13px;line-height:1.5}._ff-settings-panel__accordion_6bhvd_1 a{color:var(--ffscouter-success-color);text-decoration:underline}._ff-settings-panel__premium-badge_6bhvd_107{color:#fff;vertical-align:middle;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:700;display:inline-block}._ff-settings-panel__premium-badge--enabled_6bhvd_117{background:#4caf50}._ff-settings-panel__premium-badge--disabled_6bhvd_121{background:#c62828}._ff-settings-panel__premium-badge--unknown_6bhvd_125{background:#f39c12}._ff-settings-panel__section_6bhvd_138{grid-template-columns:1fr;gap:12px;margin-bottom:15px;display:grid}@media (width>=784px){._ff-settings-panel__section_6bhvd_138{grid-template-columns:repeat(3,1fr)}}._ff-settings-panel__span_6bhvd_152{grid-column:1/-1;margin-bottom:0}._ff-settings-panel__cell_6bhvd_160{flex-direction:column;gap:5px;min-width:0;margin-bottom:0;display:flex}._ff-settings-panel__cell_6bhvd_160._ff-settings-panel__cell--checkbox_6bhvd_169{flex-direction:row;align-items:flex-start;gap:10px}._ff-settings-panel__cell_6bhvd_160 input[type=text]{width:100%;margin-right:0}._ff-settings-panel__cell_6bhvd_160 select{width:auto;max-width:100%;margin-right:0}._ff-settings-panel__api-block_6bhvd_193{flex-direction:column;gap:10px;display:flex}._ff-settings-panel__api-block_6bhvd_193 ._ff-settings-panel__cell_6bhvd_160 input[type=text]{max-width:360px}._ff-settings-panel__api-status-row_6bhvd_203{flex-wrap:wrap;align-items:center;gap:10px;display:flex}._ff-settings-panel__chain-suboptions_6bhvd_213{border-left:2px solid var(--ffscouter-border-color);grid-template-columns:repeat(2,1fr);margin-top:10px;padding-left:8px}._ff-settings-panel__chain-suboptions_6bhvd_213 ._ff-settings-panel__chain-wide_6bhvd_218{grid-column:1/-1}@media (width>=784px){._ff-settings-panel__chain-suboptions_6bhvd_213{grid-template-columns:repeat(3,1fr);padding-left:16px}._ff-settings-panel__chain-suboptions_6bhvd_213 ._ff-settings-panel__chain-wide_6bhvd_218{grid-column:auto}}._ff-settings-panel__group_6bhvd_242{background-color:var(--ffscouter-alt-bg-color);border:1px solid var(--ffscouter-border-color);border-radius:5px;margin-bottom:15px;padding:12px}._ff-settings-panel__group_6bhvd_242 h4{margin:0 0 12px}._ff-settings-panel__marker-size_6bhvd_256,._ff-settings-panel__marker-border-width_6bhvd_257{flex-direction:column;gap:5px;display:flex}._ff-settings-panel__marker-size-controls_6bhvd_263{flex-wrap:wrap;align-items:center;gap:10px;display:flex}._ff-settings-panel__marker-size-controls_6bhvd_263 input[type=range]{flex:120px;min-width:120px}._ff-settings-panel__color-scheme_6bhvd_276{flex-direction:column;gap:5px;display:flex}._ff-settings-panel__color-scheme-controls_6bhvd_282{flex-wrap:wrap;align-items:center;gap:10px;display:flex}._ff-settings-panel__accordion_6bhvd_1 .ffscouter-swatch-row{flex-wrap:wrap}._ff-settings-panel__actions_6bhvd_295{flex-wrap:wrap;justify-content:center;align-items:center;gap:10px;margin-top:20px;display:flex}._ff-settings-panel__saved-msg_6bhvd_304{color:#4caf50}\n/*$vite$:1*/ ");
+	_css(" ._ffscouter-attack-bounty-row_60dre_2{flex-wrap:wrap;align-items:center;gap:6px;margin-top:4px;font-size:12px;display:flex}._ffscouter-attack-bounty-row__label_60dre_11{font-weight:700}._ffscouter-attack-bounty-row__claim_60dre_15{background-color:var(--ffscouter-alt-bg-color);color:var(--ffscouter-text-color);border:1px solid var(--ffscouter-border-color);cursor:pointer;border-radius:3px;padding:2px 8px;font-size:12px}._ffscouter-attack-bounty-row__claim_60dre_15:disabled{opacity:.6;cursor:default}._ffscouter-info-line__label_aofgj_1{margin-right:6px;font-weight:700}._ffscouter-info-line__badge_aofgj_8{border-radius:4px;padding:2px 6px;font-weight:700;display:inline-block}._ffscouter-info-line__premium-upgrade_aofgj_15{white-space:nowrap;margin-top:4px;font-size:12px;font-style:normal;line-height:1.3;display:block}@media (width<=768px){._ffscouter-info-line__premium-upgrade_aofgj_15{white-space:normal;overflow-wrap:anywhere;margin-top:6px;line-height:1.35}}._ffscouter-info-line__freshness-trigger_aofgj_44{appearance:none!important;box-shadow:none!important;width:auto!important;min-width:0!important;min-height:0!important;font:inherit!important;color:inherit!important;text-transform:none!important;cursor:pointer!important;vertical-align:baseline!important;text-underline-offset:2px!important;background:0 0!important;border:none!important;margin:0!important;padding:0!important;-webkit-text-decoration:underline dotted!important;text-decoration:underline dotted!important;display:inline!important}._ffscouter-explainer-glyph_aofgj_64{appearance:none!important;box-shadow:none!important;vertical-align:middle!important;cursor:pointer!important;background:0 0!important;border:none!important;width:auto!important;min-width:0!important;min-height:0!important;margin:0 0 0 6px!important;padding:0!important;line-height:1!important;display:inline-flex!important}._ffscouter-explainer-glyph_aofgj_64 svg{width:14px!important;height:14px!important}._ffscouter-explainer-card_aofgj_90{background:var(--ffscouter-alt-bg-color)!important;border:1px solid var(--ffscouter-border-color)!important;color:var(--ffscouter-text-color)!important;text-align:left!important;border-radius:6px!important;margin:6px 0 0!important;padding:10px 30px 10px 12px!important;font-size:12px!important;font-style:normal!important;font-weight:400!important;line-height:1.5!important;display:block!important;position:relative!important}._ffscouter-explainer-card_aofgj_90 p{float:none!important;margin:0 0 8px!important;padding:0!important;display:block!important}._ffscouter-explainer-card_aofgj_90 p:last-child{margin-bottom:0!important}._ffscouter-explainer-card_aofgj_90 p:before,._ffscouter-explainer-card_aofgj_90 p:after{content:none!important}._ffscouter-explainer-card_aofgj_90 a{font:inherit!important;color:inherit!important;background:0 0!important;margin:0!important;padding:0!important;text-decoration:underline!important;display:inline!important;position:static!important}._ffscouter-explainer-card__close_aofgj_140{appearance:none!important;box-shadow:none!important;cursor:pointer!important;width:auto!important;min-width:0!important;min-height:0!important;color:inherit!important;background:0 0!important;border:none!important;margin:0!important;padding:4px!important;font-size:14px!important;line-height:1!important;position:absolute!important;top:2px!important;right:4px!important}@media (width<=784px){._ffscouter-explainer-card_aofgj_90{font-size:13px!important;line-height:1.55!important}}._ff-bounty-modal_13u5t_5,._ff-bounty-modal_13u5t_5 *,._ff-bounty-modal_13u5t_5 :before,._ff-bounty-modal_13u5t_5 :after{box-sizing:border-box}._ff-bounty-modal_13u5t_5{z-index:9999;background-color:var(--ffscouter-bg-color);width:420px;max-width:calc(100vw - 32px);max-height:70vh;color:var(--ffscouter-text-color);border:1px solid var(--ffscouter-border-color);border-radius:8px;flex-direction:column;font-family:Arial,sans-serif;font-size:13px;display:flex;position:fixed;box-shadow:0 4px 16px #0000004d}._ff-bounty-modal__header_13u5t_30{background-color:var(--ffscouter-alt-bg-color);border-bottom:1px solid var(--ffscouter-border-color);border-radius:7px 7px 0 0;justify-content:space-between;align-items:center;gap:8px;padding:8px 12px;display:flex}._ff-bounty-modal__header--drag_13u5t_43{cursor:move;touch-action:none;-webkit-user-select:none;user-select:none}._ff-bounty-modal--minimized_13u5t_49 ._ff-bounty-modal__header_13u5t_30{border-bottom:none;border-radius:7px}._ff-bounty-modal--in-flow_13u5t_57{z-index:auto;width:auto;max-width:100%;box-shadow:none;margin-bottom:10px;position:static}._ff-bounty-modal__header_13u5t_30 ._ff-bounty-modal__title_13u5t_67{margin:0;font-size:14px;font-weight:700}._ff-bounty-modal__header-btn_13u5t_73{color:inherit;cursor:pointer;background:0 0;border:none;padding:0 4px;font-size:16px;font-weight:700;line-height:1}._ff-bounty-modal__body_13u5t_84{padding:8px 12px 12px;overflow-y:auto}._ff-bounty-modal__notice_13u5t_89{margin:4px 0;line-height:1.4}._ff-bounty-modal__notice_13u5t_89 a{color:inherit;font-weight:700;text-decoration:underline}._ff-bounty-modal__primary-btn_13u5t_100{background-color:var(--ffscouter-alt-bg-color);color:var(--ffscouter-text-color);border:1px solid var(--ffscouter-border-color);cursor:pointer;border-radius:4px;margin-top:8px;padding:6px 10px;font-size:13px;font-weight:700}._ff-bounty-modal__primary-btn_13u5t_100:disabled{opacity:.6;cursor:default}._ff-bounty-modal__filters_13u5t_117{flex-wrap:wrap;gap:8px;margin-bottom:8px;display:flex}._ff-bounty-modal__filter_13u5t_117{align-items:center;gap:4px;display:flex}._ff-bounty-modal__filter_13u5t_117 input{background-color:var(--ffscouter-alt-bg-color);width:70px;color:var(--ffscouter-text-color);border:1px solid var(--ffscouter-input-color);border-radius:3px;padding:2px 4px;font-size:13px}._ff-bounty-modal__filter_13u5t_117 input[type=checkbox]{width:auto;padding:0}._ff-bounty-modal__list_13u5t_145,._ff-bounty-modal__member-list_13u5t_146,._ff-bounty-modal__tier-ladder_13u5t_147{margin:0;padding:0;list-style:none}._ff-bounty-modal__row_13u5t_153,._ff-bounty-modal__faction-card_13u5t_154{border-top:1px solid var(--ffscouter-border-color);padding:4px 0}._ff-bounty-modal__row-main_13u5t_159,._ff-bounty-modal__faction-header_13u5t_160{align-items:center;gap:6px;display:flex}._ff-bounty-modal__faction-header_13u5t_160{width:100%;color:inherit;text-align:left;cursor:pointer;background:0 0;border:none;padding:2px 0;font-size:13px}._ff-bounty-modal__member-list_13u5t_146{margin-left:12px}._ff-bounty-modal__name_13u5t_181{text-overflow:ellipsis;white-space:nowrap;min-width:0;color:inherit;flex:auto;font-weight:700;overflow:hidden}._ff-bounty-modal__status_13u5t_192{white-space:nowrap;flex:none;font-size:12px}._ff-bounty-modal__status--okay_13u5t_198{color:var(--ffscouter-status-okay-color)}._ff-bounty-modal__status--out_13u5t_202{color:var(--ffscouter-status-out-color)}._ff-bounty-modal__status--away_13u5t_206{color:var(--ffscouter-status-away-color)}._ff-bounty-modal__estimate_13u5t_210{text-align:center;background-color:var(--ffscouter-alt-bg-color);border-radius:4px;flex:none;min-width:44px;padding:1px 6px;font-weight:700}._ff-bounty-modal__tier-label_13u5t_220,._ff-bounty-modal__tier-toggle_13u5t_221,._ff-bounty-modal__pool_13u5t_222{white-space:nowrap;flex:none}._ff-bounty-modal__tier-toggle_13u5t_221{color:inherit;cursor:pointer;background:0 0;border:none;padding:0;font-size:13px}._ff-bounty-modal__tier-ladder_13u5t_147{margin:2px 0 2px 12px;font-size:12px}._ff-bounty-modal__action_13u5t_241{background-color:var(--ffscouter-alt-bg-color);color:var(--ffscouter-text-color);border:1px solid var(--ffscouter-border-color);cursor:pointer;border-radius:3px;flex:none;padding:2px 6px;font-size:12px}._ff-bounty-modal--own_13u5t_252{opacity:.6}._ff-bounty-modal--own_13u5t_252 ._ff-bounty-modal--own_13u5t_252{opacity:1}._ff-bounty-modal__own-label_13u5t_262{margin-top:2px;font-size:12px;font-style:italic;font-weight:700}._ff-bounty-modal__action_13u5t_241:disabled{opacity:.6;cursor:default}._ff-bounty-launcher_13u5t_276{z-index:9999;box-sizing:border-box;background-color:var(--ffscouter-alt-bg-color);width:40px;height:40px;color:var(--ffscouter-text-color);border:1px solid var(--ffscouter-border-color);cursor:pointer;touch-action:none;-webkit-user-select:none;user-select:none;border-radius:8px;padding:0;font-family:Arial,sans-serif;font-size:11px;font-weight:700;position:fixed;box-shadow:0 4px 16px #0000004d}._ff-filter-box_zoxj6_1,._ff-filter-box_zoxj6_1 *,._ff-filter-box_zoxj6_1 :before,._ff-filter-box_zoxj6_1 :after{box-sizing:border-box!important}._ff-filter-box_zoxj6_1{background-color:var(--ffscouter-bg-color);border:1px solid var(--ffscouter-border-color);color:var(--ffscouter-text-color);border-radius:8px;margin-bottom:16px;padding:12px 16px;font-family:Arial,sans-serif;box-shadow:0 2px 5px #0000000d}._ff-filter-box_zoxj6_1._ff-filter-box--no-borders_zoxj6_19{background-color:var(--default-bg-panel-color);border-top:1px solid var(--ffscouter-border-color);border-bottom:1px solid var(--ffscouter-border-color);box-shadow:none;border-left:none;border-right:none;border-radius:0;margin:0;padding:12px 10px}._ff-filter-box_zoxj6_1 summary{cursor:pointer;-webkit-user-select:none;user-select:none;outline:none;font-size:14px;font-weight:700}._ff-filter-box_zoxj6_1[open] summary{border-bottom:1px solid var(--ffscouter-border-color);margin-bottom:12px;padding-bottom:6px}._ff-filter-box_zoxj6_1 summary:focus-visible{outline:2px solid var(--ffscouter-glow-color);outline-offset:2px}._ff-filter-box__header_zoxj6_52{vertical-align:middle;justify-content:space-between;align-items:center;width:calc(100% - 24px);display:inline-flex}._ff-filter-box__header-actions_zoxj6_60{align-items:center;gap:6px;display:flex}._ff-filter-box_zoxj6_1 ._ff-filter-box__action-btn_zoxj6_66{background:var(--ffscouter-alt-bg-color);border:1px solid var(--ffscouter-border-color);color:var(--ffscouter-text-color);cursor:pointer;border-radius:4px;justify-content:center;align-items:center;width:24px;height:24px;padding:0;transition:background-color .2s,color .2s,opacity .2s;display:inline-flex}._ff-filter-box_zoxj6_1 ._ff-filter-box__action-btn_zoxj6_66:hover{background-color:var(--ffscouter-hover-color)}._ff-filter-box_zoxj6_1 ._ff-filter-box__action-btn_zoxj6_66._ff-filter-box__action-btn--active_zoxj6_88{color:var(--ffscouter-text-color);opacity:1}._ff-filter-box_zoxj6_1 ._ff-filter-box__action-btn_zoxj6_66._ff-filter-box__action-btn--inactive_zoxj6_93{color:var(--ffscouter-text-color);opacity:.4}._ff-filter-box_zoxj6_1 ._ff-filter-box__action-btn_zoxj6_66 svg{fill:currentColor;width:14px;height:14px}._ff-filter-box_zoxj6_1 ._ff-filter-box__action-btn_zoxj6_66._ff-filter-box__action-btn--reset_zoxj6_104 svg{transition:transform .25s ease-in-out}._ff-filter-box_zoxj6_1 ._ff-filter-box__action-btn_zoxj6_66._ff-filter-box__action-btn--reset_zoxj6_104:hover svg{transform:rotate(-180deg)}._ff-filter-box__grid_zoxj6_114{grid-template-columns:repeat(2,1fr);gap:12px;margin-top:12px;display:grid}._ff-filter-box__group--sort_zoxj6_121{order:1}._ff-filter-box__group--level_zoxj6_125{order:2}._ff-filter-box__group--activity_zoxj6_129{order:3}._ff-filter-box__group--status_zoxj6_133{order:4}._ff-filter-box__group--ff_zoxj6_137{order:5}._ff-filter-box__group--stats_zoxj6_141{order:6}._ff-filter-box__group--last-action_zoxj6_145{order:7}._ff-filter-box__group--columns_zoxj6_149{order:8}@media (width>=784px){._ff-filter-box__grid_zoxj6_114{grid-template-columns:repeat(3,1fr)}._ff-filter-box__grid_zoxj6_114>*{order:0}}._ff-filter-box__group_zoxj6_121{flex-direction:column;gap:2px;display:flex}._ff-filter-box__sort-controls_zoxj6_171{flex-direction:column;gap:8px;display:flex}._ff-filter-box__sort-controls_zoxj6_171 ._ff-filter-box__sort-btn_zoxj6_177{width:100%}._ff-filter-box__sort-controls_zoxj6_171 ._ff-filter-box__compare-btn_zoxj6_181{width:100%;height:32px}._ff-filter-box__display-select_zoxj6_186{border:1px solid var(--ffscouter-border-color);background:var(--ffscouter-alt-bg-color);color:var(--ffscouter-text-color);cursor:pointer;border-radius:4px;height:32px;padding:4px;font-size:11px}._ff-filter-box__options_zoxj6_197{flex-direction:column;display:flex}._ff-filter-box__options_zoxj6_197 label{cursor:pointer;align-items:center;gap:6px;font-size:12px;display:flex}._ff-filter-box__option--out-soon_zoxj6_212{margin-left:16px}._ff-filter-box__sr-only_zoxj6_218{clip:rect(0, 0, 0, 0);white-space:nowrap;border:0;width:1px;height:1px;margin:-1px;padding:0;position:absolute;overflow:hidden}._ff-filter-box__range-inputs_zoxj6_230{align-items:center;gap:4px;display:flex}._ff-filter-box__range-inputs_zoxj6_230 input{border:1px solid var(--ffscouter-border-color);background:var(--ffscouter-alt-bg-color);width:0;min-width:30px;max-width:80px;color:var(--ffscouter-text-color);text-align:center;border-radius:4px;flex:1;padding:4px;font-size:11px}._ff-filter-box_zoxj6_1 button{border:1px solid var(--ffscouter-border-color);background:var(--ffscouter-alt-bg-color);color:var(--ffscouter-text-color);cursor:pointer;border-radius:4px;justify-content:center;align-items:center;gap:6px;padding:6px 10px;font-size:12px;transition:background-color .2s;display:inline-flex}._ff-filter-box_zoxj6_1 button:hover{background-color:var(--ffscouter-hover-color)}._ff-od-insurance__row-btn_1yru3_6{vertical-align:middle;background:var(--ffscouter-alt-bg-color);color:var(--ffscouter-text-color);border:1px solid var(--ffscouter-glow-color);white-space:nowrap;cursor:pointer;border-radius:4px;margin-left:8px;padding:1px 6px;font-family:Arial,sans-serif;font-size:11px;font-weight:700;line-height:16px}._ff-od-insurance__row-btn_1yru3_6:hover{background:var(--ffscouter-hover-color)}._ff-od-insurance__row-btn-full_1yru3_29{display:none}@media (width>=784px){._ff-od-insurance__row-btn-full_1yru3_29{display:inline}._ff-od-insurance__row-btn-short_1yru3_38{display:none}}._ff-od-insurance__overlay_1yru3_43{z-index:10000;box-sizing:border-box;background:#0000008c;justify-content:center;align-items:center;padding:16px 10px 48px;display:flex;position:fixed;inset:0}._ff-od-insurance_1yru3_6,._ff-od-insurance_1yru3_6 *,._ff-od-insurance_1yru3_6 :before,._ff-od-insurance_1yru3_6 :after{box-sizing:border-box}._ff-od-insurance_1yru3_6{background:var(--ffscouter-bg-color);width:420px;max-width:calc(100vw - 20px);height:480px;max-height:100%;color:var(--ffscouter-text-color);border:1px solid var(--ffscouter-border-color);border-radius:8px;flex-direction:column;margin:0;padding:0;font-family:Arial,sans-serif;font-size:13px;display:flex;position:static;box-shadow:0 4px 16px #0006}._ff-od-insurance_1yru3_6 a{color:inherit;font-weight:700}._ff-od-insurance__header_1yru3_90{background:var(--ffscouter-alt-bg-color);border-bottom:1px solid var(--ffscouter-border-color);border-radius:7px 7px 0 0;justify-content:space-between;align-items:center;gap:8px;padding:8px 12px;display:flex}._ff-od-insurance__title_1yru3_101{margin:0;font-size:14px;font-weight:700;line-height:1.2}._ff-od-insurance__sub_1yru3_108{opacity:.75;margin-top:1px;font-size:11px}._ff-od-insurance__close_1yru3_114{color:inherit;cursor:pointer;background:0 0;border:none;flex:none;padding:2px 6px;font-size:18px;font-weight:700;line-height:1}._ff-od-insurance__body_1yru3_126{flex:1;padding:8px 12px 12px;overflow-y:auto}._ff-od-insurance__intro_1yru3_132{margin:4px 0 8px;line-height:1.4}._ff-od-insurance__plan_1yru3_138{background:var(--ffscouter-alt-bg-color);min-width:0;color:var(--ffscouter-text-color);border:1px solid var(--ffscouter-border-color);border-radius:6px;margin:0 0 8px;padding:0}._ff-od-insurance__plan-open_1yru3_148{text-align:left;width:100%;color:inherit;font:inherit;cursor:pointer;background:0 0;border:none;border-radius:6px 6px 0 0;margin:0;padding:8px 10px;display:block}._ff-od-insurance__plan-open_1yru3_148:hover{background:var(--ffscouter-hover-color)}._ff-od-insurance__pick_1yru3_166{border-top:1px solid var(--ffscouter-border-color);flex-wrap:wrap;align-items:center;gap:6px 10px;padding:6px 10px 4px;font-size:12px;display:flex}._ff-od-insurance__multiplier_1yru3_176{background:var(--ffscouter-bg-color);width:4em;color:var(--ffscouter-text-color);border:1px solid var(--ffscouter-border-color);font:inherit;border-radius:3px;padding:2px 4px}._ff-od-insurance__button_1yru3_186:disabled{cursor:not-allowed;opacity:.5}._ff-od-insurance__plan-name_1yru3_191{font-weight:700;line-height:1.3;display:block}._ff-od-insurance__plan-meta_1yru3_197{margin-top:2px;font-size:12px;line-height:1.4;display:block}._ff-od-insurance__button_1yru3_186{background:var(--ffscouter-alt-bg-color);color:var(--ffscouter-text-color);border:1px solid var(--ffscouter-border-color);cursor:pointer;border-radius:4px;margin:0 0 4px;padding:3px 10px;font-size:12px;font-weight:700}._ff-od-insurance__row_1yru3_6{flex-wrap:wrap;align-items:baseline;gap:6px;margin:4px 0;line-height:1.4;display:flex}._ff-od-insurance__row-label_1yru3_225{flex:none;font-weight:700}._ff-od-insurance__code_1yru3_231{background:var(--ffscouter-alt-bg-color);border:1px solid var(--ffscouter-border-color);overflow-wrap:anywhere;-webkit-user-select:all;user-select:all;border-radius:3px;padding:1px 5px;font-family:monospace}._ff-od-insurance__copy-status_1yru3_242{-webkit-user-select:text;user-select:text;font-size:12px}._ff-od-insurance__note_1yru3_248{margin:8px 0 0;font-size:12px;line-height:1.4}._ff-od-insurance__footer_1yru3_254{opacity:.75;margin-top:10px;font-size:11px;line-height:1.4}._ff-od-insurance__hide_1yru3_261{background:var(--ffscouter-alt-bg-color);color:var(--ffscouter-text-color);border:1px solid var(--ffscouter-glow-color);cursor:pointer;border-radius:4px;margin-top:6px;padding:2px 8px;font-size:11px}._ff-od-insurance__hide_1yru3_261:hover{background:var(--ffscouter-hover-color)}._ff-od-helper_1yru3_278{z-index:9999;max-width:calc(100vw - 16px);color:var(--ffscouter-text-color);font-family:Arial,sans-serif;font-size:12px;position:fixed}._ff-od-helper__bar_1yru3_287{background:var(--ffscouter-bg-color);border:1px solid var(--ffscouter-glow-color);border-radius:6px;align-items:stretch;display:flex;overflow:hidden;box-shadow:0 2px 8px #0006}._ff-od-helper_1yru3_278[data-problem=true] ._ff-od-helper__bar_1yru3_287{border-color:#c0392b}._ff-od-helper__grip_1yru3_301,._ff-od-helper__press_1yru3_302,._ff-od-helper__icon_1yru3_303{color:inherit;font:inherit;cursor:pointer;background:0 0;border:none;margin:0;padding:6px 8px}._ff-od-helper__grip_1yru3_301{cursor:grab;touch-action:none;opacity:.7}._ff-od-helper__press_1yru3_302{text-align:left;overflow-wrap:anywhere;background:var(--ffscouter-alt-bg-color);flex:1;min-width:0;font-weight:700}._ff-od-helper__press_1yru3_302:hover,._ff-od-helper__icon_1yru3_303:hover{background:var(--ffscouter-hover-color)}._ff-od-helper__icon_1yru3_303{font-weight:700}._ff-od-helper__steps_1yru3_338{background:var(--ffscouter-bg-color);border:1px solid var(--ffscouter-border-color);border-radius:6px;margin:0 0 4px;padding:6px 10px;line-height:1.6;list-style:none}._ff-od-helper__current_1yru3_348{font-weight:700}._ff-settings-panel__accordion_6bhvd_1{background-color:var(--ffscouter-bg-color);border:1px solid var(--ffscouter-border-color);color:var(--ffscouter-text-color);border-radius:5px;margin:10px 0;padding:15px}._ff-settings-panel__accordion_6bhvd_1._ff-settings-panel__accordion--glow_6bhvd_10{border-color:var(--ffscouter-glow-color);box-shadow:0 0 8px #4caf5080}._ff-settings-panel__accordion_6bhvd_1 summary{cursor:pointer;font-weight:700}._ff-settings-panel__body_6bhvd_20{margin-top:15px}._ff-settings-panel__input-row_6bhvd_24{flex-direction:column;gap:5px;margin-bottom:15px;display:flex}._ff-settings-panel__range-row_6bhvd_32{align-items:center;gap:10px;display:flex}._ff-settings-panel__blur_6bhvd_38{filter:blur(4px);transition:filter .2s}._ff-settings-panel__blur_6bhvd_38:hover,._ff-settings-panel__blur_6bhvd_38:focus{filter:blur()}._ff-settings-panel__error-msg_6bhvd_48{color:#f33;margin-top:5px;font-size:13px}._ff-settings-panel__accordion_6bhvd_1 input[type=text],._ff-settings-panel__accordion_6bhvd_1 input[type=number]{text-align:left;vertical-align:top;width:178px;margin-right:8px;padding:9px 10px;line-height:14px;display:inline-block;box-sizing:border-box!important;height:34px!important}._ff-settings-panel__accordion_6bhvd_1 input[type=number]._ff-settings-panel__number_6bhvd_67{width:80px}._ff-settings-panel__accordion_6bhvd_1 select{box-sizing:border-box;text-align:left;vertical-align:top;border:var(--input-border-color,1px solid var(--ffscouter-border-color));width:178px;height:34px;color:var(--input-color,var(--ffscouter-text-color));background:var(--input-background-color,var(--ffscouter-alt-bg-color));border-radius:5px;margin-right:8px;padding:8px 10px;font-family:Arial,serif;line-height:14px;display:inline-block}.dark-mode ._ff-settings-panel__accordion_6bhvd_1 select option{color:var(--input-color);background-color:#000}._ff-settings-panel__api-explanation_6bhvd_94{color:var(--ffscouter-text-color);margin-bottom:20px;font-size:13px;line-height:1.5}._ff-settings-panel__accordion_6bhvd_1 a{color:var(--ffscouter-success-color);text-decoration:underline}._ff-settings-panel__premium-badge_6bhvd_107{color:#fff;vertical-align:middle;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:700;display:inline-block}._ff-settings-panel__premium-badge--enabled_6bhvd_117{background:#4caf50}._ff-settings-panel__premium-badge--disabled_6bhvd_121{background:#c62828}._ff-settings-panel__premium-badge--unknown_6bhvd_125{background:#f39c12}._ff-settings-panel__section_6bhvd_138{grid-template-columns:1fr;gap:12px;margin-bottom:15px;display:grid}@media (width>=784px){._ff-settings-panel__section_6bhvd_138{grid-template-columns:repeat(3,1fr)}}._ff-settings-panel__span_6bhvd_152{grid-column:1/-1;margin-bottom:0}._ff-settings-panel__cell_6bhvd_160{flex-direction:column;gap:5px;min-width:0;margin-bottom:0;display:flex}._ff-settings-panel__cell_6bhvd_160._ff-settings-panel__cell--checkbox_6bhvd_169{flex-direction:row;align-items:flex-start;gap:10px}._ff-settings-panel__cell_6bhvd_160 input[type=text]{width:100%;margin-right:0}._ff-settings-panel__cell_6bhvd_160 select{width:auto;max-width:100%;margin-right:0}._ff-settings-panel__api-block_6bhvd_193{flex-direction:column;gap:10px;display:flex}._ff-settings-panel__api-block_6bhvd_193 ._ff-settings-panel__cell_6bhvd_160 input[type=text]{max-width:360px}._ff-settings-panel__api-status-row_6bhvd_203{flex-wrap:wrap;align-items:center;gap:10px;display:flex}._ff-settings-panel__chain-suboptions_6bhvd_213{border-left:2px solid var(--ffscouter-border-color);grid-template-columns:repeat(2,1fr);margin-top:10px;padding-left:8px}._ff-settings-panel__chain-suboptions_6bhvd_213 ._ff-settings-panel__chain-wide_6bhvd_218{grid-column:1/-1}@media (width>=784px){._ff-settings-panel__chain-suboptions_6bhvd_213{grid-template-columns:repeat(3,1fr);padding-left:16px}._ff-settings-panel__chain-suboptions_6bhvd_213 ._ff-settings-panel__chain-wide_6bhvd_218{grid-column:auto}}._ff-settings-panel__group_6bhvd_242{background-color:var(--ffscouter-alt-bg-color);border:1px solid var(--ffscouter-border-color);border-radius:5px;margin-bottom:15px;padding:12px}._ff-settings-panel__group_6bhvd_242 h4{margin:0 0 12px}._ff-settings-panel__marker-size_6bhvd_256,._ff-settings-panel__marker-border-width_6bhvd_257{flex-direction:column;gap:5px;display:flex}._ff-settings-panel__marker-size-controls_6bhvd_263{flex-wrap:wrap;align-items:center;gap:10px;display:flex}._ff-settings-panel__marker-size-controls_6bhvd_263 input[type=range]{flex:120px;min-width:120px}._ff-settings-panel__color-scheme_6bhvd_276{flex-direction:column;gap:5px;display:flex}._ff-settings-panel__color-scheme-controls_6bhvd_282{flex-wrap:wrap;align-items:center;gap:10px;display:flex}._ff-settings-panel__accordion_6bhvd_1 .ffscouter-swatch-row{flex-wrap:wrap}._ff-settings-panel__actions_6bhvd_295{flex-wrap:wrap;justify-content:center;align-items:center;gap:10px;margin-top:20px;display:flex}._ff-settings-panel__saved-msg_6bhvd_304{color:#4caf50}\n/*$vite$:1*/ ");
 	var __defProp = Object.defineProperty;
 	var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 	var __getOwnPropNames = Object.getOwnPropertyNames;
@@ -146,11 +146,12 @@
 		return typeof val === "object" && val !== null && "nodeType" in val && typeof val.nodeType === "number" && "nodeName" in val && typeof val.nodeName === "string";
 	}
 	function formatDOMNode(node) {
-		if (node.nodeType === 1) return `<${node.tagName.toLowerCase()}${node.id ? `#${node.id}` : ""}${node.className && typeof node.className === "string" && node.className.trim() ? `.${node.className.trim().split(/\s+/).join(".")}` : ""}>`;
+		if (node.nodeType === 1) return `<${node.tagName.toLowerCase()}${node.id ? `#${node.id}` : ""}${node.className && typeof node.className === "string" && node.className.trim() ? `.${node.className.trim().split(WHITESPACE_REGEX).join(".")}` : ""}>`;
 		return `[Node: ${node.nodeName}]`;
 	}
 	var LogLevel;
 	var Logger;
+	var WHITESPACE_REGEX;
 	var logger_default;
 	var init_logger = __esmMin((() => {
 		init_pda();
@@ -251,15 +252,16 @@
 				});
 			}
 		};
+		WHITESPACE_REGEX = /\s+/;
 		logger_default = new Logger("FFSV2", 0);
 	}));
-	var log$25;
+	var log$26;
 	var Time;
 	var Storage;
 	var storage_default;
 	var init_storage = __esmMin((() => {
 		init_logger();
-		log$25 = logger_default.child("storage");
+		log$26 = logger_default.child("storage");
 		Time = function(Time) {
 			Time[Time["Seconds"] = 1e3] = "Seconds";
 			Time[Time["Minutes"] = 6e4] = "Minutes";
@@ -281,32 +283,32 @@
 					};
 					localStorage.setItem(this.prefix + key, JSON.stringify(item));
 				} catch (error) {
-					log$25.error(`Error storing item '${key}':`, error);
+					log$26.error(`Error storing item '${key}':`, error);
 				}
 			}
 			get(key) {
 				try {
 					const itemStr = localStorage.getItem(this.prefix + key);
 					if (!itemStr) return null;
-					let item = null;
+					let item;
 					try {
 						item = JSON.parse(itemStr);
 					} catch {
 						item = null;
 					}
 					if (!item) {
-						log$25.warn(`Key '${key}' has invalid JSON in it.`);
+						log$26.warn(`Key '${key}' has invalid JSON in it.`);
 						this.remove(key);
 						return null;
 					}
 					if (item.expiration && Date.now() > item.expiration) {
 						this.remove(key);
-						log$25.debug(`Key ${key} has expired.`);
+						log$26.debug(`Key ${key} has expired.`);
 						return null;
 					}
 					return item.value;
 				} catch (error) {
-					log$25.error(`Error retrieving item '${key}':`, error);
+					log$26.error(`Error retrieving item '${key}':`, error);
 					return null;
 				}
 			}
@@ -314,7 +316,7 @@
 				try {
 					localStorage.removeItem(this.prefix + key);
 				} catch (error) {
-					log$25.error(`Error removing item [${key}]:`, error);
+					log$26.error(`Error removing item [${key}]:`, error);
 				}
 			}
 			has(key) {
@@ -326,7 +328,7 @@
 						localStorage.removeItem(key);
 					});
 				} catch (error) {
-					log$25.error("Error clearing storage:", error);
+					log$26.error("Error clearing storage:", error);
 				}
 			}
 		};
@@ -751,6 +753,8 @@
 	init_ffconfig();
 	var DAY = 86400;
 	var OLD_ESTIMATE_INTERVAL = 14 * DAY;
+	var AGE_PHRASE_PREFIX_REGEX = /^\((.*) old\)$/;
+	var SUFFIX_NUMBER_REGEX = /^([\d.,]+)\s*([kmbt])?$/;
 	function get_source_marker(source) {
 		switch (source) {
 			case "spies": return {
@@ -762,6 +766,7 @@
 				label: "Premium data"
 			};
 			case "bss": return null;
+			default: return null;
 		}
 	}
 	var SOURCE_MARKER_VIEWBOX = "0 0 20 20";
@@ -830,7 +835,7 @@
 	}
 	function staleness_suffix(d) {
 		const age = Date.now() / 1e3 - extract_last_updated(d);
-		var suffix = "";
+		let suffix = "";
 		if (age > OLD_ESTIMATE_INTERVAL) suffix = "?";
 		return suffix;
 	}
@@ -866,7 +871,7 @@
 		}
 	}
 	function format_age_phrase(timestamp_sec) {
-		return format_relative_time(timestamp_sec).replace(/^\((.*) old\)$/, "$1");
+		return format_relative_time(timestamp_sec).replace(AGE_PHRASE_PREFIX_REGEX, "$1");
 	}
 	function format_duration_human(totalSeconds, compact) {
 		const clampedSeconds = Math.max(0, Math.floor(totalSeconds));
@@ -1020,9 +1025,9 @@
 		return get_active_palette()[ratio] ?? NO_DATA_COLOR;
 	}
 	function get_contrast_color(hex) {
-		const r = parseInt(hex.slice(1, 3), 16);
-		const g = parseInt(hex.slice(3, 5), 16);
-		const b = parseInt(hex.slice(5, 7), 16);
+		const r = Number.parseInt(hex.slice(1, 3), 16);
+		const g = Number.parseInt(hex.slice(3, 5), 16);
+		const b = Number.parseInt(hex.slice(5, 7), 16);
 		return r * .299 + g * .587 + b * .114 > 126 ? "black" : "white";
 	}
 	function ff_to_percent(d) {
@@ -1045,7 +1050,7 @@
 	function parse_suffix_number(valStr) {
 		const trimmed = valStr.trim().toLowerCase();
 		if (!trimmed) return null;
-		const match = trimmed.match(/^([\d.,]+)\s*([kmbt])?$/);
+		const match = trimmed.match(SUFFIX_NUMBER_REGEX);
 		if (!match) return null;
 		const matchStr = match[1];
 		if (!matchStr) return null;
@@ -1224,14 +1229,21 @@
 	init_pda();
 	var FF_SCOUTER_BASE_URL = "https://ffscouter.com/api/v1";
 	new TornApiClient({
-		defaultComment: `FFScouterV2-3.5-beta4`,
+		defaultComment: `FFScouterV2-3.6-beta1`,
 		defaultTimeout: 30
 	});
 	async function gmRequest(options) {
 		if (isInPDA() && !ffconfig.debug_disable_pda_http) {
 			const url = options.url;
 			const headers = options.headers ?? {};
-			return (options.method ?? "GET").toUpperCase() === "POST" ? await window.PDA_httpPost(url, headers, options.data) : await window.PDA_httpGet(url, headers);
+			if ((options.method ?? "GET").toUpperCase() === "POST") {
+				const httpPost = window.PDA_httpPost;
+				if (!httpPost) throw new Error("PDA_httpPost is not available");
+				return await httpPost(url, headers, options.data);
+			}
+			const httpGet = window.PDA_httpGet;
+			if (!httpGet) throw new Error("PDA_httpGet is not available");
+			return await httpGet(url, headers);
 		}
 		return new Promise((resolve, reject) => {
 			GM_xmlhttpRequest({
@@ -1279,11 +1291,11 @@
 			blank: true
 		};
 		const limits = parse_limit_headers(resp.responseHeaders);
-		let ff_response = null;
+		let ff_response;
 		try {
 			ff_response = JSON.parse(resp.responseText);
 		} catch {
-			logger_default.warn(`query_stats: unparseable response. status=${resp.status}, body=${resp.responseText?.substring(0, 200)}, url=${url}`);
+			logger_default.warn(`query_stats: unparseable response. status=${resp.status}, body=${resp.responseText?.slice(0, 200)}, url=${url}`);
 			throw new FFApiError(`API request failed. Couldn't parse response. HTTP status code: ${resp.status}`, { ff_api_limits: limits });
 		}
 		if (ff_response == null) {
@@ -1295,7 +1307,7 @@
 			ff_api_limits: limits
 		});
 		if (resp.status !== 200) {
-			logger_default.warn(`query_stats: unexpected HTTP status. status=${resp.status}, body=${resp.responseText?.substring(0, 200)}, url=${url}`);
+			logger_default.warn(`query_stats: unexpected HTTP status. status=${resp.status}, body=${resp.responseText?.slice(0, 200)}, url=${url}`);
 			throw new FFApiError(`API request failed. HTTP status code: ${resp.status}`, { ff_api_limits: limits });
 		}
 		const results = new Map();
@@ -1357,11 +1369,11 @@
 		const remaining_str = headers.get("x-ratelimit-remaining");
 		const rate_limit_str = headers.get("x-ratelimit-limit");
 		if (reset_time_str && remaining_str && rate_limit_str) {
-			const remaining = parseInt(remaining_str, 10);
-			const rate_limit = parseInt(rate_limit_str, 10);
+			const remaining = Number.parseInt(remaining_str, 10);
+			const rate_limit = Number.parseInt(rate_limit_str, 10);
 			const this_minute = rate_limit - remaining;
 			return {
-				reset_time: new Date(parseInt(reset_time_str, 10) * 1e3),
+				reset_time: new Date(Number.parseInt(reset_time_str, 10) * 1e3),
 				remaining,
 				rate_limit,
 				this_minute
@@ -1377,11 +1389,11 @@
 		});
 		if (!resp) return { blank: true };
 		const limits = parse_limit_headers(resp.responseHeaders);
-		let ff_response = null;
+		let ff_response;
 		try {
 			ff_response = JSON.parse(resp.responseText);
 		} catch {
-			logger_default.warn(`check_key: unparseable response. status=${resp.status}, body=${resp.responseText?.substring(0, 200)}, url=${url}`);
+			logger_default.warn(`check_key: unparseable response. status=${resp.status}, body=${resp.responseText?.slice(0, 200)}, url=${url}`);
 			throw new FFApiError(`API request failed. Couldn't parse response. HTTP status code: ${resp.status}`, { ff_api_limits: limits });
 		}
 		if (ff_response == null) {
@@ -1393,7 +1405,7 @@
 			ff_api_limits: limits
 		});
 		if (resp.status !== 200) {
-			logger_default.warn(`check_key: unexpected HTTP status. status=${resp.status}, body=${resp.responseText?.substring(0, 200)}, url=${url}`);
+			logger_default.warn(`check_key: unexpected HTTP status. status=${resp.status}, body=${resp.responseText?.slice(0, 200)}, url=${url}`);
 			throw new FFApiError(`API request failed. HTTP status code: ${resp.status}`, { ff_api_limits: limits });
 		}
 		return {
@@ -1420,11 +1432,11 @@
 		});
 		if (!resp) return { blank: true };
 		const limits = parse_limit_headers(resp.responseHeaders);
-		let ff_response = null;
+		let ff_response;
 		try {
 			ff_response = JSON.parse(resp.responseText);
 		} catch {
-			logger_default.warn(`query_flights: unparseable response. status=${resp.status}, body=${resp.responseText?.substring(0, 200)}, url=${url}`);
+			logger_default.warn(`query_flights: unparseable response. status=${resp.status}, body=${resp.responseText?.slice(0, 200)}, url=${url}`);
 			throw new FFApiError(`API request failed. Couldn't parse response. HTTP status code: ${resp.status}`, { ff_api_limits: limits });
 		}
 		if (ff_response == null) {
@@ -1436,7 +1448,7 @@
 			ff_api_limits: limits
 		});
 		if (resp.status !== 200) {
-			logger_default.warn(`query_flights: unexpected HTTP status. status=${resp.status}, body=${resp.responseText?.substring(0, 200)}, url=${url}`);
+			logger_default.warn(`query_flights: unexpected HTTP status. status=${resp.status}, body=${resp.responseText?.slice(0, 200)}, url=${url}`);
 			throw new FFApiError(`API request failed. HTTP status code: ${resp.status}`, { ff_api_limits: limits });
 		}
 		return {
@@ -1477,11 +1489,11 @@
 	};
 	var parse_ff_response = (resp, label, ok_statuses = [200]) => {
 		const limits = parse_limit_headers(resp.responseHeaders);
-		let parsed = null;
+		let parsed;
 		try {
 			parsed = JSON.parse(resp.responseText);
 		} catch {
-			logger_default.warn(`${label}: unparseable response. status=${resp.status}, body=${resp.responseText?.substring(0, 200)}`);
+			logger_default.warn(`${label}: unparseable response. status=${resp.status}, body=${resp.responseText?.slice(0, 200)}`);
 			throw new FFApiError(`API request failed. Couldn't parse response. HTTP status code: ${resp.status}`, {
 				ff_api_limits: limits,
 				ff_http_status: resp.status
@@ -1501,7 +1513,7 @@
 			ff_http_status: resp.status
 		});
 		if (!ok_statuses.includes(resp.status)) {
-			logger_default.warn(`${label}: unexpected HTTP status. status=${resp.status}, body=${resp.responseText?.substring(0, 200)}`);
+			logger_default.warn(`${label}: unexpected HTTP status. status=${resp.status}, body=${resp.responseText?.slice(0, 200)}`);
 			throw new FFApiError(`API request failed. HTTP status code: ${resp.status}`, {
 				ff_api_limits: limits,
 				ff_http_status: resp.status
@@ -1667,6 +1679,9 @@
 			unavailable: UNAVAILABLE_STATES.has(state)
 		};
 	}
+	function assertNever$1(value) {
+		throw new Error(`Unhandled case: ${JSON.stringify(value)}`);
+	}
 	function is_status_available(view) {
 		switch (view.kind) {
 			case "unknown":
@@ -1674,6 +1689,7 @@
 			case "okay_guess": return true;
 			case "timed": return false;
 			case "static": return !view.unavailable;
+			default: return assertNever$1(view);
 		}
 	}
 	function format_tier_label(tier) {
@@ -1762,7 +1778,10 @@
 		for (const target of targets) {
 			if (target.disabled) continue;
 			if (target.target_faction_id != null) {
-				if (expanded.has(target.target_faction_id)) for (const member of target.members ?? []) ids.push(member.player_id);
+				if (expanded.has(target.target_faction_id)) {
+					const members = target.members ?? [];
+					for (const member of members) ids.push(member.player_id);
+				}
 			} else if (target.target_player_id != null) ids.push(target.target_player_id);
 		}
 		return ids;
@@ -1834,7 +1853,7 @@
 			children: [
 				jsx("span", {
 					className: cls$5.label,
-					children: "FF Scouter Bounty:"
+					children: "FFScouter Bounty:"
 				}),
 				top ? jsxs("span", {
 					title: match.tiers.map(format_tier_label).join(", then "),
@@ -2071,7 +2090,7 @@
 		}
 	}));
 	init_logger();
-	var log$24 = logger_default.child("storage");
+	var log$25 = logger_default.child("storage");
 	var STORES = {
 		CACHE: "cache",
 		FLIGHTS: "flights",
@@ -2110,7 +2129,7 @@
 			]);
 			this.open = async () => {
 				if (this.db) return this.db;
-				if (this.open_promise) return this.open_promise;
+				if (this.open_promise !== null) return this.open_promise;
 				if (typeof BroadcastChannel !== "undefined" && !this.channel) {
 					this.channel = new BroadcastChannel(`ffcache-channel-${this.db_name}`);
 					this.channel.onmessage = (event) => {
@@ -2123,17 +2142,17 @@
 					try {
 						const db = await openDB(this.db_name, this.db_version, {
 							upgrade(db, oldVersion, newVersion, transaction, _event) {
-								log$24.info("Need to upgrade from", oldVersion, "to", newVersion);
+								log$25.info("Need to upgrade from", oldVersion, "to", newVersion);
 								for (let i = (oldVersion ?? 0) + 1; i <= cache.db_version; i++) {
-									log$24.debug(`Migration: ${i}`);
+									log$25.debug(`Migration: ${i}`);
 									const m = cache.migrations.get(i);
 									if (m) m(db, transaction);
-									else log$24.debug(`Migration not found: ${i}`);
-									log$24.debug(`Migration complete: ${i}`);
+									else log$25.debug(`Migration not found: ${i}`);
+									log$25.debug(`Migration complete: ${i}`);
 								}
 							},
 							blocking(currentVersion, blockedVersion, event) {
-								log$24.debug(`Can't open ${blockedVersion} because ${currentVersion} is open. Closing.`);
+								log$25.debug(`Can't open ${blockedVersion} because ${currentVersion} is open. Closing.`);
 								cache.close();
 								if (event?.target && typeof event.target.close === "function") event.target.close();
 							}
@@ -2184,9 +2203,9 @@
 				this.close();
 				try {
 					await deleteDB(this.db_name, { blocked: () => {
-						log$24.debug("deleteDB blocked callback called!");
+						log$25.debug("deleteDB blocked callback called!");
 					} });
-					log$24.info(`Successfully deleted ${this.db_name} IndexedDB.`);
+					log$25.info(`Successfully deleted ${this.db_name} IndexedDB.`);
 				} finally {
 					this.channel?.postMessage({ type: "deleted" });
 					this.state = "CLOSED";
@@ -2220,11 +2239,11 @@
 				}
 			};
 			this.wait_for_deletion_complete = async () => {
-				while (this.state === "DELETING_LOCAL" || this.state === "DELETING_REMOTE") if (this.deletion_promise) await this.deletion_promise;
+				while (this.state === "DELETING_LOCAL" || this.state === "DELETING_REMOTE") if (this.deletion_promise !== null) await this.deletion_promise;
 				else await new Promise((resolve) => setTimeout(resolve, 10));
 			};
 			this.wait_for_active_ops = async () => {
-				if (this.open_promise) try {
+				if (this.open_promise !== null) try {
 					await this.open_promise;
 				} catch {}
 				while (this.active_operations > 0) await new Promise((resolve) => setTimeout(resolve, 10));
@@ -2276,7 +2295,7 @@
 							const index = tx.store.index("expiry");
 							const range = IDBKeyRange.upperBound(Date.now());
 							const r = await index.getAllKeys(range);
-							log$24.info(`Found ${r.length} expired values to delete from cache.`);
+							log$25.info(`Found ${r.length} expired values to delete from cache.`);
 							await Promise.all(r.map((id) => tx.store.delete(id)));
 							await tx.done;
 						}
@@ -2285,7 +2304,7 @@
 							const index = tx.store.index("expiry");
 							const range = IDBKeyRange.upperBound(Date.now());
 							const r = await index.getAllKeys(range);
-							log$24.info(`Found ${r.length} expired values to delete from flights.`);
+							log$25.info(`Found ${r.length} expired values to delete from flights.`);
 							await Promise.all(r.map((id) => tx.store.delete(id)));
 							await tx.done;
 						}
@@ -2295,7 +2314,7 @@
 							const thirty_days_ago = Date.now() - 2592e6;
 							const range = IDBKeyRange.upperBound(thirty_days_ago);
 							const r = await index.getAllKeys(range);
-							log$24.info(`Found ${r.length} expired values to delete from analytics.`);
+							log$25.info(`Found ${r.length} expired values to delete from analytics.`);
 							await Promise.all(r.map((id) => tx.store.delete(id)));
 							await tx.done;
 						}
@@ -2304,7 +2323,7 @@
 							const index = tx.store.index("expiry");
 							const range = IDBKeyRange.upperBound(Date.now());
 							const r = await index.getAllKeys(range);
-							log$24.info(`Found ${r.length} expired values to delete from bounty_board.`);
+							log$25.info(`Found ${r.length} expired values to delete from bounty_board.`);
 							await Promise.all(r.map((key) => tx.store.delete(key)));
 							await tx.done;
 						}
@@ -2461,7 +2480,7 @@
 	init_logger();
 	init_storage();
 	init_ffconfig();
-	var log$23 = logger_default.child("api");
+	var log$24 = logger_default.child("api");
 	var CHECK_KEY = "check-key-status";
 	var CheckKeyStatus = class {
 		constructor(config, storage) {
@@ -2474,7 +2493,7 @@
 				try {
 					result = await check_key(this.config.key);
 				} catch (err) {
-					log$23.error("Received error response querying ffscouter check-key api:", err);
+					log$24.error("Received error response querying ffscouter check-key api:", err);
 					throw err;
 				}
 				if (result.blank) return null;
@@ -2490,7 +2509,7 @@
 					if (!status) return null;
 					return status.is_premium;
 				} catch (err) {
-					log$23.warn("Failed to check premium status:", err);
+					log$24.warn("Failed to check premium status:", err);
 					return null;
 				}
 			};
@@ -2500,7 +2519,7 @@
 					if (!status) return null;
 					return status.is_registered;
 				} catch (err) {
-					log$23.warn("Failed to check key registration status:", err);
+					log$24.warn("Failed to check key registration status:", err);
 					return null;
 				}
 			};
@@ -2514,7 +2533,7 @@
 	var check_key_status = new CheckKeyStatus(ffconfig, new Storage("ffsv3-check"));
 	init_ffconfig();
 	init_logger();
-	var log$22 = logger_default.child("api");
+	var log$23 = logger_default.child("api");
 	var DB_NAME = "FFSV3-cache";
 	var RECHECK_RETRY_DELAY = 6e4;
 	var RECHECK_WINDOW_DURATION = 18e4;
@@ -2533,7 +2552,7 @@
 				const valStart = pos + target.length;
 				let valEnd = queryString.indexOf("&", valStart);
 				if (valEnd === -1) valEnd = queryString.length;
-				const rawVal = queryString.substring(valStart, valEnd);
+				const rawVal = queryString.slice(valStart, valEnd);
 				if (rawVal.indexOf("%") === -1 && rawVal.indexOf("+") === -1) return rawVal;
 				try {
 					return decodeURIComponent(rawVal.replace(/\+/g, " "));
@@ -2597,7 +2616,7 @@
 				try {
 					await this.cache.delete_flight(player_id);
 				} catch (err) {
-					log$22.error("Failed to delete flight from cache", err);
+					log$23.error("Failed to delete flight from cache", err);
 				}
 			};
 			this.calculate_flight_cache_ttl = (result) => {
@@ -2643,7 +2662,7 @@
 				this.flight_timer = null;
 				if (this.flight_queue.length === 0) return;
 				if (this.last_limits && this.last_limits.reset_time > new Date() && this.last_limits.remaining <= GLOBAL_BUDGET_RESERVE) {
-					log$22.warn(`Total API quota <= ${GLOBAL_BUDGET_RESERVE}. Deferring flight status checks to prioritize stats.`);
+					log$23.warn(`Total API quota <= ${GLOBAL_BUDGET_RESERVE}. Deferring flight status checks to prioritize stats.`);
 					this.schedule_flight_processor(5e3);
 					return;
 				}
@@ -2654,7 +2673,7 @@
 					this.schedule_flight_processor(0);
 					return;
 				}
-				log$22.debug(`Querying paced flight API for player ${player_id}`);
+				log$23.debug(`Querying paced flight API for player ${player_id}`);
 				try {
 					const response = await query_flights(this.config.key, player_id);
 					if (response.blank) throw new Error(`Empty flight response returned for player ${player_id}`);
@@ -2664,10 +2683,10 @@
 						const ttl = this.calculate_flight_cache_ttl(response.result);
 						await this.cache.update_flight(response.result, ttl);
 					} catch (err) {
-						log$22.error("Failed to update flight cache", err);
+						log$23.error("Failed to update flight cache", err);
 					}
 					else {
-						log$22.debug(`Start rechecking cycle for player ${player_id}`);
+						log$23.debug(`Start rechecking cycle for player ${player_id}`);
 						const now = Date.now();
 						const next_retry_at = now + RECHECK_RETRY_DELAY;
 						const recheck_until = this.flight_recheck_until.get(player_id) ?? now + RECHECK_WINDOW_DURATION;
@@ -2683,13 +2702,13 @@
 							const remaining_ttl = Math.max(0, recheck_until - now);
 							await this.cache.update_flight(rechecking_response, remaining_ttl);
 						} catch (err) {
-							log$22.error("Failed to update flight cache during recheck", err);
+							log$23.error("Failed to update flight cache during recheck", err);
 						}
 						finalResult = rechecking_response;
 					}
 					for (const job of pending) job.resolve(finalResult);
 				} catch (err) {
-					log$22.error(`Paced flight API query failed for ${player_id}:`, err);
+					log$23.error(`Paced flight API query failed for ${player_id}:`, err);
 					const apiErr = err;
 					if (apiErr?.ff_api_limits) this.last_limits = apiErr.ff_api_limits;
 					for (const job of pending) job.reject(err);
@@ -2699,13 +2718,13 @@
 					try {
 						await this.cache.clean_expired();
 					} catch (err) {
-						log$22.error("Failed to clean expired cache entries", err);
+						log$23.error("Failed to clean expired cache entries", err);
 					}
 					if (this.flight_queue.length > 0) this.schedule_flight_processor(FLIGHT_PACING_DELAY);
 				}
 			};
 			this.get_flights = async (player_id) => {
-				log$22.debug(`get_flights called for ${player_id}`);
+				log$23.debug(`get_flights called for ${player_id}`);
 				if (!this.config.key) return {
 					player_id,
 					current: null,
@@ -2715,14 +2734,14 @@
 				try {
 					cached = await this.cache.get_flight(player_id);
 				} catch (err) {
-					log$22.error("Failed to query flight cache", err);
+					log$23.error("Failed to query flight cache", err);
 				}
 				if (cached) {
-					log$22.debug(`Flight cache hit for player ${player_id}`);
+					log$23.debug(`Flight cache hit for player ${player_id}`);
 					if (cached.rechecking) {
 						const now = Date.now();
 						if (cached.recheck_until && now >= cached.recheck_until) {
-							log$22.debug(`Rechecking window expired for player ${player_id}. Finalizing no data.`);
+							log$23.debug(`Rechecking window expired for player ${player_id}. Finalizing no data.`);
 							const final_response = {
 								player_id: cached.player_id,
 								current: null,
@@ -2732,12 +2751,12 @@
 							try {
 								await this.cache.update_flight(final_response, FINALIZED_NO_FLIGHT_TTL);
 							} catch (err) {
-								log$22.error("Failed to finalize flight cache", err);
+								log$23.error("Failed to finalize flight cache", err);
 							}
 							return final_response;
 						}
 						if (cached.next_retry_at && now >= cached.next_retry_at) {
-							log$22.debug(`Retrying API call for player ${player_id} during recheck window`);
+							log$23.debug(`Retrying API call for player ${player_id} during recheck window`);
 							return await this.enqueue_flight_api(player_id, cached.recheck_until);
 						}
 						return {
@@ -2755,23 +2774,23 @@
 						recent_flights: cached.recent_flights
 					};
 				}
-				log$22.debug(`Flight cache miss for player ${player_id}. Querying API paced.`);
+				log$23.debug(`Flight cache miss for player ${player_id}. Querying API paced.`);
 				return await this.enqueue_flight_api(player_id);
 			};
 			this.complete = () => {
 				this.process_cache();
 			};
 			this.enqueue_cache = (player_id) => {
-				log$22.debug(`Enqueuing cache ${player_id}`);
+				log$23.debug(`Enqueuing cache ${player_id}`);
 				this.cache_queue.add(player_id);
 				this.schedule_cache();
 			};
 			this.schedule_cache = () => {
 				if (this.cache_timer) {
-					log$22.debug(`schedule_cache called but job already scheduled`);
+					log$23.debug(`schedule_cache called but job already scheduled`);
 					return;
 				}
-				log$22.debug(`schedule_cache called and job scheduled for ${this.cache_delay} ms`);
+				log$23.debug(`schedule_cache called and job scheduled for ${this.cache_delay} ms`);
 				this.cache_timer = this.schedule(this.process_cache, this.cache_delay);
 			};
 			this.process_cache = async () => {
@@ -2785,42 +2804,42 @@
 				let results;
 				try {
 					results = await this.cache.get(ids);
-				} catch (_) {
+				} catch {
 					results = new Map();
 				}
-				log$22.debug(`Received ${results.size} cache results`);
+				log$23.debug(`Received ${results.size} cache results`);
 				for (const id of ids) {
 					const v = results.get(id);
 					if (v) {
-						log$22.debug("Id", id, "found in cache. Resolving value.");
+						log$23.debug("Id", id, "found in cache. Resolving value.");
 						this.resolve(id, v);
 					} else {
-						log$22.debug("Id", id, "not found in cache. Scheduling api call.");
+						log$23.debug("Id", id, "not found in cache. Scheduling api call.");
 						this.enqueue_api(id);
 					}
 				}
 			};
 			this.clear_cache = () => {
 				this.cache.delete_db().catch((err) => {
-					log$22.error("Failed to delete IndexedDB cache", err);
+					log$23.error("Failed to delete IndexedDB cache", err);
 				});
 				check_key_status.clear();
 			};
 			this.enqueue_api = (player_id) => {
-				log$22.debug(`Enqueuing api ${player_id}`);
+				log$23.debug(`Enqueuing api ${player_id}`);
 				this.api_queue.add(player_id);
 				this.schedule_api();
 			};
 			this.schedule_api = (delay = this.api_initial_delay) => {
 				if (this.api_timer) {
-					log$22.debug(`schedule_api called but job already scheduled`);
+					log$23.debug(`schedule_api called but job already scheduled`);
 					return;
 				}
-				log$22.debug(`schedule_api called and job scheduled for ${delay} ms`);
+				log$23.debug(`schedule_api called and job scheduled for ${delay} ms`);
 				this.api_timer = this.schedule(this.process_api, delay);
 			};
 			this.process_api = async () => {
-				log$22.debug("process_api called");
+				log$23.debug("process_api called");
 				if (this.api_timer) {
 					this.clear(this.api_timer);
 					this.api_timer = null;
@@ -2828,18 +2847,18 @@
 				let ids = Array.from(this.api_queue);
 				if (ids.length > this.api_max_batch_size) ids = ids.slice(0, this.api_max_batch_size);
 				for (const id of ids) this.api_queue.delete(id);
-				log$22.debug(`Processing ${ids} api requests`);
+				log$23.debug(`Processing ${ids} api requests`);
 				if (ids.length <= 0) {
-					log$22.debug("No ids found to query");
+					log$23.debug("No ids found to query");
 					return;
 				}
 				let next_run = this.api_default_delay;
 				let results;
 				try {
-					log$22.debug(`Calling query_stats with key=*** ids=[${ids}]`);
+					log$23.debug(`Calling query_stats with key=*** ids=[${ids}]`);
 					results = await query_stats(this.config.key, ids);
 				} catch (err) {
-					log$22.error("Received error response querying ffscouter api:", err);
+					log$23.error("Received error response querying ffscouter api:", err);
 					for (const id of ids) this.reject(id, err);
 					results = {
 						result: new Map(),
@@ -2847,21 +2866,21 @@
 						limits: err.ff_api_limits
 					};
 				}
-				log$22.debug(`Received api results: blank=${results.blank}, count=${results.result.size}`);
+				log$23.debug(`Received api results: blank=${results.blank}, count=${results.result.size}`);
 				if (results.blank) for (const id of ids) this.requeue_api(id);
 				else {
 					try {
 						await this.cache.update(Array.from(results.result.values()));
 					} catch (err) {
-						log$22.error("Failed to update cache", err);
+						log$23.error("Failed to update cache", err);
 					}
 					for (const id of ids) {
 						const v = results.result.get(id);
 						if (v) {
-							log$22.debug("Id", id, "found in results. Resolving value.");
+							log$23.debug("Id", id, "found in results. Resolving value.");
 							this.resolve(id, v);
 						} else {
-							log$22.debug("Id", id, "not found in results. Resolving no_data.");
+							log$23.debug("Id", id, "not found in results. Resolving no_data.");
 							this.resolve(id, {
 								player_id: id,
 								no_data: true
@@ -2877,7 +2896,7 @@
 				try {
 					await this.cache.clean_expired();
 				} catch (err) {
-					log$22.error("Failed to clean expired cache entries", err);
+					log$23.error("Failed to clean expired cache entries", err);
 				}
 			};
 			this.calculate_next_api_run = (limits) => {
@@ -2924,14 +2943,14 @@
 						hash
 					});
 				} catch (err) {
-					log$22.error("Failed to add analytics entry", err);
+					log$23.error("Failed to add analytics entry", err);
 				}
 			};
 			this.get_analytics_entries = async () => {
 				try {
 					return await this.cache.get_analytics();
 				} catch (err) {
-					log$22.error("Failed to get analytics entries", err);
+					log$23.error("Failed to get analytics entries", err);
 					return [];
 				}
 			};
@@ -2943,8 +2962,8 @@
 					if (entry.params) param = getParamFast(entry.params, "sid") || getParamFast(entry.params, "step") || "";
 					if (!param && entry.hash) {
 						let hashClean = entry.hash;
-						if (hashClean.startsWith("#/")) hashClean = hashClean.substring(2);
-						else if (hashClean.startsWith("#") || hashClean.startsWith("/")) hashClean = hashClean.substring(1);
+						if (hashClean.startsWith("#/")) hashClean = hashClean.slice(2);
+						else if (hashClean.startsWith("#") || hashClean.startsWith("/")) hashClean = hashClean.slice(1);
 						if (!hashClean.startsWith("!") && !hashClean.startsWith("?")) hashClean = `?${hashClean}`;
 						param = getParamFast(hashClean, "sid") || getParamFast(hashClean, "step") || "";
 					}
@@ -2965,7 +2984,7 @@
 				try {
 					await this.cache.clear_analytics();
 				} catch (err) {
-					log$22.error("Failed to clear analytics entries", err);
+					log$23.error("Failed to clear analytics entries", err);
 				}
 			};
 			this.config = config;
@@ -2978,7 +2997,7 @@
 	var ffscouter = new FFScouter(ffconfig);
 	init_ffconfig();
 	init_logger();
-	var log$21 = logger_default.child("bounty-board");
+	var log$22 = logger_default.child("bounty-board");
 	var BOUNTY_BOARD_FRESHNESS_FLOOR_MS = 6e4;
 	var BOUNTY_BOARD_EXPIRY_MS = 6e5;
 	var BOARD_CACHE_KEY = "board";
@@ -2996,7 +3015,7 @@
 				try {
 					return await this.cache.get_bounty_board(key);
 				} catch (err) {
-					log$21.error(`Failed to read bounty board cache '${key}'`, err);
+					log$22.error(`Failed to read bounty board cache '${key}'`, err);
 					return null;
 				}
 			};
@@ -3004,18 +3023,18 @@
 				try {
 					await this.cache.put_bounty_board(key, value, expiry);
 				} catch (err) {
-					log$21.error(`Failed to write bounty board cache '${key}'`, err);
+					log$22.error(`Failed to write bounty board cache '${key}'`, err);
 				}
 			};
 			this.remove = async (key) => {
 				try {
 					await this.cache.delete_bounty_board(key);
 				} catch (err) {
-					log$21.error(`Failed to delete bounty board cache '${key}'`, err);
+					log$22.error(`Failed to delete bounty board cache '${key}'`, err);
 				}
 			};
 			this.get_board = async () => {
-				if (this.inflight) return this.inflight;
+				if (this.inflight !== null) return this.inflight;
 				this.inflight = this.load_board();
 				try {
 					return await this.inflight;
@@ -3052,7 +3071,7 @@
 				try {
 					await this.get_board();
 				} catch (err) {
-					log$21.error("Bounty board refresh failed", err);
+					log$22.error("Bounty board refresh failed", err);
 				}
 			};
 			this.fetch_board = async () => {
@@ -3104,7 +3123,7 @@
 	};
 	var bounty_board_cache = new BountyBoardCache(ffconfig);
 	init_logger();
-	var log$20 = logger_default.child("ui");
+	var log$21 = logger_default.child("ui");
 	var TOAST_LEVEL = function(TOAST_LEVEL) {
 		TOAST_LEVEL[TOAST_LEVEL["DEBUG"] = 0] = "DEBUG";
 		TOAST_LEVEL[TOAST_LEVEL["INFO"] = 1] = "INFO";
@@ -3158,7 +3177,7 @@
 		const msg = document.createElement("span");
 		if (message === "Invalid API key. Please sign up at ffscouter.com to use this service") msg.innerHTML = "FairFight Scouter V2: Invalid API key. Please sign up at <a href=\"https://ffscouter.com\" target=\"_blank\" style=\"color: #fff; text-decoration: underline; font-weight: bold;\">ffscouter.com</a> to use this service. Register the API key with the script.";
 		else msg.textContent = `FairFight Scouter V2: ${message}`;
-		log$20.info("[FF Scouter V2] Toast: ", message);
+		log$21.info("[FFScouter V2] Toast: ", message);
 		toast.appendChild(msg);
 		toast.appendChild(closeBtn);
 		document.body.appendChild(toast);
@@ -3403,7 +3422,7 @@
 		});
 	}
 	init_logger();
-	var log$19 = logger_default.child("ui");
+	var log$20 = logger_default.child("ui");
 	var PREMIUM_UPGRADE_URL$1 = "https://ffscouter.com/premium";
 	function FFHeaderLine({ playerId, showExplainer = false }) {
 		const [data, setData] = useState(null);
@@ -3416,7 +3435,7 @@
 			ffscouter.get(playerId).then((result) => {
 				if (!cancelled) setData(result);
 			}).catch((err) => {
-				log$19.error(err);
+				log$20.error(err);
 			});
 			return () => {
 				cancelled = true;
@@ -3429,7 +3448,7 @@
 			check_key_status.is_premium().then((premium) => {
 				if (!cancelled) setIsPremium(premium);
 			}).catch((err) => {
-				log$19.error(err);
+				log$20.error(err);
 			}).finally(() => {
 				if (!cancelled) setPremiumLoading(false);
 			});
@@ -3573,8 +3592,11 @@
 	}
 	init_ffconfig();
 	init_logger();
-	var log$18 = logger_default.child("dom");
+	var log$19 = logger_default.child("dom");
 	var ID_PARAMS = ["XID", "user2ID"];
+	var XID_TARGET_REGEX = /.*XID=(?<target_id>\d+)/;
+	var USER_ID_TARGET_REGEX = /.*userId=(?<target_id>\d+)/;
+	var ACTIVITY_STATUS_REGEX = / is (online|offline|idle)$/i;
 	var GaugeAttachMode = function(GaugeAttachMode) {
 		GaugeAttachMode["HONOR_BAR"] = "honor-bar";
 		GaugeAttachMode["FALLBACK"] = "fallback";
@@ -3585,7 +3607,7 @@
 		const search = new URLSearchParams(parsed.search);
 		for (const param of ID_PARAMS) {
 			const v = search.get(param);
-			if (v) return parseInt(v, 10);
+			if (v) return Number.parseInt(v, 10);
 		}
 		return null;
 	}
@@ -3614,7 +3636,7 @@
 			const hash = window.location.hash;
 			for (const h of match_hash) {
 				if (h.endsWith("*")) {
-					const stripped = h.substring(0, h.length - 1);
+					const stripped = h.slice(0, -1);
 					if (hash.startsWith(stripped)) {
 						hash_match = true;
 						break;
@@ -3753,7 +3775,7 @@
 			if (width !== null) element.style.setProperty("--ffscouter-marker-actual-width", `${width}px`);
 			ffscouter.add_analytics_entry(featureName, player_id, "applied");
 		}).catch((err) => {
-			log$18.error(err);
+			log$19.error(err);
 		});
 	}
 	function has_href(el) {
@@ -3761,33 +3783,33 @@
 	}
 	function extract_target_id(href, r) {
 		const groups = href.match(r)?.groups;
-		if (groups?.target_id) return parseInt(groups.target_id, 10);
+		if (groups?.target_id) return Number.parseInt(groups.target_id, 10);
 		return null;
 	}
 	function get_player_id_in_element(element) {
 		const parent = element.parentElement;
 		if (has_href(parent)) {
-			const xid = extract_target_id(parent.href, /.*XID=(?<target_id>\d+)/);
+			const xid = extract_target_id(parent.href, XID_TARGET_REGEX);
 			if (xid) return xid;
 		}
 		const anchors = element.getElementsByTagName("a");
 		for (const anchor of anchors) {
-			const xid = extract_target_id(anchor.href, /.*XID=(?<target_id>\d+)/);
+			const xid = extract_target_id(anchor.href, XID_TARGET_REGEX);
 			if (xid) return xid;
-			const userid = extract_target_id(anchor.href, /.*userId=(?<target_id>\d+)/);
+			const userid = extract_target_id(anchor.href, USER_ID_TARGET_REGEX);
 			if (userid) return userid;
 		}
 		if (has_href(element)) {
-			const xid = extract_target_id(element.href, /.*XID=(?<target_id>\d+)/);
+			const xid = extract_target_id(element.href, XID_TARGET_REGEX);
 			if (xid) return xid;
-			const userid = extract_target_id(element.href, /.*userId=(?<target_id>\d+)/);
+			const userid = extract_target_id(element.href, USER_ID_TARGET_REGEX);
 			if (userid) return userid;
 		}
 		const parent_anchor = element.closest("a");
 		if (parent_anchor) {
-			const xid = extract_target_id(parent_anchor.href, /.*XID=(?<target_id>\d+)/);
+			const xid = extract_target_id(parent_anchor.href, XID_TARGET_REGEX);
 			if (xid) return xid;
-			const userid = extract_target_id(parent_anchor.href, /.*userId=(?<target_id>\d+)/);
+			const userid = extract_target_id(parent_anchor.href, USER_ID_TARGET_REGEX);
 			if (userid) return userid;
 		}
 		return null;
@@ -3795,11 +3817,11 @@
 	var seenUnknownActivityLabels = new Set();
 	function get_activity_status(row) {
 		const label = row.querySelector("[class*=\"userStatusWrap\"]")?.getAttribute("aria-label") || "";
-		const status = label.match(/ is (online|offline|idle)$/i)?.[1];
+		const status = label.match(ACTIVITY_STATUS_REGEX)?.[1];
 		if (!status) {
 			if (!seenUnknownActivityLabels.has(label)) {
 				seenUnknownActivityLabels.add(label);
-				log$18.warn(`Unrecognized activity aria-label: "${label}"`);
+				log$19.warn(`Unrecognized activity aria-label: "${label}"`);
 			}
 			return "unknown";
 		}
@@ -3826,8 +3848,8 @@
 					resolve(element);
 				}
 			});
-			if (!root) root = document.body;
-			observer.observe(root, {
+			const target_root = root ?? document.body;
+			observer.observe(target_root, {
 				childList: true,
 				subtree: true
 			});
@@ -3861,9 +3883,9 @@
 			if (delay > 0) await new Promise((resolve) => setTimeout(resolve, delay));
 			const element = document.createElement(tagName);
 			if (!ctor || element instanceof ctor) return element;
-			log$18.warn(`<${tagName}> construction produced a fallback element; retrying`);
+			log$19.warn(`<${tagName}> construction produced a fallback element; retrying`);
 		}
-		log$18.error(`Failed to construct a working <${tagName}> after multiple attempts`);
+		log$19.error(`Failed to construct a working <${tagName}> after multiple attempts`);
 		return null;
 	}
 	var MonitorElements = class {
@@ -3918,13 +3940,13 @@
 	async function getLocalUserId() {
 		const name = await wait_for_element(".settings-menu > .link > a:first-child", 15e3);
 		if (!name?.href) {
-			log$18.debug("Failed to find the XID element.");
+			log$19.debug("Failed to find the XID element.");
 			return null;
 		}
 		try {
 			return new URL(name.href).searchParams.get("XID");
 		} catch {
-			log$18.debug("User XID is malformed");
+			log$19.debug("User XID is malformed");
 			return null;
 		}
 	}
@@ -4019,7 +4041,7 @@
 	init_ffconfig();
 	init_logger();
 	init_react();
-	var log$17 = logger_default.child("feature:attack");
+	var log$18 = logger_default.child("feature:attack");
 	var FIGHT_BUTTON = "[class*=\"dialogButtons\"] button";
 	var attack_target = null;
 	var bounty_row = null;
@@ -4050,7 +4072,7 @@
 		if (!result.ok) {
 			const phase = classify_board_error(result.err).phase;
 			gate_failed ||= phase === "consent" || phase === "key_unregistered";
-			if (!gate_failed) log$17.error("Bounty board read failed on the attack page", result.err);
+			if (!gate_failed) log$18.error("Bounty board read failed on the attack page", result.err);
 		}
 		if (gate_failed) silence_attack_bounty();
 		const match = !gate_failed && result.ok ? find_bounty_match(result.response.board.targets, player_id) : null;
@@ -4128,7 +4150,7 @@
 		async run() {
 			const player_id = extract_id_from_url(window.location.href);
 			if (!player_id) return;
-			log$17.debug("On the attack page, found player_id", player_id);
+			log$18.debug("On the attack page, found player_id", player_id);
 			const info_line = create_info_line();
 			mountComponent(createElement(FFHeaderLine, { playerId: player_id }), info_line);
 			await inject_info_line$1(info_line);
@@ -4150,38 +4172,38 @@
 		return Date.now() / 1e3;
 	}
 	var bounty_board_module_default = {
-		"ff-bounty-modal": "_ff-bounty-modal_1r3gd_5",
-		"ff-bounty-modal__header": "_ff-bounty-modal__header_1r3gd_30",
-		"ff-bounty-modal__header--drag": "_ff-bounty-modal__header--drag_1r3gd_43",
-		"ff-bounty-modal--minimized": "_ff-bounty-modal--minimized_1r3gd_49",
-		"ff-bounty-modal--in-flow": "_ff-bounty-modal--in-flow_1r3gd_57",
-		"ff-bounty-modal__title": "_ff-bounty-modal__title_1r3gd_67",
-		"ff-bounty-modal__header-btn": "_ff-bounty-modal__header-btn_1r3gd_73",
-		"ff-bounty-modal__body": "_ff-bounty-modal__body_1r3gd_84",
-		"ff-bounty-modal__notice": "_ff-bounty-modal__notice_1r3gd_89",
-		"ff-bounty-modal__primary-btn": "_ff-bounty-modal__primary-btn_1r3gd_100",
-		"ff-bounty-modal__filters": "_ff-bounty-modal__filters_1r3gd_117",
-		"ff-bounty-modal__filter": "_ff-bounty-modal__filter_1r3gd_117",
-		"ff-bounty-modal__list": "_ff-bounty-modal__list_1r3gd_145",
-		"ff-bounty-modal__member-list": "_ff-bounty-modal__member-list_1r3gd_146",
-		"ff-bounty-modal__tier-ladder": "_ff-bounty-modal__tier-ladder_1r3gd_147",
-		"ff-bounty-modal__row": "_ff-bounty-modal__row_1r3gd_153",
-		"ff-bounty-modal__faction-card": "_ff-bounty-modal__faction-card_1r3gd_154",
-		"ff-bounty-modal__row-main": "_ff-bounty-modal__row-main_1r3gd_159",
-		"ff-bounty-modal__faction-header": "_ff-bounty-modal__faction-header_1r3gd_160",
-		"ff-bounty-modal__name": "_ff-bounty-modal__name_1r3gd_181",
-		"ff-bounty-modal__status": "_ff-bounty-modal__status_1r3gd_192",
-		"ff-bounty-modal__status--okay": "_ff-bounty-modal__status--okay_1r3gd_198",
-		"ff-bounty-modal__status--out": "_ff-bounty-modal__status--out_1r3gd_202",
-		"ff-bounty-modal__status--away": "_ff-bounty-modal__status--away_1r3gd_206",
-		"ff-bounty-modal__estimate": "_ff-bounty-modal__estimate_1r3gd_210",
-		"ff-bounty-modal__tier-label": "_ff-bounty-modal__tier-label_1r3gd_220",
-		"ff-bounty-modal__tier-toggle": "_ff-bounty-modal__tier-toggle_1r3gd_221",
-		"ff-bounty-modal__pool": "_ff-bounty-modal__pool_1r3gd_222",
-		"ff-bounty-modal__action": "_ff-bounty-modal__action_1r3gd_241",
-		"ff-bounty-modal--own": "_ff-bounty-modal--own_1r3gd_252",
-		"ff-bounty-modal__own-label": "_ff-bounty-modal__own-label_1r3gd_262",
-		"ff-bounty-launcher": "_ff-bounty-launcher_1r3gd_276"
+		"ff-bounty-modal": "_ff-bounty-modal_13u5t_5",
+		"ff-bounty-modal__header": "_ff-bounty-modal__header_13u5t_30",
+		"ff-bounty-modal__header--drag": "_ff-bounty-modal__header--drag_13u5t_43",
+		"ff-bounty-modal--minimized": "_ff-bounty-modal--minimized_13u5t_49",
+		"ff-bounty-modal--in-flow": "_ff-bounty-modal--in-flow_13u5t_57",
+		"ff-bounty-modal__title": "_ff-bounty-modal__title_13u5t_67",
+		"ff-bounty-modal__header-btn": "_ff-bounty-modal__header-btn_13u5t_73",
+		"ff-bounty-modal__body": "_ff-bounty-modal__body_13u5t_84",
+		"ff-bounty-modal__notice": "_ff-bounty-modal__notice_13u5t_89",
+		"ff-bounty-modal__primary-btn": "_ff-bounty-modal__primary-btn_13u5t_100",
+		"ff-bounty-modal__filters": "_ff-bounty-modal__filters_13u5t_117",
+		"ff-bounty-modal__filter": "_ff-bounty-modal__filter_13u5t_117",
+		"ff-bounty-modal__list": "_ff-bounty-modal__list_13u5t_145",
+		"ff-bounty-modal__member-list": "_ff-bounty-modal__member-list_13u5t_146",
+		"ff-bounty-modal__tier-ladder": "_ff-bounty-modal__tier-ladder_13u5t_147",
+		"ff-bounty-modal__row": "_ff-bounty-modal__row_13u5t_153",
+		"ff-bounty-modal__faction-card": "_ff-bounty-modal__faction-card_13u5t_154",
+		"ff-bounty-modal__row-main": "_ff-bounty-modal__row-main_13u5t_159",
+		"ff-bounty-modal__faction-header": "_ff-bounty-modal__faction-header_13u5t_160",
+		"ff-bounty-modal__name": "_ff-bounty-modal__name_13u5t_181",
+		"ff-bounty-modal__status": "_ff-bounty-modal__status_13u5t_192",
+		"ff-bounty-modal__status--okay": "_ff-bounty-modal__status--okay_13u5t_198",
+		"ff-bounty-modal__status--out": "_ff-bounty-modal__status--out_13u5t_202",
+		"ff-bounty-modal__status--away": "_ff-bounty-modal__status--away_13u5t_206",
+		"ff-bounty-modal__estimate": "_ff-bounty-modal__estimate_13u5t_210",
+		"ff-bounty-modal__tier-label": "_ff-bounty-modal__tier-label_13u5t_220",
+		"ff-bounty-modal__tier-toggle": "_ff-bounty-modal__tier-toggle_13u5t_221",
+		"ff-bounty-modal__pool": "_ff-bounty-modal__pool_13u5t_222",
+		"ff-bounty-modal__action": "_ff-bounty-modal__action_13u5t_241",
+		"ff-bounty-modal--own": "_ff-bounty-modal--own_13u5t_252",
+		"ff-bounty-modal__own-label": "_ff-bounty-modal__own-label_13u5t_262",
+		"ff-bounty-launcher": "_ff-bounty-launcher_13u5t_276"
 	};
 	var cls$4 = {
 		modal: bounty_board_module_default["ff-bounty-modal"],
@@ -4262,7 +4284,10 @@
 				break;
 			case "static":
 				text = short_state(view.state);
-				tone = view.state === "Traveling" || view.state === "Abroad" ? "away" : view.unavailable ? "out" : "other";
+				if (view.state === "Traveling" || view.state === "Abroad") tone = "away";
+				else tone = view.unavailable ? "out" : "other";
+				break;
+			default: return assertNever$1(view);
 		}
 		const checked = row.status_last_checked != null ? `checked ${format_short_age(now - row.status_last_checked)} ago` : null;
 		const title = [detail, checked].filter(Boolean).join(" · ");
@@ -4489,7 +4514,7 @@
 		};
 	}
 	function escape_zones(rect, viewport, zones) {
-		if (!zones.some((zone) => overlaps(rect, zone))) return rect;
+		if (zones.every((zone) => !overlaps(rect, zone))) return rect;
 		const height = rect.bottom - rect.top;
 		let best = rect;
 		for (const zone of zones) for (const top of [zone.top - EDGE_GAP - height, zone.bottom + EDGE_GAP]) {
@@ -4531,7 +4556,8 @@
 	function drop_anchor(dropped, viewport, zones, snap) {
 		const placed = clamp_to_viewport(dropped, viewport);
 		const side = (placed.left + placed.right) / 2 < viewport.width / 2 ? "left" : "right";
-		const inset = snap ? EDGE_GAP : side === "left" ? placed.left : viewport.width - placed.right;
+		const free_inset = side === "left" ? placed.left : viewport.width - placed.right;
+		const inset = snap ? EDGE_GAP : free_inset;
 		const size = {
 			width: placed.right - placed.left,
 			height: placed.bottom - placed.top
@@ -4585,7 +4611,7 @@
 	}
 	function save_anchor(id, anchor) {
 		storage_default.set(POSITIONS_KEY, {
-			...storage_default.get(POSITIONS_KEY) ?? {},
+			...storage_default.get(POSITIONS_KEY),
 			[id]: anchor
 		});
 	}
@@ -4720,7 +4746,7 @@
 	init_logger();
 	init_storage();
 	init_react();
-	var log$16 = logger_default.child("ui");
+	var log$17 = logger_default.child("ui");
 	var VIEW_STATE_KEY = "bounty_board_view";
 	var DEFAULT_VIEW_STATE = {
 		stats_less_than: "",
@@ -4733,7 +4759,7 @@
 	function load_view_state() {
 		return {
 			...DEFAULT_VIEW_STATE,
-			...storage_default.get(VIEW_STATE_KEY) ?? {}
+			...storage_default.get(VIEW_STATE_KEY)
 		};
 	}
 	function useViewState() {
@@ -4768,6 +4794,9 @@
 	function handleAttack(row) {
 		open_attack_link(row.player_id, { openInNewTab: ffconfig.bounty_attack_action === WarQuickAttackAction.NEW_TAB });
 	}
+	function assertNever(value) {
+		throw new Error(`Unhandled case: ${JSON.stringify(value)}`);
+	}
 	function board_reducer(_state, action) {
 		switch (action.type) {
 			case "reload": return { phase: "loading" };
@@ -4776,6 +4805,7 @@
 				response: action.response
 			};
 			case "failed": return action.state;
+			default: return assertNever(action);
 		}
 	}
 	function initial_board_state() {
@@ -4788,7 +4818,7 @@
 			getLocalUserId().then((id) => {
 				if (id && !cancelled) setHref(`https://www.torn.com/profiles.php?XID=${id}#ff-scouter-api-key`);
 			}).catch((err) => {
-				log$16.error(err);
+				log$17.error(err);
 			});
 			return () => {
 				cancelled = true;
@@ -4797,13 +4827,13 @@
 		return jsxs("p", {
 			className: cls$4.notice,
 			children: [
-				unregistered ? "Your FF Scouter API key isn't registered. Check it in " : "FF Scouter Bounties need your FF Scouter API key. Enter it in ",
+				unregistered ? "Your FFScouter API key isn't registered. Check it in " : "FFScouter Bounties need your FFScouter API key. Enter it in ",
 				href ? jsx("a", {
 					href,
 					target: "_blank",
 					rel: "noopener noreferrer",
-					children: "FF Scouter Settings"
-				}) : jsx("strong", { children: "FF Scouter Settings" }),
+					children: "FFScouter Settings"
+				}) : jsx("strong", { children: "FFScouter Settings" }),
 				" ",
 				"on your profile page."
 			]
@@ -4828,7 +4858,7 @@
 		return jsxs("div", { children: [jsxs("p", {
 			className: cls$4.notice,
 			children: [
-				"FF Scouter Bounties are a separate system from Torn's own bounties. To view and claim them, read the",
+				"FFScouter Bounties are a separate system from Torn's own bounties. To view and claim them, read the",
 				" ",
 				jsx("a", {
 					href: BOUNTY_POLICY_URL,
@@ -4902,7 +4932,7 @@
 					return next;
 				});
 			}).catch((err) => {
-				log$16.error(err);
+				log$17.error(err);
 			});
 			return cleanup;
 		}, [
@@ -4951,15 +4981,17 @@
 		switch (state.phase) {
 			case "loading": return jsx("p", {
 				className: cls$4.notice,
-				children: "Loading FF Scouter Bounties…"
+				children: "Loading FFScouter Bounties…"
 			});
 			case "key_missing": return jsx(KeyNudge, { unregistered: false });
 			case "key_unregistered": return jsx(KeyNudge, { unregistered: true });
 			case "consent": return jsx(ConsentGate, { onAccepted: () => dispatch({ type: "reload" }) });
 			case "error": return jsxs("p", {
 				className: cls$4.notice,
-				children: ["Couldn't load FF Scouter Bounties: ", state.message]
+				children: ["Couldn't load FFScouter Bounties: ", state.message]
 			});
+			case "ready": break;
+			default: return assertNever(state);
 		}
 		const anyShown = state.response.board.targets.some(is_shown_target);
 		return jsxs("div", { children: [jsxs("div", {
@@ -4998,7 +5030,7 @@
 			]
 		}), rows.length === 0 ? jsx("p", {
 			className: cls$4.notice,
-			children: anyShown ? "No FF Scouter Bounties match your filters." : "No open FF Scouter Bounties right now."
+			children: anyShown ? "No FFScouter Bounties match your filters." : "No open FFScouter Bounties right now."
 		}) : jsx("ul", {
 			className: cls$4.list,
 			children: rows.map((row) => row.kind === "faction" ? jsx(FactionBountyCard, {
@@ -5041,7 +5073,7 @@
 		if (floating && view.minimized) return jsx("button", {
 			type: "button",
 			className: cls$4.launcher,
-			"aria-label": "Expand FF Scouter Bounties",
+			"aria-label": "Expand FFScouter Bounties",
 			"aria-expanded": false,
 			style: edge_style(drag.box, drag.side, drag.viewport),
 			...drag.handleProps,
@@ -5055,22 +5087,23 @@
 				maxHeight: `min(70vh, ${maxHeight}px)`
 			};
 		}
+		const minimizedClass = view.minimized ? ` ${cls$4.modalMinimized}` : "";
 		return jsxs("section", {
-			className: `${shell.className}${view.minimized ? ` ${cls$4.modalMinimized}` : ""}`,
-			"aria-label": "FF Scouter Bounties",
+			className: `${shell.className}${minimizedClass}`,
+			"aria-label": "FFScouter Bounties",
 			style,
 			children: [jsxs("div", {
 				className: floating ? `${cls$4.header} ${cls$4.dragHandle}` : cls$4.header,
 				onPointerDown: floating ? drag.handleProps.onPointerDown : void 0,
 				children: [jsx("h2", {
 					className: cls$4.title,
-					children: "FF Scouter Bounties"
+					children: "FFScouter Bounties"
 				}), jsx("button", {
 					type: "button",
 					className: cls$4.headerBtn,
 					onPointerDown: (e) => e.stopPropagation(),
 					"aria-expanded": !view.minimized,
-					"aria-label": view.minimized ? "Expand FF Scouter Bounties" : `${shell.collapse} FF Scouter Bounties`,
+					"aria-label": view.minimized ? "Expand FFScouter Bounties" : `${shell.collapse} FFScouter Bounties`,
 					onClick: () => updateView({ minimized: !view.minimized }),
 					children: view.minimized ? shell.collapsed : shell.expanded
 				})]
@@ -5092,15 +5125,16 @@
 	init_ffconfig();
 	init_logger();
 	init_react();
+	var HASH_ROUTE_PREFIX = /^#\/?!?/;
 	function is_bounty_main_route() {
-		const route = new URLSearchParams(location.hash.replace(/^#\/?!?/, "")).get("p");
+		const route = new URLSearchParams(location.hash.replace(HASH_ROUTE_PREFIX, "")).get("p");
 		return route === null || route === "main";
 	}
 	var CONTENT_WRAPPER = ".content-wrapper";
 	var TEMPLATE = ".page-template-cont";
 	var BOUNTY_ROWS = `${TEMPLATE} .bounties-list > li`;
 	var BOUNTY_LIST_TIMEOUT_MS = 3e4;
-	var log$15 = logger_default.child("feature:bounties");
+	var log$16 = logger_default.child("feature:bounties");
 	function should_show_bounty_board() {
 		return ffconfig.bounty_board_enabled && torn_page("bounties") && is_bounty_main_route();
 	}
@@ -5156,7 +5190,7 @@
 				sync$1();
 				return;
 			}
-			log$15.warn("Torn's bounty list didn't render; floating FF Scouter Bounties");
+			log$16.warn("Torn's bounty list didn't render; floating FFScouter Bounties");
 			float_modal();
 			watch_page();
 		});
@@ -5188,8 +5222,8 @@
 		}
 	}
 	var bounties_default = {
-		name: "FF Scouter Bounties",
-		description: "FF Scouter Bounties board on Torn's bounties page, floating on desktop and in-flow on narrow layouts (separate from Torn's own bounties)",
+		name: "FFScouter Bounties",
+		description: "FFScouter Bounties board on Torn's bounties page, floating on desktop and in-flow on narrow layouts (separate from Torn's own bounties)",
 		executionTime: StartTime.DocumentBody,
 		async shouldRun() {
 			return torn_page("bounties");
@@ -5231,6 +5265,7 @@
 		"ff-filter-box__range-inputs": "_ff-filter-box__range-inputs_zoxj6_230"
 	};
 	init_ffconfig();
+	init_logger();
 	init_react();
 	var cls$3 = {
 		box: faction_filter_box_module_default["ff-filter-box"],
@@ -5260,6 +5295,8 @@
 		rangeInputs: faction_filter_box_module_default["ff-filter-box__range-inputs"],
 		srOnly: faction_filter_box_module_default["ff-filter-box__sr-only"]
 	};
+	var log$15 = logger_default.child("ui");
+	var PROFILE_ID_RE = /[?&]ID=(\d+)/i;
 	var DEFAULT_HIDDEN_COLUMNS = {
 		level: false,
 		status: false,
@@ -5306,6 +5343,15 @@
 		lastActionMin: null,
 		lastActionMax: null
 	};
+	var SORT_CYCLE = {
+		none: "ff-desc",
+		"ff-desc": "ff-asc",
+		"ff-asc": "none"
+	};
+	function sortButtonLabel(sortBy, sortText) {
+		if (sortBy === "none") return "Sort: Default";
+		return `Sort: ${sortText} ${sortBy === "ff-asc" ? "▲" : "▼"}`;
+	}
 	function getFilterBoxHandle(el) {
 		if (!el) return null;
 		return el.__ffHandle ?? null;
@@ -5446,7 +5492,7 @@
 					ids.push(id);
 				}
 			} catch {
-				const match = (link.getAttribute("href") || "").match(/[?&]ID=(\d+)/i);
+				const match = (link.getAttribute("href") || "").match(PROFILE_ID_RE);
 				if (match?.[1]) {
 					const id = match[1];
 					if (!seen.has(id)) {
@@ -5462,7 +5508,7 @@
 			for (const link of docLinks) tryExtract(link);
 		}
 		if (ids.length < 2) {
-			console.warn("Could not find faction IDs to compare activity.");
+			log$15.warn("Could not find faction IDs to compare activity.");
 			return;
 		}
 		const now = new Date();
@@ -5566,7 +5612,7 @@
 						id: "sort-toggle-btn",
 						className: cls$3.sortBtn,
 						onClick: onSortToggle,
-						children: sortBy === "none" ? "Sort: Default" : sortBy === "ff-asc" ? `Sort: ${sortText} ▲` : `Sort: ${sortText} ▼`
+						children: sortButtonLabel(sortBy, sortText)
 					}),
 					jsxs("select", {
 						id: mode === "war" ? "war-col-display-filter" : "factions-col-display-filter",
@@ -5711,9 +5757,10 @@
 	}
 	function FilterBoxLayout({ rootRef, mode, collapsed, filterState, colDisplay, hasUntilData, hasLastActionData, onToggle, onToggleFilter, onResetFilters, onSortToggle, onDisplayChange, onCompareActivity, onActivityChange, onStatusChange, onOutSoonChange, onLevelChange, onFFChange, onStatsChange, onLastActionChange, onColumnVisibilityChange }) {
 		const s = filterState;
+		const warClass = mode === "war" ? ` ${cls$3.boxNoBorders}` : "";
 		return jsxs("details", {
 			ref: rootRef,
-			className: `${cls$3.box}${mode === "war" ? ` ${cls$3.boxNoBorders}` : ""}`,
+			className: `${cls$3.box}${warClass}`,
 			open: !collapsed,
 			onToggle,
 			children: [jsx("summary", { children: jsxs("div", {
@@ -5903,7 +5950,7 @@
 			persistCollapsed(mode, newCollapsed);
 		};
 		const onSortToggle = () => {
-			const next = filterStateRef.current.sortBy === "none" ? "ff-desc" : filterStateRef.current.sortBy === "ff-desc" ? "ff-asc" : "none";
+			const next = SORT_CYCLE[filterStateRef.current.sortBy];
 			applyStatePatch({ sortBy: next });
 			executeChangeImmediately();
 		};
@@ -6153,12 +6200,12 @@
 		toggle_tt_siblings(row, false);
 	}
 	function is_filter_active(filters) {
-		if (filters.sortBy !== "none") return true;
-		return false;
+		return filters.sortBy !== "none";
 	}
 	init_ffconfig();
 	init_logger();
 	var log$14 = logger_default.child("feature:faction");
+	var PROFILE_XID_PATTERN = /.*XID=(?<player_id>\d+)/;
 	async function poll_traveling_flights(membersList) {
 		const travelingPlayers = Array.from(membersList.querySelectorAll(".enemy, .your")).map((row) => {
 			const player_id = get_player_id_in_element(row);
@@ -6239,7 +6286,7 @@
 			if (!memberDiv) return null;
 			const profileLink = memberDiv.querySelector("a[href^=\"/profiles\"]");
 			if (!profileLink || !(profileLink instanceof HTMLAnchorElement)) return null;
-			const match = profileLink.href.match(/.*XID=(?<player_id>\d+)/);
+			const match = profileLink.href.match(PROFILE_XID_PATTERN);
 			if (!match?.groups?.["player_id"]) return null;
 			return {
 				row,
@@ -6560,7 +6607,9 @@
 			};
 		});
 		const flightInterval = setInterval(() => {
-			poll_traveling_flights(list);
+			poll_traveling_flights(list).catch((err) => {
+				log$12.error("Failed to poll traveling flights", err);
+			});
 			update_twse_presence_flags(list);
 			const handle = getFilterBoxHandle((list.closest(".faction-war") || list.parentNode)?.querySelector("[data-ff-filter-box]"));
 			if (handle?.ready) {
@@ -6655,9 +6704,7 @@
 				e.stopPropagation();
 				const newSort = handle.sortBy === "ff-desc" ? "ff-asc" : "ff-desc";
 				handle.setSortBy(newSort);
-			} else if (target.closest(nativeTabSelector)) {
-				if (handle.sortBy !== "none") handle.setSortBy("none");
-			}
+			} else if (target.closest(nativeTabSelector) && handle.sortBy !== "none") handle.setSortBy("none");
 		}, { capture: true });
 	}
 	function setup_war_features(factionWar) {
@@ -6735,9 +6782,7 @@
 	};
 	function should_run_faction() {
 		if (torn_page("factions", { step: "profile" })) return true;
-		if (torn_page("factions", { step: "your" })) {
-			if (window.location.hash === "" || window.location.hash === "#" || window.location.hash === "#/" || window.location.hash.startsWith("#/war/") || window.location.hash === "#/tab=info") return true;
-		}
+		if (torn_page("factions", { step: "your" }) && (window.location.hash === "" || window.location.hash === "#" || window.location.hash === "#/" || window.location.hash.startsWith("#/war/") || window.location.hash === "#/tab=info")) return true;
 		return false;
 	}
 	var API_KEY_NOTICE_ID = "ffscouter-api-key-notice";
@@ -6764,7 +6809,7 @@
 		].join(";");
 		const msg = document.createElement("span");
 		const link = document.createElement("a");
-		link.textContent = "FF Scouter Settings";
+		link.textContent = "FFScouter Settings";
 		link.style.cssText = "color: #fff; font-weight: bold; text-decoration: underline;";
 		msg.append(message, link, " on your profile page.");
 		getLocalUserId().then((id) => {
@@ -6805,10 +6850,10 @@
 		}
 		if (document.getElementById(API_KEY_NOTICE_ID)) return;
 		let message;
-		if (!ffconfig.key) message = "FF Scouter needs your API key to show Fair Fight data here. Enter it in ";
+		if (!ffconfig.key) message = "FFScouter needs your API key to show Fair Fight data here. Enter it in ";
 		else {
 			if (await check_key_status.is_registered() !== false) return;
-			message = "Your FF Scouter API key isn't registered. Check it in ";
+			message = "Your FFScouter API key isn't registered. Check it in ";
 		}
 		if (!should_run_faction() || apiKeyNoticeDismissed) {
 			remove_api_key_notice();
@@ -7177,9 +7222,7 @@
 		const handler = async (e) => {
 			if (e instanceof KeyboardEvent) {
 				if (e.key !== "Enter") return;
-			} else if (e instanceof MouseEvent) {
-				if (e.button !== 0 && e.button !== 1 && e.button !== 2) return;
-			}
+			} else if (e instanceof MouseEvent && e.button !== 0 && e.button !== 1 && e.button !== 2) return;
 			const cached = ffconfig.chain_targets;
 			if (!cached?.targets || cached.targets.length === 0) {
 				e.preventDefault();
@@ -7934,8 +7977,9 @@
 			})
 		] });
 	}
+	var WHOLE_NUMBER = /^\d+$/;
 	function parse_multiplier(value, max) {
-		if (!/^\d+$/.test(value)) return null;
+		if (!WHOLE_NUMBER.test(value)) return null;
 		const n = Number(value);
 		return n >= 1 && n <= max ? n : null;
 	}
@@ -8113,7 +8157,7 @@
 									children: "Hide OD Insurance"
 								}),
 								" ",
-								"You can turn it back on in FF Scouter Settings."
+								"You can turn it back on in FFScouter Settings."
 							] })
 						]
 					})]
@@ -8204,7 +8248,10 @@
 	function load_position() {
 		return clamp_position(storage_default.get("od_send_helper_position") ?? DEFAULT_POSITION);
 	}
-	var mark = (step) => step.done ? "✓" : step.current ? "▸" : "·";
+	var mark = (step) => {
+		if (step.done) return "✓";
+		return step.current ? "▸" : "·";
+	};
 	function SendHelper({ label, problem, steps, onPress, onCancel }) {
 		const [position, setPosition] = useState(load_position);
 		const [expanded, setExpanded] = useState(false);
@@ -8312,7 +8359,8 @@
 	function add_row_slots(root, item_ids) {
 		const added = [];
 		if (item_ids.length === 0) return added;
-		for (const row of root.querySelectorAll(row_selector(item_ids))) {
+		const rows = root.querySelectorAll(row_selector(item_ids));
+		for (const row of rows) {
 			if (row.hasAttribute("data-ff-od")) continue;
 			const name = row.querySelector(".title > .name-wrap");
 			if (!name) continue;
@@ -8436,7 +8484,8 @@
 		action: NONE
 	});
 	var not_enough = (have, need) => blocked("open_send", "not_enough", `Not enough Xanax: ${have} of ${need}`);
-	var bracket_id = (value) => value.match(/\[(\d+)\]\s*$/)?.[1] ?? null;
+	var BRACKET_ID = /\[(\d+)\]\s*$/;
+	var bracket_id = (value) => value.match(BRACKET_ID)?.[1] ?? null;
 	function read_send_form(form, selected) {
 		const pay = selected.plan.payment;
 		const total = plan_total(selected);
@@ -8480,13 +8529,14 @@
 			target: send
 		});
 	}
+	var CONFIRM_RECIPIENT = / to (.+?)(?: with the message:.*)?\?\s*$/;
 	function confirm_differences(form, selected) {
 		const pay = selected.plan.payment;
 		const value = (name) => form.querySelector(`input[type="hidden"][name="${name}"]`)?.value ?? "";
 		const diffs = [];
 		const user = value("userID");
 		if (user !== String(pay.recipient_player_id)) {
-			const name = (form.querySelector("p")?.textContent ?? "").match(/ to (.+?)(?: with the message:.*)?\?\s*$/)?.[1];
+			const name = (form.querySelector("p")?.textContent ?? "").match(CONFIRM_RECIPIENT)?.[1];
 			diffs.push(`to ${name ?? "player"} [${user}], not ${recipient_text(selected)}`);
 		}
 		const amount = value("amount");
@@ -8495,13 +8545,16 @@
 		if (tag !== pay.message) diffs.push(`message "${tag}", not "${pay.message}"`);
 		return diffs;
 	}
+	var SENT_AMOUNT = /^You sent (?:(\d[\d,]*)x|(some)) Xanax /;
+	var XID_PARAM = /XID=(\d+)/;
+	var SENT_MESSAGE = / with the message: (.*)$/;
 	function result_matches(result, selected) {
 		const pay = selected.plan.payment;
 		const text = flat_text(result);
-		const sent = text.match(/^You sent (?:(\d[\d,]*)x|(some)) Xanax /);
+		const sent = text.match(SENT_AMOUNT);
 		const amount = sent?.[2] ? 1 : count_of(sent?.[1]);
-		const id = result.querySelector("a[href*=\"XID=\"]")?.getAttribute("href")?.match(/XID=(\d+)/)?.[1];
-		const message = text.match(/ with the message: (.*)$/)?.[1] ?? "";
+		const id = result.querySelector("a[href*=\"XID=\"]")?.getAttribute("href")?.match(XID_PARAM)?.[1];
+		const message = text.match(SENT_MESSAGE)?.[1] ?? "";
 		return amount === plan_total(selected) && id === String(pay.recipient_player_id) && message === pay.message;
 	}
 	function read_send_panel(wrap, selected, stale_form) {
@@ -8710,7 +8763,7 @@
 	}
 	function hide_feature() {
 		ffconfig.od_insurance_enabled = false;
-		toast("OD Insurance hidden. Turn it back on in FF Scouter Settings.");
+		toast("OD Insurance hidden. Turn it back on in FFScouter Settings.");
 		window.dispatchEvent(new CustomEvent("ff-config-updated"));
 	}
 	var same_ids = (a, b) => {
@@ -8838,7 +8891,7 @@
 		async run() {
 			const info_line = create_info_line();
 			if (!ffconfig.key) {
-				info_line.innerHTML = "[FF Scouter V2]: Limited API key needed - enter in FF Scouter Settings below";
+				info_line.innerHTML = "[FFScouter V2]: Limited API key needed - enter in FFScouter Settings below";
 				inject_info_line(info_line);
 				return;
 			}
@@ -8898,6 +8951,13 @@
 	};
 	var profile_history_exports = __exportAll({ default: () => profile_history_default });
 	init_ffconfig();
+	function torn_icon_class(buttonsList) {
+		for (const svg of buttonsList.querySelectorAll(".profile-button svg")) {
+			const cls = [...svg.classList].find((c) => c.startsWith("icon___"));
+			if (cls) return cls;
+		}
+		return null;
+	}
 	var profile_history_default = {
 		name: "Profile FF history",
 		description: "Add a button to all user's profiles to link to ffscouter.com",
@@ -8919,7 +8979,7 @@
 			btn.className = "profile-button ff-scouter-history-btn";
 			btn.title = "View Stats History on FFScouter";
 			const container = document.createElement("div");
-			container.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="46" height="46" viewBox="640 178 46 46" class="icon___GP196">
+			container.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="46" height="46" viewBox="640 178 46 46" stroke="currentColor">
   <g fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
     <!-- Clock face outline representing history/time -->
     <circle cx="663" cy="201" r="17" />
@@ -8930,7 +8990,12 @@
     <text x="657" y="212">FF</text>
   </g>
 </svg>`;
-			for (const node of container.children) btn.appendChild(node);
+			const svg = container.firstElementChild;
+			if (svg) {
+				const iconClass = torn_icon_class(buttonsList);
+				if (iconClass) svg.setAttribute("class", iconClass);
+				btn.appendChild(svg);
+			}
 			const label = document.createElement("span");
 			label.className = "ff-history-label";
 			label.textContent = "FF\nHistory";
@@ -9078,6 +9143,18 @@
 		isKeyRegistered: null
 	};
 	function ApiKeySection({ apiKey, drafts, isPremium, onChange, onApiKeyBlur, onVerify }) {
+		let premiumBadgeClass;
+		let premiumLabel;
+		if (isPremium === null) {
+			premiumBadgeClass = cls.premiumBadgeUnknown;
+			premiumLabel = "Unknown";
+		} else if (isPremium) {
+			premiumBadgeClass = cls.premiumBadgeEnabled;
+			premiumLabel = "Enabled";
+		} else {
+			premiumBadgeClass = cls.premiumBadgeDisabled;
+			premiumLabel = "Disabled";
+		}
 		return jsxs("div", {
 			className: cls.group,
 			children: [jsx("h4", { children: "API Key & Premium" }), jsxs("div", {
@@ -9129,12 +9206,12 @@
 						children: [
 							jsx("label", {
 								htmlFor: "ff-premium-badge",
-								children: "FF Scouter Premium:"
+								children: "FFScouter Premium:"
 							}),
 							jsx("span", {
 								id: "ff-premium-badge",
-								className: `${cls.premiumBadge} ${isPremium === null ? cls.premiumBadgeUnknown : isPremium ? cls.premiumBadgeEnabled : cls.premiumBadgeDisabled}`,
-								children: isPremium === null ? "Unknown" : isPremium ? "Enabled" : "Disabled"
+								className: `${cls.premiumBadge} ${premiumBadgeClass}`,
+								children: premiumLabel
 							}),
 							jsx("button", {
 								type: "button",
@@ -9733,7 +9810,7 @@
 					onChange
 				}), jsx("label", {
 					htmlFor: "bounty-board-toggle",
-					children: "Enable FF Scouter Bounties"
+					children: "Enable FFScouter Bounties"
 				})]
 			}),
 			jsxs("div", {
@@ -9775,7 +9852,7 @@
 					onChange
 				}), jsx("label", {
 					htmlFor: "settings-panel-own-profile-only-toggle",
-					children: "Only show FF Scouter Settings on my own profile"
+					children: "Only show FFScouter Settings on my own profile"
 				})]
 			}),
 			jsx("div", {
@@ -9920,9 +9997,10 @@
 		useEffect(() => {
 			onRendered();
 		});
+		const accordionGlow = !props.apiKey || isKeyRegistered === false ? ` ${cls.accordionGlow}` : "";
 		return jsxs("details", {
-			className: `${cls.accordion}${!props.apiKey || isKeyRegistered === false ? ` ${cls.accordionGlow}` : ""} cont-gray border-round`,
-			children: [jsx("summary", { children: "FF Scouter Settings" }), jsxs("div", {
+			className: `${cls.accordion}${accordionGlow} cont-gray border-round`,
+			children: [jsx("summary", { children: "FFScouter Settings" }), jsxs("div", {
 				className: cls.body,
 				children: [
 					jsx(ApiKeySection, {
@@ -10112,7 +10190,7 @@
 					}));
 				},
 				onClearCache: () => {
-					if (confirm("Are you sure you want to clear all FF Scouter cache?")) this.dispatchEvent(new CustomEvent("ff-clear-cache", {
+					if (confirm("Are you sure you want to clear all FFScouter cache?")) this.dispatchEvent(new CustomEvent("ff-clear-cache", {
 						bubbles: true,
 						composed: true
 					}));
@@ -10795,7 +10873,7 @@
 		if (v3_has(new_key)) return;
 		const v = v2_get(old_key);
 		if (v !== null) {
-			const n = parseFloat(v);
+			const n = Number.parseFloat(v);
 			if (!Number.isNaN(n)) v3_set(new_key, n);
 		}
 	}
@@ -10841,8 +10919,8 @@
 	init_ffconfig();
 	init_logger();
 	var settings_default = {
-		name: "FF Scouter settings panel",
-		description: "Give users a FF Scouter settings box injected on the profile page",
+		name: "FFScouter settings panel",
+		description: "Give users a FFScouter settings box injected on the profile page",
 		executionTime: StartTime.DocumentBody,
 		async shouldRun() {
 			return torn_page("profiles");
@@ -10852,12 +10930,12 @@
 				const viewedId = extract_id_from_url(window.location.href);
 				if (viewedId === null) return;
 				const localIdStr = await getLocalUserId();
-				const localId = localIdStr !== null ? parseInt(localIdStr, 10) : null;
+				const localId = localIdStr !== null ? Number.parseInt(localIdStr, 10) : null;
 				if (localId !== null && !Number.isNaN(localId) && viewedId !== localId) return;
 			}
 			const panel = await create_ff_element("ff-settings-panel");
 			if (!panel) {
-				toast("FF Scouter settings failed to load. This may be caused by a conflicting browser extension (e.g. AdBlocker Ultimate).", TOAST_LEVEL.ERROR);
+				toast("FFScouter settings failed to load. This may be caused by a conflicting browser extension (e.g. AdBlocker Ultimate).", TOAST_LEVEL.ERROR);
 				return;
 			}
 			panel.apiKey = ffconfig.key || "";
@@ -10991,7 +11069,7 @@
 				try {
 					ffscouter.clear_cache();
 					clear_v2_data();
-					toast("FF Scouter cache cleared successfully!");
+					toast("FFScouter cache cleared successfully!");
 				} catch (err) {
 					logger_default.error("Failed to delete IndexedDB cache", err);
 					toast("Failed to clear cache database", TOAST_LEVEL.ERROR);
@@ -11014,7 +11092,7 @@
 				}
 				panel.isPremium = null;
 				panel.isKeyRegistered = null;
-				let result = null;
+				let result;
 				try {
 					result = await check_key(detail.apiKey);
 				} catch (err) {
@@ -11029,10 +11107,10 @@
 					toast("Problem querying ffscouter.com API. Please wait a few seconds and try again.", TOAST_LEVEL.WARNING);
 					return;
 				}
-				let message = `FF Scouter not configured. API key (${result.result.key}) not registered.`;
+				let message = `FFScouter not configured. API key (${result.result.key}) not registered.`;
 				let level = TOAST_LEVEL.ERROR;
 				if (result.result.is_registered) {
-					message = `FF Scouter successfully configured. API key (${result.result.key}) was registered on ${format_timestamp(result.result.registered_at)} and last used ${format_timestamp(result.result.last_used)}.`;
+					message = `FFScouter successfully configured. API key (${result.result.key}) was registered on ${format_timestamp(result.result.registered_at)} and last used ${format_timestamp(result.result.last_used)}.`;
 					level = TOAST_LEVEL.INFO;
 					ffconfig.key = detail.apiKey;
 					panel.apiKey = detail.apiKey;
@@ -11070,6 +11148,10 @@
 	init_ffconfig();
 	init_logger();
 	var log$2 = logger_default.child("feature:status-attack");
+	var USER2ID_PATTERN = /user2ID=(\d+)/;
+	var PROFILE_ID_PATTERN = /profile-(\d+)$/;
+	var MINI_PROFILE_ID_PATTERN = /mini-profile-(\d+)$/;
+	var XID_PATTERN = /XID=(\d+)/;
 	function updateBodyClass() {
 		if (ffconfig.status_attack_links_enabled) document.body.setAttribute("data-ff-status-attack-enabled", "true");
 		else document.body.removeAttribute("data-ff-status-attack-enabled");
@@ -11104,7 +11186,7 @@
 	function logExtractionCrossCheck(statusEl, resolvedId) {
 		const row = statusEl.closest("li[data-player_id], li.enemy, li.your");
 		const dataPlayerId = row?.getAttribute("data-player_id") ?? null;
-		const attackLinkUserId = ((row?.querySelector("a[href*=\"user2ID=\"]")?.getAttribute("href"))?.match(/user2ID=(\d+)/))?.[1] ?? null;
+		const attackLinkUserId = ((row?.querySelector("a[href*=\"user2ID=\"]")?.getAttribute("href"))?.match(USER2ID_PATTERN))?.[1] ?? null;
 		log$2.info("Status click extraction cross-check:", {
 			resolvedId,
 			dataPlayerId,
@@ -11116,7 +11198,7 @@
 		try {
 			const idStr = await getLocalUserId();
 			if (idStr) {
-				localUserId = parseInt(idStr, 10);
+				localUserId = Number.parseInt(idStr, 10);
 				log$2.debug("Logged-in user ID cached:", localUserId);
 			}
 		} catch (err) {
@@ -11145,12 +11227,12 @@
 		let playerId = null;
 		const idAttr = statusEl.id || "";
 		if (idAttr?.includes("-profile-")) {
-			const match = idAttr.match(/profile-(\d+)$/);
-			if (match?.[1]) playerId = parseInt(match[1], 10);
+			const match = idAttr.match(PROFILE_ID_PATTERN);
+			if (match?.[1]) playerId = Number.parseInt(match[1], 10);
 		}
 		if (!playerId && idAttr && idAttr.includes("-mini-profile-")) {
-			const match = idAttr.match(/mini-profile-(\d+)$/);
-			if (match?.[1]) playerId = parseInt(match[1], 10);
+			const match = idAttr.match(MINI_PROFILE_ID_PATTERN);
+			if (match?.[1]) playerId = Number.parseInt(match[1], 10);
 		}
 		if (!playerId && torn_page("factions")) {
 			const row = statusEl.closest(".table-row, .enemy, .your, .member");
@@ -11167,8 +11249,8 @@
 			if (container) playerId = get_player_id_in_element(container);
 		}
 		if (!playerId && torn_page("profiles")) {
-			const match = window.location.href.match(/XID=(\d+)/);
-			if (match?.[1]) playerId = parseInt(match[1], 10);
+			const match = window.location.href.match(XID_PATTERN);
+			if (match?.[1]) playerId = Number.parseInt(match[1], 10);
 		}
 		if (!playerId) {
 			const miniRoot = document.getElementById("profile-mini-root");
@@ -11246,11 +11328,11 @@
 			if (typeof window !== "undefined") {
 				const originalPushState = window.history.pushState;
 				const originalReplaceState = window.history.replaceState;
-				window.history.pushState = function(...args) {
+				window.history.pushState = function pushState(...args) {
 					originalPushState.apply(this, args);
 					setTimeout(initPage, 100);
 				};
-				window.history.replaceState = function(...args) {
+				window.history.replaceState = function replaceState(...args) {
 					originalReplaceState.apply(this, args);
 					setTimeout(initPage, 100);
 				};
@@ -11327,7 +11409,7 @@
 			return;
 		}
 		document.documentElement.setAttribute(INJECTION_KEY, "1");
-		log.info("Initializing", "3.5-beta4");
+		log.info("Initializing", "3.6-beta1");
 		run_migration();
 		if (ffscouter.analytics_enabled) {
 			if (typeof unsafeWindow !== "undefined") unsafeWindow.ffscouter = ffscouter;
