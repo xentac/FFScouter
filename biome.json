@@ -241,7 +241,11 @@
     {
       "includes": [
         "src/features/faction/__fixtures__/torn-markup/2026-09-28/war-row-hospital-until.html",
-        "src/features/status-attack/__fixtures__/torn-markup/2026-07-26/war-list-enemy-rows.html"
+        "src/features/status-attack/__fixtures__/torn-markup/2026-07-26/war-list-enemy-rows.html",
+        "src/ui/floating/__fixtures__/torn-markup/2026-11-10/page-header.html",
+        "src/features/od-insurance/__fixtures__/torn-markup/2026-11-13/send-confirm.html",
+        "src/features/od-insurance/__fixtures__/torn-markup/2026-11-13/send-result.html",
+        "src/features/od-insurance/__fixtures__/torn-markup/2026-11-13/send-result-one.html"
       ],
       "formatter": {
         "enabled": false

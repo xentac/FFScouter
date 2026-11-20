@@ -151,9 +151,11 @@ function PlanDetail({
 /** Picks a plan for the Send Helper, with a multiplier. */
 export type OnPick = (plan: PayablePlan, multiplier: number) => void;
 
+const WHOLE_NUMBER = /^\d+$/;
+
 // A whole number from 1 to the plan's cap, or null.
 function parse_multiplier(value: string, max: number): number | null {
-  if (!/^\d+$/.test(value)) return null;
+  if (!WHOLE_NUMBER.test(value)) return null;
   const n = Number(value);
   return n >= 1 && n <= max ? n : null;
 }

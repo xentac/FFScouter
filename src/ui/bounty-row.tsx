@@ -13,7 +13,11 @@ import type { FFData, TornTimestampSec } from "@utils/types";
 import type { ReactNode } from "react";
 import { cls } from "./bounty-board-classes";
 import type { FactionCardModel, PlayerRowModel } from "./bounty-board-rows";
-import { format_tier_label, resolve_board_status } from "./bounty-board-rows";
+import {
+  assertNever,
+  format_tier_label,
+  resolve_board_status,
+} from "./bounty-board-rows";
 
 const OWN_LABEL = "Your bounty – not claimable by you";
 const OWN_TITLE = "You posted this bounty, so you can't attack or claim it.";
@@ -96,13 +100,14 @@ function StatusLabel({
       break;
     case "static":
       text = short_state(view.state);
-      tone =
-        view.state === "Traveling" || view.state === "Abroad"
-          ? "away"
-          : view.unavailable
-            ? "out"
-            : "other";
+      if (view.state === "Traveling" || view.state === "Abroad") {
+        tone = "away";
+      } else {
+        tone = view.unavailable ? "out" : "other";
+      }
       break;
+    default:
+      return assertNever(view);
   }
   const checked =
     row.status_last_checked != null

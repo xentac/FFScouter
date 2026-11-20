@@ -165,7 +165,8 @@ const not_enough = (have: number, need: number) =>
   blocked("open_send", "not_enough", `Not enough Xanax: ${have} of ${need}`);
 
 // Torn reads only the ID inside the brackets of the recipient field.
-const bracket_id = (value: string) => value.match(/\[(\d+)\]\s*$/)?.[1] ?? null;
+const BRACKET_ID = /\[(\d+)\]\s*$/;
+const bracket_id = (value: string) => value.match(BRACKET_ID)?.[1] ?? null;
 
 function read_send_form(form: HTMLFormElement, selected: SelectedPlan): Read {
   const pay = selected.plan.payment;
@@ -223,6 +224,8 @@ function read_send_form(form: HTMLFormElement, selected: SelectedPlan): Read {
   return at_step("send", { kind: "click", target: send });
 }
 
+const CONFIRM_RECIPIENT = / to (.+?)(?: with the message:.*)?\?\s*$/;
+
 function confirm_differences(
   form: HTMLFormElement,
   selected: SelectedPlan,
@@ -236,7 +239,7 @@ function confirm_differences(
   if (user !== String(pay.recipient_player_id)) {
     // Torn resolved the ID to a name: "... to <b>name</b> ..."
     const text = form.querySelector("p")?.textContent ?? "";
-    const name = text.match(/ to (.+?)(?: with the message:.*)?\?\s*$/)?.[1];
+    const name = text.match(CONFIRM_RECIPIENT)?.[1];
     diffs.push(
       `to ${name ?? "player"} [${user}], not ${recipient_text(selected)}`,
     );
@@ -252,17 +255,21 @@ function confirm_differences(
   return diffs;
 }
 
+const SENT_AMOUNT = /^You sent (?:(\d[\d,]*)x|(some)) Xanax /;
+const XID_PARAM = /XID=(\d+)/;
+const SENT_MESSAGE = / with the message: (.*)$/;
+
 // Torn's result: "You sent <b>20x</b> <b>Xanax</b> to <a XID>…</a> with the
 // message: …". For one item Torn writes "some" in place of "1x". Matches only
 // when the ID, the amount, and the message do.
 function result_matches(result: Element, selected: SelectedPlan): boolean {
   const pay = selected.plan.payment;
   const text = flat_text(result);
-  const sent = text.match(/^You sent (?:(\d[\d,]*)x|(some)) Xanax /);
+  const sent = text.match(SENT_AMOUNT);
   const amount = sent?.[2] ? 1 : count_of(sent?.[1]);
   const link = result.querySelector<HTMLAnchorElement>('a[href*="XID="]');
-  const id = link?.getAttribute("href")?.match(/XID=(\d+)/)?.[1];
-  const message = text.match(/ with the message: (.*)$/)?.[1] ?? "";
+  const id = link?.getAttribute("href")?.match(XID_PARAM)?.[1];
+  const message = text.match(SENT_MESSAGE)?.[1] ?? "";
   return (
     amount === plan_total(selected) &&
     id === String(pay.recipient_player_id) &&

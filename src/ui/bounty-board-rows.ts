@@ -125,6 +125,10 @@ export function resolve_board_status(
   return { kind: "static", state, unavailable: UNAVAILABLE_STATES.has(state) };
 }
 
+export function assertNever(value: never): never {
+  throw new Error(`Unhandled case: ${JSON.stringify(value)}`);
+}
+
 export function is_status_available(view: BoardStatusView): boolean {
   switch (view.kind) {
     case "unknown":
@@ -135,6 +139,8 @@ export function is_status_available(view: BoardStatusView): boolean {
       return false;
     case "static":
       return !view.unavailable;
+    default:
+      return assertNever(view);
   }
 }
 
