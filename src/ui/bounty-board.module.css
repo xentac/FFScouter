@@ -1,6 +1,6 @@
-/* FF Scouter Bounties (Bounty Board Modal). Branded and floating on purpose:
+/* FFScouter Bounties (Bounty Board Modal). Branded and floating on purpose:
    it sits on Torn's own bounties page and must never read as Torn's native
-   bounty list (see CONTEXT.md "Torn Bounty" vs "FF Scouter Bounty"). */
+   bounty list (see CONTEXT.md "Torn Bounty" vs "FFScouter Bounty"). */
 
 .ff-bounty-modal,
 .ff-bounty-modal *,

@@ -145,7 +145,7 @@ describe("OdInsuranceModal", () => {
     modal(FRESH);
     expect(guide_links().length).toBeGreaterThan(0);
     expect(screen.getByRole("dialog").textContent).toContain(
-      "You can turn it back on in FF Scouter Settings.",
+      "You can turn it back on in FFScouter Settings.",
     );
   });
 

@@ -143,7 +143,7 @@ function place_section() {
       sync();
       return;
     }
-    log.warn("Torn's bounty list didn't render; floating FF Scouter Bounties");
+    log.warn("Torn's bounty list didn't render; floating FFScouter Bounties");
     float_modal();
     // Keep watching, so a list Torn renders later still moves it in-flow.
     watch_page();
@@ -181,9 +181,9 @@ function sync() {
 }
 
 export default {
-  name: "FF Scouter Bounties",
+  name: "FFScouter Bounties",
   description:
-    "FF Scouter Bounties board on Torn's bounties page, floating on desktop and in-flow on narrow layouts (separate from Torn's own bounties)",
+    "FFScouter Bounties board on Torn's bounties page, floating on desktop and in-flow on narrow layouts (separate from Torn's own bounties)",
   executionTime: StartTime.DocumentBody,
 
   // Only the page is checked here: shouldRun() runs once at boot, so the

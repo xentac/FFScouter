@@ -27,7 +27,7 @@ async function show_banner() {
 
   const msg = document.createElement("span");
   msg.innerHTML =
-    `This version of FF Scouter is no longer maintained. ` +
+    `This version of FFScouter is no longer maintained. ` +
     `<a href="${BETA_INSTALL_URL}" target="_blank" rel="noopener noreferrer" ` +
     `style="color: #fff; font-weight: bold; text-decoration: underline;">` +
     `Install FF Scouter V2 beta</a> to keep receiving updates.`;

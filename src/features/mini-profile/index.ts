@@ -83,7 +83,7 @@ const setup_mini_observer = () => {
     }
     lastPlayerId = player_id;
 
-    // Get FF Scouter data
+    // Get FFScouter data
     ffscouter
       .get(player_id)
       .then(async (d: FFData) => {

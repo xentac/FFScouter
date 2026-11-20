@@ -252,7 +252,7 @@ function ApiKeySection({
             />
           </div>
           <div className={cls.apiStatusRow}>
-            <label htmlFor="ff-premium-badge">FF Scouter Premium:</label>
+            <label htmlFor="ff-premium-badge">FFScouter Premium:</label>
             <span
               id="ff-premium-badge"
               className={`${cls.premiumBadge} ${premiumBadgeClass}`}
@@ -767,7 +767,7 @@ function AdditionalFeaturesSection({ drafts, onChange }: SettingsSectionProps) {
           checked={drafts.bountyBoardEnabled}
           onChange={onChange}
         />
-        <label htmlFor="bounty-board-toggle">Enable FF Scouter Bounties</label>
+        <label htmlFor="bounty-board-toggle">Enable FFScouter Bounties</label>
       </div>
 
       <div className={`${cls.cell} ${cls.cellCheckbox}`}>
@@ -802,7 +802,7 @@ function AdditionalFeaturesSection({ drafts, onChange }: SettingsSectionProps) {
           onChange={onChange}
         />
         <label htmlFor="settings-panel-own-profile-only-toggle">
-          Only show FF Scouter Settings on my own profile
+          Only show FFScouter Settings on my own profile
         </label>
       </div>
 
@@ -959,7 +959,7 @@ export function SettingsPanelComponent({
     <details
       className={`${cls.accordion}${accordionGlow} cont-gray border-round`}
     >
-      <summary>FF Scouter Settings</summary>
+      <summary>FFScouter Settings</summary>
 
       <div className={cls.body}>
         <ApiKeySection
@@ -1102,7 +1102,7 @@ export class FFSettingsPanel extends HTMLElement {
           }
         },
         onClearCache: () => {
-          if (confirm("Are you sure you want to clear all FF Scouter cache?")) {
+          if (confirm("Are you sure you want to clear all FFScouter cache?")) {
             this.dispatchEvent(
               new CustomEvent("ff-clear-cache", {
                 bubbles: true,

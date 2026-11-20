@@ -1,4 +1,4 @@
-// Pure view-model for the FF Scouter Bounties board: turns board targets plus
+// Pure view-model for the FFScouter Bounties board: turns board targets plus
 // the FF lookup into sorted, filtered row models. No DOM — shared by the
 // desktop floating modal and the later mobile in-flow container.
 import {

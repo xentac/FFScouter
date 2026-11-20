@@ -355,7 +355,7 @@ export function OdInsuranceModal({
               <button type="button" className={cls.hide} onClick={onHide}>
                 Hide OD Insurance
               </button>{" "}
-              You can turn it back on in FF Scouter Settings.
+              You can turn it back on in FFScouter Settings.
             </div>
           </div>
         </div>
