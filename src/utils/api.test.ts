@@ -22,11 +22,11 @@ import {
   check_key,
   FFApiError,
   type gmRequest,
-  make_flights_url,
+  make_flights_batch_url,
   make_od_insurance_plans_url,
   make_stats_url,
   query_bounty_seller_board,
-  query_flights,
+  query_flights_batch,
   query_od_insurance_plans,
   query_stats,
   query_targets,
@@ -492,33 +492,25 @@ test("success carries available_estimates and spies through to FFDataComplete", 
   }
 });
 
-test("make_flights_url generates proper url", () => {
-  expect(make_flights_url("test-key", 12345)).toEqual(
-    "https://ffscouter.com/api/v1/player-flights?key=test-key&target=12345",
+test("make_flights_batch_url generates proper url", () => {
+  expect(make_flights_batch_url("test-key", [12345, 67890])).toEqual(
+    "https://ffscouter.com/api/v1/player-flights/batch?key=test-key&targets=12345%2C67890",
   );
 });
 
-test("query_flights success", async () => {
+test("query_flights_batch success maps each player to its current trip", async () => {
+  const japan = {
+    takeoff_time: 1710000000,
+    status_description: "Traveling to Japan",
+    earliest_arrival_time: 1710007200,
+    latest_arrival_time: 1710010800,
+    travel_method: "Airline",
+    book_likely_being_used: true,
+  };
   const mockResponse = {
-    player_id: 12345,
-    current: {
-      takeoff_time: 1710000000,
-      status_description: "Traveling to Japan",
-      earliest_arrival_time: 1710007200,
-      latest_arrival_time: 1710010800,
-      travel_method: "Airline",
-      book_likely_being_used: true,
-    },
-    recent_flights: [
-      {
-        takeoff_time: 1709900000,
-        status_description: "Traveling to China",
-        earliest_arrival_time: 1709905000,
-        latest_arrival_time: 1709909000,
-        travel_method: "PI",
-        book_likely_being_used: false,
-        approx_landing_time: 1709912000,
-      },
+    flights: [
+      { player_id: 12345, current: japan },
+      { player_id: 67890, current: null },
     ],
   };
 
@@ -537,8 +529,13 @@ x-ratelimit-remaining: 99\n",
     context: {},
   });
 
-  expect(await query_flights("test-key", 12345, success)).toEqual({
-    result: mockResponse,
+  expect(
+    await query_flights_batch("test-key", [12345, 67890], success),
+  ).toEqual({
+    result: new Map([
+      [12345, japan],
+      [67890, null],
+    ]),
     blank: false,
     limits: {
       rate_limit: 100,
@@ -547,16 +544,20 @@ x-ratelimit-remaining: 99\n",
       this_minute: 1,
     },
   });
+  expect(success).toHaveBeenCalledWith({
+    method: "GET",
+    url: make_flights_batch_url("test-key", [12345, 67890]),
+  });
 });
 
-test("query_flights empty response", async () => {
+test("query_flights_batch empty response", async () => {
   const empty: typeof gmRequest = vi.fn().mockResolvedValue(null);
-  expect(await query_flights("test-key", 12345, empty)).toEqual({
+  expect(await query_flights_batch("test-key", [12345], empty)).toEqual({
     blank: true,
   });
 });
 
-test("query_flights handle errors", async () => {
+test("query_flights_batch handle errors", async () => {
   const error400: typeof gmRequest = vi.fn().mockResolvedValue({
     responseHeaders: "",
     readyState: 4,
@@ -569,7 +570,9 @@ test("query_flights handle errors", async () => {
     context: {},
   });
 
-  await expect(query_flights("test-key", 12345, error400)).rejects.toThrow(
+  await expect(
+    query_flights_batch("test-key", [12345], error400),
+  ).rejects.toThrow(
     new FFApiError(
       "API request failed. Couldn't parse response. HTTP status code: 400",
     ),
@@ -593,7 +596,7 @@ test("query_flights handle errors", async () => {
   });
 
   await expect(
-    query_flights("test-key", 12345, error_rate_limit),
+    query_flights_batch("test-key", [12345], error_rate_limit),
   ).rejects.toThrow(
     new FFApiError(
       "API request failed. Error: Rate limit exceeded. Maximum 100 requests per minute per account.; Code: 20",
@@ -606,6 +609,24 @@ test("query_flights handle errors", async () => {
         } as any,
       },
     ),
+  );
+
+  const malformed: typeof gmRequest = vi.fn().mockResolvedValue({
+    responseHeaders: "",
+    readyState: 4,
+    response: "",
+    responseText: JSON.stringify({ unexpected: true }),
+    responseXML: null,
+    status: 200,
+    statusText: "",
+    finalUrl: "",
+    context: {},
+  });
+
+  await expect(
+    query_flights_batch("test-key", [12345], malformed),
+  ).rejects.toThrow(
+    new FFApiError("API request failed. HTTP status code: 200"),
   );
 });
 

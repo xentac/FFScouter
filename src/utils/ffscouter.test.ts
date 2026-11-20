@@ -1,16 +1,17 @@
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
-import { query_flights, query_stats } from "./api";
+import { query_flights_batch, query_stats } from "./api";
 import { FFCache } from "./ffcache";
 import { FFConfig } from "./ffconfig.js";
 import { FFScouter } from "./ffscouter";
 
 import { generate_test_ff_data } from "./test.js";
-import type { FFData, TravelMethod } from "./types.js";
+import type { FFData, PlayerFlightsResponse, TravelMethod } from "./types.js";
 
 vi.mock(import("./api.js"), () => {
   return {
+    FLIGHTS_BATCH_MAX_TARGETS: 100 as const,
     query_stats: vi.fn(),
-    query_flights: vi.fn(),
+    query_flights_batch: vi.fn(),
   };
 });
 
@@ -58,6 +59,12 @@ const prime_cache = async (c: FFCache) => {
 };
 
 const config = new FFConfig("test");
+
+// Wrap single-player flight results as a flights batch API response.
+const batch_of = (...flights: PlayerFlightsResponse[]) => ({
+  result: new Map(flights.map((f) => [f.player_id, f.current])),
+  blank: false as const,
+});
 vi.spyOn(config, "key", "get").mockReturnValue("a");
 vi.spyOn(config, "key", "set");
 
@@ -371,7 +378,7 @@ test("get_flights cache hit", async () => {
   const res = await f.get_flights(123);
   expect(res).toEqual(mockFlight);
   expect(c.get_flight).toHaveBeenCalledWith(123);
-  expect(query_flights).not.toHaveBeenCalled();
+  expect(query_flights_batch).not.toHaveBeenCalled();
 
   await c.delete_db();
 });
@@ -401,10 +408,7 @@ test("get_flights cache miss success", async () => {
   vi.spyOn(c, "update_flight").mockResolvedValue();
   vi.spyOn(c, "clean_expired").mockResolvedValue();
 
-  vi.mocked(query_flights).mockResolvedValue({
-    result: mockFlight,
-    blank: false,
-  });
+  vi.mocked(query_flights_batch).mockResolvedValue(batch_of(mockFlight));
 
   const promise = f.get_flights(456);
   await Promise.resolve();
@@ -413,8 +417,8 @@ test("get_flights cache miss success", async () => {
 
   expect(res).toEqual(mockFlight);
   expect(c.get_flight).toHaveBeenCalledWith(456);
-  expect(query_flights).toHaveBeenCalledWith("a", 456);
-  expect(c.update_flight).toHaveBeenCalledWith(mockFlight, 1800000); // 3600 / 2 = 1800 seconds = 1,800,000 ms
+  expect(query_flights_batch).toHaveBeenCalledWith("a", [456]);
+  expect(c.update_flight).toHaveBeenCalledWith(mockFlight, 1800000); // cached until earliest arrival, 1800s away
   expect(c.clean_expired).toHaveBeenCalled();
 
   await c.delete_db();
@@ -426,7 +430,7 @@ test("get_flights API error throws", async () => {
 
   vi.spyOn(c, "get_flight").mockResolvedValue(null);
   vi.spyOn(c, "clean_expired").mockResolvedValue();
-  vi.mocked(query_flights).mockRejectedValue(new Error("API offline"));
+  vi.mocked(query_flights_batch).mockRejectedValue(new Error("API offline"));
 
   const promise = expect(f.get_flights(789)).rejects.toThrow("API offline");
   await Promise.resolve();
@@ -450,10 +454,7 @@ test("get_flights cache miss with current === null starts rechecking", async () 
   const spyUpdate = vi.spyOn(c, "update_flight").mockResolvedValue();
   vi.spyOn(c, "clean_expired").mockResolvedValue();
 
-  vi.mocked(query_flights).mockResolvedValue({
-    result: mockBlankFlight,
-    blank: false,
-  });
+  vi.mocked(query_flights_batch).mockResolvedValue(batch_of(mockBlankFlight));
 
   const now = 1000000000000;
   vi.spyOn(Date, "now").mockReturnValue(now);
@@ -501,7 +502,7 @@ test("get_flights cache hit rechecking before next_retry_at returns cached", asy
 
   expect(res.rechecking).toBe(true);
   expect(res.next_retry_at).toBe(now + 60000);
-  expect(query_flights).not.toHaveBeenCalled();
+  expect(query_flights_batch).not.toHaveBeenCalled();
 
   await c.delete_db();
 });
@@ -533,10 +534,7 @@ test("get_flights cache hit rechecking after next_retry_at retries API (still nu
     current: null,
     recent_flights: [],
   };
-  vi.mocked(query_flights).mockResolvedValue({
-    result: mockBlankFlight,
-    blank: false,
-  });
+  vi.mocked(query_flights_batch).mockResolvedValue(batch_of(mockBlankFlight));
 
   const promise = f.get_flights(333);
   await Promise.resolve();
@@ -546,7 +544,7 @@ test("get_flights cache hit rechecking after next_retry_at retries API (still nu
   expect(res.rechecking).toBe(true);
   expect(res.next_retry_at).toBe(currentTime + 60000);
   expect(res.recheck_until).toBe(now + 180000);
-  expect(query_flights).toHaveBeenCalledWith("a", 333);
+  expect(query_flights_batch).toHaveBeenCalledWith("a", [333]);
   expect(spyUpdate).toHaveBeenCalledWith(
     expect.objectContaining({
       rechecking: true,
@@ -594,10 +592,7 @@ test("get_flights cache hit rechecking after next_retry_at retries API (tracked)
     },
     recent_flights: [],
   };
-  vi.mocked(query_flights).mockResolvedValue({
-    result: mockFlight,
-    blank: false,
-  });
+  vi.mocked(query_flights_batch).mockResolvedValue(batch_of(mockFlight));
 
   const promise = f.get_flights(444);
   await Promise.resolve();
@@ -606,7 +601,7 @@ test("get_flights cache hit rechecking after next_retry_at retries API (tracked)
 
   expect(res.rechecking).toBeUndefined();
   expect(res.current).not.toBeNull();
-  expect(spyUpdate).toHaveBeenCalledWith(mockFlight, 1800000); // 3600 / 2 = 1800 seconds = 1,800,000 ms
+  expect(spyUpdate).toHaveBeenCalledWith(mockFlight, 1800000); // cached until earliest arrival, 1800s away
 
   await c.delete_db();
 });
@@ -636,7 +631,7 @@ test("get_flights cache hit rechecking after recheck_until finalizes", async () 
 
   expect(res.rechecking).toBe(false);
   expect(res.current).toBeNull();
-  expect(query_flights).not.toHaveBeenCalled();
+  expect(query_flights_batch).not.toHaveBeenCalled();
   expect(spyUpdate).toHaveBeenCalledWith(
     expect.objectContaining({
       rechecking: false,
@@ -647,39 +642,247 @@ test("get_flights cache hit rechecking after recheck_until finalizes", async () 
   await c.delete_db();
 });
 
-test("get_flights sequentially paces API requests", async () => {
-  const c = new FFCache("test-scouter-flights-pacing");
+const flying_leg = (player_id: number) => {
+  const nowUnix = Date.now() / 1000;
+  return {
+    player_id,
+    current: {
+      takeoff_time: nowUnix - 600,
+      status_description: "Traveling to Japan",
+      earliest_arrival_time: nowUnix + 1800,
+      latest_arrival_time: nowUnix + 3600,
+      travel_method: "Airline" as TravelMethod,
+      book_likely_being_used: false,
+    },
+    recent_flights: [],
+  };
+};
+
+// Fetch one flight through the batch path and return the cache TTL it was
+// stored with.
+const cached_ttl_for = async (
+  name: string,
+  current: PlayerFlightsResponse["current"],
+) => {
+  const now_spy = vi.spyOn(Date, "now").mockReturnValue(TTL_TEST_NOW);
+  const c = new FFCache(name);
+  const f = new FFScouter(config, c);
+  vi.spyOn(c, "get_flight").mockResolvedValue(null);
+  const spyUpdate = vi.spyOn(c, "update_flight").mockResolvedValue();
+  vi.spyOn(c, "clean_expired").mockResolvedValue();
+  vi.mocked(query_flights_batch).mockResolvedValue(
+    batch_of({ player_id: 700, current, recent_flights: [] }),
+  );
+
+  const promise = f.get_flights(700);
+  await vi.runAllTimersAsync();
+  await promise;
+  await c.delete_db();
+  now_spy.mockRestore();
+  return spyUpdate.mock.calls[0]?.[1];
+};
+
+// Pinned so the batch window's timer advance doesn't shift the expected TTLs
+const TTL_TEST_NOW = 1_000_000_000_000;
+
+const leg = (earliest_in_s: number | null, latest_in_s: number) => {
+  const nowUnix = TTL_TEST_NOW / 1000;
+  return {
+    takeoff_time: nowUnix - 600,
+    status_description: "Traveling to Japan",
+    earliest_arrival_time: (earliest_in_s === null
+      ? null
+      : nowUnix + earliest_in_s) as number,
+    latest_arrival_time: nowUnix + latest_in_s,
+    travel_method: "Airline" as TravelMethod,
+    book_likely_being_used: false,
+  };
+};
+
+test("flight estimates are cached until earliest arrival", async () => {
+  // Far from the latest-arrival midpoint, so only the earliest rule fits
+  expect(await cached_ttl_for("test-ttl-early", leg(5000, 6000))).toBe(
+    5000 * 1000,
+  );
+});
+
+test("flight estimates past earliest arrival are re-polled every minute", async () => {
+  expect(await cached_ttl_for("test-ttl-window", leg(-120, 600))).toBe(
+    60 * 1000,
+  );
+});
+
+test("flight estimates past latest arrival are re-polled, not finalized", async () => {
+  expect(await cached_ttl_for("test-ttl-overdue", leg(-1200, -60))).toBe(
+    60 * 1000,
+  );
+});
+
+test("flight estimates close to earliest arrival keep the 1 minute minimum", async () => {
+  expect(await cached_ttl_for("test-ttl-near", leg(10, 600))).toBe(60 * 1000);
+});
+
+test("flight estimates without an earliest arrival are re-polled every minute", async () => {
+  expect(await cached_ttl_for("test-ttl-null", leg(null, 600))).toBe(60 * 1000);
+});
+
+test("a cached leg is replaced by a new takeoff once it expires", async () => {
+  const now_spy = vi.spyOn(Date, "now").mockReturnValue(TTL_TEST_NOW);
+  const c = new FFCache("test-scouter-flights-turnaround");
+  const f = new FFScouter(config, c);
+  vi.spyOn(c, "clean_expired").mockResolvedValue();
+  const spyUpdate = vi.spyOn(c, "update_flight").mockResolvedValue();
+
+  // The cached leg's earliest arrival has passed and its cache entry expired
+  vi.spyOn(c, "get_flight").mockResolvedValue(null);
+  const new_leg = { ...leg(3000, 4000), takeoff_time: TTL_TEST_NOW / 1000 - 5 };
+  vi.mocked(query_flights_batch).mockResolvedValue(
+    batch_of({ player_id: 701, current: new_leg, recent_flights: [] }),
+  );
+
+  const promise = f.get_flights(701);
+  await vi.runAllTimersAsync();
+  const res = await promise;
+
+  expect(res.current).toEqual(new_leg);
+  expect(spyUpdate).toHaveBeenCalledWith(
+    expect.objectContaining({ player_id: 701, current: new_leg }),
+    3000 * 1000,
+  );
+  await c.delete_db();
+  now_spy.mockRestore();
+});
+
+test("get_flights batches concurrent cache misses into one request", async () => {
+  const c = new FFCache("test-scouter-flights-batch");
+  const f = new FFScouter(config, c);
+
+  vi.spyOn(c, "get_flight").mockResolvedValue(null);
+  const spyUpdate = vi.spyOn(c, "update_flight").mockResolvedValue();
+  vi.spyOn(c, "clean_expired").mockResolvedValue();
+
+  const flying = flying_leg(801);
+  const grounded = { player_id: 802, current: null, recent_flights: [] };
+  vi.mocked(query_flights_batch).mockResolvedValue(batch_of(flying, grounded));
+
+  const p1 = f.get_flights(801);
+  const p2 = f.get_flights(802);
+  const p1_again = f.get_flights(801);
+
+  // Nothing goes out until the collection window closes
+  await vi.advanceTimersByTimeAsync(0);
+  expect(query_flights_batch).not.toHaveBeenCalled();
+
+  await vi.advanceTimersByTimeAsync(100);
+  expect(query_flights_batch).toHaveBeenCalledTimes(1);
+  expect(query_flights_batch).toHaveBeenCalledWith("a", [801, 802]);
+
+  const [r1, r2, r1_again] = await Promise.all([p1, p2, p1_again]);
+  expect(r1).toEqual(flying);
+  expect(r1_again).toEqual(flying);
+  expect(r2.rechecking).toBe(true);
+  expect(r2.current).toBeNull();
+  expect(spyUpdate).toHaveBeenCalledWith(flying, expect.any(Number));
+  expect(spyUpdate).toHaveBeenCalledWith(
+    expect.objectContaining({ player_id: 802, rechecking: true }),
+    3 * 60 * 1000,
+  );
+
+  await c.delete_db();
+});
+
+test("get_flights treats a player missing from the batch response as grounded", async () => {
+  const c = new FFCache("test-scouter-flights-batch-missing");
   const f = new FFScouter(config, c);
 
   vi.spyOn(c, "get_flight").mockResolvedValue(null);
   vi.spyOn(c, "update_flight").mockResolvedValue();
   vi.spyOn(c, "clean_expired").mockResolvedValue();
 
-  const mockFlight1 = { player_id: 801, current: null, recent_flights: [] };
-  const mockFlight2 = { player_id: 802, current: null, recent_flights: [] };
+  vi.mocked(query_flights_batch).mockResolvedValue(batch_of());
 
-  vi.mocked(query_flights).mockImplementation(async (_, target) => {
-    if (target === 801) return { result: mockFlight1, blank: false };
-    return { result: mockFlight2, blank: false };
-  });
+  const promise = f.get_flights(803);
+  await vi.runAllTimersAsync();
+  const res = await promise;
 
-  const p1 = f.get_flights(801);
-  const p2 = f.get_flights(802);
+  expect(res.player_id).toBe(803);
+  expect(res.current).toBeNull();
+  expect(res.rechecking).toBe(true);
 
-  // Advance by 0 to let the first request run
-  await vi.advanceTimersByTimeAsync(0);
-  expect(query_flights).toHaveBeenCalledTimes(1);
-  expect(query_flights).toHaveBeenLastCalledWith("a", 801);
+  await c.delete_db();
+});
 
-  // The second request should be paced and wait for 1000ms
-  expect(query_flights).not.toHaveBeenCalledWith("a", 802);
+test("get_flights splits more than 100 players into paced batches", async () => {
+  const c = new FFCache("test-scouter-flights-batch-split");
+  const f = new FFScouter(config, c);
 
-  // Advance by 1000ms to trigger the paced second request
-  await vi.advanceTimersByTimeAsync(1000);
-  expect(query_flights).toHaveBeenCalledTimes(2);
-  expect(query_flights).toHaveBeenLastCalledWith("a", 802);
+  vi.spyOn(c, "get_flight").mockResolvedValue(null);
+  vi.spyOn(c, "update_flight").mockResolvedValue();
+  vi.spyOn(c, "clean_expired").mockResolvedValue();
 
+  vi.mocked(query_flights_batch).mockImplementation(async (_key, ids) =>
+    batch_of(
+      ...ids.map((player_id) => ({
+        player_id,
+        current: null,
+        recent_flights: [],
+      })),
+    ),
+  );
+
+  const ids = Array.from({ length: 150 }, (_, i) => 1000 + i);
+  const promises = ids.map((id) => f.get_flights(id));
+
+  await vi.advanceTimersByTimeAsync(100);
+  expect(query_flights_batch).toHaveBeenCalledTimes(1);
+  expect(vi.mocked(query_flights_batch).mock.calls[0]?.[1]).toEqual(
+    ids.slice(0, 100),
+  );
+
+  // The remainder waits for the pacing delay
+  await vi.advanceTimersByTimeAsync(999);
+  expect(query_flights_batch).toHaveBeenCalledTimes(1);
+  await vi.advanceTimersByTimeAsync(1);
+  expect(query_flights_batch).toHaveBeenCalledTimes(2);
+  expect(vi.mocked(query_flights_batch).mock.calls[1]?.[1]).toEqual(
+    ids.slice(100),
+  );
+
+  const results = await Promise.all(promises);
+  expect(results.map((r) => r.player_id)).toEqual(ids);
+
+  await c.delete_db();
+});
+
+test("get_flights rejects every player in a failed batch", async () => {
+  const c = new FFCache("test-scouter-flights-batch-error");
+  const f = new FFScouter(config, c);
+
+  vi.spyOn(c, "get_flight").mockResolvedValue(null);
+  vi.spyOn(c, "clean_expired").mockResolvedValue();
+  vi.mocked(query_flights_batch).mockRejectedValue(new Error("API offline"));
+
+  const p1 = expect(f.get_flights(804)).rejects.toThrow("API offline");
+  const p2 = expect(f.get_flights(805)).rejects.toThrow("API offline");
+  await vi.runAllTimersAsync();
   await Promise.all([p1, p2]);
+  expect(query_flights_batch).toHaveBeenCalledTimes(1);
+
+  await c.delete_db();
+});
+
+test("get_flights rejects the batch on a blank response", async () => {
+  const c = new FFCache("test-scouter-flights-batch-blank");
+  const f = new FFScouter(config, c);
+
+  vi.spyOn(c, "get_flight").mockResolvedValue(null);
+  vi.spyOn(c, "clean_expired").mockResolvedValue();
+  vi.mocked(query_flights_batch).mockResolvedValue({ blank: true });
+
+  const p = expect(f.get_flights(806)).rejects.toThrow("Empty flight response");
+  await vi.runAllTimersAsync();
+  await p;
+
   await c.delete_db();
 });
 
@@ -700,21 +903,18 @@ test("get_flights pauses queries when global quota remaining is <= 50", async ()
   vi.spyOn(c, "clean_expired").mockResolvedValue();
 
   const mockFlight = { player_id: 901, current: null, recent_flights: [] };
-  vi.mocked(query_flights).mockResolvedValue({
-    result: mockFlight,
-    blank: false,
-  });
+  vi.mocked(query_flights_batch).mockResolvedValue(batch_of(mockFlight));
 
   const promise = f.get_flights(901);
 
-  // Advance timers by 0 - it should see the quota <= 50 and defer (not call query_flights)
-  await vi.advanceTimersByTimeAsync(0);
-  expect(query_flights).not.toHaveBeenCalled();
+  // Once the batch window closes it should see the quota <= 50 and defer
+  await vi.advanceTimersByTimeAsync(100);
+  expect(query_flights_batch).not.toHaveBeenCalled();
 
   // Boost remaining quota above 50 and advance timers to let it run
   f.last_limits.remaining = 60;
   await vi.advanceTimersByTimeAsync(5000); // Wait the 5 second retry delay
-  expect(query_flights).toHaveBeenCalledTimes(1);
+  expect(query_flights_batch).toHaveBeenCalledTimes(1);
 
   await promise;
   await c.delete_db();
@@ -933,16 +1133,13 @@ test("get_flights does not pause queries if global quota is expired/stale", asyn
   vi.spyOn(c, "clean_expired").mockResolvedValue();
 
   const mockFlight = { player_id: 902, current: null, recent_flights: [] };
-  vi.mocked(query_flights).mockResolvedValue({
-    result: mockFlight,
-    blank: false,
-  });
+  vi.mocked(query_flights_batch).mockResolvedValue(batch_of(mockFlight));
 
   const promise = f.get_flights(902);
-  await vi.advanceTimersByTimeAsync(0);
+  await vi.advanceTimersByTimeAsync(100);
 
-  // Should NOT be deferred, query_flights should be called immediately
-  expect(query_flights).toHaveBeenCalledTimes(1);
+  // Should NOT be deferred: the batch goes out when its window closes
+  expect(query_flights_batch).toHaveBeenCalledTimes(1);
   const res = await promise;
   expect(res).toEqual({
     player_id: 902,
@@ -994,13 +1191,10 @@ test("process_flight_queue resolves promises even when FFCache update_flight thr
   vi.spyOn(c, "clean_expired").mockResolvedValue();
 
   const mockFlight = { player_id: 903, current: null, recent_flights: [] };
-  vi.mocked(query_flights).mockResolvedValue({
-    result: mockFlight,
-    blank: false,
-  });
+  vi.mocked(query_flights_batch).mockResolvedValue(batch_of(mockFlight));
 
   const promise = f.get_flights(903);
-  await vi.advanceTimersByTimeAsync(0);
+  await vi.advanceTimersByTimeAsync(100);
 
   // The promise should successfully resolve with API results even though cache update failed
   const res = await promise;

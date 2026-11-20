@@ -2,7 +2,8 @@ import {
   type FFApiError,
   type FFApiQueryResponse,
   type FFApiRateLimits,
-  query_flights,
+  FLIGHTS_BATCH_MAX_TARGETS,
+  query_flights_batch,
   query_stats,
 } from "./api";
 import { check_key_status } from "./check_key";
@@ -14,6 +15,7 @@ import type {
   AnalyticsEntry,
   CachedFlightData,
   FFData,
+  Flight,
   PlayerFlightsResponse,
   PlayerId,
 } from "./types";
@@ -25,7 +27,11 @@ export const DB_NAME = "FFSV3-cache";
 const RECHECK_RETRY_DELAY = 60 * 1000; // 60 seconds (1 minute)
 const RECHECK_WINDOW_DURATION = 3 * 60 * 1000; // 3 minutes
 const FINALIZED_NO_FLIGHT_TTL = 30 * 60 * 1000; // 30 minutes
-const FLIGHT_PACING_DELAY = 1000; // 1 second pacing delay between requests
+// FF Scouter caches flight responses for ~60s, so polling faster gains nothing
+const FLIGHT_LANDING_POLL_TTL = 60 * 1000;
+const FLIGHT_BATCH_DELAY = 100; // Window to collect concurrent callers into one batch
+const FLIGHT_PACING_DELAY = 1000; // 1 second pacing delay between batches
+const FLIGHT_QUOTA_RETRY_DELAY = 5000; // Re-check the quota after this long
 const GLOBAL_BUDGET_RESERVE = 50; // Pause flight queries when global remaining <= 50
 
 type Job<T> = {
@@ -87,7 +93,7 @@ export class FFScouter {
 
   public last_limits: FFApiRateLimits | undefined;
 
-  private flight_queue: PlayerId[] = [];
+  private flight_queue = new Set<PlayerId>();
   private flight_timer: ReturnType<typeof setTimeout> | null = null;
   private flight_recheck_until = new Map<PlayerId, number>();
   private pending_flights = new Map<
@@ -164,20 +170,23 @@ export class FFScouter {
     }
   };
 
+  // A flight estimate never changes once FF Scouter issues it, and nobody
+  // can land before the earliest arrival, so a leg is safe to reuse until
+  // then. From earliest arrival on, the player may land (or land and take
+  // off again), so re-ask at the server's cache interval: the API answers
+  // with the same leg, a new leg, or null, and that answer replaces this one.
   private calculate_flight_cache_ttl = (
     result: PlayerFlightsResponse,
   ): number => {
-    if (result.current) {
-      const now = Date.now();
-      const latest_arrival_time_ms = result.current.latest_arrival_time * 1000;
-      const time_remaining = latest_arrival_time_ms - now;
-      if (time_remaining > 0) {
-        const segment = Math.floor(time_remaining / 2);
-        const min_ttl = 60 * 1000; // 1 minute minimum
-        return Math.max(min_ttl, segment);
-      }
+    if (!result.current) {
+      return FINALIZED_NO_FLIGHT_TTL;
     }
-    return FINALIZED_NO_FLIGHT_TTL;
+    // The spec marks arrival times nullable; without one, just poll.
+    const earliest = result.current.earliest_arrival_time;
+    if (typeof earliest !== "number") {
+      return FLIGHT_LANDING_POLL_TTL;
+    }
+    return Math.max(FLIGHT_LANDING_POLL_TTL, earliest * 1000 - Date.now());
   };
 
   enqueue_flight_api = (
@@ -202,23 +211,66 @@ export class FFScouter {
     }
 
     this.pending_flights.set(player_id, [{ resolve, reject }]);
-    this.flight_queue.push(player_id);
-    this.schedule_flight_processor();
+    this.flight_queue.add(player_id);
+    this.schedule_flight_processor(FLIGHT_BATCH_DELAY);
 
     return promise;
   };
 
-  private schedule_flight_processor = (delay = 0) => {
+  private schedule_flight_processor = (delay: number) => {
     if (this.flight_timer) {
       return;
     }
     this.flight_timer = this.schedule(this.process_flight_queue, delay);
   };
 
+  // Cache a player's batch result and turn it into what callers receive.
+  // A null trip starts (or continues) the recheck window, since the API can
+  // lag behind a takeoff that Torn already shows.
+  private settle_flight = async (
+    player_id: PlayerId,
+    current: Flight | null,
+  ): Promise<PlayerFlightsResponse> => {
+    if (current) {
+      const result: PlayerFlightsResponse = {
+        player_id,
+        current,
+        recent_flights: [],
+      };
+      try {
+        const ttl = this.calculate_flight_cache_ttl(result);
+        await this.cache.update_flight(result, ttl);
+      } catch (err) {
+        log.error("Failed to update flight cache", err);
+      }
+      return result;
+    }
+
+    log.debug(`Start rechecking cycle for player ${player_id}`);
+    const now = Date.now();
+    const recheck_until =
+      this.flight_recheck_until.get(player_id) ?? now + RECHECK_WINDOW_DURATION;
+    const rechecking_response: PlayerFlightsResponse = {
+      player_id,
+      current: null,
+      recent_flights: [],
+      rechecking: true,
+      next_retry_at: now + RECHECK_RETRY_DELAY,
+      recheck_until,
+    };
+    try {
+      const remaining_ttl = Math.max(0, recheck_until - now);
+      await this.cache.update_flight(rechecking_response, remaining_ttl);
+    } catch (err) {
+      log.error("Failed to update flight cache during recheck", err);
+    }
+    return rechecking_response;
+  };
+
   private process_flight_queue = async () => {
     this.flight_timer = null;
 
-    if (this.flight_queue.length === 0) {
+    if (this.flight_queue.size === 0) {
       return;
     }
 
@@ -230,96 +282,78 @@ export class FFScouter {
       log.warn(
         `Total API quota <= ${GLOBAL_BUDGET_RESERVE}. Deferring flight status checks to prioritize stats.`,
       );
-      this.schedule_flight_processor(5000);
+      this.schedule_flight_processor(FLIGHT_QUOTA_RETRY_DELAY);
       return;
     }
 
-    const player_id = this.flight_queue.shift();
-    if (player_id === undefined) {
-      return;
+    const ids = Array.from(this.flight_queue).slice(
+      0,
+      FLIGHTS_BATCH_MAX_TARGETS,
+    );
+    for (const id of ids) {
+      this.flight_queue.delete(id);
     }
 
-    const pending = this.pending_flights.get(player_id);
-    if (!pending) {
-      this.schedule_flight_processor(0);
-      return;
-    }
-
-    log.debug(`Querying paced flight API for player ${player_id}`);
+    log.debug(`Querying batched flight API for players [${ids}]`);
     try {
-      const response = await query_flights(this.config.key, player_id);
+      const response = await query_flights_batch(this.config.key, ids);
 
       if (response.blank) {
-        throw new Error(
-          `Empty flight response returned for player ${player_id}`,
-        );
+        throw new Error(`Empty flight response returned for players [${ids}]`);
       }
 
       if (response.limits) {
         this.last_limits = response.limits;
       }
 
-      let finalResult = response.result;
-
-      if (response.result.current) {
-        try {
-          const ttl = this.calculate_flight_cache_ttl(response.result);
-          await this.cache.update_flight(response.result, ttl);
-        } catch (err) {
-          log.error("Failed to update flight cache", err);
+      // Settle (cache) every player first, then resolve all jobs with no
+      // await before the finally-block deletes: a caller joining a player's
+      // job list after it was resolved would otherwise never settle.
+      const results = await Promise.all(
+        ids.map((id) =>
+          this.settle_flight(id, response.result.get(id) ?? null),
+        ),
+      );
+      ids.forEach((id, i) => {
+        const result = results[i];
+        const jobs = this.pending_flights.get(id) ?? [];
+        if (!result) return;
+        for (const job of jobs) {
+          job.resolve(result);
         }
-      } else {
-        log.debug(`Start rechecking cycle for player ${player_id}`);
-        const now = Date.now();
-        const next_retry_at = now + RECHECK_RETRY_DELAY;
-        const existing_recheck_until = this.flight_recheck_until.get(player_id);
-        const recheck_until =
-          existing_recheck_until ?? now + RECHECK_WINDOW_DURATION;
-        const rechecking_response: PlayerFlightsResponse = {
-          player_id: response.result.player_id,
-          current: null,
-          recent_flights: response.result.recent_flights,
-          rechecking: true,
-          next_retry_at,
-          recheck_until,
-        };
-        try {
-          const remaining_ttl = Math.max(0, recheck_until - now);
-          await this.cache.update_flight(rechecking_response, remaining_ttl);
-        } catch (err) {
-          log.error("Failed to update flight cache during recheck", err);
-        }
-        finalResult = rechecking_response;
-      }
-
-      for (const job of pending) {
-        job.resolve(finalResult);
-      }
+      });
     } catch (err) {
-      log.error(`Paced flight API query failed for ${player_id}:`, err);
-      const apiErr = err as any;
+      log.error(`Batched flight API query failed for [${ids}]:`, err);
+      const apiErr = err as FFApiError;
       if (apiErr?.ff_api_limits) {
         this.last_limits = apiErr.ff_api_limits;
       }
-      for (const job of pending) {
-        job.reject(err);
+      // Rejecting an already-resolved job is a no-op, so this only reaches
+      // players the loop above didn't settle.
+      for (const id of ids) {
+        const jobs = this.pending_flights.get(id) ?? [];
+        for (const job of jobs) {
+          job.reject(err);
+        }
       }
     } finally {
-      this.pending_flights.delete(player_id);
-      this.flight_recheck_until.delete(player_id);
+      for (const id of ids) {
+        this.pending_flights.delete(id);
+        this.flight_recheck_until.delete(id);
+      }
       try {
         await this.cache.clean_expired();
       } catch (err) {
         log.error("Failed to clean expired cache entries", err);
       }
 
-      if (this.flight_queue.length > 0) {
+      if (this.flight_queue.size > 0) {
         this.schedule_flight_processor(FLIGHT_PACING_DELAY);
       }
     }
   };
 
-  // Get flights for a player, utilizing cache, bypassing batch queueing
+  // Get flights for a player, utilizing cache; cache misses join the next flights batch
   get_flights = async (player_id: PlayerId): Promise<PlayerFlightsResponse> => {
     log.debug(`get_flights called for ${player_id}`);
 

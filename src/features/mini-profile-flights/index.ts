@@ -51,7 +51,13 @@ const setup_mini_flight_observer = async () => {
 
   let lastPlayerId: number | null = null;
 
-  const renderForPlayer = (player_id: number) => {
+  // The tracker is only mounted for a flying player: mounting it is what
+  // starts the flight fetches, so hovering a grounded player costs no API calls.
+  const show_tracker = (player_id: number, status: Element) => {
+    const description = status.querySelector(".description");
+    if (!description) {
+      return;
+    }
     if (!root) {
       root = createRoot(container);
     }
@@ -61,6 +67,18 @@ const setup_mini_flight_observer = async () => {
         compact: true,
       }),
     );
+    if (!description.contains(container)) {
+      log.debug(
+        `Player ${player_id} is flying, adding flight tracker to mini-profile`,
+      );
+      description.appendChild(container);
+    }
+  };
+
+  const hide_tracker = (player_id: number) => {
+    root?.render(null);
+    container.remove();
+    void ffscouter.clear_flight_cache(player_id);
   };
 
   const mp_observer = new MutationObserver((mutations) => {
@@ -93,19 +111,10 @@ const setup_mini_flight_observer = async () => {
       return;
     }
 
-    renderForPlayer(player_id);
-
     if (is_flying(status)) {
-      const description = status.querySelector(".description");
-      if (description && !description.contains(container)) {
-        log.debug(
-          `Player ${player_id} is flying, adding flight tracker to mini-profile`,
-        );
-        description.appendChild(container);
-      }
+      show_tracker(player_id, status);
     } else {
-      container.remove();
-      void ffscouter.clear_flight_cache(player_id);
+      hide_tracker(player_id);
     }
   });
 
@@ -115,13 +124,9 @@ const setup_mini_flight_observer = async () => {
   const player_id = get_player_id_in_element(miniroot);
   const status = miniroot.querySelector(".profile-status");
   if (player_id && status) {
-    renderForPlayer(player_id);
     lastPlayerId = player_id;
     if (is_flying(status)) {
-      const description = status.querySelector(".description");
-      if (description && !description.contains(container)) {
-        description.appendChild(container);
-      }
+      show_tracker(player_id, status);
     }
   }
 };

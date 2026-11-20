@@ -1,4 +1,7 @@
 // @vitest-environment jsdom
+
+import { check_key_status } from "@utils/check_key";
+import { ffscouter } from "@utils/ffscouter";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import miniProfileFlights from "./index";
 
@@ -60,4 +63,27 @@ test("does not add flight tracker if player is not travelling", async () => {
   await miniProfileFlights.run();
 
   expect(desc.querySelector(".ff-flight-element")).toBeNull();
+});
+
+test("only fetches flights for a travelling player", async () => {
+  vi.mocked(check_key_status.is_premium).mockResolvedValue(true);
+  vi.mocked(ffscouter.get_flights).mockResolvedValue({
+    player_id: 123456,
+    current: null,
+    recent_flights: [],
+  });
+
+  const grounded = buildMiniRoot(false);
+  document.body.appendChild(grounded.root);
+  await miniProfileFlights.run();
+  await new Promise((resolve) => setTimeout(resolve, 50));
+  expect(ffscouter.get_flights).not.toHaveBeenCalled();
+  expect(ffscouter.clear_flight_cache).not.toHaveBeenCalled();
+
+  document.body.innerHTML = "";
+  const flying = buildMiniRoot(true);
+  document.body.appendChild(flying.root);
+  await miniProfileFlights.run();
+  await new Promise((resolve) => setTimeout(resolve, 50));
+  expect(ffscouter.get_flights).toHaveBeenCalledWith(123456);
 });
