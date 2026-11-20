@@ -32,10 +32,10 @@ afterEach(() => {
 });
 
 describe("AttackBountyRow", () => {
-  test("shows the FF Scouter branding, price per hit and hits remaining", () => {
+  test("shows the FFScouter branding, price per hit and hits remaining", () => {
     render(<AttackBountyRow {...IDLE} match={PLAYER_MATCH} />);
     const row = document.getElementById("ffscouter-attack-bounty-row");
-    expect(row?.textContent).toContain("FF Scouter Bounty:");
+    expect(row?.textContent).toContain("FFScouter Bounty:");
     expect(row?.textContent).toContain("$700k per hit");
     expect(row?.textContent).toContain("9 hits remaining");
   });

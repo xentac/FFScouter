@@ -745,7 +745,7 @@ function build_api_key_notice(message: string): HTMLElement {
 
   const msg = document.createElement("span");
   const link = document.createElement("a");
-  link.textContent = "FF Scouter Settings";
+  link.textContent = "FFScouter Settings";
   link.style.cssText =
     "color: #fff; font-weight: bold; text-decoration: underline;";
   // No href until getLocalUserId() resolves below: an <a> without href isn't
@@ -801,7 +801,7 @@ async function update_api_key_notice_impl() {
   let message: string;
   if (!ffconfig.key) {
     message =
-      "FF Scouter needs your API key to show Fair Fight data here. Enter it in ";
+      "FFScouter needs your API key to show Fair Fight data here. Enter it in ";
   } else {
     // Fails open on a null (unknown/error) result: a transient API hiccup
     // should never accuse the user of having a bad key.
@@ -809,7 +809,7 @@ async function update_api_key_notice_impl() {
     if (registered !== false) {
       return;
     }
-    message = "Your FF Scouter API key isn't registered. Check it in ";
+    message = "Your FFScouter API key isn't registered. Check it in ";
   }
 
   // Re-check after the await above: navigation, dismissal, or another queued

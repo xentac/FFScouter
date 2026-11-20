@@ -21,7 +21,7 @@ vi.mock("@utils/dom", async (importOriginal) => {
   };
 });
 
-describe("FF Scouter settings panel feature", () => {
+describe("FFScouter settings panel feature", () => {
   beforeEach(() => {
     localStorage.clear();
     document.body.innerHTML = "";

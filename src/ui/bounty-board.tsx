@@ -1,4 +1,4 @@
-// FF Scouter Bounties: the Bounty Board Modal (desktop floating shell), the
+// FFScouter Bounties: the Bounty Board Modal (desktop floating shell), the
 // narrow/mobile in-flow section, and the body they share. The body is
 // container-agnostic, so the consent state renders in whichever container is
 // active.
@@ -190,14 +190,14 @@ function KeyNudge({ unregistered }: { unregistered: boolean }) {
   return (
     <p className={cls.notice}>
       {unregistered
-        ? "Your FF Scouter API key isn't registered. Check it in "
-        : "FF Scouter Bounties need your FF Scouter API key. Enter it in "}
+        ? "Your FFScouter API key isn't registered. Check it in "
+        : "FFScouter Bounties need your FFScouter API key. Enter it in "}
       {href ? (
         <a href={href} target="_blank" rel="noopener noreferrer">
-          FF Scouter Settings
+          FFScouter Settings
         </a>
       ) : (
-        <strong>FF Scouter Settings</strong>
+        <strong>FFScouter Settings</strong>
       )}{" "}
       on your profile page.
     </p>
@@ -229,7 +229,7 @@ function ConsentGate({ onAccepted }: { onAccepted: () => void }) {
   return (
     <div>
       <p className={cls.notice}>
-        FF Scouter Bounties are a separate system from Torn's own bounties. To
+        FFScouter Bounties are a separate system from Torn's own bounties. To
         view and claim them, read the{" "}
         <a href={BOUNTY_POLICY_URL} target="_blank" rel="noopener noreferrer">
           Bounty Board Data Policy and Rules
@@ -397,7 +397,7 @@ function BountyBoardBody({
 
   switch (state.phase) {
     case "loading":
-      return <p className={cls.notice}>Loading FF Scouter Bounties…</p>;
+      return <p className={cls.notice}>Loading FFScouter Bounties…</p>;
     case "key_missing":
       return <KeyNudge unregistered={false} />;
     case "key_unregistered":
@@ -407,7 +407,7 @@ function BountyBoardBody({
     case "error":
       return (
         <p className={cls.notice}>
-          Couldn't load FF Scouter Bounties: {state.message}
+          Couldn't load FFScouter Bounties: {state.message}
         </p>
       );
     case "ready":
@@ -454,8 +454,8 @@ function BountyBoardBody({
       {rows.length === 0 ? (
         <p className={cls.notice}>
           {anyShown
-            ? "No FF Scouter Bounties match your filters."
-            : "No open FF Scouter Bounties right now."}
+            ? "No FFScouter Bounties match your filters."
+            : "No open FFScouter Bounties right now."}
         </p>
       ) : (
         <ul className={cls.list}>
@@ -543,7 +543,7 @@ export function BountyBoard({ variant }: { variant: BountyBoardVariant }) {
       <button
         type="button"
         className={cls.launcher}
-        aria-label="Expand FF Scouter Bounties"
+        aria-label="Expand FFScouter Bounties"
         aria-expanded={false}
         style={edge_style(drag.box, drag.side, drag.viewport)}
         {...drag.handleProps}
@@ -570,14 +570,14 @@ export function BountyBoard({ variant }: { variant: BountyBoardVariant }) {
   return (
     <section
       className={`${shell.className}${minimizedClass}`}
-      aria-label="FF Scouter Bounties"
+      aria-label="FFScouter Bounties"
       style={style}
     >
       <div
         className={floating ? `${cls.header} ${cls.dragHandle}` : cls.header}
         onPointerDown={floating ? drag.handleProps.onPointerDown : undefined}
       >
-        <h2 className={cls.title}>FF Scouter Bounties</h2>
+        <h2 className={cls.title}>FFScouter Bounties</h2>
         <button
           type="button"
           className={cls.headerBtn}
@@ -586,8 +586,8 @@ export function BountyBoard({ variant }: { variant: BountyBoardVariant }) {
           aria-expanded={!view.minimized}
           aria-label={
             view.minimized
-              ? "Expand FF Scouter Bounties"
-              : `${shell.collapse} FF Scouter Bounties`
+              ? "Expand FFScouter Bounties"
+              : `${shell.collapse} FFScouter Bounties`
           }
           onClick={() => updateView({ minimized: !view.minimized })}
         >

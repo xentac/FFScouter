@@ -1,4 +1,4 @@
-// Keep-out Zones: areas of Torn's own page that FF Scouter floating elements
+// Keep-out Zones: areas of Torn's own page that FFScouter floating elements
 // must not cover. One shared list applies to every floating element; a caller
 // can add zones of its own but cannot remove the shared ones.
 
@@ -34,7 +34,7 @@ function chat_bar_zone(): Rect | null {
   };
 }
 
-// Torn's page header, found through its id. It stacks above FF Scouter's
+// Torn's page header, found through its id. It stacks above FFScouter's
 // floating elements, so it hides them.
 function find_header(): Element | null {
   return document.getElementById("header-root");

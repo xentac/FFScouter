@@ -1,4 +1,4 @@
-// Shared FF Scouter Bounties row shapes. Container-agnostic on purpose: the
+// Shared FFScouter Bounties row shapes. Container-agnostic on purpose: the
 // desktop floating modal and the narrow/mobile in-flow section render these
 // unchanged.
 import {

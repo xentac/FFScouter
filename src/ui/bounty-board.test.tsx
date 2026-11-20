@@ -131,7 +131,7 @@ function Shell({ variant }: { variant: "modal" | "section" }) {
 describe.each(["modal", "section"] as const)("%s", (variant) => {
   test("renders the branded board with enabled targets sorted by top price", async () => {
     render(<Shell variant={variant} />);
-    expect(screen.getByRole("heading").textContent).toBe("FF Scouter Bounties");
+    expect(screen.getByRole("heading").textContent).toBe("FFScouter Bounties");
 
     await screen.findByText("Arcanine");
     expect(screen.queryByText("DisabledTarget")).toBeNull();
@@ -263,7 +263,7 @@ describe.each(["modal", "section"] as const)("%s", (variant) => {
       screen.queryByRole("button", { name: "Claim bounty on OwnTarget" }),
     ).toBeNull();
     expect(document.body.textContent).not.toContain(
-      "No open FF Scouter Bounties",
+      "No open FFScouter Bounties",
     );
     expect(ffscouter.get).not.toHaveBeenCalledWith(998);
   });
@@ -385,10 +385,10 @@ describe.each(["modal", "section"] as const)("%s", (variant) => {
     ffconfig.key = "";
     render(<Shell variant={variant} />);
     expect(document.body.textContent).toContain(
-      "FF Scouter Bounties need your FF Scouter API key",
+      "FFScouter Bounties need your FFScouter API key",
     );
     const link = await screen.findByRole("link", {
-      name: "FF Scouter Settings",
+      name: "FFScouter Settings",
     });
     expect(link.getAttribute("href")).toBe(
       "https://www.torn.com/profiles.php?XID=1000001#ff-scouter-api-key",
@@ -457,7 +457,7 @@ test("Hide unavailable hides a hospitalized target and survives a remount", asyn
   first.unmount();
 
   render(<BountyBoard variant="modal" />);
-  await screen.findByText("No FF Scouter Bounties match your filters.");
+  await screen.findByText("No FFScouter Bounties match your filters.");
   expect(hide_unavailable_box().checked).toBe(true);
 });
 
@@ -570,17 +570,17 @@ test("minimizing hides the body and persists", async () => {
   const first = render(<BountyBoard variant="modal" />);
   await screen.findByText("Arcanine");
   fireEvent.click(
-    screen.getByRole("button", { name: "Minimize FF Scouter Bounties" }),
+    screen.getByRole("button", { name: "Minimize FFScouter Bounties" }),
   );
   expect(screen.queryByText("Arcanine")).toBeNull();
   first.unmount();
 
   render(<BountyBoard variant="modal" />);
   const launcher = screen.getByRole("button", {
-    name: "Expand FF Scouter Bounties",
+    name: "Expand FFScouter Bounties",
   });
   expect(launcher.textContent).toBe("FFBB");
-  expect(screen.queryByRole("region", { name: "FF Scouter Bounties" })).toBe(
+  expect(screen.queryByRole("region", { name: "FFScouter Bounties" })).toBe(
     null,
   );
   expect(screen.queryByText("Arcanine")).toBeNull();
@@ -592,9 +592,9 @@ test("minimizing hides the body and persists", async () => {
 // jsdom's default viewport is 1024x768, and the 40x40 Launcher's default
 // anchor with no chat bar is the right edge, 64px from the bottom.
 const launcher = () =>
-  screen.getByRole("button", { name: "Expand FF Scouter Bounties" });
+  screen.getByRole("button", { name: "Expand FFScouter Bounties" });
 const board_region = () =>
-  screen.queryByRole("region", { name: "FF Scouter Bounties" });
+  screen.queryByRole("region", { name: "FFScouter Bounties" });
 
 function minimized() {
   default_storage.set("bounty_board_view", { minimized: true });
@@ -750,7 +750,7 @@ describe("Bounty Board Launcher", () => {
     fireEvent.click(el);
     expect(board_region()).toBeTruthy();
     fireEvent.click(
-      screen.getByRole("button", { name: "Minimize FF Scouter Bounties" }),
+      screen.getByRole("button", { name: "Minimize FFScouter Bounties" }),
     );
     expect(launcher().style.right).toBe("8px");
     expect(launcher().style.top).toBe("664px");
@@ -783,7 +783,7 @@ describe("Bounty Board Launcher", () => {
     render(<BountyBoard variant="modal" />);
     await screen.findByText("Arcanine");
     const heading = screen.getByRole("heading", {
-      name: "FF Scouter Bounties",
+      name: "FFScouter Bounties",
     });
     press(heading, [800, 690], [110, 200]);
 
@@ -793,7 +793,7 @@ describe("Bounty Board Launcher", () => {
     expect(modal.style.bottom).toBe("");
 
     fireEvent.click(
-      screen.getByRole("button", { name: "Minimize FF Scouter Bounties" }),
+      screen.getByRole("button", { name: "Minimize FFScouter Bounties" }),
     );
     expect(launcher().style.left).toBe("8px");
     expect(launcher().style.top).toBe("174px");
@@ -803,7 +803,7 @@ describe("Bounty Board Launcher", () => {
     render(<BountyBoard variant="modal" />);
     await screen.findByText("Arcanine");
     const heading = screen.getByRole("heading", {
-      name: "FF Scouter Bounties",
+      name: "FFScouter Bounties",
     });
     fireEvent.pointerDown(heading, { clientX: 800, clientY: 690, button: 0 });
     // The anchor box is now in the upper half, but the drag started from the
@@ -822,7 +822,7 @@ describe("Bounty Board Launcher", () => {
     render(<BountyBoard variant="modal" />);
     await screen.findByText("Arcanine");
     press(
-      screen.getByRole("button", { name: "Minimize FF Scouter Bounties" }),
+      screen.getByRole("button", { name: "Minimize FFScouter Bounties" }),
       [1000, 690],
       [110, 200],
     );
@@ -835,7 +835,7 @@ describe("Bounty Board Launcher", () => {
     await screen.findByText("Arcanine");
     expect((board_region() as HTMLElement).getAttribute("style")).toBeNull();
     fireEvent.click(
-      screen.getByRole("button", { name: "Collapse FF Scouter Bounties" }),
+      screen.getByRole("button", { name: "Collapse FFScouter Bounties" }),
     );
     expect(screen.queryByText("FFBB")).toBeNull();
     expect(board_region()).toBeTruthy();
@@ -845,10 +845,10 @@ describe("Bounty Board Launcher", () => {
 test("the section collapses, persists it, and stays in-flow", async () => {
   const first = render(<BountyBoard variant="section" />);
   await screen.findByText("Arcanine");
-  const section = screen.getByRole("region", { name: "FF Scouter Bounties" });
+  const section = screen.getByRole("region", { name: "FFScouter Bounties" });
   expect(section.className).toContain("ff-bounty-modal--in-flow");
   fireEvent.click(
-    screen.getByRole("button", { name: "Collapse FF Scouter Bounties" }),
+    screen.getByRole("button", { name: "Collapse FFScouter Bounties" }),
   );
   expect(screen.queryByText("Arcanine")).toBeNull();
   first.unmount();
@@ -856,7 +856,7 @@ test("the section collapses, persists it, and stays in-flow", async () => {
   render(<BountyBoard variant="section" />);
   expect(
     screen
-      .getByRole("button", { name: "Expand FF Scouter Bounties" })
+      .getByRole("button", { name: "Expand FFScouter Bounties" })
       .getAttribute("aria-expanded"),
   ).toBe("false");
   expect(screen.queryByText("Arcanine")).toBeNull();
@@ -874,7 +874,7 @@ test("switching variants keeps the loaded board and view state", async () => {
 
   rerender(<BountyBoard variant="section" />);
   expect(
-    screen.getByRole("region", { name: "FF Scouter Bounties" }).className,
+    screen.getByRole("region", { name: "FFScouter Bounties" }).className,
   ).toContain("ff-bounty-modal--in-flow");
   expect(screen.getByText("Arcanine")).toBeTruthy();
   expect(
@@ -888,7 +888,7 @@ test("switching variants keeps the loaded board and view state", async () => {
 
   rerender(<BountyBoard variant="modal" />);
   expect(
-    screen.getByRole("region", { name: "FF Scouter Bounties" }).className,
+    screen.getByRole("region", { name: "FFScouter Bounties" }).className,
   ).not.toContain("ff-bounty-modal--in-flow");
   expect(bounty_board_cache.get_board).toHaveBeenCalledTimes(1);
 });

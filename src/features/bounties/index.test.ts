@@ -54,7 +54,7 @@ const navigate = (hash: string) => {
 };
 
 const modals = () =>
-  document.querySelectorAll('section[aria-label="FF Scouter Bounties"]');
+  document.querySelectorAll('section[aria-label="FFScouter Bounties"]');
 
 const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
 
