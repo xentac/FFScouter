@@ -33,20 +33,31 @@ export default {
 
     const container = document.createElement("div");
     container.classList.add("ff-flight-element");
-    createRoot(container).render(
-      createElement(FFFlightProfileStatus, { playerId: player_id }),
-    );
+    const root = createRoot(container);
+    let mounted = false;
 
+    // The tracker only exists while the player is flying: mounting it is what
+    // starts the flight fetches, so a grounded player costs no API calls.
     const check_and_update = () => {
       if (is_flying(status)) {
         const description = status.querySelector(".description");
         if (description === null) {
           return;
         }
+        if (!mounted) {
+          root.render(
+            createElement(FFFlightProfileStatus, { playerId: player_id }),
+          );
+          mounted = true;
+        }
         if (!description.contains(container)) {
           description.appendChild(container);
         }
       } else {
+        if (mounted) {
+          root.render(null);
+          mounted = false;
+        }
         container.remove();
         void ffscouter.clear_flight_cache(player_id);
       }
