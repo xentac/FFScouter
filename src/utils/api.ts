@@ -7,7 +7,7 @@ import type {
   EstimateSource,
   FFData,
   FFDataDistribution,
-  PlayerFlightsResponse,
+  Flight,
   PlayerId,
   SpySnapshot,
   TornApiKey,
@@ -402,9 +402,14 @@ export const check_key = async (
   return { result: ff_response, blank: false, limits: limits };
 };
 
-export type FFApiFlightsResponse =
+// The flights batch endpoint accepts 1-100 unique targets per request
+// (spec v1.22.0, getPlayerFlightsBatch; code 23 above that).
+export const FLIGHTS_BATCH_MAX_TARGETS = 100;
+
+export type FFApiFlightsBatchResponse =
   | {
-      result: PlayerFlightsResponse;
+      // One entry per requested player; null when they aren't traveling.
+      result: Map<PlayerId, Flight | null>;
       blank: false;
       limits?: FFApiRateLimits;
     }
@@ -412,27 +417,34 @@ export type FFApiFlightsResponse =
       blank: true;
     };
 
-export const make_flights_url = (key: TornApiKey, target: PlayerId) => {
-  const query = new URLSearchParams([
-    ["key", key],
-    ["target", target.toString()],
-  ]);
-  return `${FF_SCOUTER_BASE_URL}/player-flights?${query.toString()}`;
+type FlightsBatchSuccess = {
+  flights: { player_id: PlayerId; current: Flight | null }[];
 };
 
-function is_flight_success(
-  resp: PlayerFlightsResponse | FFError,
-): resp is PlayerFlightsResponse {
+export const make_flights_batch_url = (
+  key: TornApiKey,
+  targets: PlayerId[],
+) => {
+  const query = new URLSearchParams([
+    ["key", key],
+    ["targets", targets.toString()],
+  ]);
+  return `${FF_SCOUTER_BASE_URL}/player-flights/batch?${query.toString()}`;
+};
+
+function is_flights_batch_success(
+  resp: FlightsBatchSuccess | FFError,
+): resp is FlightsBatchSuccess {
   return (resp as FFError).code === undefined;
 }
 
-export const query_flights = async (
+export const query_flights_batch = async (
   key: TornApiKey,
-  target: PlayerId,
+  targets: PlayerId[],
   requester: typeof gmRequest = gmRequest,
-): Promise<FFApiFlightsResponse> => {
-  logger.debug("Calling query_flights with arguments", { key, target });
-  const url = make_flights_url(key, target);
+): Promise<FFApiFlightsBatchResponse> => {
+  logger.debug("Calling query_flights_batch with arguments", { targets });
+  const url = make_flights_batch_url(key, targets);
 
   const resp = await requester({
     method: "GET",
@@ -444,12 +456,12 @@ export const query_flights = async (
   }
 
   const limits = parse_limit_headers(resp.responseHeaders);
-  let ff_response: PlayerFlightsResponse | FFError | null;
+  let ff_response: FlightsBatchSuccess | FFError | null;
   try {
     ff_response = JSON.parse(resp.responseText);
   } catch {
     logger.warn(
-      `query_flights: unparseable response. status=${resp.status}, body=${resp.responseText?.slice(0, 200)}, url=${url}`,
+      `query_flights_batch: unparseable response. status=${resp.status}, body=${resp.responseText?.slice(0, 200)}`,
     );
     throw new FFApiError(
       `API request failed. Couldn't parse response. HTTP status code: ${resp.status}`,
@@ -458,7 +470,7 @@ export const query_flights = async (
   }
   if (ff_response == null) {
     logger.warn(
-      `query_flights: null response after parse. status=${resp.status}, url=${url}`,
+      `query_flights_batch: null response after parse. status=${resp.status}`,
     );
     throw new FFApiError(
       `API request failed. Response not set. HTTP status code: ${resp.status}`,
@@ -466,16 +478,16 @@ export const query_flights = async (
     );
   }
 
-  if (!is_flight_success(ff_response)) {
+  if (!is_flights_batch_success(ff_response)) {
     throw new FFApiError(
       `API request failed. Error: ${ff_response.error}; Code: ${ff_response.code}`,
       { ff_api_error: ff_response, ff_api_limits: limits },
     );
   }
 
-  if (resp.status !== 200) {
+  if (resp.status !== 200 || !Array.isArray(ff_response.flights)) {
     logger.warn(
-      `query_flights: unexpected HTTP status. status=${resp.status}, body=${resp.responseText?.slice(0, 200)}, url=${url}`,
+      `query_flights_batch: unexpected response. status=${resp.status}, body=${resp.responseText?.slice(0, 200)}`,
     );
     throw new FFApiError(
       `API request failed. HTTP status code: ${resp.status}`,
@@ -483,7 +495,12 @@ export const query_flights = async (
     );
   }
 
-  return { result: ff_response, blank: false, limits: limits };
+  const result = new Map<PlayerId, Flight | null>();
+  for (const entry of ff_response.flights) {
+    result.set(entry.player_id, entry.current ?? null);
+  }
+
+  return { result, blank: false, limits: limits };
 };
 
 export type FFTarget = {
