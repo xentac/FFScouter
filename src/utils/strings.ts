@@ -231,6 +231,42 @@ export function format_age_phrase(timestamp_sec: TimestampSec) {
   return format_relative_time(timestamp_sec).replace(/^\((.*) old\)$/, "$1");
 }
 
+export function format_duration_human(
+  totalSeconds: number,
+  compact: boolean,
+): string {
+  const clampedSeconds = Math.max(0, Math.floor(totalSeconds));
+  const hours = Math.floor(clampedSeconds / 3600);
+  const minutes = Math.floor((clampedSeconds % 3600) / 60);
+  const seconds = clampedSeconds % 60;
+  const parts: string[] = [];
+  if (hours > 0) {
+    parts.push(`${hours}h`);
+  }
+  if (hours > 0 || minutes > 0) {
+    parts.push(`${minutes}m`);
+  }
+  parts.push(`${seconds}s`);
+  if (compact) {
+    return parts.join("");
+  }
+  return parts.join(" ");
+}
+
+// The age of a fresh, minutes-scale check ("45s", "3m", "2h"), for prose that
+// supplies its own framing ("checked 45s ago"). format_relative_time only
+// counts days, so it can't describe a status refreshed every minute.
+export function format_short_age(age_seconds: number): string {
+  const age = Math.max(0, Math.floor(age_seconds));
+  if (age < 60) {
+    return `${age}s`;
+  }
+  if (age < 3600) {
+    return `${Math.floor(age / 60)}m`;
+  }
+  return `${Math.floor(age / 3600)}h`;
+}
+
 export function get_ff_colour(d: FFDataComplete) {
   return get_ff_arrow_colour(d);
 }

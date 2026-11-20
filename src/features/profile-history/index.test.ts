@@ -86,3 +86,40 @@ test("run injects history button when enabled and not already present", async ()
   expect(injectedBtn.getAttribute("target")).toBe("_blank");
   expect(injectedBtn.getAttribute("rel")).toBe("noopener noreferrer");
 });
+
+function make_torn_button(svgClass: string): HTMLAnchorElement {
+  const btn = document.createElement("a");
+  btn.className = "profile-button";
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("class", svgClass);
+  btn.appendChild(svg);
+  return btn;
+}
+
+async function run_with_buttons(...svgClasses: string[]) {
+  vi.mocked(extract_id_from_url).mockReturnValue(123 as any);
+  ffconfig.ff_history_enabled = true;
+  const buttonsList = document.createElement("div");
+  for (const cls of svgClasses) {
+    buttonsList.appendChild(make_torn_button(cls));
+  }
+  document.body.appendChild(buttonsList);
+  vi.mocked(wait_for_element).mockResolvedValue(buttonsList);
+  await profileHistory.run();
+  return buttonsList.querySelector(".ff-scouter-history-btn svg");
+}
+
+test("history icon borrows Torn's current icon class from a sibling button", async () => {
+  // Torn's CSS-module hash changes between deploys (icon___GP196 → icon___IAtmY).
+  const svg = await run_with_buttons(
+    "icon___IAtmY disabled___jXA5p",
+    "icon___IAtmY",
+  );
+  expect(svg?.getAttribute("class")).toBe("icon___IAtmY");
+});
+
+test("history icon has a visible stroke when no sibling icon class exists", async () => {
+  const svg = await run_with_buttons();
+  expect(svg?.getAttribute("class")).toBeNull();
+  expect(svg?.getAttribute("stroke")).toBe("currentColor");
+});

@@ -16,8 +16,16 @@ import { ffscouter } from "@utils/ffscouter";
 import logger from "@utils/logger";
 import default_storage from "@utils/storage";
 import { parse_suffix_number } from "@utils/strings";
-import type { FFData, PlayerId } from "@utils/types";
-import { useEffect, useMemo, useReducer, useRef, useState } from "react";
+import { get_current_time_seconds } from "@utils/time";
+import type { FFData, PlayerId, TornTimestampSec } from "@utils/types";
+import {
+  type CSSProperties,
+  useEffect,
+  useMemo,
+  useReducer,
+  useRef,
+  useState,
+} from "react";
 import { cls } from "./bounty-board-classes";
 import {
   api_error_message,
@@ -30,6 +38,12 @@ import {
 } from "./bounty-board-rows";
 import { submit_claim_with_toast } from "./bounty-claim";
 import { BountyRow, FactionBountyCard } from "./bounty-row";
+import {
+  align_for,
+  anchored_layout,
+  edge_style,
+  useFloatingDrag,
+} from "./floating/floating-drag";
 import { TOAST_LEVEL, toast } from "./toast";
 
 const log = logger.child("ui");
@@ -46,6 +60,7 @@ type BountyBoardViewState = {
   // Raw input text, parsed at filter time ("2.5b" for stats).
   stats_less_than: string;
   ff_less_than: string;
+  hide_unavailable: boolean;
   expanded_tiers: string[];
   expanded_factions: number[];
   minimized: boolean;
@@ -54,6 +69,7 @@ type BountyBoardViewState = {
 const DEFAULT_VIEW_STATE: BountyBoardViewState = {
   stats_less_than: "",
   ff_less_than: "",
+  hide_unavailable: false,
   expanded_tiers: [],
   expanded_factions: [],
   minimized: false,
@@ -82,6 +98,18 @@ function useViewState() {
 
 function toggle_in<T>(list: T[], item: T): T[] {
   return list.includes(item) ? list.filter((x) => x !== item) : [...list, item];
+}
+
+// Torn Clock "now", ticking once a second for status countdowns and the
+// time-driven "Hide unavailable" re-check. The body unmounts while the board
+// is minimized, so the timer only runs while the board is visible.
+function useTornNow(): TornTimestampSec {
+  const [now, setNow] = useState(get_current_time_seconds);
+  useEffect(() => {
+    const id = setInterval(() => setNow(get_current_time_seconds()), 1000);
+    return () => clearInterval(id);
+  }, []);
+  return now;
 }
 
 function parse_ff_limit(raw: string): number | null {
@@ -311,12 +339,14 @@ function BountyBoardBody({
     () => ({
       stats_less_than: parse_suffix_number(view.stats_less_than),
       ff_less_than: parse_ff_limit(view.ff_less_than),
+      hide_unavailable: view.hide_unavailable,
     }),
-    [view.stats_less_than, view.ff_less_than],
+    [view.stats_less_than, view.ff_less_than, view.hide_unavailable],
   );
+  const now = useTornNow();
   const rows = useMemo(
-    () => (targets ? build_board_view(targets, ffMap, filters) : []),
-    [targets, ffMap, filters],
+    () => (targets ? build_board_view(targets, ffMap, filters, now) : []),
+    [targets, ffMap, filters, now],
   );
   // Set lookups keep row rendering from scanning the expanded lists per row.
   const expandedFactions = useMemo(
@@ -349,6 +379,7 @@ function BountyBoardBody({
       key={row.row_key}
       row={row}
       ff={ffMap.get(row.player_id)}
+      now={now}
       expanded={expandedTiers.has(row.row_key)}
       onToggleExpanded={(key) =>
         updateView({ expanded_tiers: toggle_in(view.expanded_tiers, key) })
@@ -404,6 +435,14 @@ function BountyBoardBody({
             onChange={(e) => updateView({ ff_less_than: e.target.value })}
           />
         </label>
+        <label className={cls.filter}>
+          <input
+            type="checkbox"
+            checked={view.hide_unavailable}
+            onChange={(e) => updateView({ hide_unavailable: e.target.checked })}
+          />
+          Hide unavailable
+        </label>
       </div>
       {rows.length === 0 ? (
         <p className={cls.notice}>
@@ -452,14 +491,15 @@ const SHELL: Record<
   {
     className: string | undefined;
     collapse: string;
-    collapsed: string;
+    // Only the section shows a collapsed header: a minimized modal is the
+    // Bounty Board Launcher instead.
+    collapsed?: string;
     expanded: string;
   }
 > = {
   modal: {
     className: cls.modal,
     collapse: "Minimize",
-    collapsed: "+",
     expanded: "−",
   },
   section: {
@@ -470,19 +510,72 @@ const SHELL: Record<
   },
 };
 
+// The floating modal and its Bounty Board Launcher share one position: the
+// Launcher's box. The modal opens against it, so dragging either moves both.
+const FLOATING_ID = "bounty_board";
+const LAUNCHER_SIZE = { width: 40, height: 40 };
+
 export function BountyBoard({ variant }: { variant: BountyBoardVariant }) {
   const [view, updateView] = useViewState();
   const shell = SHELL[variant];
+  // The in-flow section never floats: it collapses in place, can't be
+  // dragged, and leaves the saved position for when the modal floats again.
+  const floating = variant === "modal";
+  const drag = useFloatingDrag({
+    id: FLOATING_ID,
+    size: LAUNCHER_SIZE,
+    snap: true,
+    enabled: floating,
+    onClick: () => updateView({ minimized: false }),
+  });
+
+  // Minimized, the floating modal is just the Launcher: no count and no
+  // board data, so the board refresh stays stopped.
+  if (floating && view.minimized) {
+    return (
+      <button
+        type="button"
+        className={cls.launcher}
+        aria-label="Expand FF Scouter Bounties"
+        aria-expanded={false}
+        style={edge_style(drag.box, drag.side, drag.viewport)}
+        {...drag.handleProps}
+      >
+        FFBB
+      </button>
+    );
+  }
+
+  let style: CSSProperties | undefined;
+  if (floating) {
+    // Aligned from where it rests, so a drag across the middle doesn't flip
+    // the modal under the pointer.
+    const { maxHeight, ...edges } = anchored_layout(
+      drag.box,
+      drag.side,
+      align_for(drag.resting, drag.viewport),
+      drag.viewport,
+      drag.zones,
+    );
+    style = { ...edges, maxHeight: `min(70vh, ${maxHeight}px)` };
+  }
+
   return (
     <section
       className={`${shell.className}${view.minimized ? ` ${cls.modalMinimized}` : ""}`}
       aria-label="FF Scouter Bounties"
+      style={style}
     >
-      <div className={cls.header}>
+      <div
+        className={floating ? `${cls.header} ${cls.dragHandle}` : cls.header}
+        onPointerDown={floating ? drag.handleProps.onPointerDown : undefined}
+      >
         <h2 className={cls.title}>FF Scouter Bounties</h2>
         <button
           type="button"
           className={cls.headerBtn}
+          // Not a drag handle: a press here only minimizes.
+          onPointerDown={(e) => e.stopPropagation()}
           aria-expanded={!view.minimized}
           aria-label={
             view.minimized
