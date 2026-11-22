@@ -3,6 +3,7 @@ import path from "node:path";
 import { defineConfig } from "vite";
 import monkey from "vite-plugin-monkey";
 import { vitePluginVersionMark } from "vite-plugin-version-mark";
+import { defaultExclude } from "vitest/config";
 
 const REACT_ALIAS_PATTERN = /^react$/;
 const REACT_DOM_CLIENT_ALIAS_PATTERN = /^react-dom\/client$/;
@@ -201,6 +202,9 @@ export default defineConfig(({ mode }) => {
     test: {
       environment: "node",
       setupFiles: ["./src/tests/idbsetup.ts"],
+      // Agent worktrees under .claude/ hold full copies of the repo. Without
+      // this, Vitest runs their stale test files as well as the real ones.
+      exclude: [...defaultExclude, ".claude/**"],
       css: {
         // Resolve CSS Module imports to their literal (unscoped) class names so
         // `styles.foo` returns "foo" in tests, letting `.class` querySelectors
