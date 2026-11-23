@@ -201,7 +201,7 @@ export default defineConfig(({ mode }) => {
     },
     test: {
       environment: "node",
-      setupFiles: ["./src/tests/idbsetup.ts"],
+      setupFiles: ["./src/tests/idbsetup.ts", "./src/tests/fcsetup.ts"],
       // Agent worktrees under .claude/ hold full copies of the repo. Without
       // this, Vitest runs their stale test files as well as the real ones.
       exclude: [...defaultExclude, ".claude/**"],

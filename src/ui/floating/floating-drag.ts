@@ -29,7 +29,7 @@ export type Size = { width: number; height: number };
 // Where an element with no saved position hangs.
 const DEFAULT_SIDE: Side = "right";
 // Gap kept from a side edge when snapping, and from a zone when escaping it.
-const EDGE_GAP = 8;
+export const EDGE_GAP = 8;
 // Without a chat bar, where the default anchor sits: clear of where Torn's
 // bottom-right chat icons would be.
 const DEFAULT_BOTTOM = 64;
