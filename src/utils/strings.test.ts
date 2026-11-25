@@ -342,6 +342,29 @@ test("parse_suffix_number parses numeric suffixes correctly", () => {
   expect(parse_suffix_number("1,000")).toEqual(1000);
   expect(parse_suffix_number("1,500k")).toEqual(1500000);
   expect(parse_suffix_number("1,000,000m")).toEqual(1000000000000);
+
+  // Issue #63: stray commas and non-digits must not parse as 0
+  expect(parse_suffix_number(",")).toBeNull();
+  expect(parse_suffix_number(",k")).toBeNull();
+  expect(parse_suffix_number("1,5")).toBeNull();
+  expect(parse_suffix_number("1,50")).toBeNull();
+  expect(parse_suffix_number("1,5000")).toBeNull();
+  expect(parse_suffix_number(".,")).toBeNull();
+  expect(parse_suffix_number(",.")).toBeNull();
+
+  // Multiplier precision (no float noise)
+  expect(parse_suffix_number("8.2m")).toEqual(8200000);
+});
+
+test("parse_duration_to_seconds rejects negative or invalid durations", () => {
+  expect(parse_duration_to_seconds("")).toBeNull();
+  expect(parse_duration_to_seconds("   ")).toBeNull();
+  expect(parse_duration_to_seconds("not-a-duration")).toBeNull();
+  expect(parse_duration_to_seconds("-5m")).toBeNull();
+  expect(parse_duration_to_seconds("-1s")).toBeNull();
+  expect(parse_duration_to_seconds("-2h")).toBeNull();
+  expect(parse_duration_to_seconds("5m")).toEqual(300);
+  expect(parse_duration_to_seconds("1h")).toEqual(3600);
 });
 
 test("format_suffix_number renders numbers with k/m/b/t suffixes", () => {

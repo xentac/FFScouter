@@ -193,6 +193,7 @@ export default defineConfig(({ mode }) => {
     },
     define: {
       __FF_SCOUTER_EDITION__: JSON.stringify(editionKey),
+      __FF_SCOUTER_V2_VERSION__: JSON.stringify(version),
     },
     build: {
       minify: false,
@@ -200,7 +201,7 @@ export default defineConfig(({ mode }) => {
     },
     test: {
       environment: "node",
-      setupFiles: ["./src/tests/idbsetup.ts"],
+      setupFiles: ["./src/tests/idbsetup.ts", "./src/tests/fcsetup.ts"],
       css: {
         // Resolve CSS Module imports to their literal (unscoped) class names so
         // `styles.foo` returns "foo" in tests, letting `.class` querySelectors

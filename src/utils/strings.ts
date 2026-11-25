@@ -20,6 +20,21 @@ const OLD_ESTIMATE_INTERVAL = 14 * DAY; // sec
 
 const AGE_PHRASE_PREFIX_REGEX = /^\((.*) old\)$/;
 const SUFFIX_NUMBER_REGEX = /^([\d.,]+)\s*([kmbt])?$/;
+const HAS_DIGIT_REGEX = /\d/;
+// A comma is only a thousands separator when it groups exactly three digits to
+// the right of it. "1,000" is one thousand; "1,5" is a decimal comma in a
+// locale that writes it that way, and "1,50" / "1,5000" are neither. Treating
+// every comma as a separator silently turns "1,5" into 15 — ten times the value
+// the user typed — so anything that isn't a clean thousands grouping is
+// rejected instead of guessed at.
+const THOUSANDS_GROUP_REGEX = /^\d{1,3}(?:,\d{3})+$/;
+
+const SUFFIX_MULTIPLIER: Record<string, number> = {
+  k: 1_000,
+  m: 1_000_000,
+  b: 1_000_000_000,
+  t: 1_000_000_000_000,
+};
 
 export type EstimateSourceIcon = "spy" | "premium";
 
@@ -506,6 +521,16 @@ export function format_timestamp(ts: TimestampSec) {
   return `${d.getHours() < 10 ? "0" : ""}${d.getHours()}:${d.getMinutes() < 10 ? "0" : ""}${d.getMinutes()}:${d.getSeconds() < 10 ? "0" : ""}${d.getSeconds()} - ${d.getDate() < 10 ? "0" : ""}${d.getDate()}/${d.getMonth() + 1 < 10 ? "0" : ""}${d.getMonth() + 1}/${d.getFullYear() - 2000}`;
 }
 
+// Parses "700k", "1.5m", "2,000" into a number.
+//
+// Returns null when the text carries no digit at all (",", ".", "k"), when the
+// digits are grouped by a comma in a way that isn't a thousands grouping
+// ("1,5" — see THOUSANDS_GROUP_REGEX), or when the result isn't finite.
+//
+// The scaled result is rounded to an integer: these values are counts of
+// points, and float noise from a decimal multiplier ("8.2m" ->
+// 8199999.999999999) makes an inclusive max filter hide a target that sits
+// exactly on the boundary.
 export function parse_suffix_number(valStr: string): number | null {
   const trimmed = valStr.trim().toLowerCase();
   if (!trimmed) return null;
@@ -516,20 +541,27 @@ export function parse_suffix_number(valStr: string): number | null {
   const matchStr = match[1];
   if (!matchStr) return null;
 
-  const num = Number(matchStr.replace(/,/g, ""));
-  if (Number.isNaN(num)) return null;
+  // Must contain at least one digit. "," and "..." match SUFFIX_NUMBER_REGEX
+  // but carry no magnitude — Number("") is 0, which would turn a stray comma
+  // in the filter box into "hide everything with a known estimate".
+  if (!HAS_DIGIT_REGEX.test(matchStr)) return null;
+
+  let num: number;
+  if (matchStr.includes(",")) {
+    if (!THOUSANDS_GROUP_REGEX.test(matchStr)) return null;
+    num = Number(matchStr.replace(/,/g, ""));
+  } else {
+    num = Number(matchStr);
+  }
+  if (Number.isNaN(num) || !Number.isFinite(num)) return null;
 
   const suffix = match[2];
   if (!suffix) return num;
 
-  const multiplier: Record<string, number> = {
-    k: 1_000,
-    m: 1_000_000,
-    b: 1_000_000_000,
-    t: 1_000_000_000_000,
-  };
+  const scaled = num * (SUFFIX_MULTIPLIER[suffix] ?? 1);
+  if (!Number.isFinite(scaled)) return null;
 
-  return num * (multiplier[suffix] ?? 1);
+  return Math.round(scaled);
 }
 
 // Inverse of parse_suffix_number: "700k", "1.5m", "2.99b". Up to 2 decimals,
@@ -556,5 +588,9 @@ export function parse_duration_to_seconds(valStr: string): number | null {
   const trimmed = valStr.trim();
   if (!trimmed) return null;
 
-  return parseDuration(trimmed, "s");
+  const seconds = parseDuration(trimmed, "s");
+  if (seconds === null || seconds === undefined) return null;
+  if (!Number.isFinite(seconds) || seconds < 0) return null;
+
+  return seconds;
 }
