@@ -59,6 +59,22 @@ interface CacheDB extends DBSchema {
   };
 }
 
+// Runs fn after delay ms and returns a function that cancels it.
+export type Schedule = (fn: () => void, delay: number) => () => void;
+
+const schedule_timeout: Schedule = (fn, delay) => {
+  const timer = setTimeout(fn, delay);
+  return () => clearTimeout(timer);
+};
+
+export type FFCacheOptions = {
+  // The browser clock. Every expiry and timestamp in the cache reads it.
+  now?: () => Timestamp;
+  // Schedules the idle close in end_op. The 10 ms polling waits stay on
+  // setTimeout.
+  schedule?: Schedule;
+};
+
 type MigrationFn = (
   db: IDBPDatabase<CacheDB>,
   transaction: IDBPTransaction<CacheDB, StoreNames<CacheDB>[], "versionchange">,
@@ -66,13 +82,15 @@ type MigrationFn = (
 
 export class FFCache {
   private db_name: string;
+  private now: () => Timestamp;
+  private schedule: Schedule;
   private db: IDBPDatabase<CacheDB> | null = null;
   private db_version = 4;
 
   private cache_interval: number = 60 * 60 * 1000; // one hour cache
   private last_clean = 0;
   private active_operations = 0;
-  private close_timer: ReturnType<typeof setTimeout> | null = null;
+  private cancel_close: (() => void) | null = null;
   private open_promise: Promise<IDBPDatabase<CacheDB>> | null = null;
   private channel: BroadcastChannel | null = null;
   private state: "CLOSED" | "OPEN" | "DELETING_LOCAL" | "DELETING_REMOTE" =
@@ -128,8 +146,10 @@ export class FFCache {
     ],
   ]);
 
-  constructor(db_name: string) {
+  constructor(db_name: string, options: FFCacheOptions = {}) {
     this.db_name = db_name;
+    this.now = options.now ?? Date.now;
+    this.schedule = options.schedule ?? schedule_timeout;
     if (typeof BroadcastChannel !== "undefined") {
       this.channel = new BroadcastChannel(`ffcache-channel-${db_name}`);
       this.channel.onmessage = (event) => {
@@ -219,9 +239,9 @@ export class FFCache {
       await this.wait_for_deletion_complete();
     }
     this.active_operations++;
-    if (this.close_timer) {
-      clearTimeout(this.close_timer);
-      this.close_timer = null;
+    if (this.cancel_close) {
+      this.cancel_close();
+      this.cancel_close = null;
     }
     return await this.open();
   };
@@ -229,20 +249,20 @@ export class FFCache {
   end_op = () => {
     this.active_operations = Math.max(0, this.active_operations - 1);
     if (this.active_operations === 0) {
-      if (this.close_timer) {
-        clearTimeout(this.close_timer);
+      if (this.cancel_close) {
+        this.cancel_close();
       }
-      this.close_timer = setTimeout(() => {
+      this.cancel_close = this.schedule(() => {
         this.close();
-        this.close_timer = null;
+        this.cancel_close = null;
       }, 1000);
     }
   };
 
   delete_db = async () => {
-    if (this.close_timer) {
-      clearTimeout(this.close_timer);
-      this.close_timer = null;
+    if (this.cancel_close) {
+      this.cancel_close();
+      this.cancel_close = null;
     }
 
     this.state = "DELETING_LOCAL";
@@ -337,7 +357,7 @@ export class FFCache {
       const result = new Map<PlayerId, CachedFFData | null>();
       player_ids.forEach((id, idx) => {
         const value = entries[idx];
-        result.set(id, !value || value.expiry <= Date.now() ? null : value);
+        result.set(id, !value || value.expiry <= this.now() ? null : value);
       });
 
       return result;
@@ -354,7 +374,7 @@ export class FFCache {
       const values_expiry = values.map((value) => {
         return {
           ...value,
-          expiry: Date.now() + this.cache_interval,
+          expiry: this.now() + this.cache_interval,
         };
       });
 
@@ -371,7 +391,7 @@ export class FFCache {
   };
 
   clean_expired = (force = false): Promise<void> => {
-    const now = Date.now();
+    const now = this.now();
     if (!force && now - this.last_clean < 60 * 60 * 1000) {
       return Promise.resolve();
     }
@@ -384,7 +404,7 @@ export class FFCache {
         {
           const tx = db.transaction(STORES.CACHE, "readwrite");
           const index = tx.store.index("expiry");
-          const range = IDBKeyRange.upperBound(Date.now());
+          const range = IDBKeyRange.upperBound(this.now());
           const r = await index.getAllKeys(range);
           log.info(`Found ${r.length} expired values to delete from cache.`);
           await Promise.all(r.map((id) => tx.store.delete(id)));
@@ -395,7 +415,7 @@ export class FFCache {
         {
           const tx = db.transaction(STORES.FLIGHTS, "readwrite");
           const index = tx.store.index("expiry");
-          const range = IDBKeyRange.upperBound(Date.now());
+          const range = IDBKeyRange.upperBound(this.now());
           const r = await index.getAllKeys(range);
           log.info(`Found ${r.length} expired values to delete from flights.`);
           await Promise.all(r.map((id) => tx.store.delete(id)));
@@ -406,7 +426,7 @@ export class FFCache {
         {
           const tx = db.transaction(STORES.ANALYTICS, "readwrite");
           const index = tx.store.index("timestamp");
-          const thirty_days_ago = Date.now() - 30 * 24 * 60 * 60 * 1000;
+          const thirty_days_ago = this.now() - 30 * 24 * 60 * 60 * 1000;
           const range = IDBKeyRange.upperBound(thirty_days_ago);
           const r = await index.getAllKeys(range);
           log.info(
@@ -420,7 +440,7 @@ export class FFCache {
         {
           const tx = db.transaction(STORES.BOUNTY_BOARD, "readwrite");
           const index = tx.store.index("expiry");
-          const range = IDBKeyRange.upperBound(Date.now());
+          const range = IDBKeyRange.upperBound(this.now());
           const r = await index.getAllKeys(range);
           log.info(
             `Found ${r.length} expired values to delete from bounty_board.`,
@@ -453,7 +473,7 @@ export class FFCache {
       const entry = await tx.store.get(player_id);
       await tx.done;
 
-      if (!entry || entry.expiry <= Date.now()) {
+      if (!entry || entry.expiry <= this.now()) {
         return null;
       }
       return entry as CachedFlightData;
@@ -472,7 +492,7 @@ export class FFCache {
 
       const value_expiry = {
         ...value,
-        expiry: Date.now() + cache_interval,
+        expiry: this.now() + cache_interval,
       };
 
       await tx.store.put(value_expiry);
@@ -502,7 +522,7 @@ export class FFCache {
       const entry = await tx.store.get(key);
       await tx.done;
 
-      if (!entry || entry.expiry <= Date.now()) {
+      if (!entry || entry.expiry <= this.now()) {
         return null;
       }
       return entry as BountyBoardEntry<T>;
@@ -545,7 +565,7 @@ export class FFCache {
       const tx = db.transaction(STORES.ANALYTICS, "readwrite");
       const value: AnalyticsEntry = {
         ...entry,
-        timestamp: Date.now(),
+        timestamp: this.now(),
       };
       await tx.store.add(value);
       await tx.done;

@@ -1,15 +1,39 @@
-import { afterEach, beforeEach, expect, test, vi } from "vitest";
-import { FFCache } from "./ffcache";
+import { beforeEach, expect, test } from "vitest";
+import { FFCache, type Schedule } from "./ffcache";
 import type {
   CachedFFData,
   FFData,
   PlayerFlightsResponse,
   PlayerId,
+  Timestamp,
 } from "./types";
 
 const SEC = 1000;
 const MINUTE = 60 * SEC;
 const HOUR = 60 * MINUTE;
+
+// The cache reads this clock. A test moves time with advance().
+const START = new Date(2012, 1, 1, 0, 0, 0).getTime();
+let clock = START;
+const now = (): Timestamp => clock;
+const advance = (ms: number) => {
+  clock += ms;
+};
+
+// The idle closes that the cache scheduled and did not cancel. A test runs
+// them by hand, so no real timer is left behind.
+let pending_closes: Set<() => void>;
+const schedule: Schedule = (fn) => {
+  pending_closes.add(fn);
+  return () => pending_closes.delete(fn);
+};
+const run_pending_closes = () => {
+  const fns = [...pending_closes];
+  pending_closes.clear();
+  for (const fn of fns) fn();
+};
+
+const make_cache = (name: string) => new FFCache(name, { now, schedule });
 
 const players: Map<PlayerId, FFData> = new Map([
   [
@@ -24,7 +48,7 @@ const players: Map<PlayerId, FFData> = new Map([
     {
       no_data: false,
       fair_fight: 3.0,
-      last_updated: Date.now() - 10 * SEC,
+      last_updated: START - 10 * SEC,
       bs_estimate: 1000,
       bs_estimate_human: "1k",
       bss_public: 20,
@@ -40,7 +64,7 @@ const players: Map<PlayerId, FFData> = new Map([
     {
       no_data: false,
       fair_fight: 11.0,
-      last_updated: Date.now() - 10 * SEC,
+      last_updated: START - 10 * SEC,
       bs_estimate: 1_000_000,
       bs_estimate_human: "1m",
       bss_public: 50,
@@ -58,32 +82,55 @@ const get_player = (id: PlayerId) => {
 };
 
 const add_expiry = (d: FFData): CachedFFData => {
-  return { ...d, expiry: Date.now() + HOUR };
+  return { ...d, expiry: clock + HOUR };
 };
 
 const bare: FFData = { no_data: true, player_id: -1 };
 
 beforeEach(() => {
-  // Take control of time.
-  vi.useFakeTimers();
-  const date = new Date(2012, 1, 1, 0, 0, 0);
-  vi.setSystemTime(date);
-});
-
-afterEach(() => {
-  // Put things back the way you found it.
-  vi.useRealTimers();
+  clock = START;
+  pending_closes = new Set();
 });
 
 test("can create and destroy db", async () => {
-  const c = new FFCache("test");
+  const c = make_cache("test");
   await c.open();
 
   await c.delete_db();
 });
 
+test("closes the database 1 second after the last operation, unless another starts", async () => {
+  const delays: number[] = [];
+  const recording = new FFCache("test-idle-close", {
+    now,
+    schedule: (fn, delay) => {
+      delays.push(delay);
+      return schedule(fn, delay);
+    },
+  });
+
+  await recording.update([get_player(1)]);
+  expect(delays).toEqual([1000]);
+  expect(pending_closes.size).toBe(1);
+
+  // A new operation cancels the scheduled close and schedules a new one.
+  await recording.get([1]);
+  expect(pending_closes.size).toBe(1);
+
+  run_pending_closes();
+  expect(pending_closes.size).toBe(0);
+  // After the close, the next operation opens the database again.
+  expect(await recording.get([1])).toEqual(
+    new Map([[1, add_expiry(get_player(1))]]),
+  );
+  expect(delays).toEqual([1000, 1000, 1000]);
+
+  await recording.delete_db();
+  expect(pending_closes.size).toBe(0);
+});
+
 test("get an entry that doesn't exist returns null", async () => {
-  const c = new FFCache("test");
+  const c = make_cache("test");
 
   expect(await c.get([1])).toEqual(new Map([[1, null]]));
 
@@ -91,7 +138,7 @@ test("get an entry that doesn't exist returns null", async () => {
 });
 
 test("can save and recover data", async () => {
-  const c = new FFCache("test");
+  const c = make_cache("test");
 
   await c.update([get_player(1), get_player(2)]);
 
@@ -110,7 +157,7 @@ test("can save and recover data", async () => {
 });
 
 test("delete_db deletes db", async () => {
-  const c = new FFCache("test");
+  const c = make_cache("test");
 
   await c.update([get_player(1), get_player(2)]);
 
@@ -120,17 +167,17 @@ test("delete_db deletes db", async () => {
 });
 
 test("expired data is not returned but still saved and clean_expired works", async () => {
-  const c = new FFCache("test");
+  const c = make_cache("test");
 
   await c.update([get_player(1)]);
   const cached_player1 = add_expiry(get_player(1));
 
-  vi.advanceTimersByTime(30 * MINUTE);
+  advance(30 * MINUTE);
 
   await c.update([get_player(2)]);
   const cached_player2 = add_expiry(get_player(2));
 
-  vi.advanceTimersByTime(31 * MINUTE);
+  advance(31 * MINUTE);
 
   expect(await c.get([2, 1])).toEqual(
     new Map([
@@ -149,7 +196,7 @@ test("expired data is not returned but still saved and clean_expired works", asy
 });
 
 test("can save and recover flight data", async () => {
-  const c = new FFCache("test-flights");
+  const c = make_cache("test-flights");
   const flightData: PlayerFlightsResponse = {
     player_id: 42,
     current: {
@@ -171,17 +218,17 @@ test("can save and recover flight data", async () => {
   expect(cached).not.toBeNull();
   expect(cached?.player_id).toEqual(42);
   expect(cached?.current?.status_description).toEqual("Flying");
-  expect(cached?.expiry).toEqual(Date.now() + 5 * MINUTE);
+  expect(cached?.expiry).toEqual(clock + 5 * MINUTE);
 
   // Expiration test
-  vi.advanceTimersByTime(6 * MINUTE);
+  advance(6 * MINUTE);
   expect(await c.get_flight(42)).toBeNull();
 
   await c.delete_db();
 });
 
 test("clean_expired cleans flight cache", async () => {
-  const c = new FFCache("test-flights-expired");
+  const c = make_cache("test-flights-expired");
   const flightData1: PlayerFlightsResponse = {
     player_id: 101,
     current: null,
@@ -196,7 +243,7 @@ test("clean_expired cleans flight cache", async () => {
   await c.update_flight(flightData1, 5 * MINUTE);
   await c.update_flight(flightData2, 15 * MINUTE);
 
-  vi.advanceTimersByTime(10 * MINUTE);
+  advance(10 * MINUTE);
 
   // flightData1 is expired, flightData2 is not
   expect(await c.get_flight(101)).toBeNull();
@@ -215,14 +262,14 @@ test("clean_expired cleans flight cache", async () => {
 });
 
 test("bounty board entries save, expire, delete, and clean_expired removes them", async () => {
-  const c = new FFCache("test-bounty-board");
+  const c = make_cache("test-bounty-board");
 
-  await c.put_bounty_board("board", { a: 1 }, Date.now() + 10 * MINUTE);
-  await c.put_bounty_board("failure", { b: 2 }, Date.now() + 5 * MINUTE);
+  await c.put_bounty_board("board", { a: 1 }, clock + 10 * MINUTE);
+  await c.put_bounty_board("failure", { b: 2 }, clock + 5 * MINUTE);
   expect(await c.get_bounty_board("board")).toEqual({
     key: "board",
     value: { a: 1 },
-    expiry: Date.now() + 10 * MINUTE,
+    expiry: clock + 10 * MINUTE,
   });
   expect(await c.get_bounty_board("missing")).toBeNull();
 
@@ -230,17 +277,17 @@ test("bounty board entries save, expire, delete, and clean_expired removes them"
   expect(await c.get_bounty_board("board")).toBeNull();
 
   // Expired entries are not returned, and clean_expired drops the row
-  vi.advanceTimersByTime(6 * MINUTE);
+  advance(6 * MINUTE);
   expect(await c.get_bounty_board("failure")).toBeNull();
   await c.clean_expired(true);
-  vi.setSystemTime(Date.now() - 6 * MINUTE);
+  clock -= 6 * MINUTE;
   expect(await c.get_bounty_board("failure")).toBeNull();
 
   await c.delete_db();
 });
 
 test("can save, recover, and purge analytics entries", async () => {
-  const c = new FFCache("test-analytics");
+  const c = make_cache("test-analytics");
 
   const entry1 = {
     feature: "fallback",
@@ -261,7 +308,7 @@ test("can save, recover, and purge analytics entries", async () => {
   };
 
   await c.add_analytics(entry1);
-  vi.advanceTimersByTime(5 * SEC);
+  advance(5 * SEC);
   await c.add_analytics(entry2);
 
   const logs = await c.get_analytics();
@@ -270,16 +317,16 @@ test("can save, recover, and purge analytics entries", async () => {
   expect(logs[0]?.player_id).toEqual(123);
   expect(logs[0]?.status).toEqual("applied");
   expect(logs[0]?.url).toEqual("https://www.torn.com/profiles.php");
-  expect(logs[0]?.timestamp).toEqual(Date.now() - 5 * SEC);
+  expect(logs[0]?.timestamp).toEqual(clock - 5 * SEC);
 
   expect(logs[1]?.feature).toEqual("mini-profile");
   expect(logs[1]?.player_id).toEqual(456);
   expect(logs[1]?.status).toEqual("ignored");
   expect(logs[1]?.hash).toEqual("#/team");
-  expect(logs[1]?.timestamp).toEqual(Date.now());
+  expect(logs[1]?.timestamp).toEqual(clock);
 
   // Test rolling log deletion (older than 30 days)
-  vi.advanceTimersByTime(31 * 24 * 60 * 60 * SEC);
+  advance(31 * 24 * 60 * 60 * SEC);
 
   const entry3 = {
     feature: "faction",
@@ -305,7 +352,7 @@ test("can save, recover, and purge analytics entries", async () => {
 });
 
 test("clear_analytics clears all analytics entries in cache", async () => {
-  const c = new FFCache("test-analytics-clear");
+  const c = make_cache("test-analytics-clear");
 
   const entry = {
     feature: "fallback",
@@ -329,8 +376,8 @@ test("clear_analytics clears all analytics entries in cache", async () => {
 
 test("multi-tab deletion: delete_db does not hang when another connection is open, and other connection reopens transparently", async () => {
   const dbName = "test-multi-tab";
-  const c1 = new FFCache(dbName);
-  const c2 = new FFCache(dbName);
+  const c1 = make_cache(dbName);
+  const c2 = make_cache(dbName);
 
   await c1.update([get_player(1)]);
   await c2.update([get_player(2)]);

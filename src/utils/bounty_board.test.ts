@@ -18,6 +18,8 @@ import {
 } from "./bounty_board";
 import { FFCache } from "./ffcache";
 import { FFConfig } from "./ffconfig";
+import { DB_NAME } from "./ffscouter";
+import type { Timestamp } from "./types";
 
 const TEST_PREFIX = "ffscouter-bounty-test.";
 
@@ -25,15 +27,20 @@ const TEST_PREFIX = "ffscouter-bounty-test.";
 let db_counter = 0;
 let test_db = "";
 
+// The caches read this clock. A test moves time with advance().
+let clock = 0;
+const now = (): Timestamp => clock;
+const advance = (ms: number) => {
+  clock += ms;
+};
+
 beforeEach(() => {
-  vi.useFakeTimers();
-  vi.setSystemTime(new Date("2026-02-02T00:00:00Z"));
+  clock = new Date("2026-02-02T00:00:00Z").getTime();
   localStorage.clear();
   test_db = `ffscouter-bounty-test-${db_counter++}`;
 });
 
 afterEach(async () => {
-  vi.useRealTimers();
   await new FFCache(test_db).delete_db();
 });
 
@@ -41,7 +48,11 @@ afterEach(async () => {
 // IndexedDB, simulating a new page load.
 const make_page_load = (query: typeof query_bounty_seller_board) => {
   const config = new FFConfig(TEST_PREFIX);
-  return new BountyBoardCache(config, new FFCache(test_db), query);
+  return new BountyBoardCache(config, {
+    cache: new FFCache(test_db, { now }),
+    query,
+    now,
+  });
 };
 
 const set_key = () => {
@@ -69,7 +80,7 @@ test("at most one fetch per freshness window across simulated page loads", async
   expect(query).toHaveBeenCalledTimes(1);
 
   // Second and third page loads inside the freshness window read storage only
-  vi.advanceTimersByTime(BOUNTY_BOARD_FRESHNESS_FLOOR_MS - 1000);
+  advance(BOUNTY_BOARD_FRESHNESS_FLOOR_MS - 1000);
   expect(await make_page_load(query).get_board()).toEqual(
     SELLER_BOARD_RESPONSE,
   );
@@ -79,9 +90,34 @@ test("at most one fetch per freshness window across simulated page loads", async
   expect(query).toHaveBeenCalledTimes(1);
 
   // Crossing the freshness floor allows exactly one more fetch
-  vi.advanceTimersByTime(2000);
+  advance(2000);
   await make_page_load(query).get_board();
   expect(query).toHaveBeenCalledTimes(2);
+});
+
+test("the default cache reads the same clock as the board cache", async () => {
+  set_key();
+  const query = vi
+    .fn()
+    .mockResolvedValue({ result: SELLER_BOARD_RESPONSE, blank: false });
+  // No cache passed. The clock is in 2026-02, before the real clock, so a
+  // cache on the real clock would see the stored board as expired.
+  const cache = new BountyBoardCache(new FFConfig(TEST_PREFIX), {
+    query,
+    now,
+  });
+  try {
+    await cache.get_board();
+    advance(BOUNTY_BOARD_FRESHNESS_FLOOR_MS - 1000);
+    // A new instance has no in-flight lookup, so it must read the stored row.
+    await new BountyBoardCache(new FFConfig(TEST_PREFIX), {
+      query,
+      now,
+    }).get_board();
+    expect(query).toHaveBeenCalledTimes(1);
+  } finally {
+    await new FFCache(DB_NAME).delete_db();
+  }
 });
 
 test("concurrent get_board calls share one in-flight fetch", async () => {
@@ -114,7 +150,7 @@ test("get_board propagates fetch errors and does not poison the cache", async ()
 
   await expect(cache.get_board()).rejects.toThrow("boom");
   // Once the failure's retry window passes, the next call fetches again
-  vi.advanceTimersByTime(31_000);
+  advance(31_000);
   expect(await cache.get_board()).toEqual(SELLER_BOARD_RESPONSE);
   expect(query).toHaveBeenCalledTimes(2);
 });
@@ -147,7 +183,7 @@ test("refresh warms the cache and swallows errors", async () => {
   await expect(cache.refresh()).resolves.toBeUndefined();
 
   // Past the failure's retry window, refresh fetches for real
-  vi.advanceTimersByTime(31_000);
+  advance(31_000);
   await cache.refresh();
   expect(query).toHaveBeenCalledTimes(2);
   // The warmed cache serves a later page load without another fetch
@@ -188,7 +224,7 @@ test("a coded 4xx failure is remembered for the floor across page loads", async 
 
   // Within the floor, every consult — including a new page load — gets the
   // remembered error, still carrying the code the consent UI branches on
-  vi.advanceTimersByTime(59_000);
+  advance(59_000);
   const remembered = await consult(query);
   expect(remembered).toBeInstanceOf(FFApiError);
   expect((remembered as FFApiError).ff_api_error).toEqual(
@@ -197,7 +233,7 @@ test("a coded 4xx failure is remembered for the floor across page loads", async 
   expect(query).toHaveBeenCalledTimes(1);
 
   // After the floor, exactly one real fetch happens
-  vi.advanceTimersByTime(2_000);
+  advance(2_000);
   await consult(query);
   expect(query).toHaveBeenCalledTimes(2);
 });
@@ -215,7 +251,7 @@ test("clear_failure drops the remembered failure so the next get_board fetches",
 
   // Still inside the retry window: without clearing, this would rethrow
   // the remembered code-86 without fetching.
-  vi.advanceTimersByTime(1_000);
+  advance(1_000);
   await make_page_load(query).clear_failure();
 
   expect(await consult(query)).toEqual(SELLER_BOARD_RESPONSE);
@@ -239,12 +275,12 @@ test("a 429 failure honors retry_after_seconds when longer than the floor", asyn
     .mockResolvedValue({ result: SELLER_BOARD_RESPONSE, blank: false });
 
   await consult(query);
-  vi.advanceTimersByTime(119_000);
+  advance(119_000);
   const remembered = await consult(query);
   expect((remembered as FFApiError).ff_api_error?.code).toBe(21);
   expect(query).toHaveBeenCalledTimes(1);
 
-  vi.advanceTimersByTime(2_000);
+  advance(2_000);
   expect(await consult(query)).toEqual(SELLER_BOARD_RESPONSE);
   expect(query).toHaveBeenCalledTimes(2);
 });
@@ -258,23 +294,23 @@ test("transient failures back off exponentially from 30s", async () => {
   await consult(query); // failure 1 → retry in 30s
   expect(query).toHaveBeenCalledTimes(1);
 
-  vi.advanceTimersByTime(29_000);
+  advance(29_000);
   await consult(query); // blocked
   expect(query).toHaveBeenCalledTimes(1);
 
-  vi.advanceTimersByTime(2_000);
+  advance(2_000);
   await consult(query); // failure 2 → retry in 60s
   expect(query).toHaveBeenCalledTimes(2);
 
-  vi.advanceTimersByTime(59_000);
+  advance(59_000);
   await consult(query); // blocked
   expect(query).toHaveBeenCalledTimes(2);
 
-  vi.advanceTimersByTime(2_000);
+  advance(2_000);
   await consult(query); // failure 3 → retry in 120s
   expect(query).toHaveBeenCalledTimes(3);
 
-  vi.advanceTimersByTime(119_000);
+  advance(119_000);
   await consult(query); // blocked
   expect(query).toHaveBeenCalledTimes(3);
 });
@@ -288,16 +324,16 @@ test("transient backoff is capped at 8 minutes", async () => {
   // Drive the counter well past where the cap kicks in
   for (let i = 0; i < 8; i++) {
     await consult(query);
-    vi.advanceTimersByTime(9 * 60_000);
+    advance(9 * 60_000);
   }
   await consult(query); // 9th failure → capped window
   expect(query).toHaveBeenCalledTimes(9);
 
-  vi.advanceTimersByTime(8 * 60_000 - 1_000);
+  advance(8 * 60_000 - 1_000);
   await consult(query); // blocked within the cap
   expect(query).toHaveBeenCalledTimes(9);
 
-  vi.advanceTimersByTime(2_000);
+  advance(2_000);
   await consult(query);
   expect(query).toHaveBeenCalledTimes(10);
 });
@@ -317,7 +353,7 @@ test("a blank (PDA empty) response is a transient failure with backoff", async (
   );
   expect(query).toHaveBeenCalledTimes(1);
 
-  vi.advanceTimersByTime(31_000);
+  advance(31_000);
   expect(await consult(query)).toEqual(SELLER_BOARD_RESPONSE);
   expect(query).toHaveBeenCalledTimes(2);
 });
@@ -333,21 +369,21 @@ test("a success clears the failure record and resets the backoff", async () => {
     .mockResolvedValue({ result: SELLER_BOARD_RESPONSE, blank: false });
 
   await consult(query); // failure 1 (30s)
-  vi.advanceTimersByTime(31_000);
+  advance(31_000);
   await consult(query); // failure 2 (60s)
-  vi.advanceTimersByTime(61_000);
+  advance(61_000);
   expect(await consult(query)).toEqual(SELLER_BOARD_RESPONSE);
   expect(query).toHaveBeenCalledTimes(3);
 
   // After the freshness floor, the next failure starts a fresh 30s window
   // instead of continuing the earlier progression
-  vi.advanceTimersByTime(61_000);
+  advance(61_000);
   await consult(query); // failure, count restarts at 1
   expect(query).toHaveBeenCalledTimes(4);
-  vi.advanceTimersByTime(29_000);
+  advance(29_000);
   await consult(query); // blocked
   expect(query).toHaveBeenCalledTimes(4);
-  vi.advanceTimersByTime(2_000);
+  advance(2_000);
   expect(await consult(query)).toEqual(SELLER_BOARD_RESPONSE);
   expect(query).toHaveBeenCalledTimes(5);
 });
@@ -363,18 +399,18 @@ test("a coded failure does not inherit the transient backoff count", async () =>
     .mockResolvedValue({ result: SELLER_BOARD_RESPONSE, blank: false });
 
   await consult(query); // transient 1 (30s)
-  vi.advanceTimersByTime(31_000);
+  advance(31_000);
   await consult(query); // transient 2 (60s)
-  vi.advanceTimersByTime(61_000);
+  advance(61_000);
   await consult(query); // coded → flat 60s window
   expect(query).toHaveBeenCalledTimes(3);
 
   // 61s later the coded window has passed; a continued transient progression
   // (120s) would still be blocked here
-  vi.advanceTimersByTime(61_000);
+  advance(61_000);
   await consult(query); // transient again, count restarted → 30s
   expect(query).toHaveBeenCalledTimes(4);
-  vi.advanceTimersByTime(31_000);
+  advance(31_000);
   expect(await consult(query)).toEqual(SELLER_BOARD_RESPONSE);
   expect(query).toHaveBeenCalledTimes(5);
 });
@@ -385,22 +421,22 @@ test("the board is stored with an expiry, the failure past its retry window", as
     .fn()
     .mockRejectedValueOnce(server_error(502))
     .mockResolvedValue({ result: SELLER_BOARD_RESPONSE, blank: false });
-  const store = new FFCache(test_db);
+  const store = new FFCache(test_db, { now });
 
   await consult(query); // transient failure 1 → retry in 30s
   const failure = await store.get_bounty_board("failure");
   // Kept an hour past next_retry_at so the next failure can escalate from
   // its count.
-  expect(failure?.expiry).toBe(Date.now() + 30_000 + 60 * 60_000);
+  expect(failure?.expiry).toBe(clock + 30_000 + 60 * 60_000);
 
-  vi.advanceTimersByTime(31_000);
+  advance(31_000);
   await consult(query);
   expect(await store.get_bounty_board("failure")).toBeNull();
   const board = await store.get_bounty_board("board");
-  expect(board?.expiry).toBe(Date.now() + BOUNTY_BOARD_EXPIRY_MS);
+  expect(board?.expiry).toBe(clock + BOUNTY_BOARD_EXPIRY_MS);
 
   // Past the expiry the row is gone, not just stale
-  vi.advanceTimersByTime(BOUNTY_BOARD_EXPIRY_MS);
+  advance(BOUNTY_BOARD_EXPIRY_MS);
   expect(await store.get_bounty_board("board")).toBeNull();
 });
 
@@ -409,11 +445,15 @@ test("an IndexedDB fault is a cache miss, not a board failure", async () => {
   const query = vi
     .fn()
     .mockResolvedValue({ result: SELLER_BOARD_RESPONSE, blank: false });
-  const broken = new FFCache(test_db);
+  const broken = new FFCache(test_db, { now });
   broken.get_bounty_board = vi.fn().mockRejectedValue(new Error("idb down"));
   broken.put_bounty_board = vi.fn().mockRejectedValue(new Error("idb down"));
   broken.delete_bounty_board = vi.fn().mockRejectedValue(new Error("idb down"));
-  const cache = new BountyBoardCache(new FFConfig(TEST_PREFIX), broken, query);
+  const cache = new BountyBoardCache(new FFConfig(TEST_PREFIX), {
+    cache: broken,
+    query,
+    now,
+  });
 
   expect(await cache.get_board()).toEqual(SELLER_BOARD_RESPONSE);
   expect(query).toHaveBeenCalledTimes(1);
@@ -439,7 +479,12 @@ const make_page_load_with_submit = (
   submit: typeof submit_bounty_seller_claim,
 ) => {
   const config = new FFConfig(TEST_PREFIX);
-  return new BountyBoardCache(config, new FFCache(test_db), query, submit);
+  return new BountyBoardCache(config, {
+    cache: new FFCache(test_db, { now }),
+    query,
+    submit,
+    now,
+  });
 };
 
 test("submit_claim folds the response claims into the cached board", async () => {
@@ -481,11 +526,11 @@ test("submit_claim does not extend the board freshness window", async () => {
   const cache = make_page_load_with_submit(query, submit);
 
   await cache.get_board();
-  vi.advanceTimersByTime(45_000);
+  advance(45_000);
   await cache.submit_claim({ target_player_id: 267456763 });
 
   // 61s after the board fetch (16s after the claim) the board is stale
-  vi.advanceTimersByTime(16_000);
+  advance(16_000);
   await cache.get_board();
   expect(query).toHaveBeenCalledTimes(2);
 });
@@ -556,7 +601,7 @@ test("a failed submit_claim leaves the cached board and retry state untouched", 
     SELLER_BOARD_RESPONSE.claims,
   );
   expect(query).toHaveBeenCalledTimes(1);
-  vi.advanceTimersByTime(61_000);
+  advance(61_000);
   await cache.get_board();
   expect(query).toHaveBeenCalledTimes(2);
 });

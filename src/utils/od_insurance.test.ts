@@ -1,14 +1,6 @@
 // @vitest-environment jsdom
 
-import {
-  afterEach,
-  beforeEach,
-  describe,
-  expect,
-  type Mock,
-  test,
-  vi,
-} from "vitest";
+import { beforeEach, describe, expect, type Mock, test, vi } from "vitest";
 import {
   ECSTASY_PLAN,
   PLANS_RESPONSE,
@@ -23,6 +15,7 @@ import {
   payable_plans,
 } from "./od_insurance";
 import { Storage } from "./storage";
+import type { Timestamp } from "./types";
 
 describe("covered_item_ids", () => {
   test("gives the item each payable plan covers, once", () => {
@@ -88,20 +81,22 @@ describe("OdInsurancePlansCache", () => {
   const ok = { result: PLANS_RESPONSE, blank: false as const };
   let query: Mock<typeof query_od_insurance_plans>;
   let cache: OdInsurancePlansCache;
+  // The cache reads this clock. A test moves time with advance().
+  const START = new Date("2026-11-12T12:00:00Z").getTime();
+  let clock = START;
+  const advance = (ms: number) => {
+    clock += ms;
+  };
 
   beforeEach(() => {
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date("2026-11-12T12:00:00Z"));
+    clock = START;
     localStorage.clear();
     query = vi.fn<typeof query_od_insurance_plans>().mockResolvedValue(ok);
     cache = new OdInsurancePlansCache({
       storage: new Storage("test."),
       query,
+      now: (): Timestamp => clock,
     });
-  });
-
-  afterEach(() => {
-    vi.useRealTimers();
   });
 
   test("fetches when nothing is stored", async () => {
@@ -116,14 +111,14 @@ describe("OdInsurancePlansCache", () => {
 
   test("serves a fresh list without a request", async () => {
     await cache.get();
-    vi.advanceTimersByTime(OD_PLANS_FRESH_MS - 1);
+    advance(OD_PLANS_FRESH_MS - 1);
     await expect(cache.get()).resolves.toMatchObject({ status: "fresh" });
     expect(query).toHaveBeenCalledTimes(1);
   });
 
   test("fetches again once the list is 10 minutes old", async () => {
     await cache.get();
-    vi.advanceTimersByTime(OD_PLANS_FRESH_MS);
+    advance(OD_PLANS_FRESH_MS);
     await cache.get();
     expect(query).toHaveBeenCalledTimes(2);
   });
@@ -136,12 +131,12 @@ describe("OdInsurancePlansCache", () => {
 
   test("falls back to a stale list under 24 hours old when the refresh fails", async () => {
     await cache.get();
-    vi.advanceTimersByTime(23 * HOUR);
+    advance(23 * HOUR);
     query.mockRejectedValue(new Error("offline"));
     await expect(cache.get()).resolves.toEqual({
       status: "stale",
       response: PLANS_RESPONSE,
-      fetched_at: new Date("2026-11-12T12:00:00Z").getTime(),
+      fetched_at: START,
     });
   });
 
@@ -152,9 +147,16 @@ describe("OdInsurancePlansCache", () => {
 
   test("fails when the refresh fails and the stored list is over 24 hours old", async () => {
     await cache.get();
-    vi.advanceTimersByTime(24 * HOUR + 1);
+    advance(24 * HOUR + 1);
     query.mockRejectedValue(new Error("offline"));
     await expect(cache.get()).resolves.toEqual({ status: "failed" });
+  });
+
+  test("falls back to a stale list exactly 24 hours old", async () => {
+    await cache.get();
+    advance(24 * HOUR);
+    query.mockRejectedValue(new Error("offline"));
+    await expect(cache.get()).resolves.toMatchObject({ status: "stale" });
   });
 
   test("fails when the request fails and nothing is stored", async () => {

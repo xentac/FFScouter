@@ -45,7 +45,7 @@ const FAILURE_RECORD_LINGER_MS = 60 * 60 * 1000;
 
 type CachedBoard = {
   response: BountySellerBoardResponse;
-  // When the response was fetched; compared against Date.now(), never the Torn clock
+  // When the response was fetched; compared against the browser clock, never the Torn clock
   fetched_at: Timestamp;
 };
 
@@ -77,18 +77,25 @@ export class BountyBoardCache {
   private cache: FFCache;
   private query: typeof query_bounty_seller_board;
   private submit: typeof submit_bounty_seller_claim;
+  private now: () => Timestamp;
   private inflight: Promise<BountySellerBoardResponse> | null = null;
 
   constructor(
     config: FFConfig,
-    cache: FFCache = new FFCache(DB_NAME),
-    query: typeof query_bounty_seller_board = query_bounty_seller_board,
-    submit: typeof submit_bounty_seller_claim = submit_bounty_seller_claim,
+    options: {
+      cache?: FFCache;
+      query?: typeof query_bounty_seller_board;
+      submit?: typeof submit_bounty_seller_claim;
+      // The browser clock for fetched_at and next_retry_at. The default
+      // cache reads the same clock.
+      now?: () => Timestamp;
+    } = {},
   ) {
     this.config = config;
-    this.cache = cache;
-    this.query = query;
-    this.submit = submit;
+    this.now = options.now ?? Date.now;
+    this.cache = options.cache ?? new FFCache(DB_NAME, { now: this.now });
+    this.query = options.query ?? query_bounty_seller_board;
+    this.submit = options.submit ?? submit_bounty_seller_claim;
   }
 
   // IndexedDB faults are logged and treated as a cache miss (or a dropped
@@ -148,14 +155,14 @@ export class BountyBoardCache {
     const cached = (await this.read<CachedBoard>(BOARD_CACHE_KEY))?.value;
     if (
       cached &&
-      Date.now() - cached.fetched_at < BOUNTY_BOARD_FRESHNESS_FLOOR_MS
+      this.now() - cached.fetched_at < BOUNTY_BOARD_FRESHNESS_FLOOR_MS
     ) {
       return cached.response;
     }
 
     const failure = (await this.read<CachedBoardFailure>(BOARD_FAILURE_KEY))
       ?.value;
-    if (failure && Date.now() < failure.next_retry_at) {
+    if (failure && this.now() < failure.next_retry_at) {
       throw rebuild_failure_error(failure);
     }
 
@@ -233,7 +240,7 @@ export class BountyBoardCache {
       if (resp.blank) {
         throw new Error("Empty bounty board response");
       }
-      const now = Date.now();
+      const now = this.now();
       await this.write<CachedBoard>(
         BOARD_CACHE_KEY,
         { response: resp.result, fetched_at: now },
@@ -280,7 +287,7 @@ export class BountyBoardCache {
       );
     }
 
-    const next_retry_at = Date.now() + retry_delay;
+    const next_retry_at = this.now() + retry_delay;
     await this.write<CachedBoardFailure>(
       BOARD_FAILURE_KEY,
       {
