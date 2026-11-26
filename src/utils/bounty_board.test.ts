@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
+import { make_clock } from "../tests/clock";
 import {
   CLAIM_CREATE_RESPONSE,
   ERROR_CONSENT_REQUIRED,
@@ -19,7 +20,6 @@ import {
 import { FFCache } from "./ffcache";
 import { FFConfig } from "./ffconfig";
 import { DB_NAME } from "./ffscouter";
-import type { Timestamp } from "./types";
 
 const TEST_PREFIX = "ffscouter-bounty-test.";
 
@@ -28,14 +28,11 @@ let db_counter = 0;
 let test_db = "";
 
 // The caches read this clock. A test moves time with advance().
-let clock = 0;
-const now = (): Timestamp => clock;
-const advance = (ms: number) => {
-  clock += ms;
-};
+const clock = make_clock(0);
+const { now, advance } = clock;
 
 beforeEach(() => {
-  clock = new Date("2026-02-02T00:00:00Z").getTime();
+  clock.set(new Date("2026-02-02T00:00:00Z").getTime());
   localStorage.clear();
   test_db = `ffscouter-bounty-test-${db_counter++}`;
 });
@@ -427,13 +424,13 @@ test("the board is stored with an expiry, the failure past its retry window", as
   const failure = await store.get_bounty_board("failure");
   // Kept an hour past next_retry_at so the next failure can escalate from
   // its count.
-  expect(failure?.expiry).toBe(clock + 30_000 + 60 * 60_000);
+  expect(failure?.expiry).toBe(now() + 30_000 + 60 * 60_000);
 
   advance(31_000);
   await consult(query);
   expect(await store.get_bounty_board("failure")).toBeNull();
   const board = await store.get_bounty_board("board");
-  expect(board?.expiry).toBe(clock + BOUNTY_BOARD_EXPIRY_MS);
+  expect(board?.expiry).toBe(now() + BOUNTY_BOARD_EXPIRY_MS);
 
   // Past the expiry the row is gone, not just stale
   advance(BOUNTY_BOARD_EXPIRY_MS);

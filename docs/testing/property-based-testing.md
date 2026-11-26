@@ -184,11 +184,11 @@ Use `fc.jsonValue()` or `fc.anything()` for a body, and `fc.oneof` to mix random
 
 A cache has state. A single input does not test it. A model-based test generates a sequence of commands. It runs each command against the real cache and against a model. After each command, it checks that the two agree. The model is a few lines of plain code, for example a `Map` and a number for the time.
 
-The example below is a short form of the `FFCache` property in `src/utils/ffcache.property.test.ts`. It uses the clock seam: `FFCache` takes a `now` function in its options. The cache reads the model's clock, so no fake timers are needed. `BountyBoardCache` and `OdInsurancePlansCache` take `now` in the same way.
+The example below is a short form of the `FFCache` property in `src/utils/ffcache.property.test.ts`. It uses the clock seam: `FFCache` takes a `now` function in its options. The cache reads the model's clock, so no fake timers are needed. `BountyBoardCache` and `OdInsurancePlansCache` take `now` in the same way. The test clock and the clock commands are in `src/tests/clock.ts`.
 
 ```ts
 type Model = {
-  clock: { now: Timestamp };
+  clock: Clock;
   rows: Map<PlayerId, { data: FFData; expiry: Timestamp }>;
 };
 type Real = { cache: FFCache };
@@ -202,7 +202,7 @@ class GetCmd implements fc.AsyncCommand<Model, Real> {
       const row = m.rows.get(id);
       // Rule: an expired entry is never returned.
       const want =
-        row === undefined || row.expiry <= m.clock.now
+        row === undefined || row.expiry <= m.clock.now()
           ? null
           : { ...row.data, expiry: row.expiry };
       expect(got.get(id)).toEqual(want);
@@ -211,23 +211,28 @@ class GetCmd implements fc.AsyncCommand<Model, Real> {
   toString = () => `get(${this.ids.join(",")})`;
 }
 
-class AdvanceCmd implements fc.AsyncCommand<Model, Real> {
-  constructor(readonly ms: number) {}
-  check = () => true;
-  async run(m: Model): Promise<void> {
-    m.clock.now = (m.clock.now + this.ms) as Timestamp;
-  }
-  toString = () => `advance(${this.ms})`;
-}
-
 // UpdateCmd writes rows to the cache and to the model in the same way.
+
+// The expiry of each row that the model holds. The deadline command moves
+// the clock to 1 ms before, on, or after one of them.
+const row_expiries = (m: Readonly<Model>) =>
+  [...m.rows.values()].map((row) => row.expiry);
+
+const commands = fc.commands([
+  update_arb,
+  get_arb,
+  fc
+    .integer({ min: 1, max: 2 * HOUR })
+    .map((ms) => new AdvanceCmd<Model, Real>(ms)),
+  advance_to_deadline_arb<Model, Real>(row_expiries),
+]);
 
 test.prop([commands])(
   "FFCache never returns an expired entry",
   async (cmds) => {
-    const clock = { now: Date.UTC(2026, 0, 1) as Timestamp };
+    const clock = make_clock(Date.UTC(2026, 0, 1));
     const cache = new FFCache(`ffcache-model-${db_counter++}`, {
-      now: () => clock.now,
+      now: clock.now,
     });
     try {
       await fc.asyncModelRun(
@@ -246,7 +251,7 @@ The real cache and the model share the `clock` object. An `advance` command move
 Rules for model-based tests in this repo:
 
 - Time moves forward only. Do not generate a backward clock.
-- Choose `advance` steps that land near the expiry edges, for example 1 ms before and after the 1-hour `FFCache` lifetime, or the 60-second board floor. Use `fc.oneof` to mix exact edge values with random steps. Random steps alone almost never land on an edge.
+- Reach each deadline exactly. A deadline is a time that the model holds, for example the expiry of a row or the end of the 60-second board floor. Random steps almost never land on one. A fixed step such as 1 hour lands on one only when it comes directly after the command that set the deadline. Add `advance_to_deadline_arb` with a function that lists the model's deadlines. Its command moves the clock to 1 ms before, on, or after one of them, after any history.
 - Give each command a `toString`. A failure prints the command sequence, for example `update(1), advance(3600000), get(1)`.
 - Use a fresh database name for each run, and delete the database at the end. The fake IndexedDB from `src/tests/idbsetup.ts` works as is.
 
@@ -302,7 +307,7 @@ FC_NUM_RUNS=50000 bun run test:deep
 
 Run a deep run on your laptop after you add or change a property. The pilot takes about 0.8 seconds at 5000 runs.
 
-The workflow `.github/workflows/property-deep.yml` runs `test:deep` in CI. It runs daily on `main` and on each push to `beta`, with 50000 runs. It also runs on request for a `feat/*` branch, with 10000 runs unless you set `num_runs`:
+The workflow `.github/workflows/property-deep.yml` runs `test:deep` in CI. It runs daily on `main` and on each push to `beta`, with 50000 runs. It also runs on request for a `feat/*` branch, with the `test:deep` default of 10000 runs unless you set `num_runs`:
 
 ```sh
 gh workflow run property-deep.yml -r feat/<name>

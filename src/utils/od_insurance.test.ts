@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 
 import { beforeEach, describe, expect, type Mock, test, vi } from "vitest";
+import { make_clock } from "../tests/clock";
 import {
   ECSTASY_PLAN,
   PLANS_RESPONSE,
@@ -15,7 +16,6 @@ import {
   payable_plans,
 } from "./od_insurance";
 import { Storage } from "./storage";
-import type { Timestamp } from "./types";
 
 describe("covered_item_ids", () => {
   test("gives the item each payable plan covers, once", () => {
@@ -83,19 +83,17 @@ describe("OdInsurancePlansCache", () => {
   let cache: OdInsurancePlansCache;
   // The cache reads this clock. A test moves time with advance().
   const START = new Date("2026-11-12T12:00:00Z").getTime();
-  let clock = START;
-  const advance = (ms: number) => {
-    clock += ms;
-  };
+  const clock = make_clock(START);
+  const { advance } = clock;
 
   beforeEach(() => {
-    clock = START;
+    clock.set(START);
     localStorage.clear();
     query = vi.fn<typeof query_od_insurance_plans>().mockResolvedValue(ok);
     cache = new OdInsurancePlansCache({
       storage: new Storage("test."),
       query,
-      now: (): Timestamp => clock,
+      now: clock.now,
     });
   });
 

@@ -4,6 +4,12 @@
 // model, and checks that every served list is one the model allows.
 import { fc, test } from "@fast-check/vitest";
 import { expect } from "vitest";
+import {
+  AdvanceCmd,
+  advance_to_deadline_arb,
+  type Clock,
+  make_clock,
+} from "../tests/clock";
 import { PLANS_RESPONSE } from "./__fixtures__/od_insurance";
 import type { OdInsurancePlansResponse, query_od_insurance_plans } from "./api";
 import {
@@ -22,7 +28,7 @@ const STALE_LIMIT_MS = OD_PLANS_STALE_LIMIT_HOURS * HOUR;
 type Outcome = "success" | "blank" | "error";
 
 type Model = {
-  clock: { now: Timestamp };
+  clock: Clock;
   // The outcome of the next request, set by each consult command.
   next: { outcome: Outcome };
   // The list that the last success stored, and when.
@@ -34,7 +40,7 @@ type Model = {
 type Real = { cache: OdInsurancePlansCache };
 
 // The list of the n-th success: the fixture with a marked manager name.
-function plans_v(version: number): OdInsurancePlansResponse {
+function plans_version(version: number): OdInsurancePlansResponse {
   return { ...PLANS_RESPONSE, manager_name: `manager-v${version}` };
 }
 
@@ -48,7 +54,7 @@ function make_query(
     if (next.outcome === "blank") return { blank: true };
     if (next.outcome === "error") throw new Error("offline");
     versions.version++;
-    return { result: plans_v(versions.version), blank: false };
+    return { result: plans_version(versions.version), blank: false };
   };
 }
 
@@ -57,7 +63,7 @@ class ConsultCmd implements fc.AsyncCommand<Model, Real> {
   check = () => true;
   async run(m: Model, r: Real): Promise<void> {
     m.next.outcome = this.outcome;
-    const now = m.clock.now;
+    const now = m.clock.now();
     const got = await r.cache.get();
 
     let want: PlansState;
@@ -66,7 +72,7 @@ class ConsultCmd implements fc.AsyncCommand<Model, Real> {
       want = { status: "fresh", response: m.stored.response };
     } else if (this.outcome === "success") {
       m.version++;
-      m.stored = { response: plans_v(m.version), fetched_at: now };
+      m.stored = { response: plans_version(m.version), fetched_at: now };
       want = { status: "fresh", response: m.stored.response };
     } else if (m.stored !== null && age !== null && age <= STALE_LIMIT_MS) {
       want = { status: "stale", ...m.stored };
@@ -82,38 +88,32 @@ class ConsultCmd implements fc.AsyncCommand<Model, Real> {
   toString = () => `consult(${this.outcome})`;
 }
 
-class AdvanceCmd implements fc.AsyncCommand<Model, Real> {
-  constructor(readonly ms: number) {}
-  check = () => true;
-  async run(m: Model): Promise<void> {
-    m.clock.now += this.ms;
-  }
-  toString = () => `advance(${this.ms})`;
-}
-
 // The outcomes a real request can have: a list, a PDA blank response, or a
 // network or HTTP error.
 const outcome_arb = fc.constantFrom<Outcome>("success", "blank", "error");
 
-// Time moves forward only. The exact edges land 1 ms before, on, and after
-// the 10-minute freshness and the 24-hour stale limit. Random steps alone
-// almost never land there.
+// Time moves forward only. A random step rarely lands on a deadline, so a
+// second command moves the clock to 1 ms before, on, or after one: the end
+// of the 10-minute freshness or of the 24-hour stale limit of the stored
+// list.
 const advance_arb = fc.oneof(
-  fc
-    .record({
-      edge: fc.constantFrom(OD_PLANS_FRESH_MS, STALE_LIMIT_MS),
-      off: fc.constantFrom(-1, 0, 1),
-    })
-    .map(({ edge, off }) => edge + off),
   fc.integer({ min: 1, max: 30 * 60 * 1000 }),
   fc.integer({ min: 1, max: 2 * STALE_LIMIT_MS }),
 );
+const deadlines = (m: Readonly<Model>): Timestamp[] =>
+  m.stored === null
+    ? []
+    : [
+        m.stored.fetched_at + OD_PLANS_FRESH_MS,
+        m.stored.fetched_at + STALE_LIMIT_MS,
+      ];
 
 // A page session: consults with the clock moving between them.
 const commands = fc.commands(
   [
     outcome_arb.map((outcome) => new ConsultCmd(outcome)),
-    advance_arb.map((ms) => new AdvanceCmd(ms)),
+    advance_arb.map((ms) => new AdvanceCmd<Model, Real>(ms)),
+    advance_to_deadline_arb<Model, Real>(deadlines),
   ],
   { maxCommands: 20 },
 );
@@ -126,13 +126,13 @@ test.prop([commands])(
   "OdInsurancePlansCache never serves a list older than 24 hours",
   async (cmds) => {
     localStorage.clear();
-    const clock = { now: Date.UTC(2026, 10, 12) };
+    const clock = make_clock(Date.UTC(2026, 10, 12));
     const next = { outcome: "success" as Outcome };
     const versions = { version: 0 };
     const cache = new OdInsurancePlansCache({
       storage: new Storage("od-insurance-property."),
       query: make_query(next, versions),
-      now: () => clock.now,
+      now: clock.now,
     });
     await fc.asyncModelRun(
       () => ({

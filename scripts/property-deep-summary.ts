@@ -2,7 +2,10 @@
 // (.github/workflows/property-deep.yml). It reads the vitest JSON report and
 // prints one replay line for each failing property, in Markdown.
 //
-// Usage: bun run scripts/property-deep-summary.ts <report.json> <num_runs>
+// Usage: bun run scripts/property-deep-summary.ts <report.json> [num_runs]
+//
+// Leave out num_runs when the run used the test:deep default. The replay
+// line then uses that default too.
 
 import { readFileSync } from "node:fs";
 
@@ -28,18 +31,26 @@ function escape_double_quoted(text: string): string {
 
 /**
  * The command that replays one failing property, or null when the test
- * name has no seed suffix (it is not a property test).
+ * name has no seed suffix (it is not a property test). With no run count,
+ * the command uses the test:deep default.
  */
-export function replay_command(title: string, num_runs: number): string | null {
+export function replay_command(
+  title: string,
+  num_runs: number | undefined,
+): string | null {
   const match = title.match(SEED_SUFFIX);
   if (!match) return null;
   const [, name = "", seed = ""] = match;
   const pattern = escape_double_quoted(escape_regex(name));
-  return `FC_SEED=${seed} FC_NUM_RUNS=${num_runs} bun run test:deep -t "${pattern}"`;
+  const runs = num_runs === undefined ? "" : ` FC_NUM_RUNS=${num_runs}`;
+  return `FC_SEED=${seed}${runs} bun run test:deep -t "${pattern}"`;
 }
 
 /** The Markdown job summary for a vitest JSON report. */
-export function summarize(report: Report, num_runs: number): string {
+export function summarize(
+  report: Report,
+  num_runs: number | undefined,
+): string {
   const replays: string[] = [];
   const others: string[] = [];
   for (const file of report.testResults) {
@@ -78,5 +89,5 @@ if (import.meta.main) {
     );
     process.exit(0);
   }
-  console.log(summarize(report, Number(num_runs)));
+  console.log(summarize(report, num_runs ? Number(num_runs) : undefined));
 }

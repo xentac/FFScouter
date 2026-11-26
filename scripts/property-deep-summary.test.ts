@@ -32,6 +32,12 @@ describe("replay_command", () => {
     );
   });
 
+  test("leaves out the run count when the run used the test:deep default", () => {
+    expect(replay_command("rule (with seed=5)", undefined)).toBe(
+      'FC_SEED=5 bun run test:deep -t "rule"',
+    );
+  });
+
   test("is null for a name without a seed suffix", () => {
     expect(replay_command("an example test", 10)).toBeNull();
   });

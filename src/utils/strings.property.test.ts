@@ -11,7 +11,7 @@ import {
   parse_duration_to_seconds,
   parse_suffix_number,
 } from "./strings";
-import type { FFData } from "./types";
+import { estimate_with_ff, ff_data_arb } from "./types.arbitraries";
 
 // ============================================================================
 // Arbitraries
@@ -33,14 +33,15 @@ const near_boundary_arb = fc
   })
   .map(({ unit, below }) => Math.max(1000, unit * 1000 - below));
 
-// Filter text that a player types: mostly the characters that the filter
-// grammar knows (separators, suffixes, spaces), plus any text at all.
+// Filter text with no digit: mostly the characters that the parser reads
+// (separators, suffixes, spaces), and sometimes any text with its digits
+// removed. Removing the digits rejects no input, as a filter would.
 const no_digit_arb = fc.oneof(
   fc.string({
     unit: fc.constantFrom(",", ".", "k", "m", "b", "t", "K", " "),
     minLength: 1,
   }),
-  fc.string().filter((s) => !/\d/.test(s)),
+  fc.string().map((text) => text.replace(/\d/g, "")),
 );
 
 // Duration filter text: near-valid text ("5m", "-2h 30s") and any text.
@@ -61,29 +62,11 @@ const duration_arb = fc.oneof(
   fc.string(),
 );
 
-// An estimate with the given FF value. The arrow color reads only no_data
-// and the FF value.
-function estimate_with_ff(fair_fight: number): FFData {
-  return {
-    no_data: false,
-    fair_fight,
-    last_updated: 0,
-    bs_estimate: 1000,
-    bs_estimate_human: "1k",
-    bss_public: 0,
-    source: "bss",
-    premium_insights_available: false,
-    available_estimates: { bss: null, premium: null, spies: null },
-    spies: [],
-    player_id: 1,
-  };
-}
-
-// FF data as the cache holds it: no data, or an estimate with any FF value.
-const ff_data_arb: fc.Arbitrary<FFData> = fc.oneof(
-  fc.constant<FFData>({ no_data: true, player_id: 1 }),
-  fc.double({ min: 0, max: 100, noNaN: true }).map(estimate_with_ff),
-);
+// FF data with any FF value, also below 1 and above 5, where the arrow
+// clamps.
+const any_ff_data_arb = ff_data_arb({
+  fair_fight: fc.double({ min: 0, max: 100, noNaN: true }),
+});
 
 // A stored color scheme: a known one, or any string. A beta build can store
 // a scheme that stable does not know.
@@ -108,8 +91,8 @@ describe("suffix number properties", () => {
     },
   );
 
-  // Rule: a label uses the largest unit that keeps its number under 1000.
-  // Source: format_suffix_number. Precondition: n is 1000 or more.
+  // Rule: for n of 1000 or more, a label uses the largest unit that keeps
+  // its number under 1000. Source: format_suffix_number.
   // Known bug: https://github.com/xentac/FFScouter/issues/64.
   // Remove `.fails` when it is fixed. Keep the example.
   test.fails.prop([fc.oneof(suffixed_count_arb, near_boundary_arb)], {
@@ -162,10 +145,10 @@ describe("palette properties", () => {
   // Rule: any stored color scheme value gives a hex color, and the arrow
   // never throws. Source: get_ff_arrow_colour. A beta build can store a
   // scheme that stable does not know, so the stored value is any string.
-  // Precondition: no custom colors are stored.
+  // Setup: storage is empty, so no custom colors apply.
   // Known bug: https://github.com/xentac/FFScouter/issues/65.
   // Remove `.fails` when it is fixed. Keep the example.
-  test.fails.prop([stored_scheme_arb, ff_data_arb], {
+  test.fails.prop([stored_scheme_arb, any_ff_data_arb], {
     examples: [["not-a-scheme", estimate_with_ff(2)]],
   })("any stored color scheme gives a hex arrow color", (scheme, data) => {
     ffconfig.color_scheme = scheme as ColorScheme;

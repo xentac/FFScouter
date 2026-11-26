@@ -5,6 +5,12 @@
 // a request is allowed.
 import { fc, test } from "@fast-check/vitest";
 import { expect } from "vitest";
+import {
+  AdvanceCmd,
+  advance_to_deadline_arb,
+  type Clock,
+  make_clock,
+} from "../tests/clock";
 import { SELLER_BOARD_RESPONSE } from "./__fixtures__/bounty_board";
 import { FFApiError, type query_bounty_seller_board } from "./api";
 import {
@@ -44,14 +50,18 @@ type Failure = {
 };
 
 type Model = {
-  clock: { now: Timestamp };
+  clock: Clock;
   // The outcome of the next request, set by each consult command.
   next: { outcome: Outcome };
   fetched_at: Timestamp | null;
   failure: Failure | null;
   requests: number;
 };
-type Real = { make: () => BountyBoardCache; requests: () => number };
+type Real = {
+  // A new cache instance, as a new page load makes it.
+  new_page_cache: () => BountyBoardCache;
+  requests: () => number;
+};
 
 // The query that the real cache calls. It records each request and acts out
 // the outcome that the model chose.
@@ -98,7 +108,7 @@ function make_query(
 // The retry delay and backoff count after a failed request, by the rules
 // above.
 function failure_after(m: Model, outcome: Outcome): Failure {
-  const now = m.clock.now;
+  const now = m.clock.now();
   if (outcome.kind === "rate_limited") {
     const delay = Math.max(
       BOUNTY_BOARD_FRESHNESS_FLOOR_MS,
@@ -133,7 +143,7 @@ class ConsultCmd implements fc.AsyncCommand<Model, Real> {
   check = () => true;
   async run(m: Model, r: Real): Promise<void> {
     m.next.outcome = this.outcome;
-    const now = m.clock.now;
+    const now = m.clock.now();
     const fresh =
       m.fetched_at !== null &&
       now - m.fetched_at < BOUNTY_BOARD_FRESHNESS_FLOOR_MS;
@@ -144,7 +154,7 @@ class ConsultCmd implements fc.AsyncCommand<Model, Real> {
     const want_request = !fresh && !waiting;
 
     const result = await r
-      .make()
+      .new_page_cache()
       .get_board()
       .then(
         (board) => ({ board }),
@@ -173,15 +183,6 @@ class ConsultCmd implements fc.AsyncCommand<Model, Real> {
   toString = () => `consult(${Object.values(this.outcome).join(":")})`;
 }
 
-class AdvanceCmd implements fc.AsyncCommand<Model, Real> {
-  constructor(readonly ms: number) {}
-  check = () => true;
-  async run(m: Model): Promise<void> {
-    m.clock.now += this.ms;
-  }
-  toString = () => `advance(${this.ms})`;
-}
-
 // The outcomes a real request can have, with success the most common.
 const outcome_arb: fc.Arbitrary<Outcome> = fc.oneof(
   { weight: 3, arbitrary: fc.constant<Outcome>({ kind: "success" }) },
@@ -199,30 +200,29 @@ const outcome_arb: fc.Arbitrary<Outcome> = fc.oneof(
   ),
 );
 
-// Time moves forward only. The exact edges land 1 ms before and after the
-// 60-second floor and the 30-second, 2-minute, 8-minute, and 10-minute retry
-// windows. Random steps alone almost never land there.
-const EDGES = [
-  BOUNTY_BOARD_FRESHNESS_FLOOR_MS,
-  TRANSIENT_BASE_MS,
-  2 * MINUTE,
-  TRANSIENT_CAP_MS,
-  10 * MINUTE,
-];
+// Time moves forward only. A random step rarely lands on a deadline, so a
+// second command moves the clock to 1 ms before, on, or after one: the end
+// of the freshness floor, the retry time, or the end of the failure linger.
 const advance_arb = fc.oneof(
-  fc
-    .record({ edge: fc.constantFrom(...EDGES), off: fc.constantFrom(-1, 1) })
-    .map(({ edge, off }) => edge + off),
   fc.integer({ min: 1, max: 15 * MINUTE }),
   fc.integer({ min: 1, max: 2 * FAILURE_LINGER_MS }),
 );
+const deadlines = (m: Readonly<Model>): Timestamp[] => [
+  ...(m.fetched_at === null
+    ? []
+    : [m.fetched_at + BOUNTY_BOARD_FRESHNESS_FLOOR_MS]),
+  ...(m.failure === null
+    ? []
+    : [m.failure.next_retry_at, m.failure.next_retry_at + FAILURE_LINGER_MS]),
+];
 
 // A player's visits: consults from new page loads with the clock moving
 // between them.
 const commands = fc.commands(
   [
     outcome_arb.map((outcome) => new ConsultCmd(outcome)),
-    advance_arb.map((ms) => new AdvanceCmd(ms)),
+    advance_arb.map((ms) => new AdvanceCmd<Model, Real>(ms)),
+    advance_to_deadline_arb<Model, Real>(deadlines),
   ],
   { maxCommands: 25 },
 );
@@ -239,8 +239,8 @@ test.prop([commands])(
   async (cmds) => {
     localStorage.clear();
     new FFConfig(TEST_PREFIX).key = "test-key";
-    const clock = { now: Date.UTC(2026, 1, 2) };
-    const now = () => clock.now;
+    const clock = make_clock(Date.UTC(2026, 1, 2));
+    const now = clock.now;
     const db_name = `bounty-board-model-${db_counter++}`;
     const next = { outcome: { kind: "success" } as Outcome };
     const log = { requests: 0 };
@@ -249,7 +249,7 @@ test.prop([commands])(
     // delete_db. The stored board and failure live in it, so one FFCache
     // serves every page load.
     const store = new FFCache(db_name, { now, schedule: () => () => {} });
-    const make = () =>
+    const new_page_cache = () =>
       new BountyBoardCache(new FFConfig(TEST_PREFIX), {
         cache: store,
         query,
@@ -265,7 +265,7 @@ test.prop([commands])(
             failure: null,
             requests: 0,
           },
-          real: { make, requests: () => log.requests },
+          real: { new_page_cache, requests: () => log.requests },
         }),
         cmds,
       );

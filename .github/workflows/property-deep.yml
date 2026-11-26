@@ -11,9 +11,11 @@ on:
   workflow_dispatch:
     inputs:
       num_runs:
-        description: Run count for each property (FC_NUM_RUNS)
+        description: >-
+          Run count for each property (FC_NUM_RUNS). Leave empty for the
+          test:deep default in package.json.
         required: false
-        default: "10000"
+        default: ""
       seed:
         description: Seed to replay (FC_SEED). Leave empty for a new seed.
         required: false
@@ -21,7 +23,7 @@ on:
 
 # Cancel superseded runs on the same ref to save Actions minutes.
 concurrency:
-  group: property-deep-${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
@@ -45,16 +47,21 @@ jobs:
         run: bun install --frozen-lockfile
 
       # 50000 runs for the schedule and the beta push. A dispatch uses its
-      # num_runs input, 10000 by default. An empty seed input leaves FC_SEED
-      # unset, so fast-check picks a new seed.
+      # num_runs input. An empty input leaves FC_NUM_RUNS unset, so test:deep
+      # uses its own default. An empty seed input leaves FC_SEED unset, so
+      # fast-check picks a new seed.
       - name: Deep property run
         env:
-          NUM_RUNS: ${{ github.event_name == 'workflow_dispatch' && (inputs.num_runs || '10000') || '50000' }}
+          EVENT: ${{ github.event_name }}
+          NUM_RUNS: ${{ inputs.num_runs }}
           SEED: ${{ inputs.seed }}
         run: |
+          if [ "$EVENT" != workflow_dispatch ]; then NUM_RUNS=50000; fi
           if [ -n "$SEED" ]; then export FC_SEED="$SEED"; fi
-          export FC_NUM_RUNS="$NUM_RUNS"
-          echo "FC_NUM_RUNS=$FC_NUM_RUNS" >> "$GITHUB_ENV"
+          if [ -n "$NUM_RUNS" ]; then
+            export FC_NUM_RUNS="$NUM_RUNS"
+            echo "FC_NUM_RUNS=$FC_NUM_RUNS" >> "$GITHUB_ENV"
+          fi
           bun run test:deep --silent=passed-only \
             --reporter=default --reporter=json \
             --outputFile.json=property-deep.json
@@ -65,4 +72,4 @@ jobs:
         if: failure()
         run: >-
           bun run scripts/property-deep-summary.ts property-deep.json
-          "$FC_NUM_RUNS" >> "$GITHUB_STEP_SUMMARY"
+          "${FC_NUM_RUNS:-}" >> "$GITHUB_STEP_SUMMARY"

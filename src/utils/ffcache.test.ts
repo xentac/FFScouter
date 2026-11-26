@@ -1,11 +1,11 @@
 import { beforeEach, expect, test } from "vitest";
+import { make_clock } from "../tests/clock";
 import { FFCache, type Schedule } from "./ffcache";
 import type {
   CachedFFData,
   FFData,
   PlayerFlightsResponse,
   PlayerId,
-  Timestamp,
 } from "./types";
 
 const SEC = 1000;
@@ -14,11 +14,8 @@ const HOUR = 60 * MINUTE;
 
 // The cache reads this clock. A test moves time with advance().
 const START = new Date(2012, 1, 1, 0, 0, 0).getTime();
-let clock = START;
-const now = (): Timestamp => clock;
-const advance = (ms: number) => {
-  clock += ms;
-};
+const clock = make_clock(START);
+const { now, advance } = clock;
 
 // The idle closes that the cache scheduled and did not cancel. A test runs
 // them by hand, so no real timer is left behind.
@@ -82,13 +79,13 @@ const get_player = (id: PlayerId) => {
 };
 
 const add_expiry = (d: FFData): CachedFFData => {
-  return { ...d, expiry: clock + HOUR };
+  return { ...d, expiry: now() + HOUR };
 };
 
 const bare: FFData = { no_data: true, player_id: -1 };
 
 beforeEach(() => {
-  clock = START;
+  clock.set(START);
   pending_closes = new Set();
 });
 
@@ -218,7 +215,7 @@ test("can save and recover flight data", async () => {
   expect(cached).not.toBeNull();
   expect(cached?.player_id).toEqual(42);
   expect(cached?.current?.status_description).toEqual("Flying");
-  expect(cached?.expiry).toEqual(clock + 5 * MINUTE);
+  expect(cached?.expiry).toEqual(now() + 5 * MINUTE);
 
   // Expiration test
   advance(6 * MINUTE);
@@ -264,12 +261,12 @@ test("clean_expired cleans flight cache", async () => {
 test("bounty board entries save, expire, delete, and clean_expired removes them", async () => {
   const c = make_cache("test-bounty-board");
 
-  await c.put_bounty_board("board", { a: 1 }, clock + 10 * MINUTE);
-  await c.put_bounty_board("failure", { b: 2 }, clock + 5 * MINUTE);
+  await c.put_bounty_board("board", { a: 1 }, now() + 10 * MINUTE);
+  await c.put_bounty_board("failure", { b: 2 }, now() + 5 * MINUTE);
   expect(await c.get_bounty_board("board")).toEqual({
     key: "board",
     value: { a: 1 },
-    expiry: clock + 10 * MINUTE,
+    expiry: now() + 10 * MINUTE,
   });
   expect(await c.get_bounty_board("missing")).toBeNull();
 
@@ -280,7 +277,7 @@ test("bounty board entries save, expire, delete, and clean_expired removes them"
   advance(6 * MINUTE);
   expect(await c.get_bounty_board("failure")).toBeNull();
   await c.clean_expired(true);
-  clock -= 6 * MINUTE;
+  advance(-6 * MINUTE);
   expect(await c.get_bounty_board("failure")).toBeNull();
 
   await c.delete_db();
@@ -317,13 +314,13 @@ test("can save, recover, and purge analytics entries", async () => {
   expect(logs[0]?.player_id).toEqual(123);
   expect(logs[0]?.status).toEqual("applied");
   expect(logs[0]?.url).toEqual("https://www.torn.com/profiles.php");
-  expect(logs[0]?.timestamp).toEqual(clock - 5 * SEC);
+  expect(logs[0]?.timestamp).toEqual(now() - 5 * SEC);
 
   expect(logs[1]?.feature).toEqual("mini-profile");
   expect(logs[1]?.player_id).toEqual(456);
   expect(logs[1]?.status).toEqual("ignored");
   expect(logs[1]?.hash).toEqual("#/team");
-  expect(logs[1]?.timestamp).toEqual(clock);
+  expect(logs[1]?.timestamp).toEqual(now());
 
   // Test rolling log deletion (older than 30 days)
   advance(31 * 24 * 60 * 60 * SEC);
