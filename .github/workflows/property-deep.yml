@@ -1,0 +1,68 @@
+name: Deep property tests
+
+# A deep run of the property tests: many more runs than the push CI, with a
+# new seed each time. It does not block the lint, test, and build check.
+# See docs/testing/property-based-testing.md.
+on:
+  schedule:
+    - cron: "17 4 * * *"
+  push:
+    branches: [beta]
+  workflow_dispatch:
+    inputs:
+      num_runs:
+        description: Run count for each property (FC_NUM_RUNS)
+        required: false
+        default: "10000"
+      seed:
+        description: Seed to replay (FC_SEED). Leave empty for a new seed.
+        required: false
+        default: ""
+
+# Cancel superseded runs on the same ref to save Actions minutes.
+concurrency:
+  group: property-deep-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  deep:
+    name: Deep property tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          # Pin to match the version used locally (see package.json / bun.lock).
+          bun-version: 1.4.4
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      # 50000 runs for the schedule and the beta push. A dispatch uses its
+      # num_runs input, 10000 by default. An empty seed input leaves FC_SEED
+      # unset, so fast-check picks a new seed.
+      - name: Deep property run
+        env:
+          NUM_RUNS: ${{ github.event_name == 'workflow_dispatch' && (inputs.num_runs || '10000') || '50000' }}
+          SEED: ${{ inputs.seed }}
+        run: |
+          if [ -n "$SEED" ]; then export FC_SEED="$SEED"; fi
+          export FC_NUM_RUNS="$NUM_RUNS"
+          echo "FC_NUM_RUNS=$FC_NUM_RUNS" >> "$GITHUB_ENV"
+          bun run test:deep --silent=passed-only \
+            --reporter=default --reporter=json \
+            --outputFile.json=property-deep.json
+
+      # One replay line for each failing property. The workflow opens no
+      # issues: file each bug by hand.
+      - name: Replay summary
+        if: failure()
+        run: >-
+          bun run scripts/property-deep-summary.ts property-deep.json
+          "$FC_NUM_RUNS" >> "$GITHUB_STEP_SUMMARY"

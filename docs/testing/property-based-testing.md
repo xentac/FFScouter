@@ -146,7 +146,7 @@ The default 25 runs did not find either case. The two cases needed about 300 and
 
 ### The pilot's wrapper
 
-The runner decision was open when the pilot was written. The pilot therefore uses plain `fc.assert` inside a normal `test`. The adoption work converts it to `test.prop`. The arbitraries, helpers, and predicates do not change. Only the wrapper changes.
+The runner decision was open when the pilot was written, so the pilot first used plain `fc.assert` inside a normal `test`. The adoption work converted it to `test.prop` and `test.fails.prop`. The arbitraries, helpers, and predicates did not change. Only the wrapper changed.
 
 ## Round trips
 
@@ -184,7 +184,7 @@ Use `fc.jsonValue()` or `fc.anything()` for a body, and `fc.oneof` to mix random
 
 A cache has state. A single input does not test it. A model-based test generates a sequence of commands. It runs each command against the real cache and against a model. After each command, it checks that the two agree. The model is a few lines of plain code, for example a `Map` and a number for the time.
 
-The example below is the `FFCache` property from the adoption spec. It needs the clock seam: `FFCache` takes a `now` function in its options. The research prototype on the `research/fast-check-vitest` branch proved the method with `vi.setSystemTime`. After the seam lands, the cache reads the model's clock, and no fake timers are needed.
+The example below is a short form of the `FFCache` property in `src/utils/ffcache.property.test.ts`. It uses the clock seam: `FFCache` takes a `now` function in its options. The cache reads the model's clock, so no fake timers are needed. `BountyBoardCache` and `OdInsurancePlansCache` take `now` in the same way.
 
 ```ts
 type Model = {
