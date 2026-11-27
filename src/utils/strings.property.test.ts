@@ -4,7 +4,6 @@
 // for all of them.
 import { fc, test } from "@fast-check/vitest";
 import { beforeEach, describe, expect } from "vitest";
-import { prop_with_known_bugs } from "../tests/known-bugs";
 import { ColorScheme, ffconfig } from "./ffconfig";
 import {
   format_suffix_number,
@@ -78,6 +77,9 @@ const any_ff_data_arb = ff_data_arb({
 
 const SCHEMES = Object.values(ColorScheme);
 
+// The exponent of each suffix: "8.2m" is 8.2e6.
+const SUFFIX_EXPONENTS = { k: 3, m: 6, b: 9, t: 12 };
+
 // A stored color scheme: a known one, or any string. A beta build can store
 // a scheme that stable does not know.
 const stored_scheme_arb = fc.oneof(fc.constantFrom(...SCHEMES), fc.string());
@@ -89,19 +91,43 @@ const stored_scheme_arb = fc.oneof(fc.constantFrom(...SCHEMES), fc.string());
 describe("suffix number properties", () => {
   // Rule: text with no digit is not a number. Source: parse_suffix_number,
   // which the filters use to read a typed limit.
-  prop_with_known_bugs(
-    [no_digit_arb],
+  // "," once parsed to 0 (#63).
+  test.prop([no_digit_arb], { examples: [[","]] })(
+    "parse_suffix_number returns null for text with no digit",
+    (text) => {
+      expect(parse_suffix_number(text)).toBeNull();
+    },
+  );
+
+  // Rule: a value with up to 2 decimals and a suffix parses to its exact
+  // value, with no float noise. Source: parse_suffix_number. A stats max of
+  // "8.2m" must not hide a target at 8,200,000. Multiplying 8.2 by 1000000
+  // once gave 8199999.999999999 (#63).
+  test.prop(
     [
-      {
-        // Text of only commas, with an optional suffix, parses to 0.
-        issue: "https://github.com/xentac/FFScouter/issues/63",
-        example: [","],
-        applies: (text) => /^,+\s*[kmbt]?$/.test(text.trim().toLowerCase()),
-      },
+      fc.integer({ min: 0, max: 99_999 }),
+      fc.constantFrom(...Object.entries(SUFFIX_EXPONENTS)),
     ],
-  )("parse_suffix_number returns null for text with no digit", (text) => {
-    expect(parse_suffix_number(text)).toBeNull();
-  });
+    { examples: [[820, ["m", 6]]] },
+  )(
+    "a decimal with a suffix parses to its exact value",
+    (hundredths, [suffix, exponent]) => {
+      const whole = Math.floor(hundredths / 100);
+      const fraction = String(hundredths % 100).padStart(2, "0");
+      expect(parse_suffix_number(`${whole}.${fraction}${suffix}`)).toBe(
+        hundredths * 10 ** (exponent - 2),
+      );
+    },
+  );
+
+  // Rule: thousands separators do not change the value. Source:
+  // parse_suffix_number, which accepts "1,000".
+  test.prop([count_arb])(
+    "a count with thousands separators parses to the same value",
+    (n) => {
+      expect(parse_suffix_number(n.toLocaleString("en-US"))).toBe(n);
+    },
+  );
 
   // Rule: for n from 1000 to just under 1000t, a label uses the largest unit
   // that keeps its number under 1000. Source: format_suffix_number.
@@ -115,8 +141,8 @@ describe("suffix number properties", () => {
   });
 
   // Rule: a label reads back to the same label. Source: format_suffix_number
-  // is the inverse of parse_suffix_number. Compare strings, not numbers:
-  // parsing "8.2m" gives 8199999.999999999.
+  // is the inverse of parse_suffix_number. Compare labels, not numbers: a
+  // label rounds n, so it reads back as a different number.
   // 999999 once gave "1000k", which reads back as "1m" (#64).
   test.prop([fc.oneof(count_arb, near_boundary_arb(all_units))], {
     examples: [[999_999]],
@@ -130,17 +156,8 @@ describe("suffix number properties", () => {
   // Rule: a duration filter is null or a finite count of seconds of 0 or
   // more. Source: parse_duration_to_seconds, which the filters use to read a
   // typed age.
-  prop_with_known_bugs(
-    [duration_arb],
-    [
-      {
-        // A negative duration parses to a negative count.
-        issue: "https://github.com/xentac/FFScouter/issues/63",
-        example: ["-5m"],
-        applies: (text) => (parse_duration_to_seconds(text) ?? 0) < 0,
-      },
-    ],
-  )(
+  // "-5m" once parsed to -300 (#63).
+  test.prop([duration_arb], { examples: [["-5m"]] })(
     "parse_duration_to_seconds returns null or a finite number of 0 or more",
     (text) => {
       const seconds = parse_duration_to_seconds(text);

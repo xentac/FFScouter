@@ -350,6 +350,36 @@ test("parse_suffix_number parses numeric suffixes correctly", () => {
   expect(parse_suffix_number("1,000,000m")).toEqual(1000000000000);
 });
 
+test("parse_suffix_number returns null for text that is not a number", () => {
+  // No digit.
+  expect(parse_suffix_number(",")).toBeNull();
+  expect(parse_suffix_number(",k")).toBeNull();
+  expect(parse_suffix_number(".")).toBeNull();
+  expect(parse_suffix_number("k")).toBeNull();
+  // A comma that is not a thousands separator, such as a decimal comma.
+  expect(parse_suffix_number("1,5")).toBeNull();
+  expect(parse_suffix_number("1,5m")).toBeNull();
+  expect(parse_suffix_number("1,0000")).toBeNull();
+  expect(parse_suffix_number(",100")).toBeNull();
+  expect(parse_suffix_number("100,")).toBeNull();
+  expect(parse_suffix_number("1,000.5,5")).toBeNull();
+  // A dot with no digit after it.
+  expect(parse_suffix_number("5.")).toBeNull();
+  expect(parse_suffix_number("5.k")).toBeNull();
+});
+
+test("parse_suffix_number gives the exact value of a decimal with a suffix", () => {
+  expect(parse_suffix_number("8.2m")).toBe(8_200_000);
+  expect(parse_suffix_number("2.99b")).toBe(2_990_000_000);
+  expect(parse_suffix_number("1.23t")).toBe(1_230_000_000_000);
+  expect(parse_suffix_number("0.1k")).toBe(100);
+  expect(parse_suffix_number(".5k")).toBe(500);
+  expect(parse_suffix_number("1,234.5k")).toBe(1_234_500);
+  // More decimals than the suffix holds give the nearest number.
+  expect(parse_suffix_number("1.2345k")).toBe(1234.5);
+  expect(parse_suffix_number("0.1")).toBe(0.1);
+});
+
 test("format_suffix_number renders numbers with k/m/b/t suffixes", () => {
   expect(format_suffix_number(0)).toEqual("0");
   expect(format_suffix_number(999)).toEqual("999");
@@ -462,6 +492,28 @@ test("parse_duration_to_seconds parses compound and word-form durations", () => 
   expect(parse_duration_to_seconds("2 minutes")).toEqual(120);
   expect(parse_duration_to_seconds("1 hour")).toEqual(3600);
   expect(parse_duration_to_seconds("2 days")).toEqual(2 * DAY);
+  expect(parse_duration_to_seconds("1 day 2 hours")).toEqual(DAY + 2 * HOUR);
+  expect(parse_duration_to_seconds("1.5h")).toEqual(1.5 * HOUR);
+  expect(parse_duration_to_seconds("3 wks")).toEqual(21 * DAY);
+  expect(parse_duration_to_seconds("5M")).toEqual(300);
+  // A bare number is seconds.
+  expect(parse_duration_to_seconds("90")).toEqual(90);
+});
+
+test("parse_duration_to_seconds returns null for text that is not a duration", () => {
+  // A negative duration.
+  expect(parse_duration_to_seconds("-5m")).toBeNull();
+  expect(parse_duration_to_seconds("--5m")).toBeNull();
+  expect(parse_duration_to_seconds("1h -30m")).toBeNull();
+  // Stray text, which the duration library skips.
+  expect(parse_duration_to_seconds("5-m")).toBeNull();
+  expect(parse_duration_to_seconds("5m m")).toBeNull();
+  expect(parse_duration_to_seconds("5 parsecs")).toBeNull();
+  // A bare number among units, and units below a second.
+  expect(parse_duration_to_seconds("1h 30")).toBeNull();
+  expect(parse_duration_to_seconds("500ms")).toBeNull();
+  // Too large to be finite.
+  expect(parse_duration_to_seconds(`${"9".repeat(400)}w`)).toBeNull();
 });
 
 test("format_duration_human compact and spaced forms", () => {

@@ -19,7 +19,20 @@ const DAY = HOUR * 24;
 const OLD_ESTIMATE_INTERVAL = 14 * DAY; // sec
 
 const AGE_PHRASE_PREFIX_REGEX = /^\((.*) old\)$/;
-const SUFFIX_NUMBER_REGEX = /^([\d.,]+)\s*([kmbt])?$/;
+// A number as a player types it: digits, with commas only as thousands
+// separators, an optional decimal part, and an optional k, m, b, or t.
+const SUFFIX_NUMBER_REGEX =
+  /^(\d{1,3}(?:,\d{3})+|\d*)(?:\.(\d+))?\s*([kmbt])?$/;
+const SUFFIX_EXPONENT: Record<string, number> = { k: 3, m: 6, b: 9, t: 12 };
+
+// The units of parse-duration, without the units below a second, which no
+// age filter needs. The lookahead stops "ms" from reading as "m" and "s".
+const DURATION_UNIT =
+  "(?:years?|yrs?|y|months?|mos?|mths?|weeks?|wks?|w|days?|d|hours?|hrs?|h|minutes?|mins?|m|seconds?|secs?|s)(?![a-z])";
+// One or more amounts with a unit, or one bare amount in seconds.
+const DURATION_REGEX = new RegExp(
+  `^(?:\\d+(?:\\.\\d+)?\\s*${DURATION_UNIT}\\s*)+$|^\\d+(?:\\.\\d+)?$`,
+);
 
 export type EstimateSourceIcon = "spy" | "premium";
 
@@ -507,29 +520,19 @@ export function format_timestamp(ts: TimestampSec) {
 }
 
 export function parse_suffix_number(valStr: string): number | null {
-  const trimmed = valStr.trim().toLowerCase();
-  if (!trimmed) return null;
-
-  const match = trimmed.match(SUFFIX_NUMBER_REGEX);
+  const match = valStr.trim().toLowerCase().match(SUFFIX_NUMBER_REGEX);
   if (!match) return null;
+  const [, whole = "", fraction, suffix] = match;
+  if (!whole && !fraction) return null;
 
-  const matchStr = match[1];
-  if (!matchStr) return null;
-
-  const num = Number(matchStr.replace(/,/g, ""));
-  if (Number.isNaN(num)) return null;
-
-  const suffix = match[2];
-  if (!suffix) return num;
-
-  const multiplier: Record<string, number> = {
-    k: 1_000,
-    m: 1_000_000,
-    b: 1_000_000_000,
-    t: 1_000_000_000_000,
-  };
-
-  return num * (multiplier[suffix] ?? 1);
+  // Shift the decimal point in the text, and convert once: "8.2m" becomes
+  // 8.2e6, which is exactly 8200000. Multiplying 8.2 by 1000000 gives
+  // 8199999.999999999.
+  const exponent = suffix ? (SUFFIX_EXPONENT[suffix] ?? 0) : 0;
+  const num = Number(
+    `${whole.replace(/,/g, "") || "0"}.${fraction ?? "0"}e${exponent}`,
+  );
+  return Number.isFinite(num) ? num : null;
 }
 
 // Inverse of parse_suffix_number: "700k", "1.5m", "2.99b". Up to 2 decimals,
@@ -560,8 +563,11 @@ export function format_suffix_number(n: number): string {
 }
 
 export function parse_duration_to_seconds(valStr: string): number | null {
-  const trimmed = valStr.trim();
-  if (!trimmed) return null;
+  const trimmed = valStr.trim().toLowerCase();
+  // parse-duration skips text that it does not know, and reads "1h -30m" as
+  // 1h30m. Check the whole text first, so no sign or stray text gets in.
+  if (!DURATION_REGEX.test(trimmed)) return null;
 
-  return parseDuration(trimmed, "s");
+  const seconds = parseDuration(trimmed, "s");
+  return seconds !== null && Number.isFinite(seconds) ? seconds : null;
 }

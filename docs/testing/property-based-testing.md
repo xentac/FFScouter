@@ -54,7 +54,8 @@ import { format_suffix_number, parse_suffix_number } from "./strings";
 const count_arb = fc.integer({ min: 0, max: 10 ** 15 });
 
 // Rule: the label reads back to the same label. Source: format_suffix_number.
-// Compare strings, not numbers: parsing "8.2m" gives 8199999.999999999.
+// Compare labels, not numbers: a label rounds n, so it reads back as a
+// different number.
 test.prop([count_arb])("a suffix label reads back to the same label", (n) => {
   const label = format_suffix_number(n);
   const parsed = parse_suffix_number(label);
