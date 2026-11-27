@@ -65,7 +65,7 @@ test.prop([count_arb])("a suffix label reads back to the same label", (n) => {
 
 This is a round trip. It does not say what the label is. It says that two functions agree with each other, and that is often enough to find a bug.
 
-A second rule for the same function: for every value of 1000 or more, the number before the suffix is less than 1000. A property survey found that `format_suffix_number(999_999)` returns "1000k". That bug is [Suffix-number labels show 1000k instead of 1m](https://github.com/xentac/FFScouter/issues/64). No example test had tried a value just under a unit boundary. The generator tried one in a few hundred runs.
+A second rule for the same function: for every value from 1000 to just under 1000t, the number before the suffix is less than 1000. No unit is larger than t, so the rule stops there. A property survey found that `format_suffix_number(999_999)` returns "1000k". That bug is [Suffix-number labels show 1000k instead of 1m](https://github.com/xentac/FFScouter/issues/64). No example test had tried a value just under a unit boundary. The generator tried one in a few hundred runs.
 
 ## The worked example: floating placement
 
@@ -257,7 +257,37 @@ Rules for model-based tests in this repo:
 
 ## Known failures
 
-A property that finds a real bug stays in the test file while the bug is open. Mark it `test.fails.prop` and pin the shrunk counterexample through `examples`:
+A property that finds a real bug stays in the test file while the bug is open. The property must still catch a new bug, so the known bug must not hide it. fast-check stops at the first failure. A property that always fails on a known bug never checks another input.
+
+Use `prop_with_known_bugs` from `src/tests/known-bugs.ts`. Give each open bug an entry with its issue, its shrunk counterexample, and `applies`, which says which inputs the bug owns:
+
+```ts
+prop_with_known_bugs(
+  [fc.oneof(suffixed_count_arb, near_boundary_arb(below_t_units))],
+  [
+    {
+      issue: "https://github.com/xentac/FFScouter/issues/64",
+      example: [999_999],
+      applies: (n) => /^1000[kmb]$/.test(format_suffix_number(n)),
+    },
+  ],
+)("the number before the suffix is less than 1000", (n) => { ... });
+```
+
+The helper registers two kinds of test:
+
+- The property. It skips each input that a bug owns with `fc.pre`, so fast-check draws a new input in its place. Every other input is checked, and a new bug fails the property. Shrinking also skips the owned inputs, so a new bug does not shrink into a known one.
+- One strict test for each bug, named `<property>: known bug #<n>`. It runs the predicate on the example, outside the property. It fails when `applies(example)` is false, and when the example passes. A passing example means that the bug looks fixed.
+
+Write `applies` in terms of the input, or of one narrow output shape such as "the label is 1000k, 1000m, or 1000b". Never write it as "the predicate fails". The property then checks nothing.
+
+A bug that owns too many inputs hides too much of the input space. In a run of 500 inputs or more, the property fails when one bug owns more than 20% of them. The normal suite runs only 25 times, which is too few to measure a share, so the deep run makes this check. An arbitrary that aims at a bug on purpose can need more. Then set `max_share` and say why in a comment. fast-check draws small and edge values more often, so measure the share with a deep run, and do not compute it from the ranges.
+
+When the fix lands, the strict test fails. Remove the bug's entry, and add its example to the property's `examples`. The example then guards against the bug coming back.
+
+### When `applies` cannot be written
+
+`applies` needs a known rule for the bug's inputs. If the right behavior is not decided yet, there is no such rule. Then mark the property `test.fails.prop` and pin the counterexample through `examples`:
 
 ```ts
 // Known bug: https://github.com/xentac/FFScouter/issues/61 (case A).
@@ -268,9 +298,9 @@ test.fails.prop([escape_case], { examples: [[THIN_STRIP_AT_EDGE]] })(
 );
 ```
 
-`test.fails` alone is flaky. At 25 runs, random inputs almost never reach the counterexample. The property then passes, and `test.fails` reports the pass as a failure. The pinned example runs first in every run, so the property fails every time and `test.fails` stays green.
+The pinned example runs first and fails, so the property never checks a generated input. A new bug in this property stays hidden until the known bug is fixed. Move the property to `prop_with_known_bugs` as soon as the rule is decided.
 
-When the fix lands, remove `.fails` and keep the example. The example then guards against the bug coming back. If a reader of `*.test.ts` must see the case, also write a separate example test there.
+`test.fails` without the example is flaky. At 25 runs, random inputs almost never reach the counterexample. The property then passes, and `test.fails` reports the pass as a failure.
 
 ## Conventions
 
@@ -278,10 +308,10 @@ When the fix lands, remove `.fails` and keep the example. The example then guard
 - Wrapper. Use `test.prop` from `@fast-check/vitest`. Keep arbitraries and predicates separate from the wrapper.
 - Shared arbitraries. An arbitrary stays in its property file until a second file needs it. Then move it to `<module>.arbitraries.ts`, next to the module that owns the type, for example `keep-out-zones.arbitraries.ts`. Do not make a central folder.
 - Arbitrary comments. Each arbitrary has a comment that says how it matches real input.
-- Property comments. Each property has a comment. The comment gives the rule in plain words and its source: a `CONTEXT.md` term, a code comment, or a function. It also names any precondition that the predicate skips with an early return. A known-failing property links its bug issue.
+- Property comments. Each property has a comment. The comment gives the rule in plain words and its source: a `CONTEXT.md` term, a code comment, or a function. It also names any precondition that the predicate skips with an early return. A known bug's entry links its issue and says in a comment which inputs it owns.
 - Test names. The test name states the rule.
-- Generators. Use `fc.record` with named fields and integers for pixel inputs. Use an early `return` in place of `fc.pre` or `chain`. Use a mapping helper for derived values. Every `chain` has a comment that says why.
-- Bugs. If a property finds a bug, file it as its own issue with the shrunk counterexample. Pin the counterexample with `test.fails.prop`. Fix the bug in its own change.
+- Generators. Use `fc.record` with named fields and integers for pixel inputs. Use an early `return` in place of `fc.pre` or `chain`. The one exception is `prop_with_known_bugs`, which skips a known bug's inputs with `fc.pre` and limits their share. Use a mapping helper for derived values. Every `chain` has a comment that says why.
+- Bugs. If a property finds a bug, file it as its own issue with the shrunk counterexample. Add it to the property's known bugs with `prop_with_known_bugs`. Fix the bug in its own change.
 - Generated inputs are synthetic. The rule to anonymize Torn DOM captures does not apply to them.
 
 ## Run counts and deep runs

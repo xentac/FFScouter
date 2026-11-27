@@ -1,8 +1,9 @@
 // Properties for the FFScouter API responses. The body comes from a server
 // that the script does not control, so query_stats must handle any status
 // and any body.
-import { fc, test } from "@fast-check/vitest";
+import { fc } from "@fast-check/vitest";
 import { describe, expect } from "vitest";
+import { prop_with_known_bugs } from "../tests/known-bugs";
 import { FFApiError, type gmRequest, query_stats } from "./api";
 import type { PlayerId } from "./types";
 
@@ -110,17 +111,42 @@ async function outcome_of(
 // Together, the two properties state one rule: for any status and any body,
 // query_stats resolves with a map keyed by exactly the requested IDs, or
 // rejects with an FFApiError. Callers branch on FFApiError and read one
-// entry for each requested ID. The rule is split in two so that each known
-// bug has a pinned example that runs.
+// entry for each requested ID. The rule is split in two, one property for
+// each part.
+
+// The parsed body, or undefined when the body is not JSON.
+function parsed(body: string): unknown {
+  try {
+    return JSON.parse(body);
+  } catch {
+    return undefined;
+  }
+}
 
 describe("query_stats properties", () => {
   // Rule: query_stats rejects only with an FFApiError. Source: query_stats
   // and FFApiError, which carries the rate-limit data.
-  // Known bug: https://github.com/xentac/FFScouter/issues/66.
-  // Remove `.fails` when it is fixed. Keep the example.
-  test.fails.prop([requested_arb, status_arb, body_arb], {
-    examples: [[[1], 200, "{}"]],
-  })(
+  prop_with_known_bugs(
+    [requested_arb, status_arb, body_arb],
+    [
+      {
+        // A 200 body that is JSON, not null, not an array, and has no code
+        // passes as a success, and .forEach then throws a TypeError.
+        issue: "https://github.com/xentac/FFScouter/issues/66",
+        example: [[1], 200, "{}"],
+        applies: (_requested, status, body) => {
+          const value = parsed(body);
+          return (
+            status === 200 &&
+            value !== undefined &&
+            value !== null &&
+            !Array.isArray(value) &&
+            (value as { code?: unknown }).code === undefined
+          );
+        },
+      },
+    ],
+  )(
     "query_stats rejects only with an FFApiError",
     async (requested, status, body) => {
       const outcome = await outcome_of(requested, status, body);
@@ -131,11 +157,28 @@ describe("query_stats properties", () => {
   // Rule: a resolved result map is keyed by exactly the requested IDs.
   // Source: query_stats, which adds a no_data entry for each requested ID
   // that the body does not name. Precondition: query_stats resolves.
-  // Known bug: https://github.com/xentac/FFScouter/issues/69.
-  // Remove `.fails` when it is fixed. Keep the example.
-  test.fails.prop([requested_arb, status_arb, body_arb], {
-    examples: [[[1], 200, '[{"player_id":2}]']],
-  })(
+  prop_with_known_bugs(
+    [requested_arb, status_arb, body_arb],
+    [
+      {
+        // A 200 body array that names an ID that was not requested adds
+        // that ID to the map.
+        issue: "https://github.com/xentac/FFScouter/issues/69",
+        example: [[1], 200, '[{"player_id":2}]'],
+        applies: (requested, status, body) => {
+          const value = parsed(body);
+          return (
+            status === 200 &&
+            Array.isArray(value) &&
+            value.some((item: unknown) => {
+              const id = (item as { player_id?: unknown } | null)?.player_id;
+              return Boolean(id) && !requested.includes(id as PlayerId);
+            })
+          );
+        },
+      },
+    ],
+  )(
     "a resolved query_stats map is keyed by exactly the requested ids",
     async (requested, status, body) => {
       const outcome = await outcome_of(requested, status, body);
