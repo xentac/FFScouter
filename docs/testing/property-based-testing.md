@@ -65,7 +65,7 @@ test.prop([count_arb])("a suffix label reads back to the same label", (n) => {
 
 This is a round trip. It does not say what the label is. It says that two functions agree with each other, and that is often enough to find a bug.
 
-A second rule for the same function: for every value from 1000 to just under 1000t, the number before the suffix is less than 1000. No unit is larger than t, so the rule stops there. A property survey found that `format_suffix_number(999_999)` returns "1000k". That bug is [Suffix-number labels show 1000k instead of 1m](https://github.com/xentac/FFScouter/issues/64). No example test had tried a value just under a unit boundary. The generator tried one in a few hundred runs.
+A second rule for the same function: for every value from 1000 to just under 1000t, the number before the suffix is less than 1000. No unit is larger than t, so the rule stops there. A property survey found that `format_suffix_number(999_999)` returns "1000k". That bug was [Suffix-number labels show 1000k instead of 1m](https://github.com/xentac/FFScouter/issues/64). No example test had tried a value just under a unit boundary. The generator tried one in a few hundred runs. After the fix, both suffix properties pin 999_999 in their `examples`.
 
 ## The worked example: floating placement
 
@@ -259,7 +259,7 @@ Rules for model-based tests in this repo:
 
 A property that finds a real bug stays in the test file while the bug is open. The property must still catch a new bug, so the known bug must not hide it. fast-check stops at the first failure. A property that always fails on a known bug never checks another input.
 
-Use `prop_with_known_bugs` from `src/tests/known-bugs.ts`. Give each open bug an entry with its issue, its shrunk counterexample, and `applies`, which says which inputs the bug owns:
+Use `prop_with_known_bugs` from `src/tests/known-bugs.ts`. Give each open bug an entry with its issue, its shrunk counterexample, and `applies`, which says which inputs the bug owns. For example, while #64 was open, its property looked like this:
 
 ```ts
 prop_with_known_bugs(

@@ -358,6 +358,14 @@ test("format_suffix_number renders numbers with k/m/b/t suffixes", () => {
   expect(format_suffix_number(1_204_000)).toEqual("1.2m");
   expect(format_suffix_number(1_999_999)).toEqual("2m");
 
+  // A value that rounds up to 1000 of a unit takes the next unit.
+  expect(format_suffix_number(999_999)).toEqual("1m");
+  expect(format_suffix_number(999_995_000)).toEqual("1b");
+  expect(format_suffix_number(999_995_000_000)).toEqual("1t");
+  expect(format_suffix_number(999_994)).toEqual("999.99k");
+  // Below 1000, the number shows as is, also when it rounds to 1000.
+  expect(format_suffix_number(999.999)).toEqual("999.999");
+
   // Round-trips through parse_suffix_number within rounding tolerance.
   const parsed = parse_suffix_number(format_suffix_number(2_989_885_521));
   expect(parsed).toEqual(2_990_000_000);

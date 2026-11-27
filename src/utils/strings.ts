@@ -543,11 +543,18 @@ export function format_suffix_number(n: number): string {
     [1_000_000, "m"],
     [1_000, "k"],
   ];
-  for (const [divisor, suffix] of units) {
+  const round = (value: number) => Math.round(value * 100) / 100;
+  let larger: [number, string] | undefined;
+  for (const unit of units) {
+    const [divisor, suffix] = unit;
     if (Math.abs(n) >= divisor) {
-      const scaled = Math.round((n / divisor) * 100) / 100;
-      return `${scaled}${suffix}`;
+      const scaled = round(n / divisor);
+      // Rounding can carry to 1000, for example 999999 to "1000k". The next
+      // unit up then shows the value as 1: "1m". No unit is larger than t.
+      if (Math.abs(scaled) < 1000 || !larger) return `${scaled}${suffix}`;
+      return `${round(n / larger[0])}${larger[1]}`;
     }
+    larger = unit;
   }
   return `${n}`;
 }

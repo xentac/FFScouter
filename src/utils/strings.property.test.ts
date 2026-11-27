@@ -2,9 +2,9 @@
 // Properties for the suffix-number filters and labels, and for the FF arrow
 // palette. Each test generates many inputs and checks a rule that must hold
 // for all of them.
-import { fc } from "@fast-check/vitest";
+import { fc, test } from "@fast-check/vitest";
 import { beforeEach, describe, expect } from "vitest";
-import { type KnownBug, prop_with_known_bugs } from "../tests/known-bugs";
+import { prop_with_known_bugs } from "../tests/known-bugs";
 import { ColorScheme, ffconfig } from "./ffconfig";
 import {
   format_suffix_number,
@@ -87,17 +87,6 @@ const stored_scheme_arb = fc.oneof(fc.constantFrom(...SCHEMES), fc.string());
 // Suffix numbers
 // ============================================================================
 
-// A value just under a unit boundary rounds up to 1000 of the smaller unit,
-// for example "1000k" for 999999.
-const rounds_up_to_1000: KnownBug<[number]> = {
-  issue: "https://github.com/xentac/FFScouter/issues/64",
-  example: [999_999],
-  applies: (n) => /^1000[kmb]$/.test(format_suffix_number(n)),
-  // near_boundary_arb aims at this rounding edge on purpose, so the bug
-  // owns about 27% of the inputs.
-  max_share: 0.4,
-};
-
 describe("suffix number properties", () => {
   // Rule: text with no digit is not a number. Source: parse_suffix_number,
   // which the filters use to read a typed limit.
@@ -117,10 +106,10 @@ describe("suffix number properties", () => {
 
   // Rule: for n from 1000 to just under 1000t, a label uses the largest unit
   // that keeps its number under 1000. Source: format_suffix_number.
-  prop_with_known_bugs(
-    [fc.oneof(suffixed_count_arb, near_boundary_arb(below_t_units))],
-    [rounds_up_to_1000],
-  )("the number before the suffix is less than 1000", (n) => {
+  // 999999 once gave "1000k" (#64).
+  test.prop([fc.oneof(suffixed_count_arb, near_boundary_arb(below_t_units))], {
+    examples: [[999_999]],
+  })("the number before the suffix is less than 1000", (n) => {
     const label = format_suffix_number(n);
     expect(label).toMatch(/^[\d.]+[kmbt]$/);
     expect(Number.parseFloat(label)).toBeLessThan(1000);
@@ -129,11 +118,10 @@ describe("suffix number properties", () => {
   // Rule: a label reads back to the same label. Source: format_suffix_number
   // is the inverse of parse_suffix_number. Compare strings, not numbers:
   // parsing "8.2m" gives 8199999.999999999.
-  // "1000k" reads back as "1m", so #64 owns this property's inputs too.
-  prop_with_known_bugs(
-    [fc.oneof(count_arb, near_boundary_arb(all_units))],
-    [rounds_up_to_1000],
-  )("a suffix label reads back to the same label", (n) => {
+  // 999999 once gave "1000k", which reads back as "1m" (#64).
+  test.prop([fc.oneof(count_arb, near_boundary_arb(all_units))], {
+    examples: [[999_999]],
+  })("a suffix label reads back to the same label", (n) => {
     const label = format_suffix_number(n);
     const parsed = parse_suffix_number(label);
     expect(parsed).not.toBeNull();
