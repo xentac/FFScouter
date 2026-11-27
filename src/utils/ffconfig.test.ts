@@ -4,12 +4,14 @@ import {
   ChainLinkType,
   ChainTabType,
   CONFIG_DEFAULTS,
+  ColorScheme,
   FactionsColDisplay,
   FFConfig,
   GaugeMarkerJustify,
   MiniProfileDisplay,
   WarQuickAttackAction,
 } from "./ffconfig";
+import { Storage } from "./storage";
 
 let config: FFConfig;
 
@@ -233,4 +235,20 @@ test("FFConfig.reset resets values to their default states except the api key", 
 
 test("od_insurance_enabled defaults on", () => {
   expect(CONFIG_DEFAULTS.od_insurance_enabled).toBe(true);
+});
+
+test("an enum setting with an unknown stored value reads as its default", () => {
+  // A beta build can store a value that this build does not know.
+  const storage = new Storage("test-config");
+  storage.set("color_scheme", "not-a-scheme");
+  storage.set("chain_link_type", 7);
+  storage.set("gauge_marker_type", { arrow: true });
+  expect(config.color_scheme).toBe(CONFIG_DEFAULTS.color_scheme);
+  expect(config.chain_link_type).toBe(CONFIG_DEFAULTS.chain_link_type);
+  expect(config.gauge_marker_type).toBe(CONFIG_DEFAULTS.gauge_marker_type);
+});
+
+test("an enum setting keeps a known stored value", () => {
+  config.color_scheme = ColorScheme.NEON;
+  expect(new FFConfig("test-config").color_scheme).toBe(ColorScheme.NEON);
 });

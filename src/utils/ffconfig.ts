@@ -167,6 +167,20 @@ export class FFConfig {
     logger.setLevel(this.debug_logs ? LogLevel.DEBUG : LogLevel.INFO);
   }
 
+  // An enum setting. A stored value outside the enum, for example a scheme
+  // that only a beta build knows, reads as the default. The stored value
+  // stays, so that build still finds it.
+  private get_enum<T extends string>(
+    key: CONFIG,
+    members: Record<string, T>,
+    fallback: T,
+  ): T {
+    const stored: unknown = this.storage.get(key);
+    return (Object.values(members) as unknown[]).includes(stored)
+      ? (stored as T)
+      : fallback;
+  }
+
   get key(): TornApiKey {
     return this.storage.get(CONFIG.KEY) ?? "";
   }
@@ -217,9 +231,10 @@ export class FFConfig {
   }
 
   get chain_link_type(): ChainLinkType {
-    return (
-      this.storage.get(CONFIG.CHAIN_LINK_TYPE) ??
-      CONFIG_DEFAULTS.chain_link_type
+    return this.get_enum(
+      CONFIG.CHAIN_LINK_TYPE,
+      ChainLinkType,
+      CONFIG_DEFAULTS.chain_link_type,
     );
   }
 
@@ -228,8 +243,10 @@ export class FFConfig {
   }
 
   get chain_tab_type(): ChainTabType {
-    return (
-      this.storage.get(CONFIG.CHAIN_TAB_TYPE) ?? CONFIG_DEFAULTS.chain_tab_type
+    return this.get_enum(
+      CONFIG.CHAIN_TAB_TYPE,
+      ChainTabType,
+      CONFIG_DEFAULTS.chain_tab_type,
     );
   }
 
@@ -238,9 +255,10 @@ export class FFConfig {
   }
 
   get war_quick_attack_action(): WarQuickAttackAction {
-    return (
-      this.storage.get(CONFIG.WAR_QUICK_ATTACK_ACTION) ??
-      CONFIG_DEFAULTS.war_quick_attack_action
+    return this.get_enum(
+      CONFIG.WAR_QUICK_ATTACK_ACTION,
+      WarQuickAttackAction,
+      CONFIG_DEFAULTS.war_quick_attack_action,
     );
   }
 
@@ -349,9 +367,10 @@ export class FFConfig {
   }
 
   get factions_col_display(): FactionsColDisplay {
-    return (
-      this.storage.get(CONFIG.FACTIONS_COL_DISPLAY) ??
-      CONFIG_DEFAULTS.factions_col_display
+    return this.get_enum(
+      CONFIG.FACTIONS_COL_DISPLAY,
+      FactionsColDisplay,
+      CONFIG_DEFAULTS.factions_col_display,
     );
   }
 
@@ -360,9 +379,10 @@ export class FFConfig {
   }
 
   get war_col_display(): FactionsColDisplay {
-    return (
-      this.storage.get(CONFIG.WAR_COL_DISPLAY) ??
-      CONFIG_DEFAULTS.war_col_display
+    return this.get_enum(
+      CONFIG.WAR_COL_DISPLAY,
+      FactionsColDisplay,
+      CONFIG_DEFAULTS.war_col_display,
     );
   }
 
@@ -371,9 +391,10 @@ export class FFConfig {
   }
 
   get mini_profile_display(): MiniProfileDisplay {
-    return (
-      this.storage.get(CONFIG.MINI_PROFILE_DISPLAY) ??
-      CONFIG_DEFAULTS.mini_profile_display
+    return this.get_enum(
+      CONFIG.MINI_PROFILE_DISPLAY,
+      MiniProfileDisplay,
+      CONFIG_DEFAULTS.mini_profile_display,
     );
   }
 
@@ -490,9 +511,10 @@ export class FFConfig {
   }
 
   get bounty_attack_action(): WarQuickAttackAction {
-    return (
-      this.storage.get(CONFIG.BOUNTY_ATTACK_ACTION) ??
-      CONFIG_DEFAULTS.bounty_attack_action
+    return this.get_enum(
+      CONFIG.BOUNTY_ATTACK_ACTION,
+      WarQuickAttackAction,
+      CONFIG_DEFAULTS.bounty_attack_action,
     );
   }
 
@@ -523,9 +545,10 @@ export class FFConfig {
   }
 
   get gauge_marker_type(): GaugeMarkerType {
-    return (
-      this.storage.get(CONFIG.GAUGE_MARKER_TYPE) ??
-      CONFIG_DEFAULTS.gauge_marker_type
+    return this.get_enum(
+      CONFIG.GAUGE_MARKER_TYPE,
+      GaugeMarkerType,
+      CONFIG_DEFAULTS.gauge_marker_type,
     );
   }
 
@@ -556,9 +579,10 @@ export class FFConfig {
   }
 
   get gauge_marker_justify(): GaugeMarkerJustify {
-    return (
-      this.storage.get(CONFIG.GAUGE_MARKER_JUSTIFY) ??
-      CONFIG_DEFAULTS.gauge_marker_justify
+    return this.get_enum(
+      CONFIG.GAUGE_MARKER_JUSTIFY,
+      GaugeMarkerJustify,
+      CONFIG_DEFAULTS.gauge_marker_justify,
     );
   }
 
@@ -567,8 +591,10 @@ export class FFConfig {
   }
 
   get color_scheme(): ColorScheme {
-    return (
-      this.storage.get(CONFIG.COLOR_SCHEME) ?? CONFIG_DEFAULTS.color_scheme
+    return this.get_enum(
+      CONFIG.COLOR_SCHEME,
+      ColorScheme,
+      CONFIG_DEFAULTS.color_scheme,
     );
   }
 

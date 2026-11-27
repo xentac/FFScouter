@@ -239,6 +239,12 @@ test("get_ff_arrow_colour returns correct hex colors with clamping", () => {
   expect(get_ff_colour(comp)).toEqual("#34e817");
 });
 
+test("get_ff_arrow_colour uses the classic palette for an unknown stored scheme", () => {
+  // A beta build can store a scheme that this build does not know.
+  ffconfig.color_scheme = "not-a-scheme" as ColorScheme;
+  expect(get_ff_arrow_colour(ff_only(1.0))).toEqual("#1734e8");
+});
+
 test("get_ff_arrow_colour switches palette based on ffconfig.color_scheme", () => {
   const data = ff_only(1.0);
 

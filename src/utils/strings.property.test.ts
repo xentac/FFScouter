@@ -12,7 +12,6 @@ import {
   parse_duration_to_seconds,
   parse_suffix_number,
 } from "./strings";
-import type { FFData } from "./types";
 import { estimate_with_ff, ff_data_arb } from "./types.arbitraries";
 
 // ============================================================================
@@ -165,21 +164,10 @@ describe("palette properties", () => {
   // never throws. Source: get_ff_arrow_colour. A beta build can store a
   // scheme that stable does not know, so the stored value is any string.
   // Setup: storage is empty, so no custom colors apply.
-  prop_with_known_bugs<[string, FFData]>(
-    [stored_scheme_arb, any_ff_data_arb],
-    [
-      {
-        // An unknown scheme has no palette, so an arrow with data throws.
-        issue: "https://github.com/xentac/FFScouter/issues/65",
-        example: ["not-a-scheme", estimate_with_ff(2)],
-        applies: (scheme, data) =>
-          !data.no_data && !SCHEMES.includes(scheme as ColorScheme),
-        // stored_scheme_arb draws any string half of the time, so the bug
-        // owns about 25% of the inputs.
-        max_share: 0.4,
-      },
-    ],
-  )("any stored color scheme gives a hex arrow color", (scheme, data) => {
+  // An unknown scheme once had no palette, so the arrow threw (#65).
+  test.prop([stored_scheme_arb, any_ff_data_arb], {
+    examples: [["not-a-scheme", estimate_with_ff(2)]],
+  })("any stored color scheme gives a hex arrow color", (scheme, data) => {
     ffconfig.color_scheme = scheme as ColorScheme;
     expect(get_ff_arrow_colour(data)).toMatch(/^#[0-9a-f]{6}$/i);
   });

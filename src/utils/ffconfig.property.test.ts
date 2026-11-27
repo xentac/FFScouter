@@ -2,9 +2,8 @@
 // Properties for the FFConfig enum getters. Settings live in localStorage,
 // which the script does not control, so each getter must return a valid
 // member for any stored value.
-import { fc } from "@fast-check/vitest";
+import { fc, test } from "@fast-check/vitest";
 import { beforeEach, describe, expect } from "vitest";
-import { prop_with_known_bugs } from "../tests/known-bugs";
 import {
   ChainLinkType,
   ChainTabType,
@@ -72,21 +71,10 @@ describe("FFConfig enum getter properties", () => {
   for (const { getter, members } of ENUM_GETTERS) {
     // Rule: the getter returns a member of its enum for any stored value.
     // Source: the FFConfig getter, whose return type is the enum.
-    prop_with_known_bugs<[unknown]>(
-      [stored_value_arb(members)],
-      [
-        {
-          // The getter returns any stored value but null unchecked.
-          issue: "https://github.com/xentac/FFScouter/issues/65",
-          example: ["not-a-scheme"],
-          applies: (stored) =>
-            stored !== null && !members.includes(stored as string),
-          // The arbitrary draws a value outside the enum about half of the
-          // time on purpose, so the bug owns about that share.
-          max_share: 0.6,
-        },
-      ],
-    )(`${getter} returns a valid member for any stored value`, (stored) => {
+    // An unknown stored value once came back unchecked (#65).
+    test.prop([stored_value_arb(members)], {
+      examples: [["not-a-scheme"]],
+    })(`${getter} returns a valid member for any stored value`, (stored) => {
       // The setter writes through the same Storage, so this is the stored
       // shape that the getter reads.
       new Storage(PREFIX).set(getter, stored);
