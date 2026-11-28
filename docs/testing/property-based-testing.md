@@ -141,13 +141,13 @@ When the rule allows more than one correct answer, compare the quantity that the
 
 ### What the pilot found
 
-The two strict properties found two rare cases in `escape_zones`. The bug issue is [Zone escape misses thin free strips and keeps the gap from only one zone][bug-61]. The counterexamples shrank to a 10x10 element in a 200x200 viewport.
+The two strict properties found two rare cases in `escape_zones`. The bug issue was [Zone escape misses thin free strips and keeps the gap from only one zone][bug-61]. The counterexamples shrank to a 10x10 element in a 200x200 viewport. The fix chose a rule: a box moves into the free space where it lands nearest. When that space is too small for the full gap, the gaps share the spare room equally. The gap properties now state that rule.
 
 The default 25 runs did not find either case. The two cases needed about 300 and about 600 runs. A deep run is therefore necessary, not optional. The section [Run counts and deep runs](#run-counts-and-deep-runs) shows how to run one.
 
 ### The pilot's wrapper
 
-The runner decision was open when the pilot was written, so the pilot first used plain `fc.assert` inside a normal `test`. The adoption work converted it to `test.prop` and `test.fails.prop`. The arbitraries, helpers, and predicates did not change. Only the wrapper changed.
+The runner decision was open when the pilot was written, so the pilot first used plain `fc.assert` inside a normal `test`. The adoption work converted it to `test.prop` and `test.fails.prop`. The arbitraries, helpers, and predicates did not change. Only the wrapper changed. After the fix for #61, every pilot property uses `test.prop`.
 
 ## Round trips
 
@@ -288,7 +288,7 @@ When the fix lands, the strict test fails. Remove the bug's entry, and add its e
 
 ### When `applies` cannot be written
 
-`applies` needs a known rule for the bug's inputs. If the right behavior is not decided yet, there is no such rule. Then mark the property `test.fails.prop` and pin the counterexample through `examples`:
+`applies` needs a known rule for the bug's inputs. If the right behavior is not decided yet, there is no such rule. Then mark the property `test.fails.prop` and pin the counterexample through `examples`. For example, before the rule for #61 was decided, its property looked like this:
 
 ```ts
 // Known bug: https://github.com/xentac/FFScouter/issues/61 (case A).

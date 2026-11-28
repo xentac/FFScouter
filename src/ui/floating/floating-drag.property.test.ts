@@ -131,6 +131,26 @@ function nearest_free(
   return best;
 }
 
+// The free space around a box that is clear of the zones, in its column: the
+// gap from the zone or screen edge above it, and to the one below it.
+function space_around(box: Rect, viewport: Size, zones: Rect[]) {
+  const column = zones.filter(
+    (zone) => zone.left < box.right && box.left < zone.right,
+  );
+  const above = column
+    .filter((zone) => zone.bottom <= box.top)
+    .map((zone) => zone.bottom);
+  const below = column
+    .filter((zone) => zone.top >= box.bottom)
+    .map((zone) => zone.top);
+  return {
+    gap_above: box.top - Math.max(0, ...above),
+    gap_below: Math.min(viewport.height, ...below) - box.bottom,
+    zone_above: above.length > 0,
+    zone_below: below.length > 0,
+  };
+}
+
 // The zone escape inputs: a box, its zones, and where resolve_box starts from
 // and ends up. Mapped, so a counterexample prints the derived values too.
 function escape_case_of(
@@ -149,10 +169,9 @@ function escape_case_of(
   };
 }
 
-// The shrunk counterexamples from a deep run, for the known-failing
-// properties. Pinned through `examples`, so every run tries them first: at the
-// default 25 runs, random inputs alone almost never reach them, and a
-// `test.fails` property that finds no counterexample passes and goes red.
+// The shrunk counterexamples of #61, from a deep run. Pinned through
+// `examples`, so every run tries them first: at the default 25 runs, random
+// inputs alone almost never reach them.
 const CORNER = { side: "left" as const, inset: 0, top: 0 };
 const SMALL = { width: 10, height: 10 };
 const SCREEN = { width: 200, height: 200 };
@@ -160,7 +179,7 @@ const SCREEN = { width: 200, height: 200 };
 const THIN_STRIP_AT_EDGE = escape_case_of(CORNER, SMALL, SCREEN, [
   { top: 0, height: 183, span: null },
 ]);
-// Stacked zones: the escape lands flush against the first zone.
+// Stacked zones: the escape once landed flush against the first zone.
 const STACKED_ZONES = escape_case_of(CORNER, SMALL, SCREEN, [
   { top: 0, height: 1, span: null },
   { top: 19, height: 1, span: null },
@@ -203,9 +222,9 @@ describe("resolve_box properties", () => {
     },
   );
 
-  // Known bug: https://github.com/xentac/FFScouter/issues/61 (case A).
-  // Remove `.fails` when it is fixed. Keep the example.
-  test.fails.prop([escape_case], { examples: [[THIN_STRIP_AT_EDGE]] })(
+  // A free strip that fits the box but not the gap was once missed (#61,
+  // case A).
+  test.prop([escape_case], { examples: [[THIN_STRIP_AT_EDGE]] })(
     "2. strict: clear of the zones when any free spot exists",
     ({ size, viewport, zones, start, box }) => {
       if (!fits(size, viewport)) return;
@@ -240,18 +259,47 @@ describe("resolve_box properties", () => {
     },
   );
 
-  // Known bug: https://github.com/xentac/FFScouter/issues/61 (case B).
-  // Remove `.fails` when it is fixed. Keep the example.
-  test.fails.prop([escape_case], { examples: [[STACKED_ZONES]] })(
-    "3. strict: a moved box keeps the gap from every zone",
+  // Rule: a moved box keeps EDGE_GAP from each zone next to it. When the
+  // space is too small for that, the gaps that a zone needs share the spare
+  // room equally, and a screen edge gets none. Source: #61, which chose the
+  // nearest space over the full gap. The gap was once kept from one zone
+  // only (case B).
+  test.prop([escape_case], {
+    examples: [[STACKED_ZONES], [THIN_STRIP_AT_EDGE]],
+  })(
+    "3. gaps: a moved box keeps the gap, or an equal share of a small space",
     ({ size, viewport, zones, start, box }) => {
       if (!fits(size, viewport) || box.top === start.top) return;
-      const padded = {
-        ...box,
-        top: box.top - EDGE_GAP,
-        bottom: box.bottom + EDGE_GAP,
-      };
-      expect(clear_of(padded, zones)).toBe(true);
+      const space = space_around(box, viewport, zones);
+      const need_above = space.zone_above ? EDGE_GAP : 0;
+      const need_below = space.zone_below ? EDGE_GAP : 0;
+      if (space.gap_above >= need_above && space.gap_below >= need_below) {
+        return;
+      }
+      if (space.zone_above && space.zone_below) {
+        expect(Math.abs(space.gap_above - space.gap_below)).toBeLessThanOrEqual(
+          1,
+        );
+      } else if (space.zone_above) {
+        expect(space.gap_below).toBe(0);
+      } else {
+        expect(space.gap_above).toBe(0);
+      }
+    },
+  );
+
+  // Rule: a move lands near the nearest free spot. It can be farther only by
+  // the gaps, so by at most 2 * EDGE_GAP. Source: #61, which chose the
+  // nearest space over the full gap.
+  test.prop([escape_case], { examples: [[STACKED_ZONES]] })(
+    "3. near: a move is at most two gaps farther than the nearest free spot",
+    ({ size, viewport, zones, start, box }) => {
+      if (!fits(size, viewport) || box.top === start.top) return;
+      const nearest = nearest_free(start, viewport, zones, 0);
+      expect(nearest).not.toBeNull();
+      expect(Math.abs(box.top - start.top)).toBeLessThanOrEqual(
+        Math.abs((nearest as Rect).top - start.top) + 2 * EDGE_GAP,
+      );
     },
   );
 

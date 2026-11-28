@@ -58,23 +58,68 @@ function clamp_to_viewport(rect: Rect, viewport: Size): Rect {
   return { left, top, right: left + width, bottom: top + height };
 }
 
-// A rect in a zone moves to the nearest free spot straight above or below it,
-// so it stays on the same side edge. With no free spot, it stays put.
+// Where a box of `height` sits in the free space from `top` to `bottom`, or
+// null when it does not fit. An edge that a zone makes needs EDGE_GAP. A
+// screen edge needs no gap. With room for every gap, the box takes the spot
+// nearest `from`. With less room, the edges that need a gap share the spare
+// room equally.
+function place_in_space(
+  space: {
+    top: number;
+    bottom: number;
+    zone_above: boolean;
+    zone_below: boolean;
+  },
+  height: number,
+  from: number,
+): number | null {
+  const room = space.bottom - space.top - height;
+  if (room < 0) return null;
+  const gap_above = space.zone_above ? EDGE_GAP : 0;
+  const gap_below = space.zone_below ? EDGE_GAP : 0;
+  if (room >= gap_above + gap_below) {
+    return clamp(
+      from,
+      space.top + gap_above,
+      space.bottom - gap_below - height,
+    );
+  }
+  return space.top + Math.floor((room * gap_above) / (gap_above + gap_below));
+}
+
+// A rect in a zone moves straight up or down, so it stays on the same side
+// edge, into the free space where it lands nearest. With no free space that
+// fits it, it stays put.
 function escape_zones(rect: Rect, viewport: Size, zones: Rect[]): Rect {
   if (zones.every((zone) => !overlaps(rect, zone))) return rect;
   const height = rect.bottom - rect.top;
+  // The zones in the rect's column, top to bottom.
+  const column = zones
+    .filter((zone) => zone.left < rect.right && rect.left < zone.right)
+    .sort((a, b) => a.top - b.top);
+
   let best = rect;
-  for (const zone of zones) {
-    for (const top of [zone.top - EDGE_GAP - height, zone.bottom + EDGE_GAP]) {
-      if (top < 0 || top + height > viewport.height) continue;
-      const moved = at_top(rect, top);
-      if (zones.some((other) => overlaps(moved, other))) continue;
-      if (
-        best === rect ||
-        Math.abs(moved.top - rect.top) < Math.abs(best.top - rect.top)
-      ) {
-        best = moved;
-      }
+  // Walk the free spaces between the zones, from the top of the screen.
+  let space_top = 0;
+  let zone_above = false;
+  for (const zone of [...column, null]) {
+    const space = {
+      top: space_top,
+      bottom: zone ? Math.min(zone.top, viewport.height) : viewport.height,
+      zone_above,
+      zone_below: zone !== null,
+    };
+    const top = place_in_space(space, height, rect.top);
+    if (
+      top !== null &&
+      (best === rect ||
+        Math.abs(top - rect.top) < Math.abs(best.top - rect.top))
+    ) {
+      best = at_top(rect, top);
+    }
+    if (zone && zone.bottom > space_top) {
+      space_top = zone.bottom;
+      zone_above = true;
     }
   }
   return best;

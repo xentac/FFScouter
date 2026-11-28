@@ -40,6 +40,43 @@ describe("resolve_box", () => {
     const taller = { ...CHAT_ZONE, top: 600 };
     expect(resolve_box(anchor, SIZE, VIEWPORT, [taller])).toEqual(box(8, 552));
   });
+
+  // Between two zones with too little room for 8px on both sides, the box
+  // sits in the middle: the 50px space holds the 40px box with 5px each side.
+  test("between two close zones, sits in the middle of the space", () => {
+    const anchor = { side: "left" as const, inset: 8, top: 30 };
+    const feature: Rect = { left: 0, right: 1024, top: 130, bottom: 170 };
+    expect(resolve_box(anchor, SIZE, VIEWPORT, [HEADER_ZONE, feature])).toEqual(
+      box(8, 85),
+    );
+  });
+
+  // The screen edge needs no gap, so the zone gets all the spare room.
+  test("in a thin strip at the screen edge, sits flush with the edge", () => {
+    const anchor = { side: "left" as const, inset: 0, top: 0 };
+    const screen = { width: 200, height: 200 };
+    const zone: Rect = { left: 0, right: 200, top: 0, bottom: 183 };
+    expect(
+      resolve_box(anchor, { width: 10, height: 10 }, screen, [zone]),
+    ).toEqual({ left: 0, top: 190, right: 10, bottom: 200 });
+  });
+
+  test("prefers a nearer tight space to a farther one with the full gap", () => {
+    const anchor = { side: "left" as const, inset: 8, top: 30 };
+    const feature: Rect = { left: 0, right: 1024, top: 130, bottom: 170 };
+    // The full-gap spot below the feature zone, at 178, is farther than 85.
+    expect(
+      resolve_box(anchor, SIZE, VIEWPORT, [HEADER_ZONE, feature]).top,
+    ).toBeLessThan(178);
+  });
+
+  test("with room for the full gap, keeps 8px from the zone it left", () => {
+    const anchor = { side: "left" as const, inset: 8, top: 30 };
+    const feature: Rect = { left: 0, right: 1024, top: 200, bottom: 240 };
+    expect(resolve_box(anchor, SIZE, VIEWPORT, [HEADER_ZONE, feature])).toEqual(
+      box(8, 88),
+    );
+  });
 });
 
 describe("drop_anchor", () => {
