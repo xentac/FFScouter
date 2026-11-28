@@ -1,11 +1,10 @@
 // Properties for the FFScouter API responses. The body comes from a server
 // that the script does not control, so query_stats must handle any status
 // and any body.
-import { fc } from "@fast-check/vitest";
+import { fc, test } from "@fast-check/vitest";
 import { describe, expect } from "vitest";
-import { prop_with_known_bugs } from "../tests/known-bugs";
 import { FFApiError, type gmRequest, query_stats } from "./api";
-import type { PlayerId } from "./types";
+import type { FFData, PlayerId } from "./types";
 
 // ============================================================================
 // Arbitraries
@@ -92,14 +91,14 @@ async function outcome_of(
   requested: PlayerId[],
   status: number,
   body: string,
-): Promise<{ keys: PlayerId[] } | { error: unknown }> {
+): Promise<{ result: Map<PlayerId, FFData> } | { error: unknown }> {
   try {
     const resp = await query_stats(
       "key",
       requested,
       respond_with(status, body),
     );
-    return { keys: [...resp.result.keys()] };
+    return { result: resp.result };
   } catch (error) {
     return { error };
   }
@@ -108,45 +107,19 @@ async function outcome_of(
 // ============================================================================
 // Properties
 // ============================================================================
-// Together, the two properties state one rule: for any status and any body,
+// The first two properties state one rule: for any status and any body,
 // query_stats resolves with a map keyed by exactly the requested IDs, or
 // rejects with an FFApiError. Callers branch on FFApiError and read one
 // entry for each requested ID. The rule is split in two, one property for
-// each part.
-
-// The parsed body, or undefined when the body is not JSON.
-function parsed(body: string): unknown {
-  try {
-    return JSON.parse(body);
-  } catch {
-    return undefined;
-  }
-}
+// each part. The third property checks the entries that have data.
 
 describe("query_stats properties", () => {
   // Rule: query_stats rejects only with an FFApiError. Source: query_stats
-  // and FFApiError, which carries the rate-limit data.
-  prop_with_known_bugs(
-    [requested_arb, status_arb, body_arb],
-    [
-      {
-        // A 200 body that is JSON, not null, not an array, and has no code
-        // passes as a success, and .forEach then throws a TypeError.
-        issue: "https://github.com/xentac/FFScouter/issues/66",
-        example: [[1], 200, "{}"],
-        applies: (_requested, status, body) => {
-          const value = parsed(body);
-          return (
-            status === 200 &&
-            value !== undefined &&
-            value !== null &&
-            !Array.isArray(value) &&
-            (value as { code?: unknown }).code === undefined
-          );
-        },
-      },
-    ],
-  )(
+  // and FFApiError, which carries the rate-limit data. A 200 body of "{}"
+  // once reached .forEach and threw a TypeError (#66).
+  test.prop([requested_arb, status_arb, body_arb], {
+    examples: [[[1], 200, "{}"]],
+  })(
     "query_stats rejects only with an FFApiError",
     async (requested, status, body) => {
       const outcome = await outcome_of(requested, status, body);
@@ -156,35 +129,51 @@ describe("query_stats properties", () => {
 
   // Rule: a resolved result map is keyed by exactly the requested IDs.
   // Source: query_stats, which adds a no_data entry for each requested ID
-  // that the body does not name. Precondition: query_stats resolves.
-  prop_with_known_bugs(
-    [requested_arb, status_arb, body_arb],
-    [
-      {
-        // A 200 body array that names an ID that was not requested adds
-        // that ID to the map.
-        issue: "https://github.com/xentac/FFScouter/issues/69",
-        example: [[1], 200, '[{"player_id":2}]'],
-        applies: (requested, status, body) => {
-          const value = parsed(body);
-          return (
-            status === 200 &&
-            Array.isArray(value) &&
-            value.some((item: unknown) => {
-              const id = (item as { player_id?: unknown } | null)?.player_id;
-              return Boolean(id) && !requested.includes(id as PlayerId);
-            })
-          );
-        },
-      },
+  // that the body does not name. Precondition: query_stats resolves. A
+  // record for an ID that was not requested once added that ID (#69).
+  test.prop([requested_arb, status_arb, body_arb], {
+    examples: [
+      [[1], 200, '[{"player_id":2}]'],
+      [[1], 200, '[{"player_id":"1"}]'],
     ],
-  )(
+  })(
     "a resolved query_stats map is keyed by exactly the requested ids",
     async (requested, status, body) => {
       const outcome = await outcome_of(requested, status, body);
       if ("error" in outcome) return;
       // Map keys and requested IDs have no repeats, so sets compare them.
-      expect(new Set(outcome.keys)).toEqual(new Set(requested));
+      expect(new Set(outcome.result.keys())).toEqual(new Set(requested));
     },
   );
+
+  // Rule: an entry with data has its required fields, each of the right
+  // type, and no 0 values. Source: query_stats, which reads any other
+  // record as no data. A wrongly typed field once passed through (#66).
+  test.prop([requested_arb, status_arb, body_arb], {
+    examples: [
+      [[1], 200, JSON.stringify([{ ...valid_record(1), fair_fight: "abc" }])],
+      [[1], 200, JSON.stringify([{ ...valid_record(1), source: "future" }])],
+    ],
+  })("an entry with data has valid fields", async (requested, status, body) => {
+    const outcome = await outcome_of(requested, status, body);
+    if ("error" in outcome) return;
+    for (const data of outcome.result.values()) {
+      if (data.no_data) continue;
+      for (const value of [
+        data.fair_fight,
+        data.bs_estimate,
+        data.bss_public,
+        data.last_updated,
+      ]) {
+        expect(Number.isFinite(value) && value > 0).toBe(true);
+      }
+      expect(typeof data.bs_estimate_human).toBe("string");
+      expect(data.bs_estimate_human).not.toBe("");
+      expect(["bss", "premium", "spies"]).toContain(data.source);
+      expect(typeof data.premium_insights_available).toBe("boolean");
+      expect(Array.isArray(data.spies)).toBe(true);
+      expect(typeof data.available_estimates).toBe("object");
+      expect(data.available_estimates).not.toBeNull();
+    }
+  });
 });

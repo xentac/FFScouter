@@ -187,6 +187,91 @@ export type FFApiCheckResponse =
       blank: true;
     };
 
+// A number that is finite and more than 0. No estimate field can be 0.
+function is_positive(value: unknown): value is number {
+  return typeof value === "number" && Number.isFinite(value) && value > 0;
+}
+
+// A parsed JSON object whose fields are not checked yet.
+type Untrusted<T> = { [K in keyof T]?: unknown };
+
+function is_object<T>(value: unknown): value is Untrusted<T> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+const ESTIMATE_SOURCES: readonly unknown[] = ["bss", "premium", "spies"];
+
+// One record of a get-stats response. A required field that is missing, 0,
+// or of the wrong type means no data for the player. An optional field of
+// the wrong type reads as absent.
+function read_stats_record(
+  record: Untrusted<FFSuccess>,
+  player_id: PlayerId,
+): FFData {
+  const {
+    fair_fight,
+    last_updated,
+    bs_estimate,
+    bs_estimate_human,
+    bss_public,
+    source,
+    distribution: raw_distribution,
+  } = record;
+  if (
+    !is_positive(fair_fight) ||
+    !is_positive(last_updated) ||
+    !is_positive(bs_estimate) ||
+    !is_positive(bss_public) ||
+    typeof bs_estimate_human !== "string" ||
+    !bs_estimate_human ||
+    typeof source !== "string" ||
+    !source
+  ) {
+    return { no_data: true, player_id };
+  }
+
+  let distribution: FFDataDistribution | undefined;
+  if (is_object<FFSuccess["distribution"]>(raw_distribution)) {
+    const percentage = is_object<
+      NonNullable<FFSuccess["distribution"]["stats_percentage"]>
+    >(raw_distribution.stats_percentage)
+      ? raw_distribution.stats_percentage
+      : undefined;
+    distribution = {
+      last_updated: raw_distribution.last_updated,
+      distribution_human: raw_distribution.distribution_human,
+      stats_percentage: {
+        strength: percentage?.strength,
+        speed: percentage?.speed,
+        defense: percentage?.defense,
+        dexterity: percentage?.dexterity,
+      },
+    } as FFDataDistribution;
+  }
+
+  return {
+    no_data: false,
+    fair_fight,
+    last_updated,
+    bs_estimate,
+    bs_estimate_human,
+    bss_public,
+    // A source that this build does not know shows as bss, with no marker.
+    source: ESTIMATE_SOURCES.includes(source)
+      ? (source as EstimateSource)
+      : "bss",
+    premium_insights_available: record.premium_insights_available === true,
+    distribution,
+    available_estimates: is_object<AvailableEstimates>(
+      record.available_estimates,
+    )
+      ? (record.available_estimates as AvailableEstimates)
+      : EMPTY_AVAILABLE_ESTIMATES,
+    spies: Array.isArray(record.spies) ? (record.spies as SpySnapshot[]) : [],
+    player_id,
+  };
+}
+
 export const query_stats = async (
   key: TornApiKey,
   player_ids: PlayerId[],
@@ -245,54 +330,29 @@ export const query_stats = async (
     );
   }
 
+  if (!Array.isArray(ff_response)) {
+    logger.warn(
+      `query_stats: response is not a list. status=${resp.status}, body=${resp.responseText?.slice(0, 200)}, url=${url}`,
+    );
+    throw new FFApiError(
+      `API request failed. Response is not a list. HTTP status code: ${resp.status}`,
+      { ff_api_limits: limits },
+    );
+  }
+
+  // Only records for requested IDs count. A record for another ID, or with
+  // an ID that is not a number, is ignored. Of two records for one ID, the
+  // last one wins.
+  const requested = new Set<unknown>(player_ids);
   const results: Map<PlayerId, FFData> = new Map();
-  ff_response.forEach((result) => {
-    if (result?.player_id) {
-      if (
-        !result.fair_fight ||
-        !result.last_updated ||
-        !result.bs_estimate ||
-        !result.bs_estimate_human ||
-        !result.bss_public ||
-        !result.source
-      ) {
-        results.set(result.player_id, {
-          no_data: true,
-          player_id: result.player_id,
-        });
-      } else {
-        let distribution: FFDataDistribution | undefined;
-        if (result.distribution) {
-          distribution = {
-            last_updated: result.distribution.last_updated,
-            distribution_human: result.distribution.distribution_human,
-            stats_percentage: {
-              strength: result.distribution.stats_percentage?.strength,
-              speed: result.distribution.stats_percentage?.speed,
-              defense: result.distribution.stats_percentage?.defense,
-              dexterity: result.distribution.stats_percentage?.dexterity,
-            },
-          };
-        }
-        results.set(result.player_id, {
-          no_data: false,
-          fair_fight: result.fair_fight,
-          last_updated: result.last_updated,
-          bs_estimate: result.bs_estimate,
-          bs_estimate_human: result.bs_estimate_human,
-          bss_public: result.bss_public,
-          source: result.source ?? "bss",
-          premium_insights_available:
-            result.premium_insights_available ?? false,
-          distribution: distribution,
-          available_estimates:
-            result.available_estimates ?? EMPTY_AVAILABLE_ESTIMATES,
-          spies: result.spies ?? [],
-          player_id: result.player_id,
-        });
-      }
-    }
-  });
+  for (const record of ff_response as unknown[]) {
+    const player_id = (record as { player_id?: unknown } | null)?.player_id;
+    if (!requested.has(player_id)) continue;
+    results.set(
+      player_id as PlayerId,
+      read_stats_record(record as Untrusted<FFSuccess>, player_id as PlayerId),
+    );
+  }
 
   // Make sure the results we return contains an entry for every requested id
   for (const id of player_ids) {
@@ -575,9 +635,19 @@ export const query_targets = async (
     throw new Error(errMessage);
   }
 
-  const parsed = JSON.parse(resp.responseText);
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(resp.responseText);
+  } catch {
+    parsed = undefined;
+  }
+  if (!is_object<{ error: unknown }>(parsed)) {
+    throw new Error(
+      `Unexpected response from get-targets. HTTP status code: ${resp.status}`,
+    );
+  }
   if (parsed.error) {
-    throw new Error(parsed.error);
+    throw new Error(String(parsed.error));
   }
   return parsed as FFTargetsResponse;
 };

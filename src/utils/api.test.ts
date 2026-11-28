@@ -1097,3 +1097,90 @@ test("query_od_insurance_plans surfaces the rate limit (429 code 21)", async () 
   expect(err?.ff_api_error?.code).toBe(21);
   expect(err?.ff_http_status).toBe(429);
 });
+
+// A query_stats or query_targets response with the rate-limit headers and a
+// raw body.
+const raw_response = (status: number, responseText: string) => ({
+  ...bounty_mock_response(status, null, RATE_LIMIT_HEADERS),
+  responseText,
+});
+const respond = (status: number, responseText: string): typeof gmRequest =>
+  vi.fn().mockResolvedValue(raw_response(status, responseText));
+
+test.each(["{}", '{"detail":"x"}', '"x"', "5", "true"])(
+  "query_stats rejects a 200 body that is not an array, %s, with an FFApiError",
+  async (body) => {
+    const outcome = query_stats("a", [1], respond(200, body));
+    await expect(outcome).rejects.toBeInstanceOf(FFApiError);
+    await expect(outcome).rejects.toMatchObject({
+      ff_api_limits: PARSED_RATE_LIMITS,
+    });
+  },
+);
+
+test("query_stats reads a record with a field of the wrong type as no data", async () => {
+  const good = generate_test_ff_data(1);
+  const bad = { ...generate_test_ff_data(2), fair_fight: "abc" };
+  const resp = await query_stats(
+    "a",
+    [1, 2],
+    respond(200, JSON.stringify([good, bad])),
+  );
+  expect(resp.result.get(1)).toEqual(good);
+  expect(resp.result.get(2)).toEqual({ no_data: true, player_id: 2 });
+});
+
+test("query_stats falls back for optional fields of the wrong type", async () => {
+  const record = {
+    ...generate_test_ff_data(1),
+    premium_insights_available: "yes",
+    available_estimates: 5,
+    spies: {},
+    distribution: "x",
+  };
+  const resp = await query_stats(
+    "a",
+    [1],
+    respond(200, JSON.stringify([record])),
+  );
+  expect(resp.result.get(1)).toMatchObject({
+    no_data: false,
+    premium_insights_available: false,
+    available_estimates: { bss: null, premium: null, spies: null },
+    spies: [],
+    distribution: undefined,
+  });
+});
+
+test("query_stats reads an unknown source as bss", async () => {
+  const record = { ...generate_test_ff_data(1), source: "future" };
+  const resp = await query_stats(
+    "a",
+    [1],
+    respond(200, JSON.stringify([record])),
+  );
+  expect(resp.result.get(1)).toMatchObject({ no_data: false, source: "bss" });
+});
+
+test("query_stats ignores records for IDs that were not requested", async () => {
+  const body = JSON.stringify([
+    generate_test_ff_data(2),
+    { ...generate_test_ff_data(1), player_id: {} },
+    { ...generate_test_ff_data(1), player_id: [1] },
+    // A string ID is the wrong type, also when it names a requested ID.
+    { ...generate_test_ff_data(1), player_id: "1" },
+  ]);
+  const resp = await query_stats("a", [1], respond(200, body));
+  expect([...resp.result.keys()]).toEqual([1]);
+  expect(resp.result.get(1)).toEqual({ no_data: true, player_id: 1 });
+});
+
+test.each(["null", "<html>busy</html>", '"x"', "5"])(
+  "query_targets rejects a 200 body of %s with a plain Error",
+  async (body) => {
+    const outcome = query_targets("test-key", {}, respond(200, body));
+    await expect(outcome).rejects.toThrow(
+      "Unexpected response from get-targets",
+    );
+  },
+);
